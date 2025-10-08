@@ -1,62 +1,30 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "G:\\PRN222\\APMMS\\",
+  "WorkspaceRootPath": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|g:\\prn222\\apmms\\fe\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.validate\\validationextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.validate\\validationextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\autoowner\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\autoowner\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|g:\\prn222\\apmms\\bll\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|g:\\prn222\\apmms\\bll\\vn.fpt.edu.extensions\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.extensions\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|g:\\prn222\\apmms\\bll\\vn.fpt.edu.services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|g:\\prn222\\apmms\\fe\\vn.fpt.edu.controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|g:\\prn222\\apmms\\fe\\vn.fpt.edu.views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\home\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|g:\\prn222\\apmms\\bll\\vn.fpt.edu.interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\homecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\weatherforecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.extensions\\identityextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.extensions\\identityextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.extensions\\jwtextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.extensions\\jwtextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|g:\\prn222\\apmms\\be\\vn.fpt.edu.middleware\\errorhandlingmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.middleware\\errorhandlingmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\APMMS-BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\APMMS-BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -66,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 124,
+          "SelectedChildIndex": 125,
           "Children": [
             {
               "$type": "Bookmark",
@@ -566,184 +534,80 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\FE\\Program.cs",
-              "RelativeDocumentMoniker": "FE\\Program.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\FE\\Program.cs",
-              "RelativeToolTip": "FE\\Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "RequestDto.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:16:30.303Z",
+              "WhenOpened": "2025-10-08T09:30:11.778Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ValidationExtensions.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAwwGgAAAB0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T09:27:45.588Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "MappingProfile.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.extensions\\MappingProfile.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.extensions\\MappingProfile.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.extensions\\MappingProfile.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.extensions\\MappingProfile.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:13:10.696Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\Program.cs",
-              "RelativeDocumentMoniker": "BE\\Program.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\Program.cs",
-              "RelativeToolTip": "BE\\Program.cs",
-              "ViewState": "AgIAACMAAAAAAAAAAAAAAD0AAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:12:26.938Z",
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\appsettings.json",
+              "RelativeDocumentMoniker": "BE\\appsettings.json",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\appsettings.json",
+              "RelativeToolTip": "BE\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-10-08T09:26:05.722Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAD0AAAA9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:10:29.479Z",
+              "Title": "BE.csproj",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source code\\APMMS\\BE\\BE.csproj",
+              "RelativeDocumentMoniker": "BE\\BE.csproj",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source code\\APMMS\\BE\\BE.csproj",
+              "RelativeToolTip": "BE\\BE.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-10-08T09:25:10.234Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "HomeController.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\FE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\FE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "RelativeToolTip": "FE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAACQAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:07:44.802Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
-              "ToolTip": "G:\\PRN222\\APMMS\\FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
-              "RelativeToolTip": "FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-05T19:07:34.347Z",
+              "WhenOpened": "2025-10-08T06:47:16.524Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "ServiceCollectionExtensions.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:07:21.74Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "IAuthService.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:07:15.898Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "Title": "HomeViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:07:08.154Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "HomeController.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\HomeController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:07:04.699Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "WeatherForecastController.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\WeatherForecastController.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\WeatherForecastController.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.controllers\\WeatherForecastController.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\WeatherForecastController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:06:56.542Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "IdentityExtensions.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.extensions\\IdentityExtensions.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.extensions\\IdentityExtensions.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.extensions\\IdentityExtensions.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.extensions\\IdentityExtensions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:06:46.807Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "JwtExtensions.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.extensions\\JwtExtensions.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.extensions\\JwtExtensions.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.extensions\\JwtExtensions.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.extensions\\JwtExtensions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:06:37.353Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
-              "Title": "ErrorHandlingMiddleware.cs",
-              "DocumentMoniker": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
-              "ToolTip": "G:\\PRN222\\APMMS\\BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-05T19:06:21.405Z",
+              "WhenOpened": "2025-10-07T08:36:38.886Z",
               "EditorCaption": ""
             }
           ]

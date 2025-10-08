@@ -1,5 +1,5 @@
 using BLL.vn.fpt.edu.extensions;
-using BE.vn.fpt.edu.extensions;
+using BE.vn.fpt.edu.security;
 using DAL.vn.fpt.edu.data;
 using DAL.vn.fpt.edu.entities;
 using FluentValidation;
