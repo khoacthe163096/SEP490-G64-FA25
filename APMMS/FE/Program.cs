@@ -1,7 +1,13 @@
+using FE;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddRazorOptions(options =>
+    {
+        options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
+    });
 
 var app = builder.Build();
 
