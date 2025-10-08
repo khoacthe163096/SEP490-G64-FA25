@@ -17,7 +17,13 @@ public partial class Feedback
 
     public DateTime? CreatedAt { get; set; }
 
+    public long? ParentId { get; set; }
+
+    public virtual ICollection<Feedback> InverseParent { get; set; } = new List<Feedback>();
+
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
+
+    public virtual Feedback? Parent { get; set; }
 
     public virtual User? User { get; set; }
 }

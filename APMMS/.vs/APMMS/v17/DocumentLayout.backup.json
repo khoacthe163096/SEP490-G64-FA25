@@ -3,6 +3,50 @@
   "WorkspaceRootPath": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\address.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\address.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\vehicleviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\vehicleviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\userviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\userviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\reportviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\reportviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\partsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\partsviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\maintenanceviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\maintenanceviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.helpers\\javascripthelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.helpers\\javascripthelper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -69,10 +113,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\autoowner\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\autoowner\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\APMMS-FE.csproj|solutionrelative:fe\\vn.fpt.edu.viewmodels\\homeviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
@@ -583,19 +623,153 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Address.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\Address.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\Address.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\Address.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\Address.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T17:52:59.528Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:81:0:{e8034f19-ab72-4f06-83fd-f6832b41aa63}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "VehicleViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\VehicleViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\VehicleViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\VehicleViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\VehicleViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:44.465Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\UserViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\UserViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\UserViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\UserViewModel.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAcwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:30.851Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ReportViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\ReportViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\ReportViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\ReportViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\ReportViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:27.628Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PartsViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\PartsViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\PartsViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\PartsViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\PartsViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:24.218Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "MaintenanceViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\MaintenanceViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\MaintenanceViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\MaintenanceViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\MaintenanceViewModel.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:17.735Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "LoginViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\LoginViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\LoginViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\LoginViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\LoginViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:13.148Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "DashboardViewModel.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\DashboardViewModel.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\DashboardViewModel.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\DashboardViewModel.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\DashboardViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:22:09.808Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ServiceCollectionExtensions.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:11:41.8Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "JavaScriptHelper.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.helpers\\JavaScriptHelper.cs",
+              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.helpers\\JavaScriptHelper.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.helpers\\JavaScriptHelper.cs",
+              "RelativeToolTip": "FE\\vn.fpt.edu.helpers\\JavaScriptHelper.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAgwCUAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-08T12:11:19.069Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Shared\\_Layout.cshtml",
               "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Shared\\_Layout.cshtml",
               "RelativeToolTip": "FE\\vn.fpt.edu.views\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAACgAAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACoAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-10-08T11:49:18.746Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 12,
               "Title": "_ViewStart.cshtml",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\_ViewStart.cshtml",
               "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\_ViewStart.cshtml",
@@ -608,7 +782,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 13,
               "Title": "_ViewImports.cshtml",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\_ViewImports.cshtml",
               "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\_ViewImports.cshtml",
@@ -621,7 +795,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 14,
               "Title": "Index.cshtml",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
               "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Home\\Index.cshtml",
@@ -634,7 +808,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 17,
               "Title": "IComponentService.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IComponentService.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.interfaces\\IComponentService.cs",
@@ -647,7 +821,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 18,
               "Title": "IAutoOwnerService.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IAutoOwnerService.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.interfaces\\IAutoOwnerService.cs",
@@ -660,7 +834,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 16,
               "Title": "IAuthService.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.interfaces\\IAuthService.cs",
@@ -673,7 +847,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 19,
               "Title": "MappingProfile.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
@@ -686,7 +860,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 20,
               "Title": "ServiceCollectionExtensions.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
@@ -699,7 +873,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 21,
               "Title": "ValidationExtensions.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.extensions\\ValidationExtensions.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.extensions\\ValidationExtensions.cs",
@@ -712,7 +886,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 22,
               "Title": "ErrorHandlingMiddleware.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
               "RelativeDocumentMoniker": "BE\\vn.fpt.edu.middleware\\ErrorHandlingMiddleware.cs",
@@ -725,7 +899,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 23,
               "Title": "IdentityExtensions.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.security\\IdentityExtensions.cs",
               "RelativeDocumentMoniker": "BE\\vn.fpt.edu.security\\IdentityExtensions.cs",
@@ -738,7 +912,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 24,
               "Title": "CustomExceptions.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.exception\\CustomExceptions.cs",
               "RelativeDocumentMoniker": "BE\\vn.fpt.edu.exception\\CustomExceptions.cs",
@@ -751,7 +925,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 25,
               "Title": "ComponentController.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\ComponentController.cs",
               "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\ComponentController.cs",
@@ -764,7 +938,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 27,
               "Title": "RequestDto.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\AutoOwner\\RequestDto.cs",
@@ -777,7 +951,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 15,
               "Title": "ValidationExtensions.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
               "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
@@ -790,7 +964,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 28,
               "Title": "appsettings.json",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\appsettings.json",
               "RelativeDocumentMoniker": "BE\\appsettings.json",
@@ -803,7 +977,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 29,
               "Title": "BE.csproj",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source code\\APMMS\\BE\\BE.csproj",
               "RelativeDocumentMoniker": "BE\\BE.csproj",
@@ -816,7 +990,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 26,
               "Title": "AuthController.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
@@ -829,13 +1003,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 7,
               "Title": "HomeViewModel.cs",
               "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
               "RelativeDocumentMoniker": "FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
               "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
               "RelativeToolTip": "FE\\vn.fpt.edu.viewmodels\\HomeViewModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-07T08:36:38.886Z",
               "EditorCaption": ""

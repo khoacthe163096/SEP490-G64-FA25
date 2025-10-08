@@ -65,6 +65,8 @@ public partial class User
 
     public virtual ICollection<MaintenanceTicket> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicket>();
 
+    public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechniciansNavigation { get; set; } = new List<MaintenanceTicketTechnician>();
+
     public virtual Role? Role { get; set; }
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();

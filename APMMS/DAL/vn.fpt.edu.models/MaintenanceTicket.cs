@@ -27,6 +27,8 @@ public partial class MaintenanceTicket
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
+    public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicketTechnician>();
+
     public virtual ScheduleService? ScheduleService { get; set; }
 
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();

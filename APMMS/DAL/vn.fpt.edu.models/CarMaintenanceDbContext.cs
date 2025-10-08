@@ -31,7 +31,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<MaintenanceTicket> MaintenanceTickets { get; set; }
 
+    public virtual DbSet<MaintenanceTicketTechnician> MaintenanceTicketTechnicians { get; set; }
+
     public virtual DbSet<Permission> Permissions { get; set; }
+
+    public virtual DbSet<Province> Provinces { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -57,6 +61,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<VehicleType> VehicleTypes { get; set; }
 
+    public virtual DbSet<Ward> Wards { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("server=DESKTOP-ITTJS91;database=CarMaintenanceDB;uid=sa;pwd=123;TrustServerCertificate=True;");
@@ -70,32 +76,29 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.ToTable("address");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Country)
-                .HasMaxLength(100)
-                .HasDefaultValue("Vietnam")
-                .HasColumnName("country");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.District)
-                .HasMaxLength(100)
-                .HasColumnName("district");
             entity.Property(e => e.PostalCode)
                 .HasMaxLength(20)
                 .HasColumnName("postal_code");
-            entity.Property(e => e.Province)
-                .HasMaxLength(100)
-                .HasColumnName("province");
+            entity.Property(e => e.ProvinceId).HasColumnName("province_id");
             entity.Property(e => e.Street)
                 .HasMaxLength(200)
                 .HasColumnName("street");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("datetime")
                 .HasColumnName("updated_at");
-            entity.Property(e => e.Ward)
-                .HasMaxLength(100)
-                .HasColumnName("ward");
+            entity.Property(e => e.WardId).HasColumnName("ward_id");
+
+            entity.HasOne(d => d.Province).WithMany(p => p.Addresses)
+                .HasForeignKey(d => d.ProvinceId)
+                .HasConstraintName("FK_address_province");
+
+            entity.HasOne(d => d.Ward).WithMany(p => p.Addresses)
+                .HasForeignKey(d => d.WardId)
+                .HasConstraintName("FK_address_ward");
         });
 
         modelBuilder.Entity<Branch>(entity =>
@@ -232,12 +235,17 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.ParentId).HasColumnName("parent_id");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.Feedbacks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .HasConstraintName("FK__feedback__mainte__797309D9");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
+                .HasForeignKey(d => d.ParentId)
+                .HasConstraintName("FK__feedback__parent__1CBC4616");
 
             entity.HasOne(d => d.User).WithMany(p => p.Feedbacks)
                 .HasForeignKey(d => d.UserId)
@@ -335,6 +343,33 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasConstraintName("FK__maintenan__techn__66603565");
         });
 
+        modelBuilder.Entity<MaintenanceTicketTechnician>(entity =>
+        {
+            entity.HasKey(e => new { e.MaintenanceTicketId, e.TechnicianId }).HasName("PK__maintena__6AF1CD71FDA5026D");
+
+            entity.ToTable("maintenance_ticket_technician");
+
+            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.TechnicianId).HasColumnName("technician_id");
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("assigned_date");
+            entity.Property(e => e.RoleInTicket)
+                .HasMaxLength(100)
+                .HasColumnName("role_in_ticket");
+
+            entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.MaintenanceTicketTechnicians)
+                .HasForeignKey(d => d.MaintenanceTicketId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__maintenan__maint__0E6E26BF");
+
+            entity.HasOne(d => d.Technician).WithMany(p => p.MaintenanceTicketTechniciansNavigation)
+                .HasForeignKey(d => d.TechnicianId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__maintenan__techn__0F624AF8");
+        });
+
         modelBuilder.Entity<Permission>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__permissi__3213E83F06480003");
@@ -350,6 +385,24 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+        });
+
+        modelBuilder.Entity<Province>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__province__3213E83FAF90B665");
+
+            entity.ToTable("province");
+
+            entity.HasIndex(e => e.Name, "UQ__province__72E12F1B02074DA7").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -693,6 +746,27 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<Ward>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__ward__3213E83F8C7A9D69");
+
+            entity.ToTable("ward");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.ProvinceId).HasColumnName("province_id");
+
+            entity.HasOne(d => d.Province).WithMany(p => p.Wards)
+                .HasForeignKey(d => d.ProvinceId)
+                .HasConstraintName("FK__ward__province_i__18EBB532");
         });
 
         OnModelCreatingPartial(modelBuilder);
