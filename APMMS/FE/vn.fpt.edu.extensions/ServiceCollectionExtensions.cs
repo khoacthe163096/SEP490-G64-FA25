@@ -19,6 +19,7 @@ namespace FE.vn.fpt.edu.extensions
 
             // Add Services
             services.AddScoped<UserService>();
+            services.AddScoped<AuthService>();
 
             return services;
         }

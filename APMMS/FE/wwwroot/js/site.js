@@ -141,18 +141,18 @@ $(document).ready(function () {
     // Update stats every 5 minutes
     setInterval(updateStats, 300000);
 
-    // Initialize date pickers
-    $('.datepicker').datepicker({
-        format: 'dd/mm/yyyy',
-        autoclose: true,
-        todayHighlight: true
-    });
+    // Initialize date pickers (commented out - requires jQuery UI)
+    // $('.datepicker').datepicker({
+    //     format: 'dd/mm/yyyy',
+    //     autoclose: true,
+    //     todayHighlight: true
+    // });
 
-    // Initialize time pickers
-    $('.timepicker').timepicker({
-        showMeridian: false,
-        minuteStep: 15
-    });
+    // Initialize time pickers (commented out - requires timepicker library)
+    // $('.timepicker').timepicker({
+    //     showMeridian: false,
+    //     minuteStep: 15
+    // });
 
     // File upload handling
     $('.file-upload').on('change', function () {
@@ -198,6 +198,342 @@ $(document).ready(function () {
         }
     });
 
+    // Authentication and Profile Management
+    initializeAuth();
+    
     // Initialize all components
     console.log('APMMS Frontend initialized successfully');
 });
+
+// Authentication and Profile Management Functions
+function initializeAuth() {
+    // Check if user is logged in on page load
+    checkLoginStatus();
+    
+    // Handle login form submission
+    $('.login-form').on('submit', function(e) {
+        console.log('Form submitted, preventing default');
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Check if it's login or register form
+        if ($(this).find('#username').length > 0) {
+            handleLogin();
+        } else {
+            handleRegister();
+        }
+        return false;
+    });
+    
+    // Handle logout
+    $('#logoutBtn').on('click', function(e) {
+        e.preventDefault();
+        handleLogout();
+    });
+}
+
+async function checkLoginStatus() {
+    try {
+        // Check server for login status
+        const response = await fetch('/Auth/GetUserInfo', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.isLoggedIn) {
+            const userInfo = {
+                username: result.username,
+                fullName: result.username,
+                email: 'user@example.com',
+                role: 'Auto Owner'
+            };
+            showProfileDropdown(userInfo);
+        } else {
+            showLoginButton();
+        }
+    } catch (error) {
+        console.error('Check login status error:', error);
+        // Fallback to localStorage
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        
+        if (isLoggedIn && userInfo.username) {
+            showProfileDropdown(userInfo);
+        } else {
+            showLoginButton();
+        }
+    }
+}
+
+async function handleLogin() {
+    console.log('handleLogin called');
+    const username = $('#username').val();
+    const password = $('#password').val();
+    
+    console.log('Username:', username);
+    
+    if (!username || !password) {
+        showAlert('Vui lòng nhập đầy đủ thông tin đăng nhập', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    const loginBtn = $('.btn-login');
+    const originalText = loginBtn.html();
+    loginBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...');
+    loginBtn.prop('disabled', true);
+    
+    try {
+        console.log('Calling Frontend AuthController: /Auth/Login');
+        // Call Frontend AuthController (which sets session variables)
+        const response = await fetch('/Auth/Login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password
+            })
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+        
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            console.error('Response text:', responseText);
+            throw new Error(`Invalid JSON response: ${jsonError.message}`);
+        }
+        
+        console.log('Response result:', result);
+        console.log('Role ID from API:', result.roleId);
+        console.log('Redirect URL from API:', result.redirectTo);
+        
+        if (result.success) {
+            // Store login info
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userInfo', JSON.stringify({
+                username: username,
+                fullName: username, // You can get this from API response
+                email: 'user@example.com',
+                role: getRoleName(result.roleId),
+                roleId: result.roleId,
+                token: result.token
+            }));
+            
+            // Hide modal
+            $('#loginModal').modal('hide');
+            
+            // Check if user should be redirected to dashboard
+            console.log('Checking redirect logic:');
+            console.log('result.redirectTo:', result.redirectTo);
+            console.log('result.redirectTo !== "/":', result.redirectTo !== '/');
+            
+            if (result.redirectTo && result.redirectTo !== '/') {
+                console.log('Redirecting to:', result.redirectTo);
+                showAlert('Đăng nhập thành công! Chuyển hướng đến Dashboard...', 'success');
+                setTimeout(() => {
+                    console.log('Executing redirect to:', result.redirectTo);
+                    window.location.href = result.redirectTo;
+                }, 1500);
+            } else {
+                // Show profile dropdown for Auto Owner/Guest
+                showProfileDropdown({
+                    username: username,
+                    fullName: username,
+                    email: 'user@example.com',
+                    role: getRoleName(result.roleId)
+                });
+                showAlert('Đăng nhập thành công!', 'success');
+            }
+        } else {
+            showAlert(result.error || 'Đăng nhập thất bại', 'danger');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        showAlert('Lỗi kết nối đến server', 'danger');
+    } finally {
+        // Reset form and button
+        $('.login-form')[0].reset();
+        loginBtn.html(originalText);
+        loginBtn.prop('disabled', false);
+    }
+}
+
+async function handleLogout() {
+    try {
+        // Call logout API
+        const response = await fetch('/Auth/Logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Clear login info
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userInfo');
+            
+            // Show login button
+            showLoginButton();
+            
+            showAlert('Đã đăng xuất thành công!', 'info');
+        } else {
+            showAlert('Lỗi khi đăng xuất', 'warning');
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Still clear local storage even if API call fails
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userInfo');
+        showLoginButton();
+        showAlert('Đã đăng xuất', 'info');
+    }
+}
+
+function showProfileDropdown(userInfo) {
+    $('#loginBtn').hide();
+    $('#profileDropdown').show();
+    
+    // Update profile info
+    $('#profileName').text(userInfo.fullName || userInfo.username);
+    
+    // Update avatar if available
+    if (userInfo.avatar) {
+        $('#profileAvatar').attr('src', userInfo.avatar);
+    }
+}
+
+function showLoginButton() {
+    $('#profileDropdown').hide();
+    $('#loginBtn').show();
+}
+
+function showAlert(message, type = 'info') {
+    // Create and show Bootstrap alert
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        $('.alert').alert('close');
+    }, 3000);
+}
+
+function getRoleName(roleId) {
+    switch(roleId) {
+        case 1: return 'Admin';
+        case 2: return 'Branch Manager';
+        case 3: return 'Accountant';
+        case 4: return 'Technician';
+        case 5: return 'Warehouse Keeper';
+        case 6: return 'Consulter';
+        case 7: return 'Auto Owner';
+        case 8: return 'Guest';
+        default: return 'User';
+    }
+}
+
+// Modal switching functions
+function showRegisterModal() {
+    $('#loginModal').modal('hide');
+    $('#registerModal').modal('show');
+}
+
+function showLoginModal() {
+    $('#registerModal').modal('hide');
+    $('#loginModal').modal('show');
+}
+
+// Register form handling
+async function handleRegister() {
+    const fullName = $('#regFullName').val();
+    const email = $('#regEmail').val();
+    const phone = $('#regPhone').val();
+    const username = $('#regUsername').val();
+    const password = $('#regPassword').val();
+    const confirmPassword = $('#regConfirmPassword').val();
+    const agreeTerms = $('#agreeTerms').is(':checked');
+    
+    // Validation
+    if (!fullName || !email || !phone || !username || !password || !confirmPassword) {
+        showAlert('Vui lòng nhập đầy đủ thông tin', 'warning');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showAlert('Mật khẩu xác nhận không khớp', 'warning');
+        return;
+    }
+    
+    if (!agreeTerms) {
+        showAlert('Vui lòng đồng ý với điều khoản sử dụng', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    const registerBtn = $('.btn-register');
+    const originalText = registerBtn.html();
+    registerBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...');
+    registerBtn.prop('disabled', true);
+    
+    try {
+        const response = await fetch('/Auth/Register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                fullName: fullName,
+                email: email,
+                phone: phone,
+                username: username,
+                password: password
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showAlert('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+            $('#registerModal').modal('hide');
+            $('#loginModal').modal('show');
+            // Pre-fill username
+            $('#username').val(username);
+        } else {
+            showAlert(result.error || 'Đăng ký thất bại', 'danger');
+        }
+    } catch (error) {
+        console.error('Register error:', error);
+        showAlert('Lỗi kết nối đến server', 'danger');
+    } finally {
+        // Reset form and button
+        $('.login-form')[1].reset();
+        registerBtn.html(originalText);
+        registerBtn.prop('disabled', false);
+    }
+}

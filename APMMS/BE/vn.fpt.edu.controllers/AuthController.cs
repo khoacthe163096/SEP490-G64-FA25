@@ -7,6 +7,8 @@ using DAL.vn.fpt.edu.entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
 
 
 namespace BE.vn.fpt.edu.controllers
@@ -32,12 +34,29 @@ namespace BE.vn.fpt.edu.controllers
         [AllowAnonymous]
         public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto dto, CancellationToken ct)
         {
+            Console.WriteLine($"Backend Login attempt for user: {dto.Username}");
+            
             var result = await _authService.LoginAsync(dto.Username, dto.Password, ct);
+            Console.WriteLine($"Backend AuthService result: Success={result.Success}, Token={result.Token?.Substring(0, Math.Min(50, result.Token?.Length ?? 0))}...");
+            
             if (!result.Success)
             {
+                Console.WriteLine($"Backend Login failed for user: {dto.Username}, Error: {result.Error}");
                 return Unauthorized(new LoginResponseDto { Success = false, Error = result.Error });
             }
-            return Ok(new LoginResponseDto { Success = true, Token = result.Token });
+            
+            // Get role ID from JWT token
+            var roleId = GetRoleIdFromToken(result.Token) ?? 7; // Default to Auto Owner
+            var redirectTo = GetRedirectUrl(roleId);
+            
+            Console.WriteLine($"Backend Login successful for user: {dto.Username}, Role: {roleId}, Redirect: {redirectTo}");
+            
+            return Ok(new LoginResponseDto { 
+                Success = true, 
+                Token = result.Token,
+                RoleId = roleId,
+                RedirectTo = redirectTo
+            });
         }
 
         [HttpPost("logout")]
@@ -102,6 +121,69 @@ namespace BE.vn.fpt.edu.controllers
 
             await _db.SaveChangesAsync(ct);
             return Ok(new { updated });
+        }
+        
+        private int? GetRoleIdFromToken(string? token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return null;
+                
+            try
+            {
+                // Decode JWT token to get role_id claim
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadJwtToken(token);
+                
+                var roleIdClaim = jsonToken.Claims.FirstOrDefault(x => x.Type == "role_id");
+                Console.WriteLine($"Backend AuthController: role_id claim found: {roleIdClaim?.Value}");
+                if (roleIdClaim != null && int.TryParse(roleIdClaim.Value, out int roleId))
+                {
+                    Console.WriteLine($"Backend AuthController: Parsed role ID: {roleId}");
+                    return roleId;
+                }
+                
+                // Fallback: try to get role from role claim
+                var roleClaim = jsonToken.Claims.FirstOrDefault(x => x.Type == "role");
+                if (roleClaim != null)
+                {
+                    return GetRoleIdFromRoleName(roleClaim.Value);
+                }
+                
+                return 7; // Default to Auto Owner
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Backend Error decoding JWT token: {ex.Message}");
+                return 7; // Default to Auto Owner
+            }
+        }
+        
+        private static int GetRoleIdFromRoleName(string roleName)
+        {
+            return roleName.ToLower() switch
+            {
+                "admin" => 1,
+                "branch manager" => 2,
+                "accountant" => 3,
+                "technician" => 4,
+                "warehouse keeper" => 5,
+                "consulter" => 6,
+                "auto owner" => 7,
+                "guest" => 8,
+                _ => 7 // Default to Auto Owner
+            };
+        }
+
+        private string GetRedirectUrl(int roleId)
+        {
+            // Admin (1), Branch Manager (2), Accountant (3), Technician (4), Warehouse Keeper (5), Consulter (6) -> Dashboard
+            if (roleId >= 1 && roleId <= 6)
+            {
+                return "/Dashboard";
+            }
+            
+            // Auto Owner (7), Guest (8) -> Home
+            return "/";
         }
     }
 }

@@ -7,22 +7,25 @@ namespace BLL.vn.fpt.edu.services
 {
     public class AuthService : IAuthService
     {
-        private readonly Func<string, string, CancellationToken, Task<(bool Success, string? UserId, string? RoleName)>> _verifyCredentialsAsync;
+        private readonly Func<string, string, CancellationToken, Task<(bool Success, string? UserId, string? RoleName, long? RoleId)>> _verifyCredentialsAsync;
         private readonly Func<string, CancellationToken, Task> _logoutAsync;
         private readonly Func<string, string?, CancellationToken, Task<string>> _generateJwtAsync;
+        private readonly Func<string, string?, int?, CancellationToken, Task<string>> _generateJwtWithRoleIdAsync;
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher<DAL.vn.fpt.edu.entities.ApplicationUser> _passwordHasher;
 
         public AuthService(
-            Func<string, string, CancellationToken, Task<(bool Success, string? UserId, string? RoleName)>> verifyCredentialsAsync,
+            Func<string, string, CancellationToken, Task<(bool Success, string? UserId, string? RoleName, long? RoleId)>> verifyCredentialsAsync,
             Func<string, CancellationToken, Task> logoutAsync,
             Func<string, string?, CancellationToken, Task<string>> generateJwtAsync,
+            Func<string, string?, int?, CancellationToken, Task<string>> generateJwtWithRoleIdAsync,
             IUserRepository userRepository,
             IPasswordHasher<DAL.vn.fpt.edu.entities.ApplicationUser> passwordHasher)
         {
             _verifyCredentialsAsync = verifyCredentialsAsync;
             _logoutAsync = logoutAsync;
             _generateJwtAsync = generateJwtAsync;
+            _generateJwtWithRoleIdAsync = generateJwtWithRoleIdAsync;
             _userRepository = userRepository;
             _passwordHasher = passwordHasher;
         }
@@ -35,7 +38,10 @@ namespace BLL.vn.fpt.edu.services
                 return (false, null, "Invalid username or password");
             }
 
-            var token = await _generateJwtAsync(verification.UserId, verification.RoleName, cancellationToken);
+            // Use role ID from database instead of parsing role name
+            var roleId = (int?)(verification.RoleId ?? 7); // Default to Auto Owner if no role
+            Console.WriteLine($"AuthService: User {username}, RoleId from DB: {verification.RoleId}, RoleName: {verification.RoleName}, Final RoleId: {roleId}");
+            var token = await _generateJwtWithRoleIdAsync(verification.UserId, verification.RoleName, roleId, cancellationToken);
             return (true, token, null);
         }
 

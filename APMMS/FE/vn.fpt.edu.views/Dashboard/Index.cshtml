@@ -1,0 +1,1140 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4>APMMS</h4>
+            <p>Quản lý hệ thống</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <!-- Quản lý người dùng -->
+            <div class="nav-section">
+                <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#userManagement" aria-expanded="true">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý người dùng</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="collapse show" id="userManagement">
+                    <ul class="nav-list">
+                        <li><a href="#" class="nav-link active" data-page="employees"><i class="fas fa-user-tie"></i> Danh sách nhân viên</a></li>
+                        <li><a href="#" class="nav-link" data-page="users"><i class="fas fa-users"></i> Danh sách người dùng</a></li>
+                        <li><a href="#" class="nav-link" data-page="directors"><i class="fas fa-user-shield"></i> Danh sách giám đốc</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Quản lý kho -->
+            <div class="nav-section">
+                <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#warehouseManagement" aria-expanded="false">
+                    <i class="fas fa-warehouse"></i>
+                    <span>Quản lý kho</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="collapse" id="warehouseManagement">
+                    <ul class="nav-list">
+                        <li><a href="#" class="nav-link" data-page="component-types"><i class="fas fa-tags"></i> Danh sách loại linh kiện</a></li>
+                        <li><a href="#" class="nav-link" data-page="components"><i class="fas fa-cogs"></i> Danh sách linh kiện</a></li>
+                        <li><a href="#" class="nav-link" data-page="service-packages"><i class="fas fa-box"></i> Danh sách gói dịch vụ</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Hóa đơn -->
+            <div class="nav-section">
+                <div class="nav-section-header">
+                    <a href="#" class="nav-link" data-page="invoices">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Danh sách hóa đơn</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bảo dưỡng và sửa chữa -->
+            <div class="nav-section">
+                <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#maintenanceManagement" aria-expanded="false">
+                    <i class="fas fa-wrench"></i>
+                    <span>Bảo dưỡng & Sửa chữa</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="collapse" id="maintenanceManagement">
+                    <ul class="nav-list">
+                        <li><a href="#" class="nav-link" data-page="schedules"><i class="fas fa-calendar-alt"></i> Danh sách đặt lịch</a></li>
+                        <li><a href="#" class="nav-link" data-page="processes"><i class="fas fa-tasks"></i> Danh sách quá trình</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="top-bar-left">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="mobile-sidebar-toggle d-md-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h2 id="pageTitle">Dashboard APMMS</h2>
+            </div>
+            <div class="top-bar-right">
+                <div class="user-info">
+                    <span>Lê Thị Thành Dung</span>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Welcome Page (Default) -->
+            <div id="welcome-page" class="page-content active">
+                <div class="dashboard-welcome">
+                    <div class="welcome-card">
+                        <h1>Chào mừng đến với APMMS Dashboard</h1>
+                        <p>Hệ thống Quản lý Phụ tùng & Bảo dưỡng Ô tô</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Quản lý người dùng</h3>
+                                <p>Quản lý nhân viên, người dùng và giám đốc</p>
+                                <a href="#" class="btn btn-primary btn-sm" data-page="employees">Xem chi tiết</a>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Quản lý kho</h3>
+                                <p>Quản lý linh kiện và gói dịch vụ</p>
+                                <a href="#" class="btn btn-primary btn-sm" data-page="component-types">Xem chi tiết</a>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Quản lý hóa đơn</h3>
+                                <p>Quản lý hóa đơn, báo cáo và thanh toán</p>
+                                <a href="#" class="btn btn-primary btn-sm" data-page="invoices">Xem chi tiết</a>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-wrench"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Bảo dưỡng</h3>
+                                <p>Quản lý lịch hẹn và quá trình sửa chữa</p>
+                                <a href="#" class="btn btn-primary btn-sm" data-page="schedules">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employees Page -->
+            <div id="employees-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn chức vụ
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm nhân viên">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên</th>
+                                <th>Mã</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Chức vụ</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Bùi Văn Giang</td>
+                                <td>V00009</td>
+                                <td>technical03@gmail.com</td>
+                                <td>0645238452</td>
+                                <td>Kỹ Thuật Viên</td>
+                                <td><span class="badge bg-success">Có hiệu lực</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Bùi Trọng Đạt</td>
+                                <td>V00010</td>
+                                <td>technical04@gmail.com</td>
+                                <td>0548312654</td>
+                                <td>Kỹ Thuật Viên</td>
+                                <td><span class="badge bg-success">Có hiệu lực</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="users-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn vai trò
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm người dùng">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Vai trò</th>
+                                <th>Ngày tạo</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Nguyễn Văn A</td>
+                                <td>nguyenvana@gmail.com</td>
+                                <td>0123456789</td>
+                                <td>Khách hàng</td>
+                                <td>15/01/2024</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Trần Thị B</td>
+                                <td>tranthib@gmail.com</td>
+                                <td>0987654321</td>
+                                <td>Khách hàng</td>
+                                <td>16/01/2024</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Directors Page -->
+            <div id="directors-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn chi nhánh
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm giám đốc">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên</th>
+                                <th>Email</th>
+                                <th>Số điện thoại</th>
+                                <th>Chi nhánh</th>
+                                <th>Ngày bổ nhiệm</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Nguyễn Văn Giám Đốc</td>
+                                <td>giamdoc1@gmail.com</td>
+                                <td>0123456789</td>
+                                <td>Chi nhánh Hà Nội</td>
+                                <td>01/01/2024</td>
+                                <td><span class="badge bg-success">Đang làm việc</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Trần Thị Phó Giám Đốc</td>
+                                <td>phogiamdoc@gmail.com</td>
+                                <td>0987654321</td>
+                                <td>Chi nhánh TP.HCM</td>
+                                <td>15/01/2024</td>
+                                <td><span class="badge bg-success">Đang làm việc</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Component Types Page -->
+            <div id="component-types-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn danh mục
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm loại linh kiện">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên loại</th>
+                                <th>Mã loại</th>
+                                <th>Mô tả</th>
+                                <th>Danh mục</th>
+                                <th>Ngày tạo</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Động cơ</td>
+                                <td>ENG001</td>
+                                <td>Các linh kiện liên quan đến động cơ</td>
+                                <td>Động cơ</td>
+                                <td>01/01/2024</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Phanh</td>
+                                <td>BRK001</td>
+                                <td>Các linh kiện hệ thống phanh</td>
+                                <td>Hệ thống phanh</td>
+                                <td>02/01/2024</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>3</td>
+                                <td>Lốp xe</td>
+                                <td>TYR001</td>
+                                <td>Các loại lốp xe</td>
+                                <td>Lốp và bánh xe</td>
+                                <td>03/01/2024</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Components Page -->
+            <div id="components-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn loại linh kiện
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm linh kiện">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên linh kiện</th>
+                                <th>Mã linh kiện</th>
+                                <th>Loại linh kiện</th>
+                                <th>Số lượng</th>
+                                <th>Giá</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Bugi đánh lửa</td>
+                                <td>SPK001</td>
+                                <td>Động cơ</td>
+                                <td>50</td>
+                                <td>150,000 VNĐ</td>
+                                <td><span class="badge bg-success">Còn hàng</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Má phanh trước</td>
+                                <td>BRK001</td>
+                                <td>Phanh</td>
+                                <td>25</td>
+                                <td>300,000 VNĐ</td>
+                                <td><span class="badge bg-success">Còn hàng</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>3</td>
+                                <td>Lốp xe 185/65R15</td>
+                                <td>TYR001</td>
+                                <td>Lốp xe</td>
+                                <td>10</td>
+                                <td>1,500,000 VNĐ</td>
+                                <td><span class="badge bg-warning">Sắp hết</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Packages Page -->
+            <div id="service-packages-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn loại dịch vụ
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm gói dịch vụ">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Tên gói dịch vụ</th>
+                                <th>Mã gói</th>
+                                <th>Loại dịch vụ</th>
+                                <th>Giá</th>
+                                <th>Thời gian</th>
+                                <th>Tình trạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Bảo dưỡng định kỳ</td>
+                                <td>PKG001</td>
+                                <td>Bảo dưỡng</td>
+                                <td>500,000 VNĐ</td>
+                                <td>2 giờ</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Sửa chữa động cơ</td>
+                                <td>PKG002</td>
+                                <td>Sửa chữa</td>
+                                <td>1,500,000 VNĐ</td>
+                                <td>4 giờ</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>3</td>
+                                <td>Thay lốp xe</td>
+                                <td>PKG003</td>
+                                <td>Thay thế</td>
+                                <td>200,000 VNĐ</td>
+                                <td>30 phút</td>
+                                <td><span class="badge bg-success">Hoạt động</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoices Page -->
+            <div id="invoices-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn loại hóa đơn
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm hóa đơn">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Số hóa đơn</th>
+                                <th>Khách hàng</th>
+                                <th>Loại dịch vụ</th>
+                                <th>Tổng tiền</th>
+                                <th>Ngày tạo</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>HD001</td>
+                                <td>Nguyễn Văn A</td>
+                                <td>Bảo dưỡng định kỳ</td>
+                                <td>500,000 VNĐ</td>
+                                <td>15/01/2024</td>
+                                <td><span class="badge bg-success">Đã thanh toán</span></td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>HD002</td>
+                                <td>Trần Thị B</td>
+                                <td>Sửa chữa động cơ</td>
+                                <td>1,500,000 VNĐ</td>
+                                <td>16/01/2024</td>
+                                <td><span class="badge bg-warning">Chờ thanh toán</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedules Page -->
+            <div id="schedules-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn loại dịch vụ
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm lịch hẹn">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Khách hàng</th>
+                                <th>Loại dịch vụ</th>
+                                <th>Ngày hẹn</th>
+                                <th>Giờ hẹn</th>
+                                <th>Trạng thái</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>Nguyễn Văn A</td>
+                                <td>Bảo dưỡng định kỳ</td>
+                                <td>20/01/2024</td>
+                                <td>09:00</td>
+                                <td><span class="badge bg-success">Đã xác nhận</span></td>
+                                <td>Xe Toyota Camry</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>Trần Thị B</td>
+                                <td>Sửa chữa động cơ</td>
+                                <td>21/01/2024</td>
+                                <td>14:00</td>
+                                <td><span class="badge bg-warning">Chờ xác nhận</span></td>
+                                <td>Xe Honda Civic</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processes Page -->
+            <div id="processes-page" class="page-content">
+                <div class="page-header">
+                    <div class="page-actions">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Thêm mới
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Sửa trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn trạng thái
+                        </button>
+                        <button class="btn btn-outline-secondary">
+                            <i class="fas fa-filter"></i> Chọn loại quá trình
+                        </button>
+                    </div>
+                    <div class="search-box">
+                        <input type="text" class="form-control" placeholder="Tìm kiếm quá trình">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>STT</th>
+                                <th>Mã quá trình</th>
+                                <th>Loại quá trình</th>
+                                <th>Mô tả</th>
+                                <th>Thời gian dự kiến</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>1</td>
+                                <td>PRC001</td>
+                                <td>Bảo dưỡng</td>
+                                <td>Kiểm tra và thay dầu động cơ</td>
+                                <td>2 giờ</td>
+                                <td><span class="badge bg-success">Hoàn thành</span></td>
+                                <td>15/01/2024</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>2</td>
+                                <td>PRC002</td>
+                                <td>Sửa chữa</td>
+                                <td>Thay thế bugi đánh lửa</td>
+                                <td>1 giờ</td>
+                                <td><span class="badge bg-warning">Đang thực hiện</span></td>
+                                <td>16/01/2024</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&lsaquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&rsaquo;</a></li>
+                            <li class="page-item"><a class="page-link" href="#">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                    <div class="items-per-page">
+                        <select class="form-select">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            // Navigation functionality
+            function showPage(pageId) {
+                try {
+                    // Hide all pages with strong CSS rules
+                    document.querySelectorAll('.page-content').forEach(page => {
+                        page.classList.remove('active');
+                        page.style.display = 'none';
+                        page.style.visibility = 'hidden';
+                        page.style.opacity = '0';
+                        page.style.position = 'absolute';
+                        page.style.left = '-9999px';
+                    });
+                    
+                    // Show selected page
+                    const page = document.getElementById(pageId + '-page');
+                    if (page) {
+                        page.classList.add('active');
+                        page.style.display = 'block';
+                        page.style.visibility = 'visible';
+                        page.style.opacity = '1';
+                        page.style.position = 'relative';
+                        page.style.left = 'auto';
+                    } else {
+                        console.warn(`Page with id "${pageId}-page" not found`);
+                    }
+                    
+                    // Update page title
+                    const pageTitle = document.querySelector(`[data-page="${pageId}"]`)?.textContent?.trim() || 'Dashboard';
+                    const titleElement = document.getElementById('pageTitle');
+                    if (titleElement) {
+                        titleElement.textContent = pageTitle;
+                    }
+                } catch (error) {
+                    console.error('Error showing page:', error);
+                }
+            }
+
+            function setActiveNavLink(activeLink) {
+                try {
+                    // Remove active class from all links
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    if (activeLink) {
+                        activeLink.classList.add('active');
+                    }
+                } catch (error) {
+                    console.error('Error setting active nav link:', error);
+                }
+            }
+
+            // Navigation links
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const pageId = this.getAttribute('data-page');
+                    if (pageId) {
+                        setActiveNavLink(this);
+                        showPage(pageId);
+                        
+                        // Close mobile sidebar after navigation
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.remove('show');
+                        }
+                    }
+                });
+            });
+
+            // Handle stat card clicks
+            document.querySelectorAll('.stat-content a[data-page]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const pageId = this.getAttribute('data-page');
+                    if (pageId) {
+                        const navLink = document.querySelector(`[data-page="${pageId}"]`);
+                        
+                        setActiveNavLink(navLink);
+                        showPage(pageId);
+                        
+                        // Close mobile sidebar after navigation
+                        if (window.innerWidth <= 768) {
+                            sidebar.classList.remove('show');
+                        }
+                    }
+                });
+            });
+
+            // Sidebar toggle functionality
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function() {
+                    if (window.innerWidth > 768) {
+                        sidebar.classList.toggle('collapsed');
+                    } else {
+                        sidebar.classList.toggle('show');
+                    }
+                });
+            }
+            
+            // Handle mobile sidebar toggle
+            const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && 
+                        !sidebarToggle.contains(e.target) && 
+                        !mobileToggle.contains(e.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('show');
+                }
+            });
+            
+            // Initialize with welcome page and hide all other pages
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+                page.style.visibility = 'hidden';
+                page.style.opacity = '0';
+                page.style.position = 'absolute';
+                page.style.left = '-9999px';
+            });
+            showPage('welcome');
+            
+            // Add loading states for better UX
+            function addLoadingState(element) {
+                if (element) {
+                    element.style.opacity = '0.7';
+                    element.style.pointerEvents = 'none';
+                }
+            }
+            
+            function removeLoadingState(element) {
+                if (element) {
+                    element.style.opacity = '1';
+                    element.style.pointerEvents = 'auto';
+                }
+            }
+            
+            // Add loading states to navigation links
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.addEventListener('click', function() {
+                    addLoadingState(this);
+                    setTimeout(() => {
+                        removeLoadingState(this);
+                    }, 300);
+                });
+            });
+            
+            // Add keyboard navigation support
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && window.innerWidth <= 768) {
+                    sidebar.classList.remove('show');
+                }
+            });
+            
+            // Add smooth scrolling for better UX
+            document.documentElement.style.scrollBehavior = 'smooth';
+            
+            // Add tooltip functionality for better UX
+            document.querySelectorAll('[title]').forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.cursor = 'help';
+                });
+            });
+            
+            // Add confirmation for important actions
+            document.querySelectorAll('.btn-danger, .btn-warning').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (!confirm('Bạn có chắc chắn muốn thực hiện hành động này?')) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+}

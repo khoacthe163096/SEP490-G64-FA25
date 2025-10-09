@@ -5,6 +5,8 @@ namespace BLL.vn.fpt.edu.DTOs.Auth
         public bool Success { get; set; }
         public string? Token { get; set; }
         public string? Error { get; set; }
+        public int? RoleId { get; set; }
+        public string? RedirectTo { get; set; }
     }
 }
 

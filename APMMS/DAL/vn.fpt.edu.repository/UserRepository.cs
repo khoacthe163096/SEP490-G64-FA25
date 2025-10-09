@@ -17,7 +17,7 @@ namespace DAL.vn.fpt.edu.repository
             _passwordHasher = passwordHasher;
         }
 
-        public async Task<(bool Success, string? UserId, string? RoleName)> VerifyCredentialsAsync(string username, string password, CancellationToken cancellationToken = default)
+        public async Task<(bool Success, string? UserId, string? RoleName, long? RoleId)> VerifyCredentialsAsync(string username, string password, CancellationToken cancellationToken = default)
         {
             var user = await _db.Set<ApplicationUser>()
                 .AsNoTracking()
@@ -25,7 +25,7 @@ namespace DAL.vn.fpt.edu.repository
 
             if (user == null || string.IsNullOrEmpty(user.PasswordHash))
             {
-                return (false, null, null);
+                return (false, null, null, null);
             }
 
             PasswordVerificationResult verify = PasswordVerificationResult.Failed;
@@ -40,7 +40,7 @@ namespace DAL.vn.fpt.edu.repository
 
             if (verify == PasswordVerificationResult.Failed)
             {
-                return (false, null, null);
+                return (false, null, null, null);
             }
 
             string? roleName = null;
@@ -53,7 +53,7 @@ namespace DAL.vn.fpt.edu.repository
                     .FirstOrDefaultAsync(cancellationToken);
             }
 
-            return (true, user.Id.ToString(), roleName);
+            return (true, user.Id.ToString(), roleName, user.RoleId);
         }
 
         public Task<bool> UsernameExistsAsync(string username, CancellationToken cancellationToken = default)

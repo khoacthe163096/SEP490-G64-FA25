@@ -13,69 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <span class="top-bar-text">
-                        <i class="fas fa-phone"></i> Bạn có câu hỏi? Gọi ngay: <strong>1900 110 89</strong>
-                    </span>
-                </div>
-                <div class="col-md-6 text-end">
-                    <span class="top-bar-text">
-                        <i class="fas fa-envelope"></i> apmms.manage.services@gmail.com
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <!-- Logo -->
-            <a class="navbar-brand" href="#">
-                <div class="logo-container">
-                    <div class="logo-icon">
-                        <i class="fas fa-car"></i>
-                    </div>
-                    <div class="logo-text">
-                        <span class="logo-main">APMMS</span>
-                        <span class="logo-sub">Auto Parts Management</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Mobile Toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <!-- Navigation Menu -->
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Trang chủ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Giới thiệu</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Dịch vụ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Liên hệ</a>
-                    </li>
-                    <li class="nav-item">
-                        <button type="button" class="btn btn-primary btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
-                            <i class="fas fa-sign-in-alt"></i> Đăng nhập
-                        </button>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Header -->
+    @await Html.PartialAsync("_Header")
 
     <!-- Main Content -->
     <main role="main" class="pb-3">
@@ -83,41 +22,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="footer-info">
-                        <h5><i class="fas fa-car"></i> APMMS</h5>
-                        <p>Hệ thống Quản lý Phụ tùng & Bảo dưỡng Ô tô</p>
-                        <p class="footer-contact">
-                            <i class="fas fa-phone"></i> 1900 110 89<br>
-                            <i class="fas fa-envelope"></i> apmms.manage.services@gmail.com
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="footer-links">
-                        <h6>Liên kết nhanh</h6>
-                        <ul class="list-unstyled">
-                            <li><a href="#"><i class="fas fa-home"></i> Trang chủ</a></li>
-                            <li><a href="#"><i class="fas fa-info-circle"></i> Giới thiệu</a></li>
-                            <li><a href="#"><i class="fas fa-cogs"></i> Dịch vụ</a></li>
-                            <li><a href="#"><i class="fas fa-phone"></i> Liên hệ</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <hr class="footer-divider">
-            <div class="row">
-                <div class="col-12 text-center">
-                    <p class="footer-copyright">
-                        &copy; 2024 APMMS. Tất cả quyền được bảo lưu.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @await Html.PartialAsync("_Footer")
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

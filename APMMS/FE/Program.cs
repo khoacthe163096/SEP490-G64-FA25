@@ -1,4 +1,5 @@
 using FE;
+using FE.vn.fpt.edu.extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,29 @@ builder.Services.AddControllersWithViews()
     {
         options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
     });
+
+// Add Frontend services
+builder.Services.AddFrontendServices(builder.Configuration);
+
+// Add session support
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Add CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -24,7 +48,19 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Add CORS middleware
+app.UseCors("AllowAll");
+
+// Add session middleware
+app.UseSession();
+
 app.UseAuthorization();
+
+// Dashboard routes
+app.MapControllerRoute(
+    name: "dashboard",
+    pattern: "Dashboard/{action=Index}/{id?}",
+    defaults: new { controller = "Dashboard" });
 
 app.MapControllerRoute(
     name: "default",
