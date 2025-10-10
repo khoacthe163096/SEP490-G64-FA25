@@ -1,6 +1,6 @@
-using DAL.vn.fpt.edu.data;
 using DAL.vn.fpt.edu.entities;
 using DAL.vn.fpt.edu.interfaces;
+using DAL.vn.fpt.edu.models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +8,10 @@ namespace DAL.vn.fpt.edu.repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly ApplicationDbContext _db;
+        private readonly CarMaintenanceDbContext _db;
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
 
-        public UserRepository(ApplicationDbContext db, IPasswordHasher<ApplicationUser> passwordHasher)
+        public UserRepository(CarMaintenanceDbContext db, IPasswordHasher<ApplicationUser> passwordHasher)
         {
             _db = db;
             _passwordHasher = passwordHasher;

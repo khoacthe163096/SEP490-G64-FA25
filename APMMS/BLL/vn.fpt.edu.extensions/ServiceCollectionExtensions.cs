@@ -1,6 +1,7 @@
 using BLL.vn.fpt.edu.interfaces;
 using BLL.vn.fpt.edu.services;
 using DAL.vn.fpt.edu.interfaces;
+using DAL.vn.fpt.edu.repository;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BLL.vn.fpt.edu.extensions
@@ -11,6 +12,11 @@ namespace BLL.vn.fpt.edu.extensions
         {
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<JwtService>();
+            
+            // Vehicle Check-in services
+            services.AddScoped<IVehicleCheckinService, VehicleCheckinService>();
+            services.AddScoped<IVehicleCheckinRepository, VehicleCheckinRepository>();
+            
             return services;
         }
 

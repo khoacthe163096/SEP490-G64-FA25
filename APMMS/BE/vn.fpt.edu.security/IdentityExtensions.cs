@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using DAL.vn.fpt.edu.data;
+using DAL.vn.fpt.edu.models;
 using DAL.vn.fpt.edu.entities;
 
 namespace BE.vn.fpt.edu.security
@@ -9,7 +9,7 @@ namespace BE.vn.fpt.edu.security
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<CarMaintenanceDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -21,7 +21,7 @@ namespace BE.vn.fpt.edu.security
                 options.Password.RequiredLength = 6;
                 options.User.RequireUniqueEmail = true;
             })
-            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddEntityFrameworkStores<CarMaintenanceDbContext>()
             .AddDefaultTokenProviders();
 
             return services;

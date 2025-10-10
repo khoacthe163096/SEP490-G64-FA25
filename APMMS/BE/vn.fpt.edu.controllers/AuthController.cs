@@ -2,7 +2,7 @@ using BLL.vn.fpt.edu.DTOs.Auth;
 using BLL.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using DAL.vn.fpt.edu.data;
+using DAL.vn.fpt.edu.models;
 using DAL.vn.fpt.edu.entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +18,11 @@ namespace BE.vn.fpt.edu.controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly ApplicationDbContext _db;
+        private readonly CarMaintenanceDbContext _db;
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
         private readonly IConfiguration _configuration;
 
-        public AuthController(IAuthService authService, ApplicationDbContext db, IPasswordHasher<ApplicationUser> passwordHasher, IConfiguration configuration)
+        public AuthController(IAuthService authService, CarMaintenanceDbContext db, IPasswordHasher<ApplicationUser> passwordHasher, IConfiguration configuration)
         {
             _authService = authService;
             _db = db;

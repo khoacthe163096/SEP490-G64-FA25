@@ -3,51 +3,92 @@
   "WorkspaceRootPath": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\dashboard\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\carmaintenancedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\carmaintenancedbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.views\\dashboard\\usermanagement\\employees.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\dashboard\\usermanagement\\employees.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\role.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\wwwroot\\js\\site.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\wwwroot\\js\\site.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.repository\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.repository\\userrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.views\\dashboard\\warehousemanagement\\components.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\dashboard\\warehousemanagement\\components.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.repository\\vehiclecheckinrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.repository\\vehiclecheckinrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.views\\dashboard\\invoices\\invoices.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.views\\dashboard\\invoices\\invoices.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.interfaces\\ivehiclecheckinrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.interfaces\\ivehiclecheckinrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\vehiclecheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\vehiclecheckin.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\fe\\vn.fpt.edu.controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{01597AC4-DD72-4D55-9E0B-223A08566AD7}|FE\\FE.csproj|solutionrelative:fe\\vn.fpt.edu.controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\vehiclecheckinapi.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vehiclecheckinapi.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\auth\\loginresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\auth\\loginresponsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\vn.fpt.edu.controllers\\vehiclecheckincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\vehiclecheckincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\auth\\loginrequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\auth\\loginrequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\vehiclecheckin\\responsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\vehiclecheckin\\responsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\vehiclecheckin\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\vehiclecheckin\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\vn.fpt.edu.controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\typecomponent\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\typecomponent\\requestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.interfaces\\ivehiclecheckinservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.interfaces\\ivehiclecheckinservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.services\\vehiclecheckinservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.services\\vehiclecheckinservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\vehicletype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\vehicletype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.repository\\autoownerrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.repository\\autoownerrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\dal\\vn.fpt.edu.models\\vehiclecheckinimage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{8C938F94-E99A-4A0E-8B05-9787403588A8}|DAL\\DAL.csproj|solutionrelative:dal\\vn.fpt.edu.models\\vehiclecheckinimage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.extensions\\servicecollectionextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.convert\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.convert\\mappingprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.validate\\validationextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.validate\\validationextensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\be\\be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{46E657F7-97EE-4959-BFD7-082D55F33D12}|BE\\BE.csproj|solutionrelative:be\\be.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|d:\\fu-learning\\fall2025\\sep490\\source code\\apmms\\bll\\vn.fpt.edu.dtos\\typecomponent\\responsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{194C3054-DCAC-4BD0-9FA9-510D45B24BEA}|BLL\\BLL.csproj|solutionrelative:bll\\vn.fpt.edu.dtos\\typecomponent\\responsedto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -57,7 +98,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 122,
+          "SelectedChildIndex": 125,
           "Children": [
             {
               "$type": "Bookmark",
@@ -549,149 +590,289 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Index.cshtml",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\Index.cshtml",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Dashboard\\Index.cshtml",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\Index.cshtml",
-              "RelativeToolTip": "FE\\vn.fpt.edu.views\\Dashboard\\Index.cshtml",
-              "ViewState": "AgIAAJYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-09T12:08:45.12Z",
+              "DocumentIndex": 1,
+              "Title": "Role.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\Role.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\Role.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\Role.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\Role.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T17:55:36.597Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Employees.cshtml",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\UserManagement\\Employees.cshtml",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Dashboard\\UserManagement\\Employees.cshtml",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\UserManagement\\Employees.cshtml",
-              "RelativeToolTip": "FE\\vn.fpt.edu.views\\Dashboard\\UserManagement\\Employees.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-09T11:49:43.717Z",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\Program.cs",
+              "RelativeDocumentMoniker": "BE\\Program.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\Program.cs",
+              "RelativeToolTip": "BE\\Program.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T17:45:32.821Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "site.js",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\wwwroot\\js\\site.js",
-              "RelativeDocumentMoniker": "FE\\wwwroot\\js\\site.js",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\wwwroot\\js\\site.js",
-              "RelativeToolTip": "FE\\wwwroot\\js\\site.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-10-09T07:08:11.954Z",
+              "Title": "UserRepository.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\UserRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.repository\\UserRepository.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\UserRepository.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.repository\\UserRepository.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAiwFkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T17:29:44.746Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Components.cshtml",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\WarehouseManagement\\Components.cshtml",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Dashboard\\WarehouseManagement\\Components.cshtml",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\WarehouseManagement\\Components.cshtml",
-              "RelativeToolTip": "FE\\vn.fpt.edu.views\\Dashboard\\WarehouseManagement\\Components.cshtml",
-              "ViewState": "AgIAAKIAAAAAAAAAAAAAAMMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-09T06:35:25.641Z"
+              "DocumentIndex": 0,
+              "Title": "CarMaintenanceDbContext.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\CarMaintenanceDbContext.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\CarMaintenanceDbContext.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\CarMaintenanceDbContext.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\CarMaintenanceDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T17:29:16.131Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Invoices.cshtml",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\Invoices\\Invoices.cshtml",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.views\\Dashboard\\Invoices\\Invoices.cshtml",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.views\\Dashboard\\Invoices\\Invoices.cshtml",
-              "RelativeToolTip": "FE\\vn.fpt.edu.views\\Dashboard\\Invoices\\Invoices.cshtml",
+              "DocumentIndex": 14,
+              "Title": "VehicleType.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleType.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\VehicleType.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleType.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\VehicleType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T15:05:47.993Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "AutoOwnerRepository.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\AutoOwnerRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.repository\\AutoOwnerRepository.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\AutoOwnerRepository.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.repository\\AutoOwnerRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-10-09T06:35:14.654Z"
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T15:05:45.109Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "VehicleCheckinImage.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleCheckinImage.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\VehicleCheckinImage.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleCheckinImage.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\VehicleCheckinImage.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T15:05:21.816Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 6,
-              "Title": "Microsoft.Common.CurrentVersion.targets",
-              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
-              "ViewState": "AgIAAPQUAAAAAAAAAIAwwBEVAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
-              "WhenOpened": "2025-10-09T05:31:01.131Z"
+              "Title": "VehicleCheckin.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleCheckin.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.models\\VehicleCheckin.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.models\\VehicleCheckin.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.models\\VehicleCheckin.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAcwBkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T15:04:01.607Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 7,
-              "Title": "DashboardController.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.controllers\\DashboardController.cs",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.controllers\\DashboardController.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.controllers\\DashboardController.cs",
-              "RelativeToolTip": "FE\\vn.fpt.edu.controllers\\DashboardController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T22:05:58.57Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "FE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\FE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeToolTip": "FE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "ViewState": "AgIAAKYAAAAAAAAAAAAUwMEAAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T22:05:52.996Z",
+              "Title": "VehicleCheckinAPI.md",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\VehicleCheckinAPI.md",
+              "RelativeDocumentMoniker": "BE\\VehicleCheckinAPI.md",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\VehicleCheckinAPI.md",
+              "RelativeToolTip": "BE\\VehicleCheckinAPI.md",
+              "ViewState": "AgIAABgAAAAAAAAAAAAkwC4AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
+              "WhenOpened": "2025-10-10T14:21:52.942Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 8,
-              "Title": "LoginResponseDto.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\Auth\\LoginResponseDto.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\Auth\\LoginResponseDto.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\Auth\\LoginResponseDto.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\Auth\\LoginResponseDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Title": "VehicleCheckinController.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\VehicleCheckinController.cs",
+              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\VehicleCheckinController.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\VehicleCheckinController.cs",
+              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\VehicleCheckinController.cs",
+              "ViewState": "AgIAAG0AAAAAAAAAAAAAwKEAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T21:07:32.935Z"
+              "WhenOpened": "2025-10-10T14:17:31.503Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "LoginRequestDto.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\Auth\\LoginRequestDto.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\Auth\\LoginRequestDto.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\Auth\\LoginRequestDto.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\Auth\\LoginRequestDto.cs",
+              "DocumentIndex": 17,
+              "Title": "ServiceCollectionExtensions.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.extensions\\ServiceCollectionExtensions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T14:11:08.145Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "MappingProfile.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.convert\\MappingProfile.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAgwBIAAAAKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T14:10:28.479Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "BE",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source code\\APMMS\\BE\\BE.csproj",
+              "RelativeDocumentMoniker": "BE\\BE.csproj",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source code\\APMMS\\BE\\BE.csproj",
+              "RelativeToolTip": "BE\\BE.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-10-10T14:06:28.229Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "IVehicleCheckinService.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IVehicleCheckinService.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.interfaces\\IVehicleCheckinService.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.interfaces\\IVehicleCheckinService.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.interfaces\\IVehicleCheckinService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:50:44.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "VehicleCheckinService.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.services\\VehicleCheckinService.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.services\\VehicleCheckinService.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.services\\VehicleCheckinService.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.services\\VehicleCheckinService.cs",
+              "ViewState": "AgIAAF8AAAAAAAAAAAAzwJQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:48:50.2Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "ResponseDto.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\TypeComponent\\ResponseDto.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\TypeComponent\\ResponseDto.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\TypeComponent\\ResponseDto.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\TypeComponent\\ResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T21:07:24.525Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "RelativeToolTip": "BLL\\vn.fpt.edu.services\\AuthService.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAowEIAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T20:52:05.737Z"
+              "WhenOpened": "2025-10-10T12:48:41.037Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 11,
-              "Title": "AuthController.cs",
-              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeDocumentMoniker": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BE\\vn.fpt.edu.controllers\\AuthController.cs",
-              "RelativeToolTip": "BE\\vn.fpt.edu.controllers\\AuthController.cs",
+              "Title": "RequestDto.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\TypeComponent\\RequestDto.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\TypeComponent\\RequestDto.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\TypeComponent\\RequestDto.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\TypeComponent\\RequestDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-08T20:51:48.067Z"
+              "WhenOpened": "2025-10-10T12:48:39.179Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ResponseDto.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\ResponseDto.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\ResponseDto.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\ResponseDto.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\ResponseDto.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAAwEAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:46:56.219Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "RequestDto.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\RequestDto.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\RequestDto.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\RequestDto.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.DTOs\\VehicleCheckin\\RequestDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:46:38.115Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "IVehicleCheckinRepository.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.interfaces\\IVehicleCheckinRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.interfaces\\IVehicleCheckinRepository.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.interfaces\\IVehicleCheckinRepository.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.interfaces\\IVehicleCheckinRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:40:56.728Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "ValidationExtensions.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "RelativeDocumentMoniker": "BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "RelativeToolTip": "BLL\\vn.fpt.edu.validate\\ValidationExtensions.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAcwBQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:39:58.529Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "VehicleCheckinRepository.cs",
+              "DocumentMoniker": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\VehicleCheckinRepository.cs",
+              "RelativeDocumentMoniker": "DAL\\vn.fpt.edu.repository\\VehicleCheckinRepository.cs",
+              "ToolTip": "D:\\FU-Learning\\Fall2025\\SEP490\\Source Code\\APMMS\\DAL\\vn.fpt.edu.repository\\VehicleCheckinRepository.cs",
+              "RelativeToolTip": "DAL\\vn.fpt.edu.repository\\VehicleCheckinRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-10T12:22:20.939Z",
+              "EditorCaption": ""
             }
           ]
         },

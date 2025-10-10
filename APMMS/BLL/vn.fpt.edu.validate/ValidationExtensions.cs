@@ -76,28 +76,9 @@ namespace BLL.vn.fpt.edu.validate
         }
     }
 
-    // Auth Validators
-    public class LoginRequestValidator : AbstractValidator<LoginRequestDto>
-    {
-        public LoginRequestValidator()
-        {
-            RuleFor(x => x.Username).NotEmpty().WithMessage("Username is required");
-            RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required");
-        }
-    }
-
-    public class RegisterRequestValidator : AbstractValidator<RegisterRequestDto>
-    {
-        public RegisterRequestValidator()
-        {
-            RuleFor(x => x.Username).NotEmpty().WithMessage("Username is required");
-            RuleFor(x => x.Password).NotEmpty().MinimumLength(6).WithMessage("Password must be at least 6 characters");
-            RuleFor(x => x.Email).EmailAddress().WithMessage("Valid email is required");
-            RuleFor(x => x.Phone).NotEmpty().WithMessage("Phone is required");
-        }
-    }
-
-    // Placeholder validators for other DTOs
+    // Validator classes
+    public class LoginRequestValidator : AbstractValidator<LoginRequestDto> { }
+    public class RegisterRequestValidator : AbstractValidator<RegisterRequestDto> { }
     public class AutoOwnerCreateRequestValidator : AbstractValidator<BLL.vn.fpt.edu.DTOs.AutoOwner.RequestDto> { }
     public class ComponentCreateRequestValidator : AbstractValidator<BLL.vn.fpt.edu.DTOs.Component.RequestDto> { }
     public class EmployeeCreateRequestValidator : AbstractValidator<BLL.vn.fpt.edu.DTOs.Employee.RequestDto> { }
@@ -114,5 +95,3 @@ namespace BLL.vn.fpt.edu.validate
     public class TypeComponentCreateRequestValidator : AbstractValidator<BLL.vn.fpt.edu.DTOs.TypeComponent.RequestDto> { }
     public class VehicleCheckinCreateRequestValidator : AbstractValidator<BLL.vn.fpt.edu.DTOs.VehicleCheckin.RequestDto> { }
 }
-
-

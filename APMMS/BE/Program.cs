@@ -1,6 +1,6 @@
 using BLL.vn.fpt.edu.extensions;
 using BE.vn.fpt.edu.security;
-using DAL.vn.fpt.edu.data;
+using DAL.vn.fpt.edu.models;
 using DAL.vn.fpt.edu.entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
@@ -40,8 +40,8 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
-// DbContext + Identity
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+// DbContext - Database First approach
+builder.Services.AddDbContext<CarMaintenanceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services
@@ -53,7 +53,7 @@ builder.Services
         options.Password.RequireDigit = true;
         options.Password.RequiredLength = 6;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddEntityFrameworkStores<CarMaintenanceDbContext>()
     .AddDefaultTokenProviders();
 
 // Project services
