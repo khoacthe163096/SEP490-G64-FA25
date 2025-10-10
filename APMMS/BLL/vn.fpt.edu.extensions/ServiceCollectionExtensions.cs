@@ -10,6 +10,7 @@ namespace BLL.vn.fpt.edu.extensions
     {
         public static IServiceCollection AddBusinessServices(this IServiceCollection services)
         {
+            // Auth services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<JwtService>();
             
@@ -17,16 +18,15 @@ namespace BLL.vn.fpt.edu.extensions
             services.AddScoped<IVehicleCheckinService, VehicleCheckinService>();
             services.AddScoped<IVehicleCheckinRepository, VehicleCheckinRepository>();
             
+            // Add validators
+            services.AddValidators();
+            
             return services;
         }
 
         public static IServiceCollection AddAuthDelegates(this IServiceCollection services)
         {
-            services.AddScoped<Func<string, string, CancellationToken, Task<(bool Success, string? UserId, string? RoleName, long? RoleId)>>>(sp =>
-            {
-                var userRepo = sp.GetRequiredService<IUserRepository>();  
-                return (username, password, ct) => userRepo.VerifyCredentialsAsync(username, password, ct);
-            });
+            // UserRepository removed - using database entities directly
 
             services.AddScoped<Func<string, CancellationToken, Task>>(sp =>
             {
@@ -40,24 +40,24 @@ namespace BLL.vn.fpt.edu.extensions
                 {
                     // Parse role name to get role ID
                     var roleId = GetRoleIdFromRoleName(roleName);
-                    return Task.FromResult(jwtService.GenerateToken(userId, roleName, roleId));
+                    return Task.FromResult(jwtService.GenerateToken(long.Parse(userId), userId, roleName ?? "User", roleId ?? 0));
                 };
             });
             
             // Add new delegate that can accept role ID directly
-            services.AddScoped<Func<string, string?, int?, CancellationToken, Task<string>>>(sp =>
+            services.AddScoped<Func<string, string?, long?, CancellationToken, Task<string>>>(sp =>
             {
                 var jwtService = sp.GetRequiredService<JwtService>();
                 return (userId, roleName, roleId, ct) => 
                 {
-                    return Task.FromResult(jwtService.GenerateToken(userId, roleName, roleId));
+                    return Task.FromResult(jwtService.GenerateToken(long.Parse(userId), userId, roleName ?? "User", roleId ?? 0));
                 };
             });
 
             return services;
         }
         
-        private static int? GetRoleIdFromRoleName(string? roleName)
+        private static long? GetRoleIdFromRoleName(string? roleName)
         {
             return roleName?.ToLower() switch
             {

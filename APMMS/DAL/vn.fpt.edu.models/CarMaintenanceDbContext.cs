@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using DAL.vn.fpt.edu.entities;
-using DAL.vn.fpt.edu.models;
 
 namespace DAL.vn.fpt.edu.models;
 
-public partial class CarMaintenanceDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, long, Microsoft.AspNetCore.Identity.IdentityUserClaim<long>, Microsoft.AspNetCore.Identity.IdentityUserRole<long>, Microsoft.AspNetCore.Identity.IdentityUserLogin<long>, Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>, Microsoft.AspNetCore.Identity.IdentityUserToken<long>>
+public partial class CarMaintenanceDbContext : DbContext
 {
     public CarMaintenanceDbContext()
     {
@@ -40,6 +37,7 @@ public partial class CarMaintenanceDbContext : IdentityDbContext<ApplicationUser
 
     public virtual DbSet<Province> Provinces { get; set; }
 
+    public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<ScheduleService> ScheduleServices { get; set; }
 
@@ -71,51 +69,6 @@ public partial class CarMaintenanceDbContext : IdentityDbContext<ApplicationUser
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
-
-        // Configure Identity tables
-        modelBuilder.Entity<ApplicationUser>(b =>
-        {
-            b.ToTable("user");
-            b.HasKey(u => u.Id);
-            b.Property(u => u.Id).HasColumnName("id");
-            b.Property(u => u.UserName).HasColumnName("username");
-            b.Property(u => u.Email).HasColumnName("email");
-            b.Property(u => u.PasswordHash).HasColumnName("password");
-            b.Property(u => u.PhoneNumber).HasColumnName("phone");
-            b.Property(u => u.RoleId).HasColumnName("role_id");
-            b.Ignore(u => u.NormalizedUserName);
-            b.Ignore(u => u.NormalizedEmail);
-            b.Ignore(u => u.EmailConfirmed);
-            b.Ignore(u => u.PhoneNumberConfirmed);
-            b.Ignore(u => u.SecurityStamp);
-            b.Ignore(u => u.ConcurrencyStamp);
-            b.Ignore(u => u.LockoutEnabled);
-            b.Ignore(u => u.LockoutEnd);
-            b.Ignore(u => u.AccessFailedCount);
-            b.Ignore(u => u.TwoFactorEnabled);
-        });
-
-        modelBuilder.Entity<ApplicationRole>(b =>
-        {
-            b.ToTable("role");
-            b.HasKey(r => r.Id);
-            b.Property(r => r.Id).HasColumnName("id");
-            b.Property(r => r.Name).HasColumnName("name");
-            b.Ignore(r => r.NormalizedName);
-            b.Ignore(r => r.ConcurrencyStamp);
-        });
-
-        // Ignore Identity tables that are not used
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserClaim<long>>();
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityRoleClaim<long>>();
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserLogin<long>>();
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserToken<long>>();
-        modelBuilder.Ignore<Microsoft.AspNetCore.Identity.IdentityUserRole<long>>();
-        
-        // Ignore the original Role and User entities to avoid conflict with ApplicationRole and ApplicationUser
-        modelBuilder.Ignore<Role>();
-        modelBuilder.Ignore<User>();
         modelBuilder.Entity<Address>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__address__3213E83F06B42C35");
@@ -452,6 +405,36 @@ public partial class CarMaintenanceDbContext : IdentityDbContext<ApplicationUser
                 .HasColumnName("name");
         });
 
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__role__3213E83F5568318F");
+
+            entity.ToTable("role");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+
+            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
+                .UsingEntity<Dictionary<string, object>>(
+                    "RolePermission",
+                    r => r.HasOne<Permission>().WithMany()
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__role_perm__permi__2D27B809"),
+                    l => l.HasOne<Role>().WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.ClientSetNull)
+                        .HasConstraintName("FK__role_perm__role___2C3393D0"),
+                    j =>
+                    {
+                        j.HasKey("RoleId", "PermissionId").HasName("PK__role_per__C85A54635B06099E");
+                        j.ToTable("role_permission");
+                        j.IndexerProperty<long>("RoleId").HasColumnName("role_id");
+                        j.IndexerProperty<long>("PermissionId").HasColumnName("permission_id");
+                    });
+        });
 
         modelBuilder.Entity<ScheduleService>(entity =>
         {
@@ -625,6 +608,82 @@ public partial class CarMaintenanceDbContext : IdentityDbContext<ApplicationUser
                 .HasColumnName("name");
         });
 
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__user__3213E83FC10C173A");
+
+            entity.ToTable("user");
+
+            entity.HasIndex(e => e.Username, "UQ__user__F3DBC5725BB1EDAA").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AddressId).HasColumnName("address_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_date");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(100)
+                .HasColumnName("first_name");
+            entity.Property(e => e.Gender)
+                .HasMaxLength(20)
+                .HasColumnName("gender");
+            entity.Property(e => e.Image)
+                .HasMaxLength(255)
+                .HasColumnName("image");
+            entity.Property(e => e.IsDelete)
+                .HasDefaultValue(false)
+                .HasColumnName("is_delete");
+            entity.Property(e => e.LastModifiedBy).HasColumnName("last_modified_by");
+            entity.Property(e => e.LastModifiedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("last_modified_date");
+            entity.Property(e => e.LastName)
+                .HasMaxLength(100)
+                .HasColumnName("last_name");
+            entity.Property(e => e.Password)
+                .HasMaxLength(255)
+                .HasColumnName("password");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .HasColumnName("phone");
+            entity.Property(e => e.ResetDate)
+                .HasColumnType("datetime")
+                .HasColumnName("reset_date");
+            entity.Property(e => e.ResetKey)
+                .HasMaxLength(100)
+                .HasColumnName("reset_key");
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasColumnName("status_code");
+            entity.Property(e => e.TaxCode)
+                .HasMaxLength(50)
+                .HasColumnName("tax_code");
+            entity.Property(e => e.Username)
+                .HasMaxLength(50)
+                .HasColumnName("username");
+
+            entity.HasOne(d => d.Address).WithMany(p => p.Users)
+                .HasForeignKey(d => d.AddressId)
+                .HasConstraintName("FK__user__address_id__37A5467C");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.Users)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK__user__branch_id__36B12243");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.Users)
+                .HasForeignKey(d => d.RoleId)
+                .HasConstraintName("FK__user__role_id__35BCFE0A");
+        });
 
         modelBuilder.Entity<VehicleCheckin>(entity =>
         {

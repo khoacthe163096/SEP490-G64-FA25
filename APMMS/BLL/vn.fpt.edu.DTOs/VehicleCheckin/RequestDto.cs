@@ -10,8 +10,10 @@ namespace BLL.vn.fpt.edu.DTOs.VehicleCheckin
         [Required(ErrorMessage = "Car ID is required")]
         public long CarId { get; set; }
         
-        [Required(ErrorMessage = "Maintenance Request ID is required")]
-        public long MaintenanceRequestId { get; set; }
+        /// <summary>
+        /// Maintenance Request ID - có thể null nếu chưa tạo phiếu bảo dưỡng
+        /// </summary>
+        public long? MaintenanceRequestId { get; set; }
         
         [Required(ErrorMessage = "Mileage is required")]
         [Range(0, int.MaxValue, ErrorMessage = "Mileage must be a positive number")]

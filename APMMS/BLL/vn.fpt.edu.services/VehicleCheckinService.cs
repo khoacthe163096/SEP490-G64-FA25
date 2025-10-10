@@ -130,6 +130,18 @@ namespace BLL.vn.fpt.edu.services
             };
         }
 
+        public async Task<ResponseDto> LinkMaintenanceRequestAsync(long vehicleCheckinId, long maintenanceRequestId)
+        {
+            var vehicleCheckin = await _vehicleCheckinRepository.GetByIdAsync(vehicleCheckinId);
+            if (vehicleCheckin == null)
+                throw new ArgumentException("Vehicle check-in not found");
+
+            vehicleCheckin.MaintenanceRequestId = maintenanceRequestId;
+            await _vehicleCheckinRepository.UpdateAsync(vehicleCheckin);
+            
+            return await GetVehicleCheckinByIdAsync(vehicleCheckinId);
+        }
+
         private ListResponseDto MapToListResponseDTO(VehicleCheckin vehicleCheckin)
         {
             return new ListResponseDto

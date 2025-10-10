@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BLL.vn.fpt.edu.DTOs.VehicleCheckin;
 using BLL.vn.fpt.edu.interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace vn.fpt.edu.controllers
 {
@@ -158,5 +159,35 @@ namespace vn.fpt.edu.controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Link vehicle check-in với maintenance request
+        /// </summary>
+        [HttpPut("{id}/link-maintenance")]
+        public async Task<IActionResult> LinkMaintenanceRequest(long id, [FromBody] LinkMaintenanceRequestDto request)
+        {
+            try
+            {
+                var result = await _vehicleCheckinService.LinkMaintenanceRequestAsync(id, request.MaintenanceRequestId);
+                return Ok(new { success = true, data = result, message = "Vehicle check-in linked to maintenance request successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+    }
+
+    /// <summary>
+    /// DTO cho việc link maintenance request
+    /// </summary>
+    public class LinkMaintenanceRequestDto
+    {
+        [Required(ErrorMessage = "Maintenance Request ID is required")]
+        public long MaintenanceRequestId { get; set; }
     }
 }

@@ -1,6 +1,5 @@
 using AutoMapper;
 using DAL.vn.fpt.edu.models;
-using DAL.vn.fpt.edu.entities;
 using BLL.vn.fpt.edu.DTOs.Auth;
 using BLL.vn.fpt.edu.DTOs.AutoOwner;
 using BLL.vn.fpt.edu.DTOs.Component;
@@ -24,10 +23,7 @@ namespace BLL.vn.fpt.edu.convert
     {
         public MappingProfile()
         {
-            // Auth mappings
-            CreateMap<ApplicationUser, LoginResponseDto>();
-            CreateMap<RegisterRequestDto, ApplicationUser>();
-            CreateMap<ApplicationUser, RegisterResponseDto>();
+            // Auth mappings removed - using database entities directly
 
             // AutoOwner mappings
             CreateMap<User, BLL.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>();

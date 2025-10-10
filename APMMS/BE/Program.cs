@@ -1,11 +1,14 @@
 using BLL.vn.fpt.edu.extensions;
 using BE.vn.fpt.edu.security;
 using DAL.vn.fpt.edu.models;
-using DAL.vn.fpt.edu.entities;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,16 +21,16 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityDefinition("Bearer", new()
     {
         Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        In = ParameterLocation.Header,
         Description = "Enter 'Bearer {token}'"
     });
     options.AddSecurityRequirement(new()
     {
         {
-            new() { Reference = new() { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" } },
+            new() { Reference = new() { Type = ReferenceType.SecurityScheme, Id = "Bearer" } },
             Array.Empty<string>()
         }
     });
@@ -44,33 +47,37 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<CarMaintenanceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services
-    .AddIdentity<ApplicationUser, ApplicationRole>(options =>
-    {
-        options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequireUppercase = false;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireDigit = true;
-        options.Password.RequiredLength = 6;
-    })
-    .AddEntityFrameworkStores<CarMaintenanceDbContext>()
-    .AddDefaultTokenProviders();
+// Identity Framework removed - using database entities directly
 
 // Project services
 builder.Services.AddAutoMapper(typeof(BLL.vn.fpt.edu.extensions.MappingProfile).Assembly);
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
-builder.Services.AddAuthDelegates();
+// Auth delegates removed - using JWT directly
 
-// DAL registrations
-builder.Services.AddScoped<DAL.vn.fpt.edu.interfaces.IUserRepository, DAL.vn.fpt.edu.repository.UserRepository>();
+// DAL registrations - UserRepository removed
 
-// Authentication/Authorization
-builder.Services.AddAuthentication();
+// JWT Configuration
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "YourSecretKeyHere123456789012345678901234567890")),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
 builder.Services.AddAuthorization();
 
-// JWT
-builder.Services.AddJwtAuthentication(builder.Configuration);
+// JWT - Already configured above
 
 var app = builder.Build();
 

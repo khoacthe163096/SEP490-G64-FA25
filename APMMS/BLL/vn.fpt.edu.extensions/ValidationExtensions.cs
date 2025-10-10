@@ -8,13 +8,13 @@ namespace BLL.vn.fpt.edu.extensions
     {
         public static IServiceCollection AddValidators(this IServiceCollection services)
         {
-            services.AddScoped<IValidator<LoginRequestDto>, LoginRequestValidator>();
-            services.AddScoped<IValidator<RegisterRequestDto>, RegisterRequestValidator>();
+            services.AddScoped<IValidator<LoginDto>, LoginRequestValidator>();
+            services.AddScoped<IValidator<RegisterDto>, RegisterRequestValidator>();
             return services;
         }
     }
 
-    public class LoginRequestValidator : AbstractValidator<LoginRequestDto>
+    public class LoginRequestValidator : AbstractValidator<LoginDto>
     {
         public LoginRequestValidator()
         {
@@ -23,14 +23,14 @@ namespace BLL.vn.fpt.edu.extensions
         }
     }
 
-    public class RegisterRequestValidator : AbstractValidator<RegisterRequestDto>
+    public class RegisterRequestValidator : AbstractValidator<RegisterDto>
     {
         public RegisterRequestValidator()
         {
             RuleFor(x => x.Username).NotEmpty().MinimumLength(3).MaximumLength(100);
             RuleFor(x => x.Password).NotEmpty().MinimumLength(6).MaximumLength(100);
-            RuleFor(x => x.Phone).NotEmpty().MaximumLength(20);
             RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
+            RuleFor(x => x.Phone).MaximumLength(20).When(x => !string.IsNullOrWhiteSpace(x.Phone));
         }
     }
 }
