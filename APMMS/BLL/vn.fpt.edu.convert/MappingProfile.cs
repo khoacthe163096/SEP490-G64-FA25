@@ -46,7 +46,19 @@ namespace BLL.vn.fpt.edu.convert
             CreateMap<BLL.vn.fpt.edu.DTOs.HistoryLog.RequestDto, HistoryLog>();
 
             // MaintenanceTicket mappings
-            CreateMap<MaintenanceTicket, BLL.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>();
+            CreateMap<MaintenanceTicket, BLL.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>()
+                .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}" : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.ScheduleServiceName, opt => opt.MapFrom(src => src.ScheduleService != null ? $"Schedule #{src.ScheduleService.Id}" : null));
+            
+            CreateMap<MaintenanceTicket, BLL.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
+                .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}" : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null));
+            
             CreateMap<BLL.vn.fpt.edu.DTOs.MaintenanceTicket.RequestDto, MaintenanceTicket>();
 
             // Profile mappings

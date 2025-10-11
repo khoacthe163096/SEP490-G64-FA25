@@ -18,6 +18,10 @@ namespace BLL.vn.fpt.edu.extensions
             services.AddScoped<IVehicleCheckinService, VehicleCheckinService>();
             services.AddScoped<IVehicleCheckinRepository, VehicleCheckinRepository>();
             
+            // Maintenance Ticket services
+            services.AddScoped<IMaintenanceTicketService, MaintenanceTicketService>();
+            services.AddScoped<IMaintenanceTicketRepository, MaintenanceTicketRepository>();
+            
             // Add validators
             services.AddValidators();
             
