@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using DAL.vn.fpt.edu.models;
 using BLL.vn.fpt.edu.DTOs.Auth;
 using BLL.vn.fpt.edu.DTOs.AutoOwner;
@@ -45,20 +45,28 @@ namespace BLL.vn.fpt.edu.convert
             CreateMap<HistoryLog, BLL.vn.fpt.edu.DTOs.HistoryLog.ResponseDto>();
             CreateMap<BLL.vn.fpt.edu.DTOs.HistoryLog.RequestDto, HistoryLog>();
 
-            // MaintenanceTicket mappings
+            // ========================
+            // MaintenanceTicket mappings (đã fix lỗi 500)
+            // ========================
             CreateMap<MaintenanceTicket, BLL.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>()
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
-                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}" : null))
-                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? src.Consulter.FirstName + " " + src.Consulter.LastName : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? src.Technician.FirstName + " " + src.Technician.LastName : null))
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
-                .ForMember(dest => dest.ScheduleServiceName, opt => opt.MapFrom(src => src.ScheduleService != null ? $"Schedule #{src.ScheduleService.Id}" : null));
-            
+                .ForMember(dest => dest.ScheduleServiceName, opt => opt.MapFrom(src => src.ScheduleService != null ? "Schedule #" + src.ScheduleService.Id : null))
+                // Bỏ qua các trường không tồn tại trong entity
+                .ForMember(dest => dest.VehicleCheckinId, opt => opt.Ignore())
+                .ForMember(dest => dest.Mileage, opt => opt.Ignore())
+                .ForMember(dest => dest.CheckinNotes, opt => opt.Ignore())
+                .ForMember(dest => dest.CheckinImages, opt => opt.Ignore());
+
             CreateMap<MaintenanceTicket, BLL.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
-                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}" : null))
-                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}" : null))
-                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null));
-            
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? src.Consulter.FirstName + " " + src.Consulter.LastName : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? src.Technician.FirstName + " " + src.Technician.LastName : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore());
+
             CreateMap<BLL.vn.fpt.edu.DTOs.MaintenanceTicket.RequestDto, MaintenanceTicket>();
 
             // Profile mappings
@@ -95,7 +103,7 @@ namespace BLL.vn.fpt.edu.convert
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BLL.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();
-            CreateMap<BLL.vn.fpt.edu.DTOs.VehicleCheckin.RequestDto, VehicleCheckin>();
+            CreateMap<BLL.vn.fpt.edu.DTOs.VehicleCheckin.VehicleCheckinRequestDto, VehicleCheckin>();
         }
     }
 }

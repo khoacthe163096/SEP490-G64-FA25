@@ -5,7 +5,7 @@ namespace BLL.vn.fpt.edu.DTOs.VehicleCheckin
     /// <summary>
     /// DTO cho việc tạo mới Vehicle Check-in
     /// </summary>
-    public class RequestDto
+    public class VehicleCheckinRequestDto
     {
         [Required(ErrorMessage = "Car ID is required")]
         public long CarId { get; set; }

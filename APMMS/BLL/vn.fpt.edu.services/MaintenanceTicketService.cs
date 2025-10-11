@@ -55,7 +55,18 @@ namespace BLL.vn.fpt.edu.services
 
             // Lấy thông tin đầy đủ để trả về
             var fullTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
-            var response = _mapper.Map<ResponseDto>(fullTicket);
+            
+            // Map thủ công thay vì dùng AutoMapper
+            var response = new ResponseDto
+            {
+                Id = fullTicket.Id,
+                CarId = fullTicket.CarId,
+                ConsulterId = fullTicket.ConsulterId,
+                TechnicianId = fullTicket.TechnicianId,
+                BranchId = fullTicket.BranchId,
+                StatusCode = fullTicket.StatusCode,
+                ScheduleServiceId = fullTicket.ScheduleServiceId
+            };
 
             // Thêm thông tin từ Vehicle Check-in
             response.VehicleCheckinId = vehicleCheckin.Id;

@@ -1,5 +1,7 @@
+﻿using BE.vn.fpt.edu.security;
 using BLL.vn.fpt.edu.extensions;
-using BE.vn.fpt.edu.security;
+using BLL.vn.fpt.edu.interfaces;
+using BLL.vn.fpt.edu.services;
 using DAL.vn.fpt.edu.models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
@@ -13,7 +15,15 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Cấu hình để tránh vòng lặp giữa các entity (Swagger và JSON)
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true; // (tùy chọn) format JSON đẹp hơn
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -47,15 +57,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<CarMaintenanceDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Identity Framework removed - using database entities directly
+
 
 // Project services
-builder.Services.AddAutoMapper(typeof(BLL.vn.fpt.edu.extensions.MappingProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(BLL.vn.fpt.edu.convert.MappingProfile).Assembly);
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
-// Auth delegates removed - using JWT directly
 
-// DAL registrations - UserRepository removed
+
 
 // JWT Configuration
 builder.Services.AddAuthentication("Bearer")
@@ -77,17 +86,21 @@ builder.Services.AddAuthentication("Bearer")
 
 builder.Services.AddAuthorization();
 
-// JWT - Already configured above
+
 
 var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 
 // Middleware
-app.UseMiddleware<BE.vn.fpt.edu.middleware.ErrorHandlingMiddleware>();
+//app.UseMiddleware<BE.vn.fpt.edu.middleware.ErrorHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
+
 app.UseSwagger();
 app.UseSwaggerUI();
-
 app.UseHttpsRedirection();
 
 app.UseCors("Default");

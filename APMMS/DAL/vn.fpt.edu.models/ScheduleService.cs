@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace DAL.vn.fpt.edu.models;
 
@@ -21,6 +22,7 @@ public partial class ScheduleService
 
     public virtual Car? Car { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
     public virtual User? User { get; set; }

@@ -14,7 +14,7 @@ namespace BLL.vn.fpt.edu.services
             _vehicleCheckinRepository = vehicleCheckinRepository;
         }
 
-        public async Task<ResponseDto> CreateVehicleCheckinAsync(RequestDto request)
+        public async Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request)
         {
             var vehicleCheckin = new VehicleCheckin
             {

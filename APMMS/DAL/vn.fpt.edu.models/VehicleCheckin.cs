@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace DAL.vn.fpt.edu.models;
 
@@ -21,5 +22,6 @@ public partial class VehicleCheckin
 
     public virtual MaintenanceRequest? MaintenanceRequest { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<VehicleCheckinImage> VehicleCheckinImages { get; set; } = new List<VehicleCheckinImage>();
 }

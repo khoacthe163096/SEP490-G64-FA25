@@ -23,7 +23,7 @@ namespace vn.fpt.edu.controllers
         /// Tạo mới vehicle check-in
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CreateVehicleCheckin([FromBody] RequestDto request)
+        public async Task<IActionResult> CreateVehicleCheckin([FromBody] VehicleCheckinRequestDto request)
         {
             try
             {
