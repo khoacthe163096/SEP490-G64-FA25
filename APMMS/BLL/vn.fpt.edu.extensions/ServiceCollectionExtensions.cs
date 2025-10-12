@@ -12,6 +12,7 @@ namespace BLL.vn.fpt.edu.extensions
         {
             // Auth services
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<JwtService>();
             
             // Vehicle Check-in services

@@ -14,14 +14,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Cấu hình để tránh vòng lặp giữa các entity (Swagger và JSON)
+      
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.WriteIndented = true; // (tùy chọn) format JSON đẹp hơn
+        options.JsonSerializerOptions.WriteIndented = true; 
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -95,7 +93,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middleware
-//app.UseMiddleware<BE.vn.fpt.edu.middleware.ErrorHandlingMiddleware>();
+app.UseMiddleware<BE.vn.fpt.edu.middleware.ErrorHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 

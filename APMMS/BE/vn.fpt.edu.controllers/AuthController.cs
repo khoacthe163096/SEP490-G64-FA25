@@ -2,7 +2,6 @@ using BLL.vn.fpt.edu.DTOs.Auth;
 using BLL.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -21,22 +20,38 @@ namespace BE.vn.fpt.edu.controllers
         /// Đăng nhập
         /// </summary>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<LoginResponseDto>), 200)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             try
             {
                 var result = await _authService.LoginAsync(loginDto);
-                
+
                 if (!result.Success)
                 {
-                    return BadRequest(new { success = false, message = result.Message });
+                    return BadRequest(new AuthResponseWrapperDto<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return Ok(new { success = true, data = result, message = result.Message });
+                return Ok(new AuthResponseWrapperDto<LoginResponseDto>
+                {
+                    Success = true,
+                    Message = result.Message,
+                    Data = result
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new AuthResponseWrapperDto<object>
+                {
+                    Success = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = null
+                });
             }
         }
 
@@ -44,22 +59,38 @@ namespace BE.vn.fpt.edu.controllers
         /// Đăng ký
         /// </summary>
         [HttpPost("register")]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<RegisterResponseDto>), 200)]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
             try
             {
                 var result = await _authService.RegisterAsync(registerDto);
-                
+
                 if (!result.Success)
                 {
-                    return BadRequest(new { success = false, message = result.Message });
+                    return BadRequest(new AuthResponseWrapperDto<RegisterResponseDto>
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return Ok(new { success = true, data = result, message = result.Message });
+                return Ok(new AuthResponseWrapperDto<RegisterResponseDto>
+                {
+                    Success = true,
+                    Message = result.Message,
+                    Data = result
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new AuthResponseWrapperDto<object>
+                {
+                    Success = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = null
+                });
             }
         }
 
@@ -68,23 +99,39 @@ namespace BE.vn.fpt.edu.controllers
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<LogoutResponseDto>), 200)]
         public async Task<IActionResult> Logout()
         {
             try
             {
                 var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                
                 if (string.IsNullOrEmpty(token))
                 {
-                    return BadRequest(new { success = false, message = "Token not provided" });
+                    return BadRequest(new AuthResponseWrapperDto<LogoutResponseDto>
+                    {
+                        Success = false,
+                        Message = "Token not provided",
+                        Data = null
+                    });
                 }
 
                 var result = await _authService.LogoutAsync(token);
-                return Ok(new { success = true, data = result, message = result.Message });
+
+                return Ok(new AuthResponseWrapperDto<LogoutResponseDto>
+                {
+                    Success = true,
+                    Message = result.Message,
+                    Data = result
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new AuthResponseWrapperDto<object>
+                {
+                    Success = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = null
+                });
             }
         }
 
@@ -92,22 +139,38 @@ namespace BE.vn.fpt.edu.controllers
         /// Refresh token
         /// </summary>
         [HttpPost("refresh")]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<LoginResponseDto>), 200)]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
         {
             try
             {
                 var result = await _authService.RefreshTokenAsync(refreshTokenDto.Token);
-                
+
                 if (!result.Success)
                 {
-                    return BadRequest(new { success = false, message = result.Message });
+                    return BadRequest(new AuthResponseWrapperDto<LoginResponseDto>
+                    {
+                        Success = false,
+                        Message = result.Message,
+                        Data = null
+                    });
                 }
 
-                return Ok(new { success = true, data = result, message = result.Message });
+                return Ok(new AuthResponseWrapperDto<LoginResponseDto>
+                {
+                    Success = true,
+                    Message = result.Message,
+                    Data = result
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new AuthResponseWrapperDto<object>
+                {
+                    Success = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = null
+                });
             }
         }
 
@@ -115,32 +178,37 @@ namespace BE.vn.fpt.edu.controllers
         /// Validate token
         /// </summary>
         [HttpPost("validate")]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
         public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenDto validateTokenDto)
         {
             try
             {
                 var isValid = await _authService.ValidateTokenAsync(validateTokenDto.Token);
-                
-                return Ok(new { success = true, data = new { isValid }, message = isValid ? "Token is valid" : "Token is invalid" });
+
+                return Ok(new AuthResponseWrapperDto<object>
+                {
+                    Success = true,
+                    Message = isValid ? "Token is valid" : "Token is invalid",
+                    Data = new { isValid }
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                return StatusCode(500, new AuthResponseWrapperDto<object>
+                {
+                    Success = false,
+                    Message = $"Internal server error: {ex.Message}",
+                    Data = null
+                });
             }
         }
     }
 
-    /// <summary>
-    /// DTO cho refresh token
-    /// </summary>
     public class RefreshTokenDto
     {
         public string Token { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// DTO cho validate token
-    /// </summary>
     public class ValidateTokenDto
     {
         public string Token { get; set; } = string.Empty;

@@ -1,127 +1,88 @@
 using BLL.vn.fpt.edu.DTOs.Auth;
 using BLL.vn.fpt.edu.interfaces;
+using DAL.vn.fpt.edu.interfaces;
 using DAL.vn.fpt.edu.models;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace BLL.vn.fpt.edu.services
 {
     public class AuthService : IAuthService
     {
-        private readonly CarMaintenanceDbContext _context;
+        private readonly IUserRepository _userRepository;
         private readonly JwtService _jwtService;
 
-        public AuthService(CarMaintenanceDbContext context, JwtService jwtService)
+        public AuthService(IUserRepository userRepository, JwtService jwtService)
         {
-            _context = context;
+            _userRepository = userRepository;
             _jwtService = jwtService;
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
         {
-            try
-            {
-                var user = await _context.Users
-                    .Include(u => u.Role)
-                    .FirstOrDefaultAsync(u => u.Username == loginDto.Username && u.IsDelete != true);
+            var user = await _userRepository.GetByUsernameAsync(loginDto.Username);
 
-                if (user == null || !VerifyPassword(loginDto.Password, user.Password))
-                {
-                    return new LoginResponseDto
-                    {
-                        Success = false,
-                        Message = "Invalid username or password"
-                    };
-                }
-
-                var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0);
-
-                return new LoginResponseDto
-                {
-                    Success = true,
-                    Message = "Login successful",
-                    Token = token,
-                    UserId = user.Id,
-                    Username = user.Username,
-                    RoleName = user.Role?.Name,
-                    RoleId = user.RoleId
-                };
-            }
-            catch (Exception ex)
+            if (user == null || !VerifyPassword(loginDto.Password, user.Password))
             {
                 return new LoginResponseDto
                 {
                     Success = false,
-                    Message = $"Login failed: {ex.Message}"
+                    Message = "Invalid username or password"
                 };
             }
+
+            var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0);
+
+            return new LoginResponseDto
+            {
+                Success = true,
+                Message = "Login successful",
+                Token = token,
+                UserId = user.Id,
+                Username = user.Username,
+                RoleName = user.Role?.Name,
+                RoleId = user.RoleId
+            };
         }
 
         public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
         {
-            try
+            if (await _userRepository.UsernameExistsAsync(registerDto.Username))
+                return new RegisterResponseDto { Success = false, Message = "Username already exists" };
+
+            if (await _userRepository.EmailExistsAsync(registerDto.Email))
+                return new RegisterResponseDto { Success = false, Message = "Email already exists" };
+
+            var user = new User
             {
-                // Check if username already exists
-                if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
-                {
-                    return new RegisterResponseDto
-                    {
-                        Success = false,
-                        Message = "Username already exists"
-                    };
-                }
+                Username = registerDto.Username,
+                Password = HashPassword(registerDto.Password),
+                Email = registerDto.Email,
+                FirstName = registerDto.FirstName,
+                LastName = registerDto.LastName,
+                Phone = registerDto.Phone,
+                RoleId = registerDto.RoleId ?? 2,
+                StatusCode = "ACTIVE",
+                IsDelete = false,
+                CreatedDate = DateTime.UtcNow
+            };
 
-                // Check if email already exists
-                if (await _context.Users.AnyAsync(u => u.Email == registerDto.Email))
-                {
-                    return new RegisterResponseDto
-                    {
-                        Success = false,
-                        Message = "Email already exists"
-                    };
-                }
+            await _userRepository.AddAsync(user);
+            await _userRepository.SaveChangesAsync();
 
-                var user = new User
-                {
-                    Username = registerDto.Username,
-                    Password = HashPassword(registerDto.Password),
-                    Email = registerDto.Email,
-                    FirstName = registerDto.FirstName,
-                    LastName = registerDto.LastName,
-                    Phone = registerDto.Phone,
-                    RoleId = registerDto.RoleId ?? 2, // Default role ID
-                    StatusCode = "ACTIVE",
-                    IsDelete = false,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                return new RegisterResponseDto
-                {
-                    Success = true,
-                    Message = "Registration successful",
-                    UserId = user.Id,
-                    Username = user.Username
-                };
-            }
-            catch (Exception ex)
+            return new RegisterResponseDto
             {
-                return new RegisterResponseDto
-                {
-                    Success = false,
-                    Message = $"Registration failed: {ex.Message}"
-                };
-            }
+                Success = true,
+                Message = "Registration successful",
+                UserId = user.Id,
+                Username = user.Username
+            };
         }
 
         public async Task<LogoutResponseDto> LogoutAsync(string token)
         {
-            // In a real application, you would add the token to a blacklist
-            // For now, we'll just return success
+            // optional: token blacklist
             return new LogoutResponseDto
             {
                 Success = true,
@@ -139,36 +100,15 @@ namespace BLL.vn.fpt.edu.services
         {
             var principal = _jwtService.ValidateToken(token);
             if (principal == null)
-            {
-                return new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "Invalid token"
-                };
-            }
+                return new LoginResponseDto { Success = false, Message = "Invalid token" };
 
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
-            {
-                return new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "Invalid token"
-                };
-            }
+                return new LoginResponseDto { Success = false, Message = "Invalid token" };
 
-            var user = await _context.Users
-                .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.Id == long.Parse(userId) && u.IsDelete != true);
-
+            var user = await _userRepository.GetByIdAsync(long.Parse(userId));
             if (user == null)
-            {
-                return new LoginResponseDto
-                {
-                    Success = false,
-                    Message = "User not found"
-                };
-            }
+                return new LoginResponseDto { Success = false, Message = "User not found" };
 
             var newToken = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0);
 
@@ -193,18 +133,8 @@ namespace BLL.vn.fpt.edu.services
 
         private bool VerifyPassword(string password, string storedPassword)
         {
-            // Hỗ trợ cả plain text và hashed password
             var hashedInput = HashPassword(password);
-            
-            // Thử so sánh với hashed password trước
-            if (hashedInput == storedPassword)
-                return true;
-                
-            // Nếu không khớp, thử so sánh với plain text
-            if (password == storedPassword)
-                return true;
-                
-            return false;
+            return hashedInput == storedPassword || password == storedPassword;
         }
     }
 }
