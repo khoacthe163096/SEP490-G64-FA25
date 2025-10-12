@@ -7,6 +7,7 @@ namespace BE.vn.fpt.edu.controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -16,194 +17,177 @@ namespace BE.vn.fpt.edu.controllers
             _authService = authService;
         }
 
+        // ============================================
+        // 🔐 LOGIN
+        // ============================================
         /// <summary>
-        /// Đăng nhập
+        /// Đăng nhập hệ thống và nhận JWT token
         /// </summary>
         [HttpPost("login")]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<LoginResponseDto>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            try
-            {
-                var result = await _authService.LoginAsync(loginDto);
+            var result = await _authService.LoginAsync(loginDto);
 
-                if (!result.Success)
-                {
-                    return BadRequest(new AuthResponseWrapperDto<LoginResponseDto>
-                    {
-                        Success = false,
-                        Message = result.Message,
-                        Data = null
-                    });
-                }
-
-                return Ok(new AuthResponseWrapperDto<LoginResponseDto>
-                {
-                    Success = true,
-                    Message = result.Message,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
+            if (!result.Success)
             {
-                return StatusCode(500, new AuthResponseWrapperDto<object>
+                return BadRequest(new AuthResponseWrapperDto<object>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
+                    Message = result.Message
                 });
             }
+
+            var response = new AuthResponseWrapperDto<object>
+            {
+                Success = true,
+                Message = result.Message,
+                Data = new
+                {
+                    result.Token,
+                    result.UserId,
+                    result.Username,
+                    result.RoleName,
+                    result.RoleId
+                }
+            };
+
+            return Ok(response);
         }
 
+        // ============================================
+        // 🧾 REGISTER
+        // ============================================
         /// <summary>
-        /// Đăng ký
+        /// Đăng ký tài khoản mới
         /// </summary>
         [HttpPost("register")]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<RegisterResponseDto>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
         public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            try
-            {
-                var result = await _authService.RegisterAsync(registerDto);
+            var result = await _authService.RegisterAsync(registerDto);
 
-                if (!result.Success)
-                {
-                    return BadRequest(new AuthResponseWrapperDto<RegisterResponseDto>
-                    {
-                        Success = false,
-                        Message = result.Message,
-                        Data = null
-                    });
-                }
-
-                return Ok(new AuthResponseWrapperDto<RegisterResponseDto>
-                {
-                    Success = true,
-                    Message = result.Message,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
+            if (!result.Success)
             {
-                return StatusCode(500, new AuthResponseWrapperDto<object>
+                return BadRequest(new AuthResponseWrapperDto<object>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
+                    Message = result.Message
                 });
             }
+
+            return Ok(new AuthResponseWrapperDto<object>
+            {
+                Success = true,
+                Message = result.Message,
+                Data = new
+                {
+                    result.UserId,
+                    result.Username
+                }
+            });
         }
 
+        // ============================================
+        // 🚪 LOGOUT
+        // ============================================
         /// <summary>
-        /// Đăng xuất
+        /// Đăng xuất (thu hồi token)
         /// </summary>
-        [HttpPost("logout")]
         [Authorize]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<LogoutResponseDto>), 200)]
+        [HttpPost("logout")]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
         public async Task<IActionResult> Logout()
         {
-            try
-            {
-                var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return BadRequest(new AuthResponseWrapperDto<LogoutResponseDto>
-                    {
-                        Success = false,
-                        Message = "Token not provided",
-                        Data = null
-                    });
-                }
+            var token = Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-                var result = await _authService.LogoutAsync(token);
-
-                return Ok(new AuthResponseWrapperDto<LogoutResponseDto>
-                {
-                    Success = true,
-                    Message = result.Message,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
+            if (string.IsNullOrEmpty(token))
             {
-                return StatusCode(500, new AuthResponseWrapperDto<object>
+                return BadRequest(new AuthResponseWrapperDto<object>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
+                    Message = "Token not provided"
                 });
             }
+
+            var result = await _authService.LogoutAsync(token);
+
+            return Ok(new AuthResponseWrapperDto<object>
+            {
+                Success = true,
+                Message = result.Message
+            });
         }
 
+        // ============================================
+        // 🔄 REFRESH TOKEN
+        // ============================================
         /// <summary>
-        /// Refresh token
+        /// Cấp mới JWT token khi token cũ còn hạn
         /// </summary>
         [HttpPost("refresh")]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<LoginResponseDto>), 200)]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto refreshTokenDto)
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDto dto)
         {
-            try
-            {
-                var result = await _authService.RefreshTokenAsync(refreshTokenDto.Token);
+            var result = await _authService.RefreshTokenAsync(dto.Token);
 
-                if (!result.Success)
-                {
-                    return BadRequest(new AuthResponseWrapperDto<LoginResponseDto>
-                    {
-                        Success = false,
-                        Message = result.Message,
-                        Data = null
-                    });
-                }
-
-                return Ok(new AuthResponseWrapperDto<LoginResponseDto>
-                {
-                    Success = true,
-                    Message = result.Message,
-                    Data = result
-                });
-            }
-            catch (Exception ex)
+            if (!result.Success)
             {
-                return StatusCode(500, new AuthResponseWrapperDto<object>
+                return BadRequest(new AuthResponseWrapperDto<object>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
+                    Message = result.Message
                 });
             }
+
+            return Ok(new AuthResponseWrapperDto<object>
+            {
+                Success = true,
+                Message = result.Message,
+                Data = new
+                {
+                    result.Token,
+                    result.UserId,
+                    result.Username,
+                    result.RoleName,
+                    result.RoleId
+                }
+            });
         }
 
+        // ============================================
+        // 🧠 VALIDATE TOKEN
+        // ============================================
         /// <summary>
-        /// Validate token
+        /// Kiểm tra token có hợp lệ không
         /// </summary>
         [HttpPost("validate")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
-        public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenDto validateTokenDto)
+        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
+        public async Task<IActionResult> ValidateToken([FromBody] ValidateTokenDto dto)
         {
-            try
-            {
-                var isValid = await _authService.ValidateTokenAsync(validateTokenDto.Token);
+            var isValid = await _authService.ValidateTokenAsync(dto.Token);
 
-                return Ok(new AuthResponseWrapperDto<object>
-                {
-                    Success = true,
-                    Message = isValid ? "Token is valid" : "Token is invalid",
-                    Data = new { isValid }
-                });
-            }
-            catch (Exception ex)
+            return Ok(new AuthResponseWrapperDto<object>
             {
-                return StatusCode(500, new AuthResponseWrapperDto<object>
-                {
-                    Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
-                });
-            }
+                Success = true,
+                Message = isValid ? "Token is valid" : "Token is invalid",
+                Data = new { isValid }
+            });
         }
     }
 
+    // ============================================
+    // 📦 SMALL DTOs
+    // ============================================
     public class RefreshTokenDto
     {
         public string Token { get; set; } = string.Empty;
