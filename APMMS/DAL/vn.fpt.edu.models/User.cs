@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace DAL.vn.fpt.edu.models;
 
@@ -54,32 +53,25 @@ public partial class User
 
     public virtual Branch? Branch { get; set; }
 
-    [JsonIgnore]
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
 
-    [JsonIgnore]
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
-    [JsonIgnore]
     public virtual ICollection<HistoryLog> HistoryLogs { get; set; } = new List<HistoryLog>();
 
-    [JsonIgnore]
     public virtual ICollection<MaintenanceRequest> MaintenanceRequests { get; set; } = new List<MaintenanceRequest>();
 
-    [JsonIgnore]
     public virtual ICollection<MaintenanceTicket> MaintenanceTicketConsulters { get; set; } = new List<MaintenanceTicket>();
 
-    [JsonIgnore]
     public virtual ICollection<MaintenanceTicket> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicket>();
 
-    [JsonIgnore]
     public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechniciansNavigation { get; set; } = new List<MaintenanceTicketTechnician>();
 
     public virtual Role? Role { get; set; }
 
-    [JsonIgnore]
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
-    [JsonIgnore]
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
+
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
 }

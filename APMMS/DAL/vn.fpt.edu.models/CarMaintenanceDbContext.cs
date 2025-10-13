@@ -182,6 +182,7 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasIndex(e => e.Code, "UQ__componen__357D4CF90AECE297").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .HasColumnName("code");
@@ -195,6 +196,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.Components)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK__component__branc__2739D489");
 
             entity.HasOne(d => d.TypeComponent).WithMany(p => p.Components)
                 .HasForeignKey(d => d.TypeComponentId)
@@ -225,6 +230,8 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__feedback__3213E83FA2E44621");
 
             entity.ToTable("feedback");
+
+            entity.HasIndex(e => e.UserId, "IX_feedback_user_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Comment)
@@ -301,6 +308,10 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasForeignKey(d => d.CarId)
                 .HasConstraintName("FK__maintenan__car_i__5165187F");
 
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceRequests)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_maintenance_request_status");
+
             entity.HasOne(d => d.User).WithMany(p => p.MaintenanceRequests)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__maintenan__user___5070F446");
@@ -312,10 +323,15 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("maintenance_ticket");
 
+            entity.HasIndex(e => e.CarId, "IX_maintenance_ticket_car_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
             entity.Property(e => e.ConsulterId).HasColumnName("consulter_id");
+            entity.Property(e => e.Description)
+                .HasMaxLength(255)
+                .HasColumnName("description");
             entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
@@ -337,6 +353,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.ScheduleService).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.ScheduleServiceId)
                 .HasConstraintName("FK__maintenan__sched__6383C8BA");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceTickets)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_maintenance_ticket_status");
 
             entity.HasOne(d => d.Technician).WithMany(p => p.MaintenanceTicketTechnicians)
                 .HasForeignKey(d => d.TechnicianId)
@@ -461,6 +481,10 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasForeignKey(d => d.CarId)
                 .HasConstraintName("FK__schedule___car_i__5FB337D6");
 
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ScheduleServices)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_schedule_service_status");
+
             entity.HasOne(d => d.User).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__schedule___user___5EBF139D");
@@ -485,6 +509,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServicePackages)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_service_package_status");
         });
 
         modelBuilder.Entity<ServiceTask>(entity =>
@@ -493,11 +521,16 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("service_task");
 
+            entity.HasIndex(e => e.MaintenanceTicketId, "IX_service_task_ticket_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.Note)
+                .HasMaxLength(255)
+                .HasColumnName("note");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -508,6 +541,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .HasConstraintName("FK__service_t__maint__6A30C649");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServiceTasks)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_service_task_status");
         });
 
         modelBuilder.Entity<StatusLookup>(entity =>
@@ -533,6 +570,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("ticket_component");
 
+            entity.HasIndex(e => e.MaintenanceTicketId, "IX_ticket_component_ticket_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ComponentId).HasColumnName("component_id");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
@@ -556,6 +595,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("total_receipt");
 
+            entity.HasIndex(e => e.BranchId, "IX_total_receipt_branch_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AccountantId).HasColumnName("accountant_id");
             entity.Property(e => e.Amount)
@@ -572,6 +613,9 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValue("VND")
                 .HasColumnName("currency_code");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.Note)
+                .HasMaxLength(255)
+                .HasColumnName("note");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -591,6 +635,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .HasConstraintName("FK__total_rec__maint__71D1E811");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.TotalReceipts)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_total_receipt_status");
         });
 
         modelBuilder.Entity<TypeComponent>(entity =>
@@ -613,6 +661,8 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__user__3213E83FC10C173A");
 
             entity.ToTable("user");
+
+            entity.HasIndex(e => e.BranchId, "IX_user_branch_id");
 
             entity.HasIndex(e => e.Username, "UQ__user__F3DBC5725BB1EDAA").IsUnique();
 
@@ -683,6 +733,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("FK__user__role_id__35BCFE0A");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.Users)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_user_status");
         });
 
         modelBuilder.Entity<VehicleCheckin>(entity =>
@@ -690,6 +744,8 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83F0B264959");
 
             entity.ToTable("vehicle_checkin");
+
+            entity.HasIndex(e => e.CarId, "IX_vehicle_checkin_car_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
@@ -702,6 +758,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Notes)
                 .HasMaxLength(255)
                 .HasColumnName("notes");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasColumnName("status_code");
 
             entity.HasOne(d => d.Car).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.CarId)
@@ -710,6 +769,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceRequest).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.MaintenanceRequestId)
                 .HasConstraintName("FK__vehicle_c__maint__571DF1D5");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.VehicleCheckins)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_vehicle_checkin_status");
         });
 
         modelBuilder.Entity<VehicleCheckinImage>(entity =>

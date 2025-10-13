@@ -15,5 +15,7 @@ public partial class ServicePackage
 
     public string? StatusCode { get; set; }
 
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
+
     public virtual ICollection<Component> Components { get; set; } = new List<Component>();
 }

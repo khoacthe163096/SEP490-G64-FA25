@@ -17,6 +17,10 @@ public partial class Component
 
     public long? TypeComponentId { get; set; }
 
+    public long? BranchId { get; set; }
+
+    public virtual Branch? Branch { get; set; }
+
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 
     public virtual TypeComponent? TypeComponent { get; set; }

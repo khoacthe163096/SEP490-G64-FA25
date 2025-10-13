@@ -21,6 +21,8 @@ public partial class MaintenanceRequest
 
     public virtual Car? Car { get; set; }
 
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
+
     public virtual User? User { get; set; }
 
     public virtual ICollection<VehicleCheckin> VehicleCheckins { get; set; } = new List<VehicleCheckin>();

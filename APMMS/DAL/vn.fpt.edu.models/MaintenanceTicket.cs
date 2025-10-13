@@ -19,6 +19,8 @@ public partial class MaintenanceTicket
 
     public long? BranchId { get; set; }
 
+    public string? Description { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
@@ -32,6 +34,8 @@ public partial class MaintenanceTicket
     public virtual ScheduleService? ScheduleService { get; set; }
 
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
+
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual User? Technician { get; set; }
 

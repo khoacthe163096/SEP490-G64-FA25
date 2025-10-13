@@ -23,6 +23,8 @@ public partial class TotalReceipt
 
     public string? StatusCode { get; set; }
 
+    public string? Note { get; set; }
+
     public virtual User? Accountant { get; set; }
 
     public virtual Branch? Branch { get; set; }
@@ -30,4 +32,6 @@ public partial class TotalReceipt
     public virtual Car? Car { get; set; }
 
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
+
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
 }

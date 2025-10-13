@@ -15,5 +15,9 @@ public partial class ServiceTask
 
     public string? StatusCode { get; set; }
 
+    public string? Note { get; set; }
+
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
+
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
 }

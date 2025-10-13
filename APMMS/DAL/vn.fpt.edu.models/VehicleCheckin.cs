@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 
 namespace DAL.vn.fpt.edu.models;
 
@@ -18,10 +17,13 @@ public partial class VehicleCheckin
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? StatusCode { get; set; }
+
     public virtual Car? Car { get; set; }
 
     public virtual MaintenanceRequest? MaintenanceRequest { get; set; }
 
-    [JsonIgnore]
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
+
     public virtual ICollection<VehicleCheckinImage> VehicleCheckinImages { get; set; } = new List<VehicleCheckinImage>();
 }
