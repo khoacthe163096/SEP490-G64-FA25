@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using BLL.vn.fpt.edu.DTOs.VehicleCheckin;
-using BLL.vn.fpt.edu.interfaces;
+using Microsoft.AspNetCore.Mvc;
+using BE.vn.fpt.edu.DTOs.VehicleCheckin;
+using BE.vn.fpt.edu.interfaces;
 using System.ComponentModel.DataAnnotations;
 
 namespace vn.fpt.edu.controllers
 {
     /// <summary>
-    /// Controller quản lý Vehicle Check-in
+    /// Controller qu?n l� Vehicle Check-in
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -20,7 +20,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Tạo mới vehicle check-in
+        /// T?o m?i vehicle check-in
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateVehicleCheckin([FromBody] VehicleCheckinRequestDto request)
@@ -41,7 +41,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Cập nhật vehicle check-in
+        /// C?p nh?t vehicle check-in
         /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVehicleCheckin(long id, [FromBody] UpdateDto request)
@@ -65,7 +65,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy chi tiết vehicle check-in theo ID
+        /// L?y chi ti?t vehicle check-in theo ID
         /// </summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetVehicleCheckinById(long id)
@@ -86,7 +86,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả vehicle check-in (có phân trang)
+        /// L?y danh s�ch t?t c? vehicle check-in (c� ph�n trang)
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllVehicleCheckins([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -103,7 +103,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy danh sách vehicle check-in theo Car ID
+        /// L?y danh s�ch vehicle check-in theo Car ID
         /// </summary>
         [HttpGet("car/{carId}")]
         public async Task<IActionResult> GetVehicleCheckinsByCarId(long carId)
@@ -120,7 +120,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy danh sách vehicle check-in theo Maintenance Request ID
+        /// L?y danh s�ch vehicle check-in theo Maintenance Request ID
         /// </summary>
         [HttpGet("maintenance-request/{maintenanceRequestId}")]
         public async Task<IActionResult> GetVehicleCheckinsByMaintenanceRequestId(long maintenanceRequestId)
@@ -137,7 +137,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Xóa vehicle check-in
+        /// X�a vehicle check-in
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVehicleCheckin(long id)
@@ -161,7 +161,7 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Link vehicle check-in với maintenance request
+        /// Link vehicle check-in v?i maintenance request
         /// </summary>
         [HttpPut("{id}/link-maintenance")]
         public async Task<IActionResult> LinkMaintenanceRequest(long id, [FromBody] LinkMaintenanceRequestDto request)
@@ -183,7 +183,7 @@ namespace vn.fpt.edu.controllers
     }
 
     /// <summary>
-    /// DTO cho việc link maintenance request
+    /// DTO cho vi?c link maintenance request
     /// </summary>
     public class LinkMaintenanceRequestDto
     {

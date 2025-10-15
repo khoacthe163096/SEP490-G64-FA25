@@ -1,8 +1,8 @@
-﻿using BE.vn.fpt.edu.security;
-using BLL.vn.fpt.edu.extensions;
-using BLL.vn.fpt.edu.interfaces;
-using BLL.vn.fpt.edu.services;
-using DAL.vn.fpt.edu.models;
+using BE.vn.fpt.edu.security;
+using BE.vn.fpt.edu.extensions;
+using BE.vn.fpt.edu.interfaces;
+using BE.vn.fpt.edu.services;
+using BE.vn.fpt.edu.models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -58,7 +58,7 @@ builder.Services.AddDbContext<CarMaintenanceDbContext>(options =>
 
 
 // Project services
-builder.Services.AddAutoMapper(typeof(BLL.vn.fpt.edu.convert.MappingProfile).Assembly);
+builder.Services.AddAutoMapper(typeof(BE.vn.fpt.edu.convert.MappingProfile).Assembly);
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
 
@@ -92,8 +92,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-// Middleware
-app.UseMiddleware<BE.vn.fpt.edu.middleware.ErrorHandlingMiddleware>();
+// Middleware removed for simplicity
 
 // Configure the HTTP request pipeline.
 
