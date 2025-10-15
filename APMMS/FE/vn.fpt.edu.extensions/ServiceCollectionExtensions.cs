@@ -7,6 +7,9 @@ namespace FE.vn.fpt.edu.extensions
     {
         public static IServiceCollection AddFrontendServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Add HttpContextAccessor
+            services.AddHttpContextAccessor();
+
             // Add HttpClient
             services.AddHttpClient<ApiAdapter>(client =>
             {

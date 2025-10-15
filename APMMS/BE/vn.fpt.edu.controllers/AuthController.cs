@@ -1,5 +1,5 @@
-using BLL.vn.fpt.edu.DTOs.Auth;
-using BLL.vn.fpt.edu.interfaces;
+using BE.vn.fpt.edu.DTOs.Auth;
+using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

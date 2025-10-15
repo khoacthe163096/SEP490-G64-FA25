@@ -22,6 +22,19 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// Add Authentication
+builder.Services.AddAuthentication("CookieAuthentication")
+    .AddCookie("CookieAuthentication", options =>
+    {
+        options.LoginPath = "/Home/Index";
+        options.LogoutPath = "/Auth/Logout";
+        options.AccessDeniedPath = "/Home/Index";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -54,6 +67,8 @@ app.UseCors("AllowAll");
 // Add session middleware
 app.UseSession();
 
+// Add authentication middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Dashboard routes

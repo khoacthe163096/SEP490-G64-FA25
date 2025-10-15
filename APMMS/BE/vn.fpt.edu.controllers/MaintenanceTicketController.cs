@@ -1,6 +1,6 @@
-﻿using AutoMapper;
-using BLL.vn.fpt.edu.DTOs.MaintenanceTicket;
-using BLL.vn.fpt.edu.interfaces;
+using AutoMapper;
+using BE.vn.fpt.edu.DTOs.MaintenanceTicket;
+using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,7 +21,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Tạo Maintenance Ticket mới
+        /// T?o Maintenance Ticket m?i
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> CreateMaintenanceTicket([FromBody] RequestDto request)
@@ -42,7 +42,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Tạo Maintenance Ticket từ Vehicle Check-in
+        /// T?o Maintenance Ticket t? Vehicle Check-in
         /// </summary>
         [HttpPost("create-from-checkin")]
         public async Task<IActionResult> CreateFromVehicleCheckin([FromBody] CreateFromCheckinDto request)
@@ -63,7 +63,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Cập nhật Maintenance Ticket
+        /// C?p nh?t Maintenance Ticket
         /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMaintenanceTicket(long id, [FromBody] RequestDto request)
@@ -84,7 +84,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy Maintenance Ticket theo ID
+        /// L?y Maintenance Ticket theo ID
         /// </summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetMaintenanceTicketById(long id)
@@ -105,7 +105,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả Maintenance Tickets
+        /// L?y danh s�ch t?t c? Maintenance Tickets
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllMaintenanceTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -122,7 +122,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy Maintenance Tickets theo Car ID
+        /// L?y Maintenance Tickets theo Car ID
         /// </summary>
         [HttpGet("by-car/{carId}")]
         public async Task<IActionResult> GetMaintenanceTicketsByCarId(long carId)
@@ -139,7 +139,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Lấy Maintenance Tickets theo Status
+        /// L?y Maintenance Tickets theo Status
         /// </summary>
         [HttpGet("by-status/{statusCode}")]
         public async Task<IActionResult> GetMaintenanceTicketsByStatus(string statusCode)
@@ -156,7 +156,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Cập nhật Status của Maintenance Ticket
+        /// C?p nh?t Status c?a Maintenance Ticket
         /// </summary>
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusDto request)
@@ -177,7 +177,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// Xóa Maintenance Ticket
+        /// X�a Maintenance Ticket
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMaintenanceTicket(long id)
