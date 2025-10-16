@@ -47,6 +47,12 @@ namespace BE.vn.fpt.edu.convert
 
             // MaintenanceTicket mappings
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>();
+            CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore()) // Ignore CreatedDate since it doesn't exist in model
+                .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}".Trim() : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}".Trim() : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null));
             CreateMap<BE.vn.fpt.edu.DTOs.MaintenanceTicket.RequestDto, MaintenanceTicket>();
 
             // Profile mappings
@@ -70,8 +76,10 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.ServiceSchedule.RequestDto, ScheduleService>();
 
             // ServiceTask mappings
-            CreateMap<ServiceTask, BE.vn.fpt.edu.DTOs.ServiceTask.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.ServiceTask.RequestDto, ServiceTask>();
+            CreateMap<ServiceTask, BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskResponseDto>();
+            CreateMap<ServiceTask, BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskListResponseDto>();
+            CreateMap<BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskRequestDto, ServiceTask>();
+            CreateMap<BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskUpdateDto, ServiceTask>();
 
             // TotalReceipt mappings
             CreateMap<TotalReceipt, BE.vn.fpt.edu.DTOs.TotalReceipt.ResponseDto>();
