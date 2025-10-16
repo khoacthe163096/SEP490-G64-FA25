@@ -1,4 +1,4 @@
-using FE;
+﻿using FE;
 using FE.vn.fpt.edu.extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,8 +7,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews()
     .AddRazorOptions(options =>
     {
-        options.ViewLocationExpanders.Add(new CustomViewLocationExpander());
-    });
+        // Cấu hình Razor tìm view trong thư mục tuỳ chỉnh của bạn
+        options.ViewLocationFormats.Clear();
+        options.ViewLocationFormats.Add("/vn.fpt.edu.views/{1}/{0}.cshtml");
+        options.ViewLocationFormats.Add("/vn.fpt.edu.views/Shared/{0}.cshtml");
+
+        // (Không cần CustomViewLocationExpander nữa)
+    })
+    
+    .AddControllersAsServices();
 
 // Add Frontend services
 builder.Services.AddFrontendServices(builder.Configuration);
@@ -52,7 +59,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -70,6 +76,9 @@ app.UseSession();
 // Add authentication middleware
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Map all controllers
+app.MapControllers();
 
 // Dashboard routes
 app.MapControllerRoute(

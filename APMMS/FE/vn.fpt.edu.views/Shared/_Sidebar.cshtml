@@ -1,0 +1,73 @@
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h4>APMMS</h4>
+        <p>Quản lý hệ thống</p>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <!-- Quản lý người dùng -->
+        <div class="nav-section">
+            <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#userManagement" aria-expanded="true">
+                <i class="fas fa-users"></i>
+                <span>Quản lý người dùng</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="collapse show" id="userManagement">
+                <ul class="nav-list">
+                    <li><a href="/Employees" class="nav-link"><i class="fas fa-user-tie"></i> Danh sách nhân viên</a></li>
+                    <li><a href="/Users" class="nav-link"><i class="fas fa-users"></i> Danh sách người dùng</a></li>
+                    <li><a href="#" class="nav-link"><i class="fas fa-user-shield"></i> Danh sách giám đốc</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quản lý kho -->
+        <div class="nav-section">
+            <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#warehouseManagement" aria-expanded="false">
+                <i class="fas fa-warehouse"></i>
+                <span>Quản lý kho</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="collapse" id="warehouseManagement">
+                <ul class="nav-list">
+                    <li><a href="/TypeComponents" class="nav-link"><i class="fas fa-tags"></i> Danh sách loại linh kiện</a></li>
+                    <li><a href="/Components" class="nav-link"><i class="fas fa-cogs"></i> Danh sách linh kiện</a></li>
+                    <li><a href="/ServicePackages" class="nav-link"><i class="fas fa-box"></i> Danh sách gói dịch vụ</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Hóa đơn -->
+        <div class="nav-section">
+            <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#totalReceipt" aria-expanded="false">
+                <i class="fas fa-file-invoice"></i>
+                <span>Danh sách hóa đơn</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="collapse" id="totalReceipt">
+                <ul class="nav-list">
+                    <li><a href="/TotalReceipts" class="nav-link"><i class="fas fa-file-invoice"></i> Danh sách hóa đơn</a></li>
+                </ul>
+            </div>
+        </div>
+      
+
+        <!-- Check-in và Bảo dưỡng -->
+        <div class="nav-section">
+            <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#maintenanceManagement" aria-expanded="false">
+                <i class="fas fa-wrench"></i>
+                <span>Check-in & Bảo dưỡng</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="collapse" id="maintenanceManagement">
+                <ul class="nav-list">
+                    <li><a href="/VehicleCheckins" class="nav-link"><i class="fas fa-car"></i> Check-in xe</a></li>
+                    <li><a href="/MaintenanceTickets" class="nav-link"><i class="fas fa-clipboard-list"></i> Phiếu bảo dưỡng</a></li>
+                    <li><a href="/ServiceSchedules" class="nav-link"><i class="fas fa-calendar-alt"></i> Danh sách đặt lịch</a></li>
+                    <li><a href="/ServiceTasks" class="nav-link"><i class="fas fa-tasks"></i> Danh sách nhiệm vụ</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>

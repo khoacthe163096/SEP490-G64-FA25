@@ -1,0 +1,250 @@
+@{
+    ViewData["Title"] = "Check-in xe mới";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Check-in xe mới</h4>
+                </div>
+                <div class="card-body">
+                    <form id="checkinForm" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="licensePlate" class="form-label">Biển số xe <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="licensePlate" name="licensePlate" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vehicleType" class="form-label">Loại xe <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="vehicleType" name="vehicleType" required>
+                                        <option value="">Chọn loại xe</option>
+                                        <option value="CAR">Ô tô</option>
+                                        <option value="MOTORBIKE">Xe máy</option>
+                                        <option value="TRUCK">Xe tải</option>
+                                        <option value="BUS">Xe bus</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerName" class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="customerName" name="customerName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="customerPhone" class="form-label">Số điện thoại khách hàng</label>
+                                    <input type="tel" class="form-control" id="customerPhone" name="customerPhone">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="branchId" name="branchId" required>
+                                        <option value="">Chọn chi nhánh</option>
+                                        <!-- Will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="checkinDate" class="form-label">Ngày check-in <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="checkinDate" name="checkinDate" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">Ghi chú</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Mô tả tình trạng xe, vấn đề cần sửa chữa..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="images" class="form-label">Hình ảnh xe</label>
+                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                    <div class="form-text">Có thể chọn nhiều hình ảnh (JPG, PNG, GIF)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="hasMaintenanceRequest" name="hasMaintenanceRequest">
+                                    <label class="form-check-label" for="hasMaintenanceRequest">
+                                        Có yêu cầu bảo dưỡng
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Maintenance Request Section (hidden by default) -->
+                        <div id="maintenanceRequestSection" style="display: none;">
+                            <hr>
+                            <h5>Thông tin yêu cầu bảo dưỡng</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="maintenanceType" class="form-label">Loại bảo dưỡng</label>
+                                        <select class="form-select" id="maintenanceType" name="maintenanceType">
+                                            <option value="">Chọn loại bảo dưỡng</option>
+                                            <option value="ROUTINE">Bảo dưỡng định kỳ</option>
+                                            <option value="REPAIR">Sửa chữa</option>
+                                            <option value="INSPECTION">Kiểm tra</option>
+                                            <option value="EMERGENCY">Khẩn cấp</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="priority" class="form-label">Mức độ ưu tiên</label>
+                                        <select class="form-select" id="priority" name="priority">
+                                            <option value="LOW">Thấp</option>
+                                            <option value="MEDIUM" selected>Trung bình</option>
+                                            <option value="HIGH">Cao</option>
+                                            <option value="URGENT">Khẩn cấp</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label for="maintenanceDescription" class="form-label">Mô tả chi tiết vấn đề</label>
+                                        <textarea class="form-control" id="maintenanceDescription" name="maintenanceDescription" rows="3" placeholder="Mô tả chi tiết vấn đề cần sửa chữa..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/VehicleCheckins" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Lưu check-in
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBranches();
+            setCurrentDateTime();
+            
+            // Toggle maintenance request section
+            document.getElementById('hasMaintenanceRequest').addEventListener('change', function() {
+                const section = document.getElementById('maintenanceRequestSection');
+                section.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            document.getElementById('checkinForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createCheckin();
+            });
+        });
+
+        function setCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const dateTimeString = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('checkinDate').value = dateTimeString;
+        }
+
+        function loadBranches() {
+            fetch('/api/Branch')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('branchId');
+                        data.data.forEach(branch => {
+                            const option = document.createElement('option');
+                            option.value = branch.id;
+                            option.textContent = branch.name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading branches:', error);
+                });
+        }
+
+        function createCheckin() {
+            const formData = new FormData(document.getElementById('checkinForm'));
+            
+            // Add maintenance request data if checked
+            if (document.getElementById('hasMaintenanceRequest').checked) {
+                formData.append('maintenanceType', document.getElementById('maintenanceType').value);
+                formData.append('priority', document.getElementById('priority').value);
+                formData.append('maintenanceDescription', document.getElementById('maintenanceDescription').value);
+            }
+
+            fetch('/api/VehicleCheckin', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Check-in xe thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/VehicleCheckins';
+                    }, 1500);
+                } else {
+                    showAlert('Lỗi: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi check-in xe', 'danger');
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+}

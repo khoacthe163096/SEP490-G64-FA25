@@ -1,0 +1,185 @@
+@{
+    ViewData["Title"] = "Chi tiết nhân viên";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Chi tiết nhân viên</h4>
+                    <div>
+                        <a href="/Employees/Edit/@ViewBag.EmployeeId" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <a href="/Employees" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="employeeDetails" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <h5>Thông tin cá nhân</h5>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>ID:</strong></div>
+                                        <div class="col-sm-8" id="employeeId">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Họ tên:</strong></div>
+                                        <div class="col-sm-8" id="fullName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Email:</strong></div>
+                                        <div class="col-sm-8" id="email">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Số điện thoại:</strong></div>
+                                        <div class="col-sm-8" id="phoneNumber">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Địa chỉ:</strong></div>
+                                        <div class="col-sm-8" id="address">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <h5>Thông tin tài khoản</h5>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Tên đăng nhập:</strong></div>
+                                        <div class="col-sm-8" id="username">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Vai trò:</strong></div>
+                                        <div class="col-sm-8" id="roleName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Chi nhánh:</strong></div>
+                                        <div class="col-sm-8" id="branchName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Trạng thái:</strong></div>
+                                        <div class="col-sm-8" id="status">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
+                                        <div class="col-sm-8" id="createdDate">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Thông tin bổ sung</h5>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="row mb-2">
+                                            <div class="col-sm-4"><strong>Lần đăng nhập cuối:</strong></div>
+                                            <div class="col-sm-8" id="lastLogin">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="row mb-2">
+                                            <div class="col-sm-4"><strong>Ghi chú:</strong></div>
+                                            <div class="col-sm-8" id="notes">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="errorText">Có lỗi xảy ra khi tải thông tin nhân viên</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const employeeId = getEmployeeIdFromUrl();
+            if (employeeId) {
+                loadEmployeeDetails(employeeId);
+            } else {
+                showError('Không tìm thấy ID nhân viên');
+            }
+        });
+
+        function getEmployeeIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadEmployeeDetails(id) {
+            fetch(`/api/Employee/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                
+                if (data.success) {
+                    displayEmployeeDetails(data.data);
+                } else {
+                    showError('Lỗi khi tải thông tin: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                showError('Có lỗi xảy ra khi tải thông tin nhân viên');
+            });
+        }
+
+        function displayEmployeeDetails(employee) {
+            document.getElementById('employeeId').textContent = employee.id || '-';
+            document.getElementById('fullName').textContent = `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || '-';
+            document.getElementById('email').textContent = employee.email || '-';
+            document.getElementById('phoneNumber').textContent = employee.phoneNumber || '-';
+            document.getElementById('address').textContent = employee.address || '-';
+            document.getElementById('username').textContent = employee.username || '-';
+            document.getElementById('roleName').innerHTML = employee.roleName ? 
+                `<span class="badge bg-info">${employee.roleName}</span>` : '-';
+            document.getElementById('branchName').textContent = employee.branchName || '-';
+            document.getElementById('status').innerHTML = employee.isActive ? 
+                '<span class="badge bg-success">Hoạt động</span>' : 
+                '<span class="badge bg-secondary">Không hoạt động</span>';
+            document.getElementById('createdDate').textContent = employee.createdDate ? 
+                new Date(employee.createdDate).toLocaleString('vi-VN') : '-';
+            document.getElementById('lastLogin').textContent = employee.lastLogin ? 
+                new Date(employee.lastLogin).toLocaleString('vi-VN') : '-';
+            document.getElementById('notes').textContent = employee.notes || '-';
+            
+            document.getElementById('employeeDetails').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+}

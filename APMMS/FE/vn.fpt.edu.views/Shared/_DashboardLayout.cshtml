@@ -14,32 +14,84 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body class="dashboard-body">
-    @RenderBody()
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        @await Html.PartialAsync("_Sidebar")
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            @await Html.PartialAsync("_TopBar")
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js"></script>
     
     <script>
-        // Ensure dashboard pages load properly
+        // Dashboard layout JavaScript
         document.addEventListener('DOMContentLoaded', function() {
-            // Force show all content
-            const contentArea = document.querySelector('.content-area');
-            if (contentArea) {
-                contentArea.style.display = 'block';
+            console.log('Dashboard layout loaded');
+            
+            // Sidebar toggle functionality
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function() {
+                    if (window.innerWidth > 768) {
+                        sidebar.classList.toggle('collapsed');
+                    } else {
+                        sidebar.classList.toggle('show');
+                    }
+                });
             }
             
-            // Ensure tables are visible
-            const tables = document.querySelectorAll('.table-container');
-            tables.forEach(table => {
-                table.style.display = 'block';
+            // Handle mobile sidebar toggle
+            const mobileToggle = document.querySelector('.mobile-sidebar-toggle');
+            if (mobileToggle) {
+                mobileToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && 
+                        !sidebarToggle.contains(e.target) && 
+                        !mobileToggle.contains(e.target)) {
+                        sidebar.classList.remove('show');
+                    }
+                }
             });
             
-            // Ensure pagination is visible
-            const pagination = document.querySelectorAll('.pagination-container');
-            pagination.forEach(pag => {
-                pag.style.display = 'flex';
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('show');
+                }
             });
+            
+            // Force show welcome page if it exists
+            setTimeout(function() {
+                const welcomePage = document.getElementById('welcome-page');
+                if (welcomePage) {
+                    console.log('Showing welcome page');
+                    welcomePage.style.display = 'block';
+                    welcomePage.style.visibility = 'visible';
+                    welcomePage.style.opacity = '1';
+                    welcomePage.style.position = 'relative';
+                    welcomePage.style.left = 'auto';
+                    welcomePage.classList.add('active');
+                }
+            }, 100);
         });
     </script>
     

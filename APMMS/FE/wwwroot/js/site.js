@@ -199,6 +199,7 @@ $(document).ready(function () {
     });
 
     // Authentication and Profile Management
+    console.log('Initializing authentication...');
     initializeAuth();
     
     // Initialize all components
@@ -207,19 +208,26 @@ $(document).ready(function () {
 
 // Authentication and Profile Management Functions
 function initializeAuth() {
+    console.log('initializeAuth called');
     // Check if user is logged in on page load
     checkLoginStatus();
     
     // Handle login form submission
+    console.log('Binding login form submit handler...');
+    console.log('Found login forms:', $('.login-form').length);
     $('.login-form').on('submit', function(e) {
         console.log('Form submitted, preventing default');
+        console.log('Form element:', this);
+        console.log('Form ID:', $(this).attr('id'));
         e.preventDefault();
         e.stopPropagation();
         
         // Check if it's login or register form
         if ($(this).find('#username').length > 0) {
+            console.log('Calling handleLogin');
             handleLogin();
         } else {
+            console.log('Calling handleRegister');
             handleRegister();
         }
         return false;
@@ -275,6 +283,10 @@ async function handleLogin() {
     const password = $('#password').val();
     
     console.log('Username:', username);
+    console.log('Password length:', password ? password.length : 0);
+    console.log('Form element:', $('#loginForm')[0]);
+    console.log('Username element:', $('#username')[0]);
+    console.log('Password element:', $('#password')[0]);
     
     if (!username || !password) {
         showAlert('Vui lòng nhập đầy đủ thông tin đăng nhập', 'warning');
@@ -289,7 +301,7 @@ async function handleLogin() {
     
     try {
         console.log('Calling Frontend AuthController: /Auth/Login');
-        // Call Frontend AuthController (which sets session variables)
+        // Call Frontend AuthController (which calls backend and sets session)
         const response = await fetch('/Auth/Login', {
             method: 'POST',
             headers: {
@@ -320,15 +332,17 @@ async function handleLogin() {
         }
         
         console.log('Response result:', result);
-        console.log('Role ID from API:', result.roleId);
-        console.log('Redirect URL from API:', result.redirectTo);
+        console.log('Success status:', result.success);
+        console.log('Token:', result.token ? 'Present' : 'Missing');
+        console.log('Role ID:', result.roleId);
+        console.log('Redirect To:', result.redirectTo);
         
         if (result.success) {
             // Store login info
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userInfo', JSON.stringify({
                 username: username,
-                fullName: username, // You can get this from API response
+                fullName: username,
                 email: 'user@example.com',
                 role: getRoleName(result.roleId),
                 roleId: result.roleId,
@@ -338,10 +352,10 @@ async function handleLogin() {
             // Hide modal
             $('#loginModal').modal('hide');
             
-            // Check if user should be redirected to dashboard
+            // Check if user should be redirected
             console.log('Checking redirect logic:');
-            console.log('result.redirectTo:', result.redirectTo);
-            console.log('result.redirectTo !== "/":', result.redirectTo !== '/');
+            console.log('Role ID:', result.roleId);
+            console.log('Redirect URL:', result.redirectTo);
             
             if (result.redirectTo && result.redirectTo !== '/') {
                 console.log('Redirecting to:', result.redirectTo);

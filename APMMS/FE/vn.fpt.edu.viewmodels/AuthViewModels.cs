@@ -42,6 +42,24 @@ namespace FE.vn.fpt.edu.viewmodels
         public string? Error { get; set; }
     }
 
+    // Backend API Response Wrapper
+    public class BackendApiResponse<T>
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public T? Data { get; set; }
+    }
+
+    // Backend Login Data
+    public class BackendLoginData
+    {
+        public string? Token { get; set; }
+        public long? UserId { get; set; }
+        public string? Username { get; set; }
+        public string? RoleName { get; set; }
+        public long? RoleId { get; set; }
+    }
+
     public class RegisterResponseModel
     {
         public bool Success { get; set; }

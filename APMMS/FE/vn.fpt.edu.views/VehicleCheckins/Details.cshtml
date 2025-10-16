@@ -1,0 +1,326 @@
+@{
+    ViewData["Title"] = "Chi tiết check-in xe";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Chi tiết check-in xe</h4>
+                    <div>
+                        <a href="/VehicleCheckins/Edit/@ViewBag.CheckinId" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <button class="btn btn-success" onclick="createMaintenanceTicket()">
+                            <i class="fas fa-wrench"></i> Tạo phiếu bảo dưỡng
+                        </button>
+                        <a href="/VehicleCheckins" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="checkinDetails" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <h5>Thông tin xe</h5>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>ID:</strong></div>
+                                        <div class="col-sm-8" id="checkinId">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Biển số:</strong></div>
+                                        <div class="col-sm-8"><span class="badge bg-primary fs-6" id="licensePlate">-</span></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Loại xe:</strong></div>
+                                        <div class="col-sm-8" id="vehicleType">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Chủ xe:</strong></div>
+                                        <div class="col-sm-8" id="customerName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>SĐT:</strong></div>
+                                        <div class="col-sm-8" id="customerPhone">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-4">
+                                    <h5>Thông tin check-in</h5>
+                                    <hr>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Chi nhánh:</strong></div>
+                                        <div class="col-sm-8" id="branchName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Trạng thái:</strong></div>
+                                        <div class="col-sm-8" id="status">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Ngày check-in:</strong></div>
+                                        <div class="col-sm-8" id="checkinDate">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
+                                        <div class="col-sm-8" id="createdDate">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Images Section -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Hình ảnh xe</h5>
+                                <hr>
+                                <div id="imagesContainer" class="row">
+                                    <!-- Images will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes Section -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h5>Ghi chú</h5>
+                                <hr>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <p id="notes" class="mb-0">-</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Maintenance Request Section -->
+                        <div id="maintenanceRequestSection" style="display: none;">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h5>Yêu cầu bảo dưỡng</h5>
+                                    <hr>
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-4"><strong>Loại:</strong></div>
+                                                        <div class="col-sm-8" id="maintenanceType">-</div>
+                                                    </div>
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-4"><strong>Ưu tiên:</strong></div>
+                                                        <div class="col-sm-8" id="priority">-</div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-4"><strong>Mô tả:</strong></div>
+                                                        <div class="col-sm-8" id="maintenanceDescription">-</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span id="errorText">Có lỗi xảy ra khi tải thông tin check-in</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let checkinData = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkinId = getCheckinIdFromUrl();
+            if (checkinId) {
+                loadCheckinDetails(checkinId);
+            } else {
+                showError('Không tìm thấy ID check-in');
+            }
+        });
+
+        function getCheckinIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadCheckinDetails(id) {
+            fetch(`/api/VehicleCheckin/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                
+                if (data.success) {
+                    checkinData = data.data;
+                    displayCheckinDetails(data.data);
+                } else {
+                    showError('Lỗi khi tải thông tin: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                showError('Có lỗi xảy ra khi tải thông tin check-in');
+            });
+        }
+
+        function displayCheckinDetails(checkin) {
+            document.getElementById('checkinId').textContent = checkin.id || '-';
+            document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
+            document.getElementById('vehicleType').textContent = getVehicleTypeText(checkin.vehicleType) || '-';
+            document.getElementById('customerName').textContent = checkin.customerName || '-';
+            document.getElementById('customerPhone').textContent = checkin.customerPhone || '-';
+            document.getElementById('branchName').textContent = checkin.branchName || '-';
+            document.getElementById('status').innerHTML = getStatusBadge(checkin.statusCode);
+            document.getElementById('checkinDate').textContent = checkin.checkinDate ? 
+                new Date(checkin.checkinDate).toLocaleString('vi-VN') : '-';
+            document.getElementById('createdDate').textContent = checkin.createdDate ? 
+                new Date(checkin.createdDate).toLocaleString('vi-VN') : '-';
+            document.getElementById('notes').textContent = checkin.notes || 'Không có ghi chú';
+
+            // Display images
+            displayImages(checkin.images || []);
+
+            // Display maintenance request if exists
+            if (checkin.maintenanceRequest) {
+                document.getElementById('maintenanceRequestSection').style.display = 'block';
+                document.getElementById('maintenanceType').textContent = getMaintenanceTypeText(checkin.maintenanceRequest.type) || '-';
+                document.getElementById('priority').innerHTML = getPriorityBadge(checkin.maintenanceRequest.priority);
+                document.getElementById('maintenanceDescription').textContent = checkin.maintenanceRequest.description || '-';
+            }
+            
+            document.getElementById('checkinDetails').style.display = 'block';
+        }
+
+        function displayImages(images) {
+            const container = document.getElementById('imagesContainer');
+            container.innerHTML = '';
+
+            if (images.length === 0) {
+                container.innerHTML = '<div class="col-12"><p class="text-muted">Không có hình ảnh</p></div>';
+                return;
+            }
+
+            images.forEach((image, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-3 mb-3';
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${image.imageUrl}" class="card-img-top" style="height: 200px; object-fit: cover;" 
+                             alt="Hình ảnh xe ${index + 1}" onclick="openImageModal('${image.imageUrl}')">
+                        <div class="card-body p-2">
+                            <small class="text-muted">Hình ${index + 1}</small>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        function getVehicleTypeText(type) {
+            switch(type) {
+                case 'CAR': return 'Ô tô';
+                case 'MOTORBIKE': return 'Xe máy';
+                case 'TRUCK': return 'Xe tải';
+                case 'BUS': return 'Xe bus';
+                default: return type;
+            }
+        }
+
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'PENDING': return '<span class="badge bg-warning">Chờ xử lý</span>';
+                case 'IN_PROGRESS': return '<span class="badge bg-primary">Đang xử lý</span>';
+                case 'COMPLETED': return '<span class="badge bg-success">Hoàn thành</span>';
+                case 'CANCELLED': return '<span class="badge bg-danger">Hủy</span>';
+                default: return `<span class="badge bg-secondary">${status}</span>`;
+            }
+        }
+
+        function getMaintenanceTypeText(type) {
+            switch(type) {
+                case 'ROUTINE': return 'Bảo dưỡng định kỳ';
+                case 'REPAIR': return 'Sửa chữa';
+                case 'INSPECTION': return 'Kiểm tra';
+                case 'EMERGENCY': return 'Khẩn cấp';
+                default: return type;
+            }
+        }
+
+        function getPriorityBadge(priority) {
+            switch(priority) {
+                case 'LOW': return '<span class="badge bg-success">Thấp</span>';
+                case 'MEDIUM': return '<span class="badge bg-warning">Trung bình</span>';
+                case 'HIGH': return '<span class="badge bg-danger">Cao</span>';
+                case 'URGENT': return '<span class="badge bg-dark">Khẩn cấp</span>';
+                default: return `<span class="badge bg-secondary">${priority}</span>`;
+            }
+        }
+
+        function createMaintenanceTicket() {
+            if (checkinData) {
+                if (confirm('Bạn có muốn tạo phiếu bảo dưỡng từ check-in này?')) {
+                    window.location.href = `/MaintenanceTickets/CreateFromCheckin/${checkinData.id}`;
+                }
+            }
+        }
+
+        function openImageModal(imageUrl) {
+            // Simple image modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Hình ảnh xe</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${imageUrl}" class="img-fluid" alt="Hình ảnh xe">
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
+            });
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+}

@@ -1,0 +1,225 @@
+@{
+    ViewData["Title"] = "Sửa thông tin người dùng";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Sửa thông tin người dùng</h4>
+                </div>
+                <div class="card-body">
+                    <form id="userForm">
+                        <input type="hidden" id="userId" name="id">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="firstName" class="form-label">Họ <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="firstName" name="firstName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="lastName" class="form-label">Tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="lastName" name="lastName" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phoneNumber" class="form-label">Số điện thoại</label>
+                                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="roleId" class="form-label">Vai trò <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="roleId" name="roleId" required>
+                                        <option value="">Chọn vai trò</option>
+                                        <option value="7">Auto Owner</option>
+                                        <option value="8">Guest</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="username" name="username" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Mật khẩu mới</label>
+                                    <input type="password" class="form-control" id="password" name="password" placeholder="Để trống nếu không đổi mật khẩu">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Để trống nếu không đổi mật khẩu">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">Địa chỉ</label>
+                                    <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isActive" name="isActive">
+                                    <label class="form-check-label" for="isActive">
+                                        Kích hoạt tài khoản
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="/Users" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Cập nhật
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = getUserIdFromUrl();
+            if (userId) {
+                loadUser(userId);
+            }
+            
+            document.getElementById('userForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateUser();
+            });
+        });
+
+        function getUserIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadUser(id) {
+            fetch(`/api/User/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const user = data.data;
+                    document.getElementById('userId').value = user.id;
+                    document.getElementById('firstName').value = user.firstName || '';
+                    document.getElementById('lastName').value = user.lastName || '';
+                    document.getElementById('email').value = user.email || '';
+                    document.getElementById('phoneNumber').value = user.phoneNumber || '';
+                    document.getElementById('roleId').value = user.roleId || '';
+                    document.getElementById('username').value = user.username || '';
+                    document.getElementById('address').value = user.address || '';
+                    document.getElementById('isActive').checked = user.isActive || false;
+                } else {
+                    showAlert('Lỗi khi tải thông tin người dùng: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi tải thông tin người dùng', 'danger');
+            });
+        }
+
+        function updateUser() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password && password !== confirmPassword) {
+                showAlert('Mật khẩu xác nhận không khớp!', 'danger');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('userForm'));
+            const userData = Object.fromEntries(formData.entries());
+            userData.isActive = document.getElementById('isActive').checked;
+            
+            // Remove empty password fields
+            if (!userData.password) {
+                delete userData.password;
+                delete userData.confirmPassword;
+            }
+
+            const userId = document.getElementById('userId').value;
+
+            fetch(`/api/User/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Cập nhật thông tin người dùng thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Users';
+                    }, 1500);
+                } else {
+                    showAlert('Lỗi: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi cập nhật thông tin người dùng', 'danger');
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+}
