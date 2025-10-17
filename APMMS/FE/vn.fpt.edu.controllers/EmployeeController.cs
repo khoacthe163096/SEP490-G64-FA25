@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace FE.vn.fpt.edu.controllers
 {
-    [Route("Employee")]
+    [Route("Employees")]
     // [Authorize] // Tạm thời comment để test
     public class EmployeeController : Controller
     {

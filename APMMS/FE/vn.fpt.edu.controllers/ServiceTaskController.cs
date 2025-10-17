@@ -2,24 +2,33 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FE.vn.fpt.edu.controllers
 {
+    [Route("ServiceTasks")]
     public class ServiceTaskController : Controller
     {
+        [HttpGet]
+        [Route("")]
         public IActionResult Index()
         {
-            return View();
+			return View("~/vn.fpt.edu.views/ServiceTasks/Index.cshtml");
         }
 
+        [HttpGet]
+        [Route("Create")]
         public IActionResult Create()
         {
             return View();
         }
 
+        [HttpGet]
+        [Route("Edit/{id}")]
         public IActionResult Edit(int id)
         {
             ViewBag.ServiceTaskId = id;
             return View();
         }
 
+        [HttpGet]
+        [Route("Details/{id}")]
         public IActionResult Details(int id)
         {
             ViewBag.ServiceTaskId = id;

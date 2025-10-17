@@ -90,5 +90,35 @@ namespace FE.vn.fpt.edu.controllers
             
             return RedirectToAction("Login");
         }
+
+        [HttpPost]
+        [Route("Logout")]
+        public async Task<IActionResult> LogoutPost()
+        {
+            // Clear session
+            HttpContext.Session.Clear();
+
+            // Sign out cookie
+            await HttpContext.SignOutAsync("CookieAuthentication");
+
+            return Json(new { success = true, redirectTo = Url.Action("Login", "Auth") });
+        }
+
+        [HttpGet]
+        [Route("GetUserInfo")]
+        public IActionResult GetUserInfo()
+        {
+            var token = HttpContext.Session.GetString("AuthToken");
+            var username = HttpContext.Session.GetString("Username") ?? string.Empty;
+            var roleIdString = HttpContext.Session.GetString("RoleId");
+            int roleId = 0;
+            if (!string.IsNullOrEmpty(roleIdString))
+            {
+                int.TryParse(roleIdString, out roleId);
+            }
+
+            var isLoggedIn = !string.IsNullOrEmpty(token);
+            return Json(new { isLoggedIn, username, roleId });
+        }
     }
 }
