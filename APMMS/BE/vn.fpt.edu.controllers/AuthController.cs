@@ -17,12 +17,7 @@ namespace BE.vn.fpt.edu.controllers
             _authService = authService;
         }
 
-        // ============================================
-        // 🔐 LOGIN
-        // ============================================
-        /// <summary>
-        /// Đăng nhập hệ thống và nhận JWT token
-        /// </summary>
+
         [HttpPost("login")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
@@ -57,12 +52,7 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(response);
         }
 
-        // ============================================
-        // 🧾 REGISTER
-        // ============================================
-        /// <summary>
-        /// Đăng ký tài khoản mới
-        /// </summary>
+
         [HttpPost("register")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
@@ -92,12 +82,7 @@ namespace BE.vn.fpt.edu.controllers
             });
         }
 
-        // ============================================
-        // 🚪 LOGOUT
-        // ============================================
-        /// <summary>
-        /// Đăng xuất (thu hồi token)
-        /// </summary>
+
         [Authorize]
         [HttpPost("logout")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
@@ -125,12 +110,7 @@ namespace BE.vn.fpt.edu.controllers
             });
         }
 
-        // ============================================
-        // 🔄 REFRESH TOKEN
-        // ============================================
-        /// <summary>
-        /// Cấp mới JWT token khi token cũ còn hạn
-        /// </summary>
+
         [HttpPost("refresh")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
@@ -163,9 +143,7 @@ namespace BE.vn.fpt.edu.controllers
             });
         }
 
-        // ============================================
-        // 🧠 VALIDATE TOKEN
-        // ============================================
+
         /// <summary>
         /// Kiểm tra token có hợp lệ không
         /// </summary>
@@ -185,9 +163,7 @@ namespace BE.vn.fpt.edu.controllers
         }
     }
 
-    // ============================================
-    // 📦 SMALL DTOs
-    // ============================================
+
     public class RefreshTokenDto
     {
         public string Token { get; set; } = string.Empty;

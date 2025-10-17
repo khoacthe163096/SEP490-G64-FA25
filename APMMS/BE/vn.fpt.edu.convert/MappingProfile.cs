@@ -34,8 +34,8 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>();
 
             // Employee mappings
-            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.Employee.RequestDto, User>();
+            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>();
+            CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>();
 
             // Feedback mappings
             CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>();
