@@ -18,6 +18,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? CarName { get; set; }
         public string? CarModel { get; set; }
         public string? LicensePlate { get; set; }
+        public string? VinNumber { get; set; }
         public string? Color { get; set; }
         public int? YearOfManufacture { get; set; }
         
@@ -53,6 +54,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public long CarId { get; set; }
         public string? CarName { get; set; }
         public string? LicensePlate { get; set; }
+        public string? VinNumber { get; set; }
         public string? CustomerName { get; set; }
         public int Mileage { get; set; }
         public DateTime? CreatedAt { get; set; }

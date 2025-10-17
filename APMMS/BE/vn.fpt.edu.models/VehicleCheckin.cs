@@ -12,7 +12,7 @@ public partial class VehicleCheckin
     public long? MaintenanceRequestId { get; set; }
 
     public int? Mileage { get; set; }
-
+    public string? VinNumber { get; set; }
     public string? Notes { get; set; }
 
     public DateTime? CreatedAt { get; set; }

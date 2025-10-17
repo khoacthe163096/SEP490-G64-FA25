@@ -16,7 +16,7 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Create")]
         public IActionResult Create()
         {
-            return View();
+			return View("~/vn.fpt.edu.views/ServiceSchedules/Create.cshtml");
         }
 
         [HttpGet]
@@ -24,7 +24,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Edit(int id)
         {
             ViewBag.ServiceScheduleId = id;
-            return View();
+			return View("~/vn.fpt.edu.views/ServiceSchedules/Edit.cshtml");
         }
 
         [HttpGet]
@@ -32,7 +32,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Details(int id)
         {
             ViewBag.ServiceScheduleId = id;
-            return View();
+			return View("~/vn.fpt.edu.views/ServiceSchedules/Details.cshtml");
         }
     }
 }

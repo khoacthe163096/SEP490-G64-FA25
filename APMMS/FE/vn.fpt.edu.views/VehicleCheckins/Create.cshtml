@@ -11,7 +11,50 @@
                     <h4 class="mb-0">Check-in xe mới</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Search Vehicle Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Tìm kiếm xe</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="searchTerm" class="form-label">Nhập biển số hoặc số khung <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="searchTerm" placeholder="VD: 30A-12345 hoặc 1HGBH41JXMN109186">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="button" class="btn btn-primary w-100" onclick="searchVehicle()">
+                                            <i class="fas fa-search"></i> Tìm kiếm
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Results -->
+                            <div id="searchResults" style="display: none;">
+                                <div class="alert alert-success">
+                                    <h6><i class="fas fa-check-circle"></i> Tìm thấy xe trong hệ thống</h6>
+                                    <div id="vehicleInfo"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="noResults" style="display: none;">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Không tìm thấy xe</h6>
+                                    <p>Xe chưa có trong hệ thống. Vui lòng nhập thông tin xe mới bên dưới.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <form id="checkinForm" enctype="multipart/form-data">
+                        <!-- Hidden field for carId -->
+                        <input type="hidden" id="carId" name="carId">
+                        
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -21,14 +64,23 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="vehicleType" class="form-label">Loại xe <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="vehicleType" name="vehicleType" required>
-                                        <option value="">Chọn loại xe</option>
-                                        <option value="CAR">Ô tô</option>
-                                        <option value="MOTORBIKE">Xe máy</option>
-                                        <option value="TRUCK">Xe tải</option>
-                                        <option value="BUS">Xe bus</option>
-                                    </select>
+                                    <label for="vinNumber" class="form-label">Số khung (VIN)</label>
+                                    <input type="text" class="form-control" id="vinNumber" name="vinNumber">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="carName" class="form-label">Tên xe <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="carName" name="carName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="carModel" class="form-label">Model xe</label>
+                                    <input type="text" class="form-control" id="carModel" name="carModel">
                                 </div>
                             </div>
                         </div>
@@ -44,6 +96,21 @@
                                 <div class="mb-3">
                                     <label for="customerPhone" class="form-label">Số điện thoại khách hàng</label>
                                     <input type="tel" class="form-control" id="customerPhone" name="customerPhone">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mileage" class="form-label">Số km hiện tại <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="yearOfManufacture" class="form-label">Năm sản xuất</label>
+                                    <input type="number" class="form-control" id="yearOfManufacture" name="yearOfManufacture" min="1900" max="2030">
                                 </div>
                             </div>
                         </div>
@@ -199,22 +266,83 @@
                 });
         }
 
-        function createCheckin() {
-            const formData = new FormData(document.getElementById('checkinForm'));
-            
-            // Add maintenance request data if checked
-            if (document.getElementById('hasMaintenanceRequest').checked) {
-                formData.append('maintenanceType', document.getElementById('maintenanceType').value);
-                formData.append('priority', document.getElementById('priority').value);
-                formData.append('maintenanceDescription', document.getElementById('maintenanceDescription').value);
+        function searchVehicle() {
+            const searchTerm = document.getElementById('searchTerm').value.trim();
+            if (!searchTerm) {
+                showAlert('Vui lòng nhập biển số hoặc số khung', 'warning');
+                return;
             }
+
+            fetch(`/VehicleCheckins/SearchVehicle?searchTerm=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.found) {
+                        // Xe đã tồn tại - tự động điền thông tin
+                        const car = data.data.car;
+                        document.getElementById('carId').value = car.id;
+                        document.getElementById('licensePlate').value = car.licensePlate || '';
+                        document.getElementById('vinNumber').value = car.vinNumber || '';
+                        document.getElementById('carName').value = car.carName || '';
+                        document.getElementById('carModel').value = car.carModel || '';
+                        document.getElementById('customerName').value = car.customerName || '';
+                        document.getElementById('customerPhone').value = car.customerPhone || '';
+                        document.getElementById('yearOfManufacture').value = car.yearOfManufacture || '';
+                        
+                        // Hiển thị thông tin xe tìm thấy
+                        document.getElementById('vehicleInfo').innerHTML = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Biển số:</strong> ${car.licensePlate || '-'}<br>
+                                    <strong>Số khung:</strong> ${car.vinNumber || '-'}<br>
+                                    <strong>Xe:</strong> ${car.carName || '-'} ${car.carModel || ''}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Chủ xe:</strong> ${car.customerName || '-'}<br>
+                                    <strong>SĐT:</strong> ${car.customerPhone || '-'}<br>
+                                    <strong>Năm SX:</strong> ${car.yearOfManufacture || '-'}
+                                </div>
+                            </div>
+                        `;
+                        
+                        document.getElementById('searchResults').style.display = 'block';
+                        document.getElementById('noResults').style.display = 'none';
+                        
+                        showAlert('Tìm thấy xe trong hệ thống! Thông tin đã được tự động điền.', 'success');
+                    } else {
+                        // Xe chưa tồn tại - cho phép nhập thông tin mới
+                        document.getElementById('carId').value = '';
+                        document.getElementById('searchResults').style.display = 'none';
+                        document.getElementById('noResults').style.display = 'block';
+                        showAlert('Xe chưa có trong hệ thống. Vui lòng nhập thông tin xe mới.', 'info');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Có lỗi xảy ra khi tìm kiếm xe', 'danger');
+                });
+        }
+
+        function createCheckin() {
+            const carId = document.getElementById('carId').value;
+            if (!carId) {
+                showAlert('Vui lòng tìm kiếm xe trước khi tạo check-in', 'warning');
+                return;
+            }
+
+            const formData = {
+                carId: parseInt(carId),
+                maintenanceRequestId: null,
+                mileage: parseInt(document.getElementById('mileage').value),
+                notes: document.getElementById('notes').value,
+                imageUrls: [] // TODO: Handle image upload
+            };
 
             fetch('/api/VehicleCheckin', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Content-Type': 'application/json'
                 },
-                body: formData
+                body: JSON.stringify(formData)
             })
             .then(response => response.json())
             .then(data => {

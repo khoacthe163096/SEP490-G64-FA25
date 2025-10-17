@@ -108,6 +108,7 @@ namespace BE.vn.fpt.edu.services
                 CarName = vehicleCheckin.Car?.CarName,
                 CarModel = vehicleCheckin.Car?.CarModel,
                 LicensePlate = vehicleCheckin.Car?.LicensePlate,
+                VinNumber = vehicleCheckin.Car?.VinNumber,
                 Color = vehicleCheckin.Car?.Color,
                 YearOfManufacture = vehicleCheckin.Car?.YearOfManufacture,
                 
@@ -142,6 +143,39 @@ namespace BE.vn.fpt.edu.services
             return await GetVehicleCheckinByIdAsync(vehicleCheckinId);
         }
 
+        public async Task<object> SearchVehicleAsync(string searchTerm)
+        {
+            // Tìm kiếm xe theo biển số hoặc số khung
+            var cars = await _vehicleCheckinRepository.SearchCarsAsync(searchTerm);
+            
+            if (!cars.Any())
+            {
+                return new { found = false, message = "Không tìm thấy xe trong hệ thống" };
+            }
+
+            // Nếu tìm thấy xe, trả về thông tin xe
+            var car = cars.First();
+            return new 
+            { 
+                found = true,
+                car = new
+                {
+                    id = car.Id,
+                    carName = car.CarName,
+                    carModel = car.CarModel,
+                    licensePlate = car.LicensePlate,
+                    vinNumber = car.VinNumber,
+                    color = car.Color,
+                    yearOfManufacture = car.YearOfManufacture,
+                    vehicleEngineNumber = car.VehicleEngineNumber,
+                    customerName = $"{car.User?.FirstName} {car.User?.LastName}".Trim(),
+                    customerPhone = car.User?.Phone,
+                    customerEmail = car.User?.Email,
+                    branchName = car.Branch?.Name
+                }
+            };
+        }
+
         private ListResponseDto MapToListResponseDTO(VehicleCheckin vehicleCheckin)
         {
             return new ListResponseDto
@@ -150,6 +184,7 @@ namespace BE.vn.fpt.edu.services
                 CarId = vehicleCheckin.CarId ?? 0,
                 CarName = vehicleCheckin.Car?.CarName,
                 LicensePlate = vehicleCheckin.Car?.LicensePlate,
+                VinNumber = vehicleCheckin.Car?.VinNumber,
                 CustomerName = $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
                 Mileage = vehicleCheckin.Mileage ?? 0,
                 CreatedAt = vehicleCheckin.CreatedAt,

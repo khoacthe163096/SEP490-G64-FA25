@@ -161,6 +161,26 @@ namespace vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Tìm kiếm xe theo biển số hoặc số khung
+        /// </summary>
+        [HttpGet("search-vehicle")]
+        public async Task<IActionResult> SearchVehicle([FromQuery] string searchTerm)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                    return BadRequest(new { success = false, message = "Search term is required" });
+
+                var result = await _vehicleCheckinService.SearchVehicleAsync(searchTerm);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Link vehicle check-in v?i maintenance request
         /// </summary>
         [HttpPut("{id}/link-maintenance")]

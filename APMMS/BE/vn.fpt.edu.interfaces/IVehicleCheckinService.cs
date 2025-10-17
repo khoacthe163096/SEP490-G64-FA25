@@ -12,5 +12,6 @@ namespace BE.vn.fpt.edu.interfaces
         Task<List<ListResponseDto>> GetVehicleCheckinsByMaintenanceRequestIdAsync(long maintenanceRequestId);
         Task<ResponseDto> LinkMaintenanceRequestAsync(long vehicleCheckinId, long maintenanceRequestId);
         Task<bool> DeleteVehicleCheckinAsync(long id);
+        Task<object> SearchVehicleAsync(string searchTerm);
     }
 }

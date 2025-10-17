@@ -56,6 +56,7 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Biển số xe</th>
+                                    <th>Số khung</th>
                                     <th>Chủ xe</th>
                                     <th>Loại xe</th>
                                     <th>Chi nhánh</th>
@@ -105,7 +106,7 @@
             const branch = document.getElementById('branchFilter').value;
             const date = document.getElementById('dateFilter').value;
 
-            fetch(`/api/VehicleCheckin?page=${currentPage}&pageSize=${pageSize}&search=${search}&status=${status}&branch=${branch}&date=${date}`)
+            fetch(`/VehicleCheckins/ListData?page=${currentPage}&pageSize=${pageSize}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -145,7 +146,7 @@
             tbody.innerHTML = '';
 
             if (checkins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="text-center">Không có dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center">Không có dữ liệu</td></tr>';
                 return;
             }
 
@@ -154,6 +155,7 @@
                 row.innerHTML = `
                     <td>${checkin.id}</td>
                     <td><strong>${checkin.licensePlate || '-'}</strong></td>
+                    <td><code>${checkin.vinNumber || '-'}</code></td>
                     <td>${checkin.customerName || '-'}</td>
                     <td><span class="badge bg-info">${checkin.vehicleType || '-'}</span></td>
                     <td>${checkin.branchName || '-'}</td>
@@ -236,18 +238,44 @@
 
         function createMaintenanceTicket(checkinId) {
             if (confirm('Bạn có muốn tạo phiếu bảo dưỡng từ check-in này?')) {
-                // Redirect to maintenance ticket creation with checkin ID
-                window.location.href = `/MaintenanceTickets/CreateFromCheckin/${checkinId}`;
+                // Create maintenance ticket via API
+                fetch('/MaintenanceTickets/CreateFromCheckin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        vehicleCheckinId: checkinId,
+                        consulterId: 1, // Default consulter ID - should be from session
+                        technicianId: null,
+                        branchId: 1, // Default branch ID - should be from session
+                        scheduleServiceId: null,
+                        statusCode: 'PENDING'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Tạo phiếu bảo dưỡng thành công!', 'success');
+                        // Optionally redirect to maintenance tickets list
+                        setTimeout(() => {
+                            window.location.href = '/MaintenanceTickets';
+                        }, 1500);
+                    } else {
+                        showAlert('Lỗi tạo phiếu bảo dưỡng: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Có lỗi xảy ra khi tạo phiếu bảo dưỡng', 'danger');
+                });
             }
         }
 
         function deleteCheckin(id) {
             if (confirm('Bạn có chắc chắn muốn xóa check-in này?')) {
                 fetch(`/api/VehicleCheckin/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                    method: 'DELETE'
                 })
                 .then(response => response.json())
                 .then(data => {

@@ -109,5 +109,16 @@ namespace BE.vn.fpt.edu.repository
                 .Take(pageSize)
                 .ToListAsync();
         }
+
+        public async Task<List<Car>> SearchCarsAsync(string searchTerm)
+        {
+            return await _context.Cars
+                .Include(c => c.User)
+                .Include(c => c.Branch)
+                .Include(c => c.VehicleType)
+                .Where(c => c.LicensePlate.Contains(searchTerm) || 
+                           (c.VinNumber != null && c.VinNumber.Contains(searchTerm)))
+                .ToListAsync();
+        }
     }
 }

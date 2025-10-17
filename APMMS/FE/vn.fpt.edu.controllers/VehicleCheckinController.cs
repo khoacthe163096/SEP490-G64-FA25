@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using FE.vn.fpt.edu.services;
 
 namespace FE.vn.fpt.edu.controllers
 {
@@ -7,6 +8,12 @@ namespace FE.vn.fpt.edu.controllers
     [Route("VehicleCheckins")]
     public class VehicleCheckinController : Controller
     {
+        private readonly VehicleCheckinService _service;
+
+        public VehicleCheckinController(VehicleCheckinService service)
+        {
+            _service = service;
+        }
         [HttpGet]
         [Route("")]
         public IActionResult Index()
@@ -15,10 +22,26 @@ namespace FE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
+        [Route("ListData")]
+        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10)
+        {
+            var data = await _service.GetAllAsync(page, pageSize);
+            return Json(data);
+        }
+
+        [HttpGet]
+        [Route("SearchVehicle")]
+        public async Task<IActionResult> SearchVehicle(string searchTerm)
+        {
+            var result = await _service.SearchVehicleAsync(searchTerm);
+            return Json(result);
+        }
+
+        [HttpGet]
         [Route("Create")]
         public IActionResult Create()
         {
-            return View();
+			return View("~/vn.fpt.edu.views/VehicleCheckins/Create.cshtml");
         }
 
         [HttpGet]
@@ -26,7 +49,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Edit(int id)
         {
             ViewBag.CheckinId = id;
-            return View();
+			return View("~/vn.fpt.edu.views/VehicleCheckins/Edit.cshtml");
         }
 
         [HttpGet]
@@ -34,7 +57,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Details(int id)
         {
             ViewBag.CheckinId = id;
-            return View();
+			return View("~/vn.fpt.edu.views/VehicleCheckins/Details.cshtml");
         }
     }
 }
