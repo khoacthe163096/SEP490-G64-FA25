@@ -52,5 +52,12 @@ namespace BE.vn.fpt.edu.controllers
             if (!success) return NotFound();
             return Ok(new { message = "Employee deleted successfully (soft delete)." });
         }
+        [HttpGet("filter")]
+        public async Task<IActionResult> FilterEmployees([FromQuery] bool? isDelete, [FromQuery] long? roleId)
+        {
+            var employees = await _employeeService.FilterAsync(isDelete, roleId);
+            return Ok(employees);
+        }
+
     }
 }

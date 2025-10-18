@@ -9,6 +9,8 @@ namespace BE.vn.fpt.edu.interfaces
         Task<EmployeeResponseDto> CreateAsync(EmployeeRequestDto dto);
         Task<EmployeeResponseDto?> UpdateAsync(long id, EmployeeRequestDto dto);
         Task<bool> DeleteAsync(long id);
+        Task<IEnumerable<EmployeeResponseDto>> FilterAsync(bool? isDelete, long? roleId);
+
     }
 }
 
