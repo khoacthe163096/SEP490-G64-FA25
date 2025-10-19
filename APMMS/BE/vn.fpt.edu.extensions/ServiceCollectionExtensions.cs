@@ -27,7 +27,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IAutoOwnerRepository, AutoOwnerRepository>();
             services.AddScoped<ICarOfAutoOwnerRepository, CarOfAutoOwnerRepository>();
-            // services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Not implemented yet
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Not implemented yet
             services.AddScoped<IHistoryLogRepository, HistoryLogRepository>();
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<IReportRepository, ReportRepository>();

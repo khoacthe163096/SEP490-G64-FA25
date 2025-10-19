@@ -39,7 +39,7 @@ namespace BE.vn.fpt.edu.convert
 
             // Feedback mappings
             CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.Feedback.CreateRequestDto, Feedback>();
+            CreateMap<BE.vn.fpt.edu.DTOs.Feedback.RequestDto, Feedback>();
 
             // HistoryLog mappings
             CreateMap<HistoryLog, BE.vn.fpt.edu.DTOs.HistoryLog.ResponseDto>();
