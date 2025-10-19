@@ -21,10 +21,21 @@ namespace FE.vn.fpt.edu.adapters
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_baseUrl}/{endpoint}");
-                response.EnsureSuccessStatusCode();
+                var url = $"{_baseUrl}/{endpoint}";
+                Console.WriteLine($"ApiAdapter: Calling GET {url}");
+                
+                var response = await _httpClient.GetAsync(url);
+                Console.WriteLine($"ApiAdapter: Response status: {response.StatusCode}");
                 
                 var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"ApiAdapter: Response content: {content}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"ApiAdapter: Request failed with status {response.StatusCode}");
+                    throw new HttpRequestException($"API request failed with status {response.StatusCode}: {content}");
+                }
+                
                 return JsonSerializer.Deserialize<T>(content, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
@@ -32,8 +43,8 @@ namespace FE.vn.fpt.edu.adapters
             }
             catch (Exception ex)
             {
-                // Log error
-                return default(T);
+                Console.WriteLine($"ApiAdapter: Exception in GetAsync: {ex.Message}");
+                throw;
             }
         }
 

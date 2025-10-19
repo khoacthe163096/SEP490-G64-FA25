@@ -94,7 +94,18 @@ namespace vn.fpt.edu.controllers
             try
             {
                 var result = await _vehicleCheckinService.GetAllVehicleCheckinsAsync(page, pageSize);
-                return Ok(new { success = true, data = result, page = page, pageSize = pageSize });
+                var totalCount = await _vehicleCheckinService.GetTotalCountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                
+                return Ok(new { 
+                    success = true, 
+                    data = result, 
+                    page = page, 
+                    pageSize = pageSize,
+                    totalPages = totalPages,
+                    currentPage = page,
+                    totalCount = totalCount
+                });
             }
             catch (Exception ex)
             {

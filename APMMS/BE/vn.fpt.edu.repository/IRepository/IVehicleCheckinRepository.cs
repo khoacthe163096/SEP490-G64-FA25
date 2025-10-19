@@ -13,6 +13,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task<bool> DeleteAsync(long id);
         Task<VehicleCheckin?> GetByIdWithDetailsAsync(long id);
         Task<List<VehicleCheckin>> GetAllWithDetailsAsync(int page = 1, int pageSize = 10);
+        Task<int> GetTotalCountAsync();
         Task<List<Car>> SearchCarsAsync(string searchTerm);
     }
 }

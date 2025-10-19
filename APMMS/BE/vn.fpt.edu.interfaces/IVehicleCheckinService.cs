@@ -8,6 +8,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> UpdateVehicleCheckinAsync(UpdateDto request);
         Task<ResponseDto> GetVehicleCheckinByIdAsync(long id);
         Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10);
+        Task<int> GetTotalCountAsync();
         Task<List<ListResponseDto>> GetVehicleCheckinsByCarIdAsync(long carId);
         Task<List<ListResponseDto>> GetVehicleCheckinsByMaintenanceRequestIdAsync(long maintenanceRequestId);
         Task<ResponseDto> LinkMaintenanceRequestAsync(long vehicleCheckinId, long maintenanceRequestId);

@@ -59,5 +59,13 @@ namespace FE.vn.fpt.edu.controllers
             ViewBag.CheckinId = id;
 			return View("~/vn.fpt.edu.views/VehicleCheckins/Details.cshtml");
         }
+
+        [HttpGet]
+        [Route("GetDetails/{id}")]
+        public async Task<IActionResult> GetDetails(int id)
+        {
+            var data = await _service.GetByIdAsync(id);
+            return Json(data);
+        }
     }
 }

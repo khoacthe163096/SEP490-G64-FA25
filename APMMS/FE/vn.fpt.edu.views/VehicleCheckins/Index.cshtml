@@ -56,13 +56,10 @@
                                 <tr>
                                     <th>ID</th>
                                     <th>Biển số xe</th>
-                                    <th>Số khung</th>
                                     <th>Chủ xe</th>
                                     <th>Loại xe</th>
-                                    <th>Chi nhánh</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày check-in</th>
-                                    <th>Ghi chú</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
@@ -106,9 +103,24 @@
             const branch = document.getElementById('branchFilter').value;
             const date = document.getElementById('dateFilter').value;
 
+            console.log('Calling API: VehicleCheckin?page=' + currentPage + '&pageSize=' + pageSize);
+            
             fetch(`/VehicleCheckins/ListData?page=${currentPage}&pageSize=${pageSize}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('API Response:', data); // Debug log
+                    console.log('Data length:', data.data ? data.data.length : 'undefined');
+                    if (data.data && data.data.length > 0) {
+                        console.log('First item status:', data.data[0].statusCode);
+                        console.log('First item maintenanceRequestStatus:', data.data[0].maintenanceRequestStatus);
+                    }
                     if (data.success) {
                         renderCheckinsTable(data.data);
                         renderPagination(data.totalPages, data.currentPage);
@@ -118,68 +130,77 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
+                    showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
                 });
         }
 
         function loadBranches() {
-            fetch('/api/Branch')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const select = document.getElementById('branchFilter');
-                        data.data.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            option.textContent = branch.name;
-                            select.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading branches:', error);
-                });
+            // Tạm thời comment để tránh lỗi API không tồn tại
+            // fetch('/api/Branch')
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         if (data.success) {
+            //             const select = document.getElementById('branchFilter');
+            //             data.data.forEach(branch => {
+            //                 const option = document.createElement('option');
+            //                 option.value = branch.id;
+            //                 option.textContent = branch.name;
+            //                 select.appendChild(option);
+            //             });
+            //         }
+            //     })
+            //     .catch(error => {
+            //         console.error('Error loading branches:', error);
+            //     });
         }
 
         function renderCheckinsTable(checkins) {
+            console.log('renderCheckinsTable called with:', checkins);
             const tbody = document.getElementById('checkinsTableBody');
             tbody.innerHTML = '';
 
-            if (checkins.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="text-center">Không có dữ liệu</td></tr>';
+            if (!checkins || checkins.length === 0) {
+                console.log('No data to render');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Không có dữ liệu</td></tr>';
                 return;
             }
 
-            checkins.forEach(checkin => {
+            console.log('Rendering', checkins.length, 'checkins');
+            checkins.forEach((checkin, index) => {
+                console.log('Rendering checkin', index, ':', checkin);
+                console.log('StatusCode:', checkin.statusCode);
+                console.log('MaintenanceRequestStatus:', checkin.maintenanceRequestStatus);
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${checkin.id}</td>
-                    <td><strong>${checkin.licensePlate || '-'}</strong></td>
-                    <td><code>${checkin.vinNumber || '-'}</code></td>
-                    <td>${checkin.customerName || '-'}</td>
-                    <td><span class="badge bg-info">${checkin.vehicleType || '-'}</span></td>
-                    <td>${checkin.branchName || '-'}</td>
-                    <td><span class="badge ${getStatusBadgeClass(checkin.statusCode)}">${getStatusText(checkin.statusCode)}</span></td>
-                    <td>${checkin.checkinDate ? new Date(checkin.checkinDate).toLocaleString('vi-VN') : '-'}</td>
-                    <td>${checkin.notes ? (checkin.notes.length > 50 ? checkin.notes.substring(0, 50) + '...' : checkin.notes) : '-'}</td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="/VehicleCheckins/Edit/${checkin.id}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button class="btn btn-sm btn-success" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
-                                <i class="fas fa-wrench"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCheckin(${checkin.id})" title="Xóa">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(row);
+                try {
+                    row.innerHTML = `
+                        <td>${checkin.id}</td>
+                        <td><strong>${checkin.licensePlate || '-'}</strong></td>
+                        <td>${checkin.customerName || '-'}</td>
+                        <td><span class="badge bg-info">${checkin.carName || '-'}</span></td>
+                        <td><span class="badge ${getStatusBadgeClass(checkin.statusCode)}">${getStatusText(checkin.statusCode)}</span></td>
+                        <td>${checkin.createdAt ? new Date(checkin.createdAt).toLocaleString('vi-VN') : '-'}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/VehicleCheckins/Edit/${checkin.id}" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-success" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
+                                    <i class="fas fa-wrench"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCheckin(${checkin.id})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                    console.log('Successfully added row for checkin', checkin.id);
+                } catch (error) {
+                    console.error('Error creating row for checkin', checkin.id, ':', error);
+                }
             });
         }
 
@@ -187,8 +208,10 @@
             switch(status) {
                 case 'PENDING': return 'bg-warning';
                 case 'IN_PROGRESS': return 'bg-primary';
-                case 'COMPLETED': return 'bg-success';
+                case 'DONE': return 'bg-success';
                 case 'CANCELLED': return 'bg-danger';
+                case 'CONFIRMED': return 'bg-info';
+                case 'REJECTED': return 'bg-danger';
                 default: return 'bg-secondary';
             }
         }
@@ -196,9 +219,11 @@
         function getStatusText(status) {
             switch(status) {
                 case 'PENDING': return 'Chờ xử lý';
-                case 'IN_PROGRESS': return 'Đang xử lý';
-                case 'COMPLETED': return 'Hoàn thành';
-                case 'CANCELLED': return 'Hủy';
+                case 'IN_PROGRESS': return 'Đang thực hiện';
+                case 'DONE': return 'Hoàn thành';
+                case 'CANCELLED': return 'Đã hủy';
+                case 'CONFIRMED': return 'Đã xác nhận';
+                case 'REJECTED': return 'Từ chối';
                 default: return status;
             }
         }

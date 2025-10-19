@@ -19,6 +19,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? CarModel { get; set; }
         public string? LicensePlate { get; set; }
         public string? VinNumber { get; set; }
+        public string? VehicleEngineNumber { get; set; }
         public string? Color { get; set; }
         public int? YearOfManufacture { get; set; }
         
@@ -27,12 +28,18 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
         
+        // Thông tin chi nhánh
+        public string? BranchName { get; set; }
+        
         // Hình ảnh
         public List<VehicleCheckinImageDto> Images { get; set; } = new List<VehicleCheckinImageDto>();
         
         // Thông tin yêu cầu bảo dưỡng
         public string? MaintenanceRequestStatus { get; set; }
         public DateTime? RequestDate { get; set; }
+        
+        // Trạng thái VehicleCheckin
+        public string? StatusCode { get; set; }
     }
     
     /// <summary>
@@ -60,6 +67,9 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public DateTime? CreatedAt { get; set; }
         public string? Notes { get; set; }
         public string? FirstImageUrl { get; set; }
+        public string? BranchName { get; set; }
+        public string? MaintenanceRequestStatus { get; set; }
+        public string? StatusCode { get; set; }
     }
 }
 

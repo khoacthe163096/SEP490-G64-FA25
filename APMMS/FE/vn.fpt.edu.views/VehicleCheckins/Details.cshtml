@@ -54,6 +54,14 @@
                                         <div class="col-sm-4"><strong>SĐT:</strong></div>
                                         <div class="col-sm-8" id="customerPhone">-</div>
                                     </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Số khung:</strong></div>
+                                        <div class="col-sm-8"><code id="vinNumber">-</code></div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Số máy:</strong></div>
+                                        <div class="col-sm-8"><code id="engineNumber">-</code></div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -168,12 +176,13 @@
         }
 
         function loadCheckinDetails(id) {
-            fetch(`/api/VehicleCheckin/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            fetch(`/VehicleCheckins/GetDetails/${id}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                return response.json();
             })
-            .then(response => response.json())
             .then(data => {
                 document.getElementById('loadingSpinner').style.display = 'none';
                 
@@ -187,22 +196,26 @@
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('loadingSpinner').style.display = 'none';
-                showError('Có lỗi xảy ra khi tải thông tin check-in');
+                showError('Có lỗi xảy ra khi tải thông tin check-in: ' + error.message);
             });
         }
 
         function displayCheckinDetails(checkin) {
+            console.log('Displaying checkin details:', checkin); // Debug log
+            
             document.getElementById('checkinId').textContent = checkin.id || '-';
             document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
-            document.getElementById('vehicleType').textContent = getVehicleTypeText(checkin.vehicleType) || '-';
+            document.getElementById('vehicleType').textContent = checkin.carName || '-'; // Sử dụng carName thay vì vehicleType
             document.getElementById('customerName').textContent = checkin.customerName || '-';
             document.getElementById('customerPhone').textContent = checkin.customerPhone || '-';
+            document.getElementById('vinNumber').textContent = checkin.vinNumber || '-';
+            document.getElementById('engineNumber').textContent = checkin.vehicleEngineNumber || '-';
             document.getElementById('branchName').textContent = checkin.branchName || '-';
             document.getElementById('status').innerHTML = getStatusBadge(checkin.statusCode);
-            document.getElementById('checkinDate').textContent = checkin.checkinDate ? 
-                new Date(checkin.checkinDate).toLocaleString('vi-VN') : '-';
-            document.getElementById('createdDate').textContent = checkin.createdDate ? 
-                new Date(checkin.createdDate).toLocaleString('vi-VN') : '-';
+            document.getElementById('checkinDate').textContent = checkin.createdAt ? 
+                new Date(checkin.createdAt).toLocaleString('vi-VN') : '-'; // Sử dụng createdAt thay vì checkinDate
+            document.getElementById('createdDate').textContent = checkin.createdAt ? 
+                new Date(checkin.createdAt).toLocaleString('vi-VN') : '-';
             document.getElementById('notes').textContent = checkin.notes || 'Không có ghi chú';
 
             // Display images
@@ -257,9 +270,11 @@
         function getStatusBadge(status) {
             switch(status) {
                 case 'PENDING': return '<span class="badge bg-warning">Chờ xử lý</span>';
-                case 'IN_PROGRESS': return '<span class="badge bg-primary">Đang xử lý</span>';
-                case 'COMPLETED': return '<span class="badge bg-success">Hoàn thành</span>';
-                case 'CANCELLED': return '<span class="badge bg-danger">Hủy</span>';
+                case 'IN_PROGRESS': return '<span class="badge bg-primary">Đang thực hiện</span>';
+                case 'DONE': return '<span class="badge bg-success">Hoàn thành</span>';
+                case 'CANCELLED': return '<span class="badge bg-danger">Đã hủy</span>';
+                case 'CONFIRMED': return '<span class="badge bg-info">Đã xác nhận</span>';
+                case 'REJECTED': return '<span class="badge bg-danger">Từ chối</span>';
                 default: return `<span class="badge bg-secondary">${status}</span>`;
             }
         }

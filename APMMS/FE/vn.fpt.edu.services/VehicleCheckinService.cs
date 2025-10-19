@@ -19,7 +19,16 @@ namespace FE.vn.fpt.edu.services
 
         public async Task<object?> GetByIdAsync(long id)
         {
-            return await _apiAdapter.GetAsync<object>($"VehicleCheckin/{id}");
+            try
+            {
+                var result = await _apiAdapter.GetAsync<object>($"VehicleCheckin/{id}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                return new { success = false, message = "Không thể tải dữ liệu chi tiết", error = ex.Message };
+            }
         }
 
         public async Task<bool> DeleteAsync(long id)

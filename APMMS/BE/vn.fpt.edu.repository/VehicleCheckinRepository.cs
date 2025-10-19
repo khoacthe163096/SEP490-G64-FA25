@@ -110,6 +110,11 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await _context.VehicleCheckins.CountAsync();
+        }
+
         public async Task<List<Car>> SearchCarsAsync(string searchTerm)
         {
             return await _context.Cars

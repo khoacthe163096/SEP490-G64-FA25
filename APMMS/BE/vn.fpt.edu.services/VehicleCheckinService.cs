@@ -22,6 +22,7 @@ namespace BE.vn.fpt.edu.services
                 MaintenanceRequestId = request.MaintenanceRequestId,
                 Mileage = request.Mileage,
                 Notes = request.Notes,
+                StatusCode = "PENDING", // Default status
                 CreatedAt = DateTime.UtcNow,
                 VehicleCheckinImages = request.ImageUrls.Select(url => new VehicleCheckinImage
                 {
@@ -76,6 +77,11 @@ namespace BE.vn.fpt.edu.services
             return vehicleCheckins.Select(MapToListResponseDTO).ToList();
         }
 
+        public async Task<int> GetTotalCountAsync()
+        {
+            return await _vehicleCheckinRepository.GetTotalCountAsync();
+        }
+
         public async Task<List<ListResponseDto>> GetVehicleCheckinsByCarIdAsync(long carId)
         {
             var vehicleCheckins = await _vehicleCheckinRepository.GetByCarIdAsync(carId);
@@ -109,6 +115,7 @@ namespace BE.vn.fpt.edu.services
                 CarModel = vehicleCheckin.Car?.CarModel,
                 LicensePlate = vehicleCheckin.Car?.LicensePlate,
                 VinNumber = vehicleCheckin.Car?.VinNumber,
+                VehicleEngineNumber = vehicleCheckin.Car?.VehicleEngineNumber,
                 Color = vehicleCheckin.Car?.Color,
                 YearOfManufacture = vehicleCheckin.Car?.YearOfManufacture,
                 
@@ -116,6 +123,9 @@ namespace BE.vn.fpt.edu.services
                 CustomerName = $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
                 CustomerPhone = vehicleCheckin.Car?.User?.Phone,
                 CustomerEmail = vehicleCheckin.Car?.User?.Email,
+                
+                // Branch information
+                BranchName = vehicleCheckin.Car?.Branch?.Name,
                 
                 // Images
                 Images = vehicleCheckin.VehicleCheckinImages?.Select(img => new VehicleCheckinImageDto
@@ -127,7 +137,10 @@ namespace BE.vn.fpt.edu.services
                 
                 // Maintenance request info
                 MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
-                RequestDate = vehicleCheckin.MaintenanceRequest?.RequestDate
+                RequestDate = vehicleCheckin.MaintenanceRequest?.RequestDate,
+                
+                // VehicleCheckin status
+                StatusCode = vehicleCheckin.StatusCode
             };
         }
 
@@ -189,7 +202,10 @@ namespace BE.vn.fpt.edu.services
                 Mileage = vehicleCheckin.Mileage ?? 0,
                 CreatedAt = vehicleCheckin.CreatedAt,
                 Notes = vehicleCheckin.Notes,
-                FirstImageUrl = vehicleCheckin.VehicleCheckinImages?.FirstOrDefault()?.ImageUrl
+                FirstImageUrl = vehicleCheckin.VehicleCheckinImages?.FirstOrDefault()?.ImageUrl,
+                BranchName = vehicleCheckin.Car?.Branch?.Name,
+                MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
+                StatusCode = vehicleCheckin.StatusCode
             };
         }
     }
