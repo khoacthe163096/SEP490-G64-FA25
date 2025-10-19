@@ -63,14 +63,13 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<Ward> Wards { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+  protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
             // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
         }
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Address>(entity =>
@@ -752,6 +751,7 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasIndex(e => e.CarId, "IX_vehicle_checkin_car_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
@@ -765,6 +765,13 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
+            entity.Property(e => e.VinNumber)
+                .HasMaxLength(50)
+                .HasColumnName("vin_number");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.VehicleCheckins)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK__vehicle_c__branc__3A4CA8FD");
 
             entity.HasOne(d => d.Car).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.CarId)
@@ -790,9 +797,7 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.ImageUrl)
-                .HasMaxLength(255)
-                .HasColumnName("image_url");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
             entity.Property(e => e.VehicleCheckinId).HasColumnName("vehicle_checkin_id");
 
             entity.HasOne(d => d.VehicleCheckin).WithMany(p => p.VehicleCheckinImages)

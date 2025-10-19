@@ -31,6 +31,10 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.VehicleCheckins
                 .Include(vc => vc.Car)
+                    .ThenInclude(c => c.Branch)
+                .Include(vc => vc.Car)
+                    .ThenInclude(c => c.User)
+                .Include(vc => vc.Branch)
                 .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .FirstOrDefaultAsync(vc => vc.Id == id);
@@ -40,6 +44,10 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.VehicleCheckins
                 .Include(vc => vc.Car)
+                    .ThenInclude(c => c.Branch)
+                .Include(vc => vc.Car)
+                    .ThenInclude(c => c.User)
+                .Include(vc => vc.Branch)
                 .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .OrderByDescending(vc => vc.CreatedAt)

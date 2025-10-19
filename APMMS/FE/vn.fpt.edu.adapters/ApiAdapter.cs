@@ -111,6 +111,41 @@ namespace FE.vn.fpt.edu.adapters
             }
         }
 
+        public async Task<T?> PutAsync<T>(string endpoint, object data)
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(data);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                var url = $"{_baseUrl}/{endpoint}";
+                Console.WriteLine($"ApiAdapter: Calling PUT {url}");
+                Console.WriteLine($"ApiAdapter: Request data: {json}");
+                
+                var response = await _httpClient.PutAsync(url, content);
+                Console.WriteLine($"ApiAdapter: Response status: {response.StatusCode}");
+                
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"ApiAdapter: Response content: {responseContent}");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"ApiAdapter: Request failed with status {response.StatusCode}");
+                    throw new HttpRequestException($"API request failed with status {response.StatusCode}: {responseContent}");
+                }
+                
+                return JsonSerializer.Deserialize<T>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ApiAdapter: Exception in PutAsync: {ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<bool> DeleteAsync(string endpoint)
         {
             try

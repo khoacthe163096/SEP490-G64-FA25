@@ -62,6 +62,10 @@
                                         <div class="col-sm-4"><strong>Số máy:</strong></div>
                                         <div class="col-sm-8"><code id="engineNumber">-</code></div>
                                     </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Số km:</strong></div>
+                                        <div class="col-sm-8"><span class="badge bg-info" id="mileage">-</span></div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -202,6 +206,7 @@
 
         function displayCheckinDetails(checkin) {
             console.log('Displaying checkin details:', checkin); // Debug log
+            console.log('BranchName from API:', checkin.branchName); // Debug branch name
             
             document.getElementById('checkinId').textContent = checkin.id || '-';
             document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
@@ -210,6 +215,7 @@
             document.getElementById('customerPhone').textContent = checkin.customerPhone || '-';
             document.getElementById('vinNumber').textContent = checkin.vinNumber || '-';
             document.getElementById('engineNumber').textContent = checkin.vehicleEngineNumber || '-';
+            document.getElementById('mileage').textContent = checkin.mileage ? checkin.mileage + ' km' : '-';
             document.getElementById('branchName').textContent = checkin.branchName || '-';
             document.getElementById('status').innerHTML = getStatusBadge(checkin.statusCode);
             document.getElementById('checkinDate').textContent = checkin.createdAt ? 
@@ -233,21 +239,32 @@
         }
 
         function displayImages(images) {
+            console.log('Displaying images:', images); // Debug log
             const container = document.getElementById('imagesContainer');
             container.innerHTML = '';
 
-            if (images.length === 0) {
+            if (!images || images.length === 0) {
+                console.log('No images found, showing placeholder');
                 container.innerHTML = '<div class="col-12"><p class="text-muted">Không có hình ảnh</p></div>';
                 return;
             }
 
+            console.log(`Found ${images.length} images`);
             images.forEach((image, index) => {
+                console.log(`Image ${index + 1}:`, image); // Debug log
                 const col = document.createElement('div');
                 col.className = 'col-md-3 mb-3';
+                
+                // Kiểm tra URL hình ảnh
+                const imageUrl = image.imageUrl || image.url || image.src;
+                console.log(`Image URL for ${index + 1}:`, imageUrl); // Debug log
+                
                 col.innerHTML = `
                     <div class="card">
-                        <img src="${image.imageUrl}" class="card-img-top" style="height: 200px; object-fit: cover;" 
-                             alt="Hình ảnh xe ${index + 1}" onclick="openImageModal('${image.imageUrl}')">
+                        <img src="${imageUrl}" class="card-img-top" style="height: 200px; object-fit: cover;" 
+                             alt="Hình ảnh xe ${index + 1}" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Lb8O0bmcgY8O0IGjDsm5oIMSR4b5uPC90ZXh0Pgo8L3N2Zz4K'; this.alt='Không thể tải hình ảnh';"
+                             onclick="openImageModal('${imageUrl}')">
                         <div class="card-body p-2">
                             <small class="text-muted">Hình ${index + 1}</small>
                         </div>

@@ -21,18 +21,6 @@
                                     <input type="text" class="form-control" id="licensePlate" name="licensePlate" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="vehicleType" class="form-label">Loại xe <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="vehicleType" name="vehicleType" required>
-                                        <option value="">Chọn loại xe</option>
-                                        <option value="CAR">Ô tô</option>
-                                        <option value="MOTORBIKE">Xe máy</option>
-                                        <option value="TRUCK">Xe tải</option>
-                                        <option value="BUS">Xe bus</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="row">
@@ -53,11 +41,34 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="vinNumber" class="form-label">Số khung (VIN)</label>
+                                    <input type="text" class="form-control" id="vinNumber" name="vinNumber">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vehicleEngineNumber" class="form-label">Số máy</label>
+                                    <input type="text" class="form-control" id="vehicleEngineNumber" name="vehicleEngineNumber">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mileage" class="form-label">Số km</label>
+                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="branchId" name="branchId" required>
-                                        <option value="">Chọn chi nhánh</option>
-                                        <!-- Will be loaded dynamically -->
-                                    </select>
+                                    <input type="text" class="form-control" id="branchName" name="branchName" readonly>
+                                    <input type="hidden" id="branchId" name="branchId">
+                                    <div class="form-text">Chi nhánh của nhân viên hiện tại</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -74,10 +85,7 @@
                                     <label for="statusCode" class="form-label">Trạng thái <span class="text-danger">*</span></label>
                                     <select class="form-select" id="statusCode" name="statusCode" required>
                                         <option value="">Chọn trạng thái</option>
-                                        <option value="PENDING">Chờ xử lý</option>
-                                        <option value="IN_PROGRESS">Đang xử lý</option>
-                                        <option value="COMPLETED">Hoàn thành</option>
-                                        <option value="CANCELLED">Hủy</option>
+                                        <!-- Will be loaded dynamically from database -->
                                     </select>
                                 </div>
                             </div>
@@ -135,12 +143,21 @@
             const checkinId = getCheckinIdFromUrl();
             if (checkinId) {
                 loadCheckin(checkinId);
-                loadBranches();
+                loadCurrentUserBranch();
+                loadStatuses();
             }
             
             document.getElementById('checkinForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 updateCheckin();
+            });
+
+            // Xử lý upload ảnh
+            document.getElementById('images').addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    uploadImages(files);
+                }
             });
         });
 
@@ -151,27 +168,38 @@
         }
 
         function loadCheckin(id) {
-            fetch(`/api/VehicleCheckin/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            fetch(`/VehicleCheckins/GetDetails/${id}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                return response.json();
             })
-            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     const checkin = data.data;
+                    console.log('Loaded checkin data:', checkin); // Debug log
+                    
                     document.getElementById('checkinId').value = checkin.id;
                     document.getElementById('licensePlate').value = checkin.licensePlate || '';
-                    document.getElementById('vehicleType').value = checkin.vehicleType || '';
                     document.getElementById('customerName').value = checkin.customerName || '';
                     document.getElementById('customerPhone').value = checkin.customerPhone || '';
-                    document.getElementById('branchId').value = checkin.branchId || '';
+                    document.getElementById('vinNumber').value = checkin.vinNumber || '';
+                    document.getElementById('vehicleEngineNumber').value = checkin.vehicleEngineNumber || '';
+                    document.getElementById('mileage').value = checkin.mileage || '';
+                    // Set branch từ dữ liệu checkin
+                    if (checkin.branchName) {
+                        document.getElementById('branchName').value = checkin.branchName;
+                    }
+                    if (checkin.branchId) {
+                        document.getElementById('branchId').value = checkin.branchId;
+                    }
                     document.getElementById('statusCode').value = checkin.statusCode || '';
                     document.getElementById('notes').value = checkin.notes || '';
                     
-                    // Set checkin date
-                    if (checkin.checkinDate) {
-                        const date = new Date(checkin.checkinDate);
+                    // Set checkin date - sử dụng createdAt thay vì checkinDate
+                    if (checkin.createdAt) {
+                        const date = new Date(checkin.createdAt);
                         const year = date.getFullYear();
                         const month = String(date.getMonth() + 1).padStart(2, '0');
                         const day = String(date.getDate()).padStart(2, '0');
@@ -188,26 +216,75 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi tải thông tin check-in', 'danger');
+                showAlert('Có lỗi xảy ra khi tải thông tin check-in: ' + error.message, 'danger');
             });
         }
 
-        function loadBranches() {
-            fetch('/api/Branch')
-                .then(response => response.json())
+        function loadCurrentUserBranch() {
+            // Lấy dữ liệu chi nhánh thật từ database có sẵn
+            console.log('Loading branches from API...');
+            
+            fetch('https://localhost:7173/api/Branch')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.success) {
-                        const select = document.getElementById('branchId');
-                        data.data.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            option.textContent = branch.name;
-                            select.appendChild(option);
-                        });
+                    console.log('API Response:', data);
+                    if (data.success && data.data && data.data.length > 0) {
+                        // Lấy chi nhánh đầu tiên từ database
+                        const firstBranch = data.data[0];
+                        document.getElementById('branchName').value = firstBranch.name;
+                        document.getElementById('branchId').value = firstBranch.id;
+                        console.log('Loaded branch from database:', firstBranch.name, 'ID:', firstBranch.id);
+                    } else {
+                        console.error('No branch data found in database');
+                        document.getElementById('branchName').value = 'Không có chi nhánh';
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading branches:', error);
+                    console.error('Error loading branches from database:', error);
+                    document.getElementById('branchName').value = 'Lỗi tải chi nhánh: ' + error.message;
+                });
+        }
+
+        function loadStatuses() {
+            // Lấy dữ liệu trạng thái thật từ database
+            console.log('Loading statuses from API...');
+            
+            fetch('https://localhost:7173/api/Status')
+                .then(response => {
+                    console.log('Status response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Status API Response:', data);
+                    if (data.success && data.data && data.data.length > 0) {
+                        const statusSelect = document.getElementById('statusCode');
+                        // Xóa option mặc định trừ "Chọn trạng thái"
+                        statusSelect.innerHTML = '<option value="">Chọn trạng thái</option>';
+                        
+                        // Thêm các trạng thái từ database
+                        data.data.forEach(status => {
+                            const option = document.createElement('option');
+                            option.value = status.code;
+                            option.textContent = status.name;
+                            statusSelect.appendChild(option);
+                        });
+                        
+                        console.log('Loaded statuses from database:', data.data.length, 'statuses');
+                    } else {
+                        console.error('No status data found in database');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading statuses from database:', error);
                 });
         }
 
@@ -243,27 +320,67 @@
             const formData = new FormData(document.getElementById('checkinForm'));
             const checkinId = document.getElementById('checkinId').value;
 
-            fetch(`/api/VehicleCheckin/${checkinId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
+            console.log('Updating checkin:', checkinId); // Debug log
+            console.log('Form data:', Object.fromEntries(formData.entries())); // Debug log
+
+            fetch(`/VehicleCheckins/Update/${checkinId}`, {
+                method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status); // Debug log
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('Update response:', data); // Debug log
                 if (data.success) {
                     showAlert('Cập nhật check-in thành công!', 'success');
                     setTimeout(() => {
                         window.location.href = '/VehicleCheckins';
                     }, 1500);
                 } else {
-                    showAlert('Lỗi: ' + data.message, 'danger');
+                    showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật'), 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi cập nhật check-in', 'danger');
+                showAlert('Có lỗi xảy ra khi cập nhật check-in: ' + error.message, 'danger');
+            });
+        }
+
+        function uploadImages(files) {
+            const checkinId = document.getElementById('checkinId').value;
+            if (!checkinId) {
+                showAlert('Không tìm thấy ID check-in', 'danger');
+                return;
+            }
+
+            Array.from(files).forEach(async (file) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('vehicleCheckinId', checkinId);
+
+                try {
+                    const response = await fetch('https://localhost:7173/api/Image/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('Image uploaded successfully:', result.data);
+                        showAlert('Upload ảnh thành công!', 'success');
+                    } else {
+                        console.error('Upload failed:', result.message);
+                        showAlert('Lỗi upload ảnh: ' + result.message, 'danger');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showAlert('Lỗi upload ảnh: ' + error.message, 'danger');
+                }
             });
         }
 
@@ -282,3 +399,4 @@
         }
     </script>
 }
+

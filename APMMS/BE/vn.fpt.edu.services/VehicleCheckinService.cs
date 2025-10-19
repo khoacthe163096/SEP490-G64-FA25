@@ -125,7 +125,8 @@ namespace BE.vn.fpt.edu.services
                 CustomerEmail = vehicleCheckin.Car?.User?.Email,
                 
                 // Branch information
-                BranchName = vehicleCheckin.Car?.Branch?.Name,
+                BranchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId,
+                BranchName = vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
                 
                 // Images
                 Images = vehicleCheckin.VehicleCheckinImages?.Select(img => new VehicleCheckinImageDto
@@ -203,7 +204,8 @@ namespace BE.vn.fpt.edu.services
                 CreatedAt = vehicleCheckin.CreatedAt,
                 Notes = vehicleCheckin.Notes,
                 FirstImageUrl = vehicleCheckin.VehicleCheckinImages?.FirstOrDefault()?.ImageUrl,
-                BranchName = vehicleCheckin.Car?.Branch?.Name,
+                BranchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId,
+                BranchName = vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
                 MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
                 StatusCode = vehicleCheckin.StatusCode
             };

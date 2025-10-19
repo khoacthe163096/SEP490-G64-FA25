@@ -29,6 +29,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? CustomerEmail { get; set; }
         
         // Thông tin chi nhánh
+        public long? BranchId { get; set; }
         public string? BranchName { get; set; }
         
         // Hình ảnh
@@ -67,6 +68,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public DateTime? CreatedAt { get; set; }
         public string? Notes { get; set; }
         public string? FirstImageUrl { get; set; }
+        public long? BranchId { get; set; }
         public string? BranchName { get; set; }
         public string? MaintenanceRequestStatus { get; set; }
         public string? StatusCode { get; set; }

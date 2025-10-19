@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BE.vn.fpt.edu.models;
@@ -26,4 +26,6 @@ public partial class Branch
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
+
+    public virtual ICollection<VehicleCheckin> VehicleCheckins { get; set; } = new List<VehicleCheckin>();
 }

@@ -67,5 +67,38 @@ namespace FE.vn.fpt.edu.controllers
             var data = await _service.GetByIdAsync(id);
             return Json(data);
         }
+
+        [HttpPost]
+        [Route("Update/{id}")]
+        public async Task<IActionResult> Update(int id)
+        {
+            try
+            {
+                // Lấy dữ liệu thật từ form
+                var formData = new Dictionary<string, object>();
+                foreach (var key in Request.Form.Keys)
+                {
+                    var value = Request.Form[key].ToString();
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        formData[key] = value;
+                    }
+                }
+                
+                Console.WriteLine($"Updating checkin {id} with real data:");
+                foreach (var kv in formData)
+                {
+                    Console.WriteLine($"  {kv.Key}: {kv.Value}");
+                }
+                
+                var result = await _service.UpdateAsync(id, formData);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in Update: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
