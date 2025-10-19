@@ -1,16 +1,16 @@
-using BE.vn.fpt.edu.DTOs.AutoOwner;
-
-using Microsoft.AspNetCore.Mvc;
+using BE.vn.fpt.edu.DTOs.CarOfAutoOwner;
 using BE.vn.fpt.edu.interfaces;
-namespace BE.vn.fpt.edu.Controllers
+using Microsoft.AspNetCore.Mvc;
+
+namespace BE.vn.fpt.edu.controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AutoOwnerController : ControllerBase
+    public class CarOfAutoOwnerController : ControllerBase
     {
-        private readonly IAutoOwnerService _service;
+        private readonly ICarOfAutoOwnerService _service;
 
-        public AutoOwnerController(IAutoOwnerService service)
+        public CarOfAutoOwnerController(ICarOfAutoOwnerService service)
         {
             _service = service;
         }
@@ -27,7 +27,14 @@ namespace BE.vn.fpt.edu.Controllers
         {
             var result = await _service.GetByIdAsync(id);
             if (result == null)
-                return NotFound("Auto Owner not found.");
+                return NotFound("Car not found.");
+            return Ok(result);
+        }
+
+        [HttpGet("user/{userId:long}")]
+        public async Task<IActionResult> GetByUserId(long userId)
+        {
+            var result = await _service.GetByUserIdAsync(userId);
             return Ok(result);
         }
 
@@ -50,7 +57,7 @@ namespace BE.vn.fpt.edu.Controllers
         {
             var success = await _service.DeleteAsync(id);
             if (!success)
-                return NotFound("Auto Owner not found or already deleted.");
+                return NotFound("Car not found or already deleted.");
             return NoContent();
         }
     }
