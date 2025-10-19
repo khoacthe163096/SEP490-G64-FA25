@@ -1,8 +1,10 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BE.vn.fpt.edu.DTOs.Employee;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BE.vn.fpt.edu.services
 {
@@ -63,6 +65,91 @@ namespace BE.vn.fpt.edu.services
             await _employeeRepository.SaveChangesAsync();
             return true;
         }
+        public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync(string? status = null, int? roleId = null, string? roleName = null)
+        {
+            var query = _employeeRepository.GetAll()
+                .Include(e => e.Role)
+                .Include(e => e.Branch)
+                .AsQueryable();
+
+            // ✅ Filter theo trạng thái
+            if (!string.IsNullOrEmpty(status))
+            {
+                if (status.ToLower() == "active")
+                    query = query.Where(e => e.IsDelete == false);
+                else if (status.ToLower() == "inactive")
+                    query = query.Where(e => e.IsDelete == true);
+            }
+
+            // ✅ Filter theo RoleId
+            if (roleId.HasValue)
+            {
+                query = query.Where(e => e.RoleId == roleId.Value);
+            }
+
+            // ✅ Filter theo RoleName
+            if (!string.IsNullOrEmpty(roleName))
+            {
+                query = query.Where(e => e.Role.Name.ToLower().Contains(roleName.ToLower()));
+            }
+
+            var employees = await query.ToListAsync();
+            return _mapper.Map<IEnumerable<EmployeeResponseDto>>(employees);
+        }
+        public async Task<IEnumerable<EmployeeResponseDto>> FilterAsync(bool? isDelete, long? roleId)
+        {
+            var query = _employeeRepository.GetAll(); // IQueryable<User>
+
+            if (isDelete.HasValue)
+                query = query.Where(e => e.IsDelete == isDelete.Value);
+
+            if (roleId.HasValue)
+                query = query.Where(e => e.RoleId == roleId.Value);
+
+            var employees = await query.ToListAsync();
+            return employees.Select(e => _mapper.Map<EmployeeResponseDto>(e));
+        }
+        public async Task<EmployeeProfileDto?> GetProfileAsync(long userId)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(userId);
+            if (employee == null) return null;
+
+            var dto = new EmployeeProfileDto
+            {
+                Username = employee.Username,
+                FirstName = employee.FirstName,
+                LastName = employee.LastName,
+                Email = employee.Email,
+                Phone = employee.Phone,
+                Gender = employee.Gender,
+                Image = employee.Image,
+                BranchName = employee.Branch?.Name,
+                RoleName = employee.Role?.Name
+            };
+
+            return dto;
+        }
+
+        public async Task<EmployeeProfileDto?> UpdateProfileAsync(long userId, UpdateProfileDto dto)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(userId);
+            if (employee == null) return null;
+
+            if (!string.IsNullOrEmpty(dto.FirstName)) employee.FirstName = dto.FirstName;
+            if (!string.IsNullOrEmpty(dto.LastName)) employee.LastName = dto.LastName;
+            if (!string.IsNullOrEmpty(dto.Email)) employee.Email = dto.Email;
+            if (!string.IsNullOrEmpty(dto.Phone)) employee.Phone = dto.Phone;
+            if (!string.IsNullOrEmpty(dto.Gender)) employee.Gender = dto.Gender;
+            if (!string.IsNullOrEmpty(dto.Image)) employee.Image = dto.Image;
+            employee.LastModifiedDate = DateTime.Now;
+
+            await _employeeRepository.UpdateAsync(employee);
+            await _employeeRepository.SaveChangesAsync();
+
+            return await GetProfileAsync(userId);
+        }
+
+
     }
 }
 

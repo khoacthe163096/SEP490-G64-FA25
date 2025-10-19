@@ -1,6 +1,8 @@
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace BE.vn.fpt.edu.repository
 {
@@ -52,6 +54,15 @@ namespace BE.vn.fpt.edu.repository
         {
             await _context.SaveChangesAsync();
         }
+        public IQueryable<User> GetAll()
+        {
+            return _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Branch)
+                .Where(u => u.RoleId >= 3 && u.RoleId <= 6);
+        }
+
+
     }
 }
 
