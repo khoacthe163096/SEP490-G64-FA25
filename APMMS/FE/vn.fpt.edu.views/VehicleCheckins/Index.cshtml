@@ -262,39 +262,66 @@
         }
 
         function createMaintenanceTicket(checkinId) {
-            if (confirm('Bạn có muốn tạo phiếu bảo dưỡng từ check-in này?')) {
-                // Create maintenance ticket via API
-                fetch('/MaintenanceTickets/CreateFromCheckin', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        vehicleCheckinId: checkinId,
-                        consulterId: 1, // Default consulter ID - should be from session
-                        technicianId: null,
-                        branchId: 1, // Default branch ID - should be from session
-                        scheduleServiceId: null,
-                        statusCode: 'PENDING'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('Tạo phiếu bảo dưỡng thành công!', 'success');
-                        // Optionally redirect to maintenance tickets list
-                        setTimeout(() => {
-                            window.location.href = '/MaintenanceTickets';
-                        }, 1500);
-                    } else {
-                        showAlert('Lỗi tạo phiếu bảo dưỡng: ' + data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tạo phiếu bảo dưỡng', 'danger');
-                });
+            // Store checkinId for later use
+            window.currentCheckinId = checkinId;
+            
+            // Show custom modal instead of browser confirm
+            $('#createMaintenanceModal').modal('show');
+        }
+
+        function confirmCreateMaintenanceTicket() {
+            const checkinId = window.currentCheckinId;
+            if (!checkinId) return;
+            
+            // Get consulter ID from token
+            const token = localStorage.getItem('authToken');
+            let consulterId = 18; // Default fallback
+            
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    consulterId = parseInt(payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) || 18;
+                } catch (e) {
+                    console.log('Could not get consulter ID from token, using default');
+                }
             }
+            
+            // Create maintenance ticket via API
+            fetch('https://localhost:7173/api/MaintenanceTicket/create-from-checkin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : '',
+                },
+                body: JSON.stringify({
+                    vehicleCheckinId: checkinId,
+                    consulterId: consulterId, // Get from token or use default
+                    technicianId: null,
+                    branchId: 1, // Default branch ID - should be from session
+                    scheduleServiceId: null,
+                    statusCode: 'PENDING',
+                    description: 'Tạo từ vehicle check-in'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Tạo phiếu bảo dưỡng thành công!', 'success');
+                    // Optionally redirect to maintenance tickets list
+                    setTimeout(() => {
+                        window.location.href = '/MaintenanceTickets';
+                    }, 1500);
+                } else {
+                    showAlert('Lỗi tạo phiếu bảo dưỡng: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi tạo phiếu bảo dưỡng', 'danger');
+            })
+            .finally(() => {
+                $('#createMaintenanceModal').modal('hide');
+            });
         }
 
         function deleteCheckin(id) {
@@ -368,3 +395,41 @@
         }
     </script>
 }
+
+<!-- Custom Modal for Creating Maintenance Ticket -->
+<div class="modal fade" id="createMaintenanceModal" tabindex="-1" aria-labelledby="createMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createMaintenanceModalLabel">
+                    <i class="fas fa-wrench me-2"></i>
+                    Tạo Phiếu Bảo Dưỡng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
+                    <h5>Xác nhận tạo phiếu bảo dưỡng</h5>
+                    <p class="text-muted mb-0">
+                        Bạn có muốn tạo phiếu bảo dưỡng từ vehicle check-in này không?
+                    </p>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Sau khi tạo phiếu bảo dưỡng, bạn sẽ được chuyển hướng đến trang quản lý phiếu bảo dưỡng.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmCreateMaintenanceTicket()">
+                    <i class="fas fa-check me-1"></i>
+                    Tạo phiếu bảo dưỡng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

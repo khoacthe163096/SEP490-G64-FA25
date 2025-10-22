@@ -41,6 +41,9 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
 
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string? StatusCode { get; set; } = "PENDING";
+
+        [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
+        public string? Description { get; set; }
     }
 
     /// <summary>

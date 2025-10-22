@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Quản lý Phiếu Bảo Dưỡng";
+    ViewData["Title"] = "Quản lý Phiếu Bảo Dưỡng";      
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
 
@@ -13,10 +13,10 @@
                         Quản lý Phiếu Bảo Dưỡng
                     </h4>
                     <div>
-                        <a href="/MaintenanceTickets/Create" class="btn btn-primary">
+                    <a href="/MaintenanceTickets/Create" class="btn btn-primary">
                             <i class="fas fa-plus me-1"></i>
                             Tạo phiếu mới
-                        </a>
+                    </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -53,12 +53,9 @@
                             <thead>
                                 <tr>
                                     <th>Mã phiếu</th>
-                                    <th>Xe</th>
                                     <th>Khách hàng</th>
-                                    <th>Kỹ thuật viên</th>
-                                    <th>Trạng thái</th>
                                     <th>Ngày tạo</th>
-                                    <th>Chi phí ước tính</th>
+                                    <th>Trạng thái</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
@@ -137,8 +134,8 @@
     </div>
 </div>
 
-<script>
-let currentPage = 1;
+    <script>
+        let currentPage = 1;
 let pageSize = 10;
 let currentTicketId = null;
 
@@ -148,7 +145,7 @@ $(document).ready(function() {
     // Filter events
     $('#statusFilter, #searchInput, #dateFrom, #dateTo').on('change keyup', function() {
         currentPage = 1;
-        loadMaintenanceTickets();
+            loadMaintenanceTickets();
     });
     
     // Action buttons
@@ -176,9 +173,9 @@ $(document).ready(function() {
             assignTechnician(currentTicketId, technicianId);
         }
     });
-});
+        });
 
-function loadMaintenanceTickets() {
+        function loadMaintenanceTickets() {
     const status = $('#statusFilter').val();
     const search = $('#searchInput').val();
     const dateFrom = $('#dateFrom').val();
@@ -194,41 +191,61 @@ function loadMaintenanceTickets() {
     if (dateFrom) params.append('dateFrom', dateFrom);
     if (dateTo) params.append('dateTo', dateTo);
     
-    fetch(`/MaintenanceTickets/ListData?${params}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displayMaintenanceTickets(data.data);
-                updatePagination(data.pagination);
-            } else {
-                showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
-        });
-}
+    // Get token for authorization
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`https://localhost:7173/api/MaintenanceTicket?${params}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+        }
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+                .then(data => {
+        console.log('API Response:', data);
+                    if (data.success) {
+            console.log('Data received:', data.data);
+            displayMaintenanceTickets(data.data);
+            // Create pagination info from data
+            const pagination = {
+                currentPage: currentPage,
+                totalPages: Math.ceil(data.data.length / pageSize),
+                totalCount: data.data.length
+            };
+            updatePagination(pagination);
+                    } else {
+            console.error('API Error:', data.message);
+            showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
+                });
+        }
 
 function displayMaintenanceTickets(tickets) {
+    console.log('displayMaintenanceTickets called with:', tickets);
     const tbody = $('#maintenanceTicketsTableBody');
     tbody.empty();
-    
-    if (tickets.length === 0) {
+
+            if (tickets.length === 0) {
         tbody.append(`
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="5" class="text-center py-4">
                     <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
                     <p class="text-muted">Không có phiếu bảo dưỡng nào</p>
                 </td>
             </tr>
         `);
-        return;
-    }
-    
-    tickets.forEach(ticket => {
+                return;
+            }
+
+            tickets.forEach(ticket => {
         const statusBadge = getStatusBadge(ticket.statusCode);
-        const createdAt = new Date(ticket.createdDate).toLocaleDateString('vi-VN');
+        const createdAt = ticket.startTime ? new Date(ticket.startTime).toLocaleDateString('vi-VN') : `ID: ${ticket.id}`;
         const estimatedCost = ticket.totalEstimatedCost ? 
             new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ticket.totalEstimatedCost) : 
             'Chưa tính';
@@ -238,31 +255,19 @@ function displayMaintenanceTickets(tickets) {
                 <td>
                     <strong>${ticket.code || 'MTK-' + ticket.id}</strong>
                 </td>
-                <td>
-                    <div>
-                        <strong>${ticket.carName || 'N/A'}</strong>
-                        <br>
-                        <small class="text-muted">ID: ${ticket.carId}</small>
-                    </div>
-                </td>
                 <td>${ticket.consulterName || 'N/A'}</td>
-                <td>${ticket.technicianName || 'Chưa gán'}</td>
-                <td>${statusBadge}</td>
                 <td>${createdAt}</td>
-                <td>${estimatedCost}</td>
-                <td>
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="showActions(${ticket.id})">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <a href="/MaintenanceTickets/Details/${ticket.id}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="/MaintenanceTickets/Edit/${ticket.id}" class="btn btn-sm btn-outline-warning">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </div>
-                </td>
+                <td>${statusBadge}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="/MaintenanceTickets/Details/${ticket.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        <a href="/MaintenanceTickets/Edit/${ticket.id}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
             </tr>
         `);
     });
@@ -360,23 +365,23 @@ function completeMaintenance(ticketId) {
             headers: {
                 'Content-Type': 'application/json',
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
                 showAlert('Hoàn thành bảo dưỡng thành công!', 'success');
                 $('#actionModal').modal('hide');
-                loadMaintenanceTickets();
-            } else {
+                        loadMaintenanceTickets();
+                    } else {
                 showAlert('Lỗi hoàn thành bảo dưỡng: ' + data.message, 'danger');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
             showAlert('Có lỗi xảy ra khi hoàn thành bảo dưỡng', 'danger');
-        });
-    }
-}
+                });
+            }
+        }
 
 function updatePagination(pagination) {
     const paginationEl = $('#pagination');
@@ -416,21 +421,21 @@ function updatePagination(pagination) {
 function changePage(page) {
     currentPage = page;
     loadMaintenanceTickets();
-}
+        }
 
-function showAlert(message, type) {
+        function showAlert(message, type) {
     const alertHtml = `
         <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
              style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    `;
+            `;
     
     $('body').append(alertHtml);
-    
-    setTimeout(() => {
+            
+            setTimeout(() => {
         $('.alert').alert('close');
     }, 3000);
-}
-</script>
+        }
+    </script>

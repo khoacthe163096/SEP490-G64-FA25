@@ -36,22 +36,25 @@ namespace BE.vn.fpt.edu.services
             if (vehicleCheckin == null)
                 throw new ArgumentException("Vehicle check-in not found");
 
+            // Kiểm tra xem VehicleCheckin đã có MaintenanceTicket chưa
+            if (vehicleCheckin.MaintenanceRequestId.HasValue && vehicleCheckin.MaintenanceRequestId.Value > 0)
+                throw new ArgumentException("Vehicle check-in already has a maintenance ticket");
+
             // Tạo Maintenance Ticket từ thông tin Check-in
             var maintenanceTicket = new MaintenanceTicket
             {
+                VehicleCheckinId = request.VehicleCheckinId,
                 CarId = vehicleCheckin.CarId,
                 ConsulterId = request.ConsulterId,
                 TechnicianId = request.TechnicianId,
                 BranchId = request.BranchId,
                 ScheduleServiceId = request.ScheduleServiceId,
-                StatusCode = request.StatusCode ?? "PENDING"
+                StatusCode = request.StatusCode ?? "PENDING",
+                PriorityLevel = "NORMAL",
+                Description = request.Description
             };
 
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
-
-            // Cập nhật Vehicle Check-in với MaintenanceTicketId
-            vehicleCheckin.MaintenanceRequestId = createdTicket.Id;
-            await _vehicleCheckinRepository.UpdateAsync(vehicleCheckin);
 
             // Lấy thông tin đầy đủ để trả về
             var fullTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
