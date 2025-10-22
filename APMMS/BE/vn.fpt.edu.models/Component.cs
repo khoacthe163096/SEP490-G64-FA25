@@ -19,6 +19,8 @@ public partial class Component
 
     public long? BranchId { get; set; }
 
+    public string? ImageUrl { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();

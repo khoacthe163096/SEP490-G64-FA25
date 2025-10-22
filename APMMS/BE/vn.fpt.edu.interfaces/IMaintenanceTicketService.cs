@@ -13,6 +13,9 @@ namespace BE.vn.fpt.edu.interfaces
         Task<List<ListResponseDto>> GetMaintenanceTicketsByStatusAsync(string statusCode);
         Task<bool> DeleteMaintenanceTicketAsync(long id);
         Task<ResponseDto> UpdateStatusAsync(long id, string statusCode);
+        Task<ResponseDto> AssignTechnicianAsync(long id, long technicianId);
+        Task<ResponseDto> StartMaintenanceAsync(long id);
+        Task<ResponseDto> CompleteMaintenanceAsync(long id);
     }
 }
 

@@ -19,15 +19,17 @@ public partial class VehicleCheckin
 
     public string? StatusCode { get; set; }
 
-    public string? VinNumber { get; set; }
-
     public long? BranchId { get; set; }
+
+    public string? Code { get; set; }
 
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
 
     public virtual MaintenanceRequest? MaintenanceRequest { get; set; }
+
+    public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 

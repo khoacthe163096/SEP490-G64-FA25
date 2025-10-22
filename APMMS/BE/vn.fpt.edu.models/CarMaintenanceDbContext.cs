@@ -63,13 +63,14 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<Ward> Wards { get; set; }
 
-  protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         if (!optionsBuilder.IsConfigured)
         {
             // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
         }
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Address>(entity =>
@@ -189,6 +190,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .HasColumnName("code");
+            entity.Property(e => e.ImageUrl)
+                .HasMaxLength(255)
+                .HasColumnName("image_url");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -331,15 +335,31 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.ConsulterId).HasColumnName("consulter_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+            entity.Property(e => e.EndTime)
+                .HasColumnType("datetime")
+                .HasColumnName("end_time");
+            entity.Property(e => e.PriorityLevel)
+                .HasMaxLength(20)
+                .HasColumnName("priority_level");
             entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
+            entity.Property(e => e.StartTime)
+                .HasColumnType("datetime")
+                .HasColumnName("start_time");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
             entity.Property(e => e.TechnicianId).HasColumnName("technician_id");
+            entity.Property(e => e.TotalEstimatedCost)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("total_estimated_cost");
+            entity.Property(e => e.VehicleCheckinId).HasColumnName("vehicle_checkin_id");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.BranchId)
@@ -364,6 +384,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.Technician).WithMany(p => p.MaintenanceTicketTechnicians)
                 .HasForeignKey(d => d.TechnicianId)
                 .HasConstraintName("FK__maintenan__techn__66603565");
+
+            entity.HasOne(d => d.VehicleCheckin).WithMany(p => p.MaintenanceTickets)
+                .HasForeignKey(d => d.VehicleCheckinId)
+                .HasConstraintName("FK_maintenance_ticket_vehicle_checkin");
         });
 
         modelBuilder.Entity<MaintenanceTicketTechnician>(entity =>
@@ -753,6 +777,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -765,9 +792,6 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
-            entity.Property(e => e.VinNumber)
-                .HasMaxLength(50)
-                .HasColumnName("vin_number");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.BranchId)

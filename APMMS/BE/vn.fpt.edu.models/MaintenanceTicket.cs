@@ -21,6 +21,18 @@ public partial class MaintenanceTicket
 
     public string? Description { get; set; }
 
+    public long? VehicleCheckinId { get; set; }
+
+    public string? Code { get; set; }
+
+    public decimal? TotalEstimatedCost { get; set; }
+
+    public DateTime? StartTime { get; set; }
+
+    public DateTime? EndTime { get; set; }
+
+    public string? PriorityLevel { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
@@ -42,4 +54,6 @@ public partial class MaintenanceTicket
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
+
+    public virtual VehicleCheckin? VehicleCheckin { get; set; }
 }

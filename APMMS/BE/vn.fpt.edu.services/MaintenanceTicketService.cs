@@ -130,6 +130,42 @@ namespace BE.vn.fpt.edu.services
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
+
+        public async Task<ResponseDto> AssignTechnicianAsync(long id, long technicianId)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            maintenanceTicket.TechnicianId = technicianId;
+            maintenanceTicket.StatusCode = "ASSIGNED";
+            var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
+        public async Task<ResponseDto> StartMaintenanceAsync(long id)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            maintenanceTicket.StatusCode = "IN_PROGRESS";
+            maintenanceTicket.StartTime = DateTime.UtcNow;
+            var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
+        public async Task<ResponseDto> CompleteMaintenanceAsync(long id)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            maintenanceTicket.StatusCode = "COMPLETED";
+            maintenanceTicket.EndTime = DateTime.UtcNow;
+            var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            return _mapper.Map<ResponseDto>(updatedTicket);
+        }
     }
 }
 

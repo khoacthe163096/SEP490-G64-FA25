@@ -52,6 +52,15 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string StatusCode { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// DTO để gán kỹ thuật viên cho Maintenance Ticket
+    /// </summary>
+    public class AssignTechnicianDto
+    {
+        [Required(ErrorMessage = "Technician ID is required")]
+        public long TechnicianId { get; set; }
+    }
 }
 
 

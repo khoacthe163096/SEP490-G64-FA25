@@ -402,15 +402,53 @@
 }
 
 .user-avatar {
+    position: relative;
+}
+
+.avatar-btn {
     width: 40px;
     height: 40px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.user-avatar .dropdown-menu {
+    min-width: 200px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    padding: 8px 0;
+    margin-top: 8px;
+}
+
+.user-avatar .dropdown-item {
+    padding: 10px 16px;
+    color: #333;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.user-avatar .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #667eea;
+}
+
+.user-avatar .dropdown-item i {
+    width: 16px;
+    text-align: center;
 }
 
 /* Content Area */
