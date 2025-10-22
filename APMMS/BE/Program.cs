@@ -63,6 +63,9 @@ builder.Services.AddAutoMapper(typeof(BE.vn.fpt.edu.convert.MappingProfile).Asse
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
 
+// Cloudinary Service
+builder.Services.AddSingleton<CloudinaryService>();
+
 
 
 // JWT Configuration
