@@ -6,22 +6,27 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Chi tiết check-in xe</h4>
-                    <div>
-                        <a href="/VehicleCheckins/Edit/@ViewBag.CheckinId" class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Sửa
-                        </a>
-                        <button class="btn btn-success" onclick="createMaintenanceTicket()">
-                            <i class="fas fa-wrench"></i> Tạo phiếu bảo dưỡng
-                        </button>
-                        <a href="/VehicleCheckins" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Quay lại
-                        </a>
+            <div class="card shadow-sm border-0">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            Chi tiết check-in xe
+                        </h4>
+                        <div>
+                            <a href="/VehicleCheckins/Edit/@ViewBag.CheckinId" class="btn btn-outline-light" id="editButton" style="display: none;">
+                                <i class="fas fa-edit me-1"></i> Sửa
+                            </a>
+                            <button class="btn btn-light" onclick="createMaintenanceTicket()" id="createMaintenanceButton" style="display: none;">
+                                <i class="fas fa-wrench me-1"></i> Tạo phiếu bảo dưỡng
+                            </button>
+                            <a href="/VehicleCheckins" class="btn btn-outline-light">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color: #f8f9fa;">
                     <div id="loadingSpinner" class="text-center">
                         <div class="spinner-border" role="status">
                             <span class="visually-hidden">Đang tải...</span>
@@ -31,12 +36,17 @@
                     <div id="checkinDetails" style="display: none;">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin xe</h5>
-                                    <hr>
+                                <div class="card mb-4 border-0 shadow-sm">
+                                    <div class="card-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-car me-2"></i>
+                                            Thông tin xe
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Mã:</strong></div>
-                                        <div class="col-sm-8"><span class="badge bg-success fs-6" id="checkinCode">-</span></div>
+                                        <div class="col-sm-8" id="checkinCode">-</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>ID:</strong></div>
@@ -44,7 +54,7 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Biển số:</strong></div>
-                                        <div class="col-sm-8"><span class="badge bg-primary fs-6" id="licensePlate">-</span></div>
+                                        <div class="col-sm-8" id="licensePlate">-</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Loại xe:</strong></div>
@@ -68,15 +78,21 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Số km:</strong></div>
-                                        <div class="col-sm-8"><span class="badge bg-info" id="mileage">-</span></div>
+                                        <div class="col-sm-8" id="mileage">-</div>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin check-in</h5>
-                                    <hr>
+                                <div class="card mb-4 border-0 shadow-sm">
+                                    <div class="card-header" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50;">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-clipboard-check me-2"></i>
+                                            Thông tin check-in
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Chi nhánh:</strong></div>
                                         <div class="col-sm-8" id="branchName">-</div>
@@ -93,15 +109,20 @@
                                         <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
                                         <div class="col-sm-8" id="createdDate">-</div>
                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Images Section -->
-                        <div class="row">
-                            <div class="col-12">
-                                <h5>Hình ảnh xe</h5>
-                                <hr>
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-images me-2"></i>
+                                    Hình ảnh xe
+                                </h5>
+                            </div>
+                            <div class="card-body">
                                 <div id="imagesContainer" class="row">
                                     <!-- Images will be loaded here -->
                                 </div>
@@ -109,43 +130,45 @@
                         </div>
 
                         <!-- Notes Section -->
-                        <div class="row">
-                            <div class="col-12">
-                                <h5>Ghi chú</h5>
-                                <hr>
-                                <div class="card">
-                                    <div class="card-body">
-                                        <p id="notes" class="mb-0">-</p>
-                                    </div>
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-sticky-note me-2"></i>
+                                    Ghi chú
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="bg-light p-3 rounded">
+                                    <p id="notes" class="mb-0">-</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Maintenance Request Section -->
                         <div id="maintenanceRequestSection" style="display: none;">
-                            <div class="row">
-                                <div class="col-12">
-                                    <h5>Yêu cầu bảo dưỡng</h5>
-                                    <hr>
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="row mb-2">
-                                                        <div class="col-sm-4"><strong>Loại:</strong></div>
-                                                        <div class="col-sm-8" id="maintenanceType">-</div>
-                                                    </div>
-                                                    <div class="row mb-2">
-                                                        <div class="col-sm-4"><strong>Ưu tiên:</strong></div>
-                                                        <div class="col-sm-8" id="priority">-</div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <div class="row mb-2">
-                                                        <div class="col-sm-4"><strong>Mô tả:</strong></div>
-                                                        <div class="col-sm-8" id="maintenanceDescription">-</div>
-                                                    </div>
-                                                </div>
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #2c3e50;">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-tools me-2"></i>
+                                        Yêu cầu bảo dưỡng
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="row mb-2">
+                                                <div class="col-sm-4"><strong>Loại:</strong></div>
+                                                <div class="col-sm-8" id="maintenanceType">-</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-sm-4"><strong>Ưu tiên:</strong></div>
+                                                <div class="col-sm-8" id="priority">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="row mb-2">
+                                                <div class="col-sm-4"><strong>Mô tả:</strong></div>
+                                                <div class="col-sm-8" id="maintenanceDescription">-</div>
                                             </div>
                                         </div>
                                     </div>
@@ -228,6 +251,22 @@
             document.getElementById('createdDate').textContent = checkin.createdAt ? 
                 new Date(checkin.createdAt).toLocaleString('vi-VN') : '-';
             document.getElementById('notes').textContent = checkin.notes || 'Không có ghi chú';
+
+            // Hiển thị/ẩn nút Sửa dựa trên trạng thái
+            const editButton = document.getElementById('editButton');
+            if (checkin.statusCode === 'PENDING') {
+                editButton.style.display = 'inline-block'; // Hiển thị nút Sửa
+            } else {
+                editButton.style.display = 'none'; // Ẩn nút Sửa
+            }
+
+            // Hiển thị/ẩn nút Tạo phiếu bảo dưỡng dựa trên trạng thái
+            const createMaintenanceButton = document.getElementById('createMaintenanceButton');
+            if (checkin.statusCode === 'CONFIRMED') {
+                createMaintenanceButton.style.display = 'inline-block'; // Hiển thị nút Tạo phiếu bảo dưỡng
+            } else {
+                createMaintenanceButton.style.display = 'none'; // Ẩn nút Tạo phiếu bảo dưỡng
+            }
 
             // Display images
             displayImages(checkin.images || []);

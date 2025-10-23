@@ -188,11 +188,14 @@
                                     `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
                                         <i class="fas fa-check"></i>
                                     </button>` : 
-                                    `<span class="badge bg-success">Đã xác nhận</span>`
+                                    ``
                                 }
-                                <button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
-                                    <i class="fas fa-wrench"></i>
-                                </button>
+                                ${checkin.statusCode === 'CONFIRMED' ? 
+                                    `<button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
+                                        <i class="fas fa-wrench"></i>
+                                    </button>` : 
+                                    ``
+                                }
                             </div>
                         </td>
                     `;

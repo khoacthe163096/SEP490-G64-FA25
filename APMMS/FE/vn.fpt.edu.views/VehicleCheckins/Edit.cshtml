@@ -6,129 +6,219 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Sửa thông tin check-in xe</h4>
+            <div class="card shadow-sm border-0">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Sửa thông tin check-in xe
+                        </h4>
+                        <div class="badge bg-white text-primary fs-6 shadow-sm" id="statusBadge">
+                            <i class="fas fa-clock me-1"></i>
+                            Đang tải...
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" style="background-color: #f8f9fa;">
                     <form id="checkinForm" enctype="multipart/form-data">
                         <input type="hidden" id="checkinId" name="id">
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="licensePlate" class="form-label">Biển số xe <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="licensePlate" name="licensePlate" required>
-                                </div>
+                        <!-- Thông tin xe -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-car me-2"></i>
+                                    Thông tin xe
+                                </h5>
                             </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="customerName" class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="customerName" name="customerName" required>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="licensePlate" class="form-label">
+                                                <i class="fas fa-id-card me-1"></i>
+                                                Biển số xe <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="licensePlate" name="licensePlate" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="mileage" class="form-label">
+                                                <i class="fas fa-tachometer-alt me-1"></i>
+                                                Số km
+                                            </label>
+                                            <input type="number" class="form-control" id="mileage" name="mileage" min="0">
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="customerPhone" class="form-label">Số điện thoại khách hàng</label>
-                                    <input type="tel" class="form-control" id="customerPhone" name="customerPhone">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="vinNumber" class="form-label">Số khung (VIN)</label>
-                                    <input type="text" class="form-control" id="vinNumber" name="vinNumber">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="vehicleEngineNumber" class="form-label">Số máy</label>
-                                    <input type="text" class="form-control" id="vehicleEngineNumber" name="vehicleEngineNumber">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="mileage" class="form-label">Số km</label>
-                                    <input type="number" class="form-control" id="mileage" name="mileage" min="0">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="branchName" name="branchName" readonly>
-                                    <input type="hidden" id="branchId" name="branchId">
-                                    <div class="form-text">Chi nhánh của nhân viên hiện tại</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="checkinDate" class="form-label">Ngày check-in <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="checkinDate" name="checkinDate" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="statusCode" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="statusCode" name="statusCode" required>
-                                        <option value="">Chọn trạng thái</option>
-                                        <!-- Will be loaded dynamically from database -->
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="notes" class="form-label">Ghi chú</label>
-                                    <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Mô tả tình trạng xe, vấn đề cần sửa chữa..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="images" class="form-label">Hình ảnh xe mới</label>
-                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
-                                    <div class="form-text">Chọn hình ảnh mới để thay thế (để trống nếu không thay đổi)</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Current Images -->
-                        <div id="currentImagesSection" style="display: none;">
-                            <div class="row">
-                                <div class="col-12">
-                                    <label class="form-label">Hình ảnh hiện tại</label>
-                                    <div id="currentImages" class="row">
-                                        <!-- Current images will be displayed here -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="vinNumber" class="form-label">
+                                                <i class="fas fa-barcode me-1"></i>
+                                                Số khung (VIN)
+                                            </label>
+                                            <input type="text" class="form-control" id="vinNumber" name="vinNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="vehicleEngineNumber" class="form-label">
+                                                <i class="fas fa-cog me-1"></i>
+                                                Số máy
+                                            </label>
+                                            <input type="text" class="form-control" id="vehicleEngineNumber" name="vehicleEngineNumber">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="/VehicleCheckins" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Cập nhật
-                            </button>
+                        <!-- Thông tin khách hàng -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Thông tin khách hàng
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="customerName" class="form-label">
+                                                <i class="fas fa-user-tag me-1"></i>
+                                                Tên khách hàng <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="customerName" name="customerName" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="customerPhone" class="form-label">
+                                                <i class="fas fa-phone me-1"></i>
+                                                Số điện thoại
+                                            </label>
+                                            <input type="tel" class="form-control" id="customerPhone" name="customerPhone">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin check-in -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clipboard-check me-2"></i>
+                                    Thông tin check-in
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="branchId" class="form-label">
+                                                <i class="fas fa-building me-1"></i>
+                                                Chi nhánh <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="branchName" name="branchName" readonly>
+                                            <input type="hidden" id="branchId" name="branchId">
+                                            <div class="form-text">Chi nhánh của nhân viên hiện tại</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="checkinDate" class="form-label">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Ngày check-in <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="datetime-local" class="form-control" id="checkinDate" name="checkinDate" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="statusCode" class="form-label">
+                                                <i class="fas fa-flag me-1"></i>
+                                                Trạng thái <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="statusCode" name="statusCode" required>
+                                                <option value="">Chọn trạng thái</option>
+                                                <!-- Will be loaded dynamically -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="notes" class="form-label">
+                                                <i class="fas fa-sticky-note me-1"></i>
+                                                Ghi chú
+                                            </label>
+                                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Mô tả tình trạng xe, vấn đề cần sửa chữa..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hình ảnh -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-images me-2"></i>
+                                    Hình ảnh xe
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="images" class="form-label">
+                                        <i class="fas fa-upload me-1"></i>
+                                        Hình ảnh mới
+                                    </label>
+                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                    <div class="form-text">Chọn hình ảnh mới để thay thế (để trống nếu không thay đổi)</div>
+                                </div>
+
+                                <!-- Current Images -->
+                                <div id="currentImagesSection" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-image me-1"></i>
+                                            Hình ảnh hiện tại
+                                        </label>
+                                        <div id="currentImages" class="row">
+                                            <!-- Current images will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Vui lòng kiểm tra thông tin trước khi cập nhật
+                                    </div>
+                                    <div class="btn-group">
+                                        <a href="/VehicleCheckins" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i> 
+                                            Quay lại
+                                        </a>
+                                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                                            <i class="fas fa-save me-1"></i> 
+                                            Cập nhật
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -196,6 +286,21 @@
                     }
                     document.getElementById('statusCode').value = checkin.statusCode || '';
                     document.getElementById('notes').value = checkin.notes || '';
+                    
+                    // Cập nhật status badge
+                    updateStatusBadge(checkin.statusCode);
+                    
+                    // Kiểm tra trạng thái - nếu đã CONFIRMED thì không cho phép chỉnh sửa
+                    if (checkin.statusCode === 'CONFIRMED') {
+                        showAlert('Vehicle check-in đã được xác nhận, không thể chỉnh sửa!', 'warning');
+                        // Disable tất cả input fields
+                        disableForm();
+                        // Chuyển hướng về trang danh sách sau 3 giây
+                        setTimeout(() => {
+                            window.location.href = '/VehicleCheckins';
+                        }, 3000);
+                        return;
+                    }
                     
                     // Set checkin date - sử dụng createdAt thay vì checkinDate
                     if (checkin.createdAt) {
@@ -378,6 +483,29 @@
             .catch(error => {
                 console.error('Upload error:', error);
                 showAlert('Lỗi upload ảnh: ' + error.message, 'danger');
+            });
+        }
+
+        function updateStatusBadge(statusCode) {
+            const statusBadge = document.getElementById('statusBadge');
+            if (statusCode === 'PENDING') {
+                statusBadge.innerHTML = '<i class="fas fa-clock me-1"></i>Chờ xử lý';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50; border: none;';
+            } else if (statusCode === 'CONFIRMED') {
+                statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i>Đã xác nhận';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50; border: none;';
+            } else {
+                statusBadge.innerHTML = '<i class="fas fa-question-circle me-1"></i>Không xác định';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50; border: none;';
+            }
+        }
+
+        function disableForm() {
+            // Disable tất cả input fields trong form
+            const form = document.getElementById('checkinForm');
+            const inputs = form.querySelectorAll('input, textarea, select, button');
+            inputs.forEach(input => {
+                input.disabled = true;
             });
         }
 

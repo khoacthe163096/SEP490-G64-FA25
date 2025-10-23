@@ -13,7 +13,7 @@
         <div class="user-info">
             <span id="userDisplayName">Đang tải...</span>
             <div class="user-avatar dropdown" id="userAvatarDropdown">
-                <button class="avatar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="avatar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userDropdownToggle">
                     <i class="fas fa-user" id="userAvatarIcon"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -64,6 +64,32 @@ function displayUserNameFromToken() {
 document.addEventListener('DOMContentLoaded', function() {
     displayUserNameFromToken();
     
+    // Khởi tạo dropdown
+    const dropdownToggle = document.getElementById('userDropdownToggle');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    
+    if (dropdownToggle && dropdownMenu) {
+        // Toggle dropdown manually
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle dropdown
+            if (dropdownMenu.classList.contains('show')) {
+                dropdownMenu.classList.remove('show');
+            } else {
+                dropdownMenu.classList.add('show');
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    }
+    
     // Xử lý logout
     document.getElementById('logoutLink').addEventListener('click', function(e) {
         e.preventDefault();
@@ -74,10 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '/?logout=true';
     });
     
-    // Xử lý profile (placeholder)
+    // Xử lý profile
     document.getElementById('profileLink').addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Chức năng Profile đang được phát triển');
+        window.location.href = '/Profile';
     });
 });
 </script>
