@@ -252,40 +252,27 @@
         }
 
         function loadStatuses() {
-            // Lấy dữ liệu trạng thái thật từ database
-            console.log('Loading statuses from API...');
+            // Chỉ hiển thị 2 trạng thái cho VehicleCheckin
+            console.log('Loading VehicleCheckin statuses...');
             
-            fetch('https://localhost:7173/api/Status')
-                .then(response => {
-                    console.log('Status response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Status API Response:', data);
-                    if (data.success && data.data && data.data.length > 0) {
-                        const statusSelect = document.getElementById('statusCode');
-                        // Xóa option mặc định trừ "Chọn trạng thái"
-                        statusSelect.innerHTML = '<option value="">Chọn trạng thái</option>';
-                        
-                        // Thêm các trạng thái từ database
-                        data.data.forEach(status => {
-                            const option = document.createElement('option');
-                            option.value = status.code;
-                            option.textContent = status.name;
-                            statusSelect.appendChild(option);
-                        });
-                        
-                        console.log('Loaded statuses from database:', data.data.length, 'statuses');
-                    } else {
-                        console.error('No status data found in database');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading statuses from database:', error);
-                });
+            const statusSelect = document.getElementById('statusCode');
+            // Xóa option mặc định trừ "Chọn trạng thái"
+            statusSelect.innerHTML = '<option value="">Chọn trạng thái</option>';
+            
+            // Chỉ thêm 2 trạng thái cho VehicleCheckin
+            const vehicleCheckinStatuses = [
+                { code: 'PENDING', name: 'Chờ xử lý' },
+                { code: 'CONFIRMED', name: 'Đã xác nhận' }
+            ];
+            
+            vehicleCheckinStatuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status.code;
+                option.textContent = status.name;
+                statusSelect.appendChild(option);
+            });
+            
+            console.log('Loaded VehicleCheckin statuses:', vehicleCheckinStatuses.length, 'statuses');
         }
 
         function displayCurrentImages(images) {

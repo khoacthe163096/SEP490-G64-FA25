@@ -24,6 +24,11 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         
         [Required(ErrorMessage = "At least one image is required")]
         public List<string> ImageUrls { get; set; } = new List<string>();
+        
+        [Required(ErrorMessage = "Branch ID is required")]
+        public long BranchId { get; set; }
+        
+        public string? Code { get; set; }
     }
     
     /// <summary>

@@ -393,7 +393,8 @@
                 maintenanceRequestId: null,
                 mileage: parseInt(document.getElementById('mileage').value),
                 notes: document.getElementById('notes').value,
-                imageUrls: imageUrls
+                imageUrls: imageUrls,
+                branchId: parseInt(document.getElementById('branchId').value)
             };
 
             fetch('https://localhost:7173/api/VehicleCheckin', {

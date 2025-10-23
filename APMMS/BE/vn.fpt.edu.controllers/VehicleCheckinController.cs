@@ -211,6 +211,33 @@ namespace vn.fpt.edu.controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Cập nhật trạng thái VehicleCheckin (chỉ PENDING hoặc CONFIRMED)
+        /// </summary>
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusDto request)
+        {
+            try
+            {
+                // Validate status
+                if (request.StatusCode != "PENDING" && request.StatusCode != "CONFIRMED")
+                {
+                    return BadRequest(new { success = false, message = "Trạng thái chỉ được phép là PENDING hoặc CONFIRMED" });
+                }
+
+                var result = await _vehicleCheckinService.UpdateStatusAsync(id, request.StatusCode);
+                return Ok(new { success = true, data = result, message = "Cập nhật trạng thái thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
     }
 
     /// <summary>
@@ -220,5 +247,14 @@ namespace vn.fpt.edu.controllers
     {
         [Required(ErrorMessage = "Maintenance Request ID is required")]
         public long MaintenanceRequestId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho việc cập nhật trạng thái
+    /// </summary>
+    public class UpdateStatusDto
+    {
+        [Required(ErrorMessage = "Status code is required")]
+        public string StatusCode { get; set; } = string.Empty;
     }
 }

@@ -13,6 +13,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public int Mileage { get; set; }
         public string? Notes { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public string? Code { get; set; }
         
         // Thông tin xe
         public string? CarName { get; set; }
@@ -60,6 +61,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
     {
         public long Id { get; set; }
         public long CarId { get; set; }
+        public string? Code { get; set; }
         public string? CarName { get; set; }
         public string? LicensePlate { get; set; }
         public string? VinNumber { get; set; }

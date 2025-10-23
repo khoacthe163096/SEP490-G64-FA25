@@ -54,7 +54,7 @@
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Mã</th>
                                     <th>Biển số xe</th>
                                     <th>Chủ xe</th>
                                     <th>Loại xe</th>
@@ -173,7 +173,7 @@
                 const row = document.createElement('tr');
                 try {
                     row.innerHTML = `
-                        <td>${checkin.id}</td>
+                        <td><strong>${checkin.code || 'VCI-' + checkin.id}</strong></td>
                         <td><strong>${checkin.licensePlate || '-'}</strong></td>
                         <td>${checkin.customerName || '-'}</td>
                         <td><span class="badge bg-info">${checkin.carName || '-'}</span></td>
@@ -184,14 +184,14 @@
                                 <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="/VehicleCheckins/Edit/${checkin.id}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-sm btn-success" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
+                                ${checkin.statusCode === 'PENDING' ? 
+                                    `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
+                                        <i class="fas fa-check"></i>
+                                    </button>` : 
+                                    `<span class="badge bg-success">Đã xác nhận</span>`
+                                }
+                                <button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
                                     <i class="fas fa-wrench"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCheckin(${checkin.id})" title="Xóa">
-                                    <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </td>
@@ -207,11 +207,7 @@
         function getStatusBadgeClass(status) {
             switch(status) {
                 case 'PENDING': return 'bg-warning';
-                case 'IN_PROGRESS': return 'bg-primary';
-                case 'DONE': return 'bg-success';
-                case 'CANCELLED': return 'bg-danger';
-                case 'CONFIRMED': return 'bg-info';
-                case 'REJECTED': return 'bg-danger';
+                case 'CONFIRMED': return 'bg-success';
                 default: return 'bg-secondary';
             }
         }
@@ -219,11 +215,7 @@
         function getStatusText(status) {
             switch(status) {
                 case 'PENDING': return 'Chờ xử lý';
-                case 'IN_PROGRESS': return 'Đang thực hiện';
-                case 'DONE': return 'Hoàn thành';
-                case 'CANCELLED': return 'Đã hủy';
                 case 'CONFIRMED': return 'Đã xác nhận';
-                case 'REJECTED': return 'Từ chối';
                 default: return status;
             }
         }
@@ -368,6 +360,49 @@
             loadCheckins();
         }
 
+        function confirmCheckin(id) {
+            // Lưu ID để sử dụng trong modal
+            window.pendingCheckinId = id;
+            // Hiển thị modal xác nhận
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmCheckinModal'));
+            confirmModal.show();
+        }
+
+        function confirmCheckinAction() {
+            // Lấy ID đã lưu và thực hiện cập nhật
+            const id = window.pendingCheckinId;
+            if (id) {
+                updateCheckinStatus(id, 'CONFIRMED');
+                // Đóng modal
+                const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmCheckinModal'));
+                confirmModal.hide();
+            }
+        }
+
+        async function updateCheckinStatus(id, status) {
+            try {
+                const response = await fetch(`https://localhost:7173/api/VehicleCheckin/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ statusCode: status })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Cập nhật trạng thái thành công!', 'success');
+                    loadCheckins(); // Reload danh sách
+                } else {
+                    showAlert('Lỗi: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi cập nhật trạng thái', 'danger');
+            }
+        }
+
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -428,6 +463,44 @@
                 <button type="button" class="btn btn-primary" onclick="confirmCreateMaintenanceTicket()">
                     <i class="fas fa-check me-1"></i>
                     Tạo phiếu bảo dưỡng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận VehicleCheckin -->
+<div class="modal fade" id="confirmCheckinModal" tabindex="-1" aria-labelledby="confirmCheckinModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="confirmCheckinModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Xác nhận Vehicle Check-in
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle fa-3x text-success mb-3"></i>
+                    <h5>Xác nhận trạng thái</h5>
+                    <p class="text-muted mb-0">
+                        Bạn có chắc chắn muốn xác nhận vehicle check-in này không?
+                    </p>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Sau khi xác nhận, trạng thái sẽ chuyển từ "Chờ xử lý" thành "Đã xác nhận".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmCheckinAction()">
+                    <i class="fas fa-check me-1"></i>
+                    Xác nhận
                 </button>
             </div>
         </div>

@@ -35,6 +35,10 @@
                                     <h5>Thông tin xe</h5>
                                     <hr>
                                     <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Mã:</strong></div>
+                                        <div class="col-sm-8"><span class="badge bg-success fs-6" id="checkinCode">-</span></div>
+                                    </div>
+                                    <div class="row mb-2">
                                         <div class="col-sm-4"><strong>ID:</strong></div>
                                         <div class="col-sm-8" id="checkinId">-</div>
                                     </div>
@@ -208,6 +212,7 @@
             console.log('Displaying checkin details:', checkin); // Debug log
             console.log('BranchName from API:', checkin.branchName); // Debug branch name
             
+            document.getElementById('checkinCode').textContent = checkin.code || 'VCI-' + checkin.id;
             document.getElementById('checkinId').textContent = checkin.id || '-';
             document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
             document.getElementById('vehicleType').textContent = checkin.carName || '-'; // Sử dụng carName thay vì vehicleType
@@ -287,11 +292,7 @@
         function getStatusBadge(status) {
             switch(status) {
                 case 'PENDING': return '<span class="badge bg-warning">Chờ xử lý</span>';
-                case 'IN_PROGRESS': return '<span class="badge bg-primary">Đang thực hiện</span>';
-                case 'DONE': return '<span class="badge bg-success">Hoàn thành</span>';
-                case 'CANCELLED': return '<span class="badge bg-danger">Đã hủy</span>';
-                case 'CONFIRMED': return '<span class="badge bg-info">Đã xác nhận</span>';
-                case 'REJECTED': return '<span class="badge bg-danger">Từ chối</span>';
+                case 'CONFIRMED': return '<span class="badge bg-success">Đã xác nhận</span>';
                 default: return `<span class="badge bg-secondary">${status}</span>`;
             }
         }

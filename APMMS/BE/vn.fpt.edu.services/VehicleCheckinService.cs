@@ -2,6 +2,7 @@ using BE.vn.fpt.edu.DTOs.VehicleCheckin;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -24,7 +25,9 @@ namespace BE.vn.fpt.edu.services
                 MaintenanceRequestId = request.MaintenanceRequestId,
                 Mileage = request.Mileage,
                 Notes = request.Notes,
-                StatusCode = "PENDING", // Default status
+                BranchId = request.BranchId,
+                Code = await GenerateVehicleCheckinCodeAsync(),
+                StatusCode = "PENDING", // Default status - chỉ có PENDING và CONFIRMED
                 CreatedAt = DateTime.UtcNow,
                 VehicleCheckinImages = request.ImageUrls.Select(url => new VehicleCheckinImage
                 {
@@ -126,6 +129,7 @@ namespace BE.vn.fpt.edu.services
                 Mileage = vehicleCheckin.Mileage ?? 0,
                 Notes = vehicleCheckin.Notes,
                 CreatedAt = vehicleCheckin.CreatedAt,
+                Code = vehicleCheckin.Code,
                 
                 // Car information
                 CarName = vehicleCheckin.Car?.CarName,
@@ -213,6 +217,7 @@ namespace BE.vn.fpt.edu.services
             {
                 Id = vehicleCheckin.Id,
                 CarId = vehicleCheckin.CarId ?? 0,
+                Code = vehicleCheckin.Code,
                 CarName = vehicleCheckin.Car?.CarName,
                 LicensePlate = vehicleCheckin.Car?.LicensePlate,
                 VinNumber = vehicleCheckin.Car?.VinNumber,
@@ -241,6 +246,54 @@ namespace BE.vn.fpt.edu.services
             {
                 return null;
             }
+        }
+
+        private async Task<string> GenerateVehicleCheckinCodeAsync()
+        {
+            string code;
+            bool isUnique;
+            
+            do
+            {
+                // Tạo code theo format VCI-xxxxx (5 số)
+                var random = new Random();
+                var number = random.Next(10000, 99999); // 5 số từ 10000-99999
+                code = $"VCI-{number}";
+                
+                // Kiểm tra code có trùng không
+                isUnique = !await _context.VehicleCheckins.AnyAsync(vc => vc.Code == code);
+            } while (!isUnique);
+            
+            return code;
+        }
+
+        public async Task<ResponseDto> UpdateStatusAsync(long id, string statusCode)
+        {
+            var vehicleCheckin = await _context.VehicleCheckins
+                .Include(vc => vc.Car)
+                    .ThenInclude(c => c.User)
+                .Include(vc => vc.Car)
+                    .ThenInclude(c => c.Branch)
+                .Include(vc => vc.Branch)
+                .Include(vc => vc.MaintenanceRequest)
+                .Include(vc => vc.VehicleCheckinImages)
+                .FirstOrDefaultAsync(vc => vc.Id == id);
+
+            if (vehicleCheckin == null)
+            {
+                throw new ArgumentException("Vehicle check-in not found");
+            }
+
+            // Validate status
+            if (statusCode != "PENDING" && statusCode != "CONFIRMED")
+            {
+                throw new ArgumentException("Trạng thái chỉ được phép là PENDING hoặc CONFIRMED");
+            }
+
+            vehicleCheckin.StatusCode = statusCode;
+            await _context.SaveChangesAsync();
+
+            return await MapToResponseDTO(vehicleCheckin);
         }
     }
 }
