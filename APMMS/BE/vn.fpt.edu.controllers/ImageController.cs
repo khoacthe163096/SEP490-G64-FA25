@@ -153,6 +153,30 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Upload image to Cloudinary without vehicleCheckinId (for temporary upload)
+        /// </summary>
+        [HttpPost("upload-temp")]
+        public async Task<IActionResult> UploadImageTemp(IFormFile file, string folder = "temp")
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { success = false, message = "Không có file được chọn" });
+                }
+
+                // Upload to Cloudinary
+                var imageUrl = await _cloudinaryService.UploadImageAsync(file, folder);
+
+                return Ok(new { success = true, data = new { url = imageUrl } });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Upload user avatar to Cloudinary
         /// </summary>
         [HttpPost("upload-avatar")]

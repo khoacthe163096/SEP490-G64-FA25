@@ -253,9 +253,9 @@ function displayMaintenanceTickets(tickets) {
         tbody.append(`
             <tr>
                 <td>
-                    <strong>${ticket.code || 'MTK-' + ticket.id}</strong>
+                    <strong>${ticket.code || 'BD-' + ticket.id}</strong>
                 </td>
-                <td>${ticket.consulterName || 'N/A'}</td>
+                <td>${ticket.customerName || 'N/A'}</td>
                 <td>${createdAt}</td>
                 <td>${statusBadge}</td>
                     <td>

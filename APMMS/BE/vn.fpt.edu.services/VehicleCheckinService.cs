@@ -8,10 +8,12 @@ namespace BE.vn.fpt.edu.services
     public class VehicleCheckinService : IVehicleCheckinService
     {
         private readonly IVehicleCheckinRepository _vehicleCheckinRepository;
+        private readonly CarMaintenanceDbContext _context;
 
-        public VehicleCheckinService(IVehicleCheckinRepository vehicleCheckinRepository)
+        public VehicleCheckinService(IVehicleCheckinRepository vehicleCheckinRepository, CarMaintenanceDbContext context)
         {
             _vehicleCheckinRepository = vehicleCheckinRepository;
+            _context = context;
         }
 
         public async Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request)
@@ -68,7 +70,7 @@ namespace BE.vn.fpt.edu.services
             if (vehicleCheckin == null)
                 throw new ArgumentException("Vehicle check-in not found");
 
-            return MapToResponseDTO(vehicleCheckin);
+            return await MapToResponseDTO(vehicleCheckin);
         }
 
         public async Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10)
@@ -99,8 +101,23 @@ namespace BE.vn.fpt.edu.services
             return await _vehicleCheckinRepository.DeleteAsync(id);
         }
 
-        private ResponseDto MapToResponseDTO(VehicleCheckin vehicleCheckin)
+        private async Task<ResponseDto> MapToResponseDTO(VehicleCheckin vehicleCheckin)
         {
+            // Debug log
+            Console.WriteLine($"Debug - VehicleCheckin ID: {vehicleCheckin.Id}");
+            Console.WriteLine($"Debug - BranchId: {vehicleCheckin.BranchId}");
+            Console.WriteLine($"Debug - Branch: {vehicleCheckin.Branch?.Name}");
+            Console.WriteLine($"Debug - Car.BranchId: {vehicleCheckin.Car?.BranchId}");
+            Console.WriteLine($"Debug - Car.Branch: {vehicleCheckin.Car?.Branch?.Name}");
+            
+            // Get branch name as fallback
+            var branchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId;
+            var branchName = vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name;
+            if (string.IsNullOrEmpty(branchName) && branchId.HasValue)
+            {
+                branchName = await GetBranchNameById(branchId);
+            }
+            
             return new ResponseDto
             {
                 Id = vehicleCheckin.Id,
@@ -125,8 +142,8 @@ namespace BE.vn.fpt.edu.services
                 CustomerEmail = vehicleCheckin.Car?.User?.Email,
                 
                 // Branch information
-                BranchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId,
-                BranchName = vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
+                BranchId = branchId,
+                BranchName = branchName,
                 
                 // Images
                 Images = vehicleCheckin.VehicleCheckinImages?.Select(img => new VehicleCheckinImageDto
@@ -209,6 +226,21 @@ namespace BE.vn.fpt.edu.services
                 MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
                 StatusCode = vehicleCheckin.StatusCode
             };
+        }
+
+        private async Task<string?> GetBranchNameById(long? branchId)
+        {
+            if (!branchId.HasValue) return null;
+            
+            try
+            {
+                var branch = await _context.Branches.FindAsync(branchId.Value);
+                return branch?.Name;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

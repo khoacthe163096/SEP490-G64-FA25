@@ -146,8 +146,9 @@
                             <div class="col-md-12">
                                 <div class="mb-3">
                                     <label for="images" class="form-label">Hình ảnh xe</label>
-                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*" onchange="previewImages()">
                                     <div class="form-text">Có thể chọn nhiều hình ảnh (JPG, PNG, GIF)</div>
+                                    <div id="imagePreview" class="mt-2"></div>
                                 </div>
                             </div>
                         </div>
@@ -248,7 +249,7 @@
         }
 
         function loadBranches() {
-            fetch('/api/Branch')
+            fetch('https://localhost:7173/api/Branch')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -259,11 +260,62 @@
                             option.textContent = branch.name;
                             select.appendChild(option);
                         });
+                        
+                        // Tự động chọn chi nhánh của Consulter
+                        selectBranchForConsulter();
                     }
                 })
                 .catch(error => {
                     console.error('Error loading branches:', error);
                 });
+        }
+        
+        function selectBranchForConsulter() {
+            console.log('selectBranchForConsulter called');
+            // Lấy thông tin user từ token
+            const token = localStorage.getItem('authToken');
+            console.log('Token found:', token ? 'Yes' : 'No');
+            if (!token) return;
+            
+            try {
+                // Decode token để lấy thông tin user
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+                const roleId = payload['RoleId'];
+                console.log('User ID:', userId, 'Role ID:', roleId);
+                
+                // Nếu là Consulter (roleId = 6), tự động chọn chi nhánh
+                if (roleId === '6') {
+                    console.log('User is Consulter, getting branch info...');
+                    // Gọi API để lấy thông tin chi nhánh của Consulter
+                    fetch(`https://localhost:7173/api/Employee/${userId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Employee data:', data);
+                            if (data.branchName) {
+                                // Tìm chi nhánh theo tên
+                                const select = document.getElementById('branchId');
+                                for (let i = 0; i < select.options.length; i++) {
+                                    if (select.options[i].textContent === data.branchName) {
+                                        select.value = select.options[i].value;
+                                        console.log('Auto-selected branch for Consulter:', data.branchName, 'ID:', select.options[i].value);
+                                        break;
+                                    }
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error getting Consulter branch:', error);
+                            // Fallback: chọn chi nhánh đầu tiên
+                            const select = document.getElementById('branchId');
+                            if (select.options.length > 1) {
+                                select.selectedIndex = 1; // Skip "Chọn chi nhánh" option
+                            }
+                        });
+                }
+            } catch (e) {
+                console.error('Error decoding token:', e);
+            }
         }
 
         function searchVehicle() {
@@ -273,7 +325,7 @@
                 return;
             }
 
-            fetch(`/VehicleCheckins/SearchVehicle?searchTerm=${encodeURIComponent(searchTerm)}`)
+            fetch(`https://localhost:7173/api/VehicleCheckin/search-vehicle?searchTerm=${encodeURIComponent(searchTerm)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.data.found) {
@@ -322,10 +374,17 @@
                 });
         }
 
-        function createCheckin() {
+        async function createCheckin() {
             const carId = document.getElementById('carId').value;
             if (!carId) {
                 showAlert('Vui lòng tìm kiếm xe trước khi tạo check-in', 'warning');
+                return;
+            }
+
+            // Upload ảnh trước
+            const imageUrls = await uploadImages();
+            if (imageUrls === null) {
+                showAlert('Có lỗi xảy ra khi upload ảnh', 'danger');
                 return;
             }
 
@@ -334,10 +393,10 @@
                 maintenanceRequestId: null,
                 mileage: parseInt(document.getElementById('mileage').value),
                 notes: document.getElementById('notes').value,
-                imageUrls: [] // TODO: Handle image upload
+                imageUrls: imageUrls
             };
 
-            fetch('/api/VehicleCheckin', {
+            fetch('https://localhost:7173/api/VehicleCheckin', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -359,6 +418,78 @@
                 console.error('Error:', error);
                 showAlert('Có lỗi xảy ra khi check-in xe', 'danger');
             });
+        }
+
+        function previewImages() {
+            const fileInput = document.getElementById('images');
+            const preview = document.getElementById('imagePreview');
+            const files = fileInput.files;
+            
+            preview.innerHTML = '';
+            
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.style.width = '100px';
+                            img.style.height = '100px';
+                            img.style.objectFit = 'cover';
+                            img.style.margin = '5px';
+                            img.style.border = '1px solid #ddd';
+                            img.style.borderRadius = '5px';
+                            preview.appendChild(img);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            }
+        }
+
+        async function uploadImages() {
+            const fileInput = document.getElementById('images');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                return []; // Không có ảnh nào
+            }
+
+            const imageUrls = [];
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', 'vehicle-checkins');
+
+                try {
+                    const response = await fetch('https://localhost:7173/api/Image/upload-temp', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success) {
+                            imageUrls.push(result.data.url);
+                        } else {
+                            console.error('Upload failed:', result.message);
+                            return null;
+                        }
+                    } else {
+                        console.error('Upload failed with status:', response.status);
+                        return null;
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    return null;
+                }
+            }
+            
+            return imageUrls;
         }
 
         function showAlert(message, type) {

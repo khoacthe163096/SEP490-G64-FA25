@@ -180,7 +180,7 @@
         }
 
         function loadCheckinDetails(id) {
-            fetch(`/VehicleCheckins/GetDetails/${id}`)
+            fetch(`https://localhost:7173/api/VehicleCheckin/${id}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

@@ -8,7 +8,7 @@ namespace BE.vn.fpt.edu.controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+   // [Authorize]
     public class MaintenanceTicketController : ControllerBase
     {
         private readonly IMaintenanceTicketService _maintenanceTicketService;

@@ -48,11 +48,13 @@ namespace BE.vn.fpt.edu.convert
             // MaintenanceTicket mappings
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>();
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
-                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore()) // Ignore CreatedDate since it doesn't exist in model
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.StartTime ?? DateTime.Now.AddDays(-src.Id)))
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
                 .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}".Trim() : null))
                 .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}".Trim() : null))
-                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null));
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? $"{src.Car.User.FirstName} {src.Car.User.LastName}".Trim() : null))
+                .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code));
             CreateMap<BE.vn.fpt.edu.DTOs.MaintenanceTicket.RequestDto, MaintenanceTicket>();
 
             // Profile mappings
