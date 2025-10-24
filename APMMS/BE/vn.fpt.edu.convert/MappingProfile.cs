@@ -30,8 +30,9 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
 
             // Component mappings
-            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>();
+            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ComponentResponseDto>();
+            CreateMap<BE.vn.fpt.edu.DTOs.Component.CreateComponentDto, Component>();
+            CreateMap<BE.vn.fpt.edu.DTOs.Component.UpdateComponentDto, Component>();
 
             // Employee mappings
             CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>();
@@ -88,8 +89,9 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto, TotalReceipt>();
 
             // TypeComponent mappings
-            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.RequestDto, TypeComponent>();
+            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentResponseDto>();
+            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.CreateTypeComponentDto, TypeComponent>();
+            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.UpdateTypeComponentDto, TypeComponent>();
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BE.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();

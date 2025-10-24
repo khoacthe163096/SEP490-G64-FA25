@@ -44,7 +44,7 @@ namespace BE.vn.fpt.edu.repository
         {
             var query = _context.VehicleCheckins
                 .Include(vc => vc.Car)
-                    .ThenInclude(c => c.Branch)
+                    .ThenInclude(c =>    c.Branch)
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Branch)
