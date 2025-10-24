@@ -40,9 +40,9 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(vc => vc.Id == id);
         }
 
-        public async Task<List<VehicleCheckin>> GetAllAsync(int page = 1, int pageSize = 10)
+        public async Task<List<VehicleCheckin>> GetAllAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            return await _context.VehicleCheckins
+            var query = _context.VehicleCheckins
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.Branch)
                 .Include(vc => vc.Car)
@@ -50,6 +50,36 @@ namespace BE.vn.fpt.edu.repository
                 .Include(vc => vc.Branch)
                 .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
+                .AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(vc => 
+                    (vc.Car != null && vc.Car.LicensePlate != null && vc.Car.LicensePlate.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.VinNumber != null && vc.Car.VinNumber.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.FirstName != null && vc.Car.User.FirstName.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.LastName != null && vc.Car.User.LastName.Contains(searchTerm)));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(statusCode))
+            {
+                query = query.Where(vc => vc.StatusCode == statusCode);
+            }
+
+            // Apply date filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt <= toDate.Value.AddDays(1).AddTicks(-1));
+            }
+
+            return await query
                 .OrderByDescending(vc => vc.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -102,9 +132,9 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(vc => vc.Id == id);
         }
 
-        public async Task<List<VehicleCheckin>> GetAllWithDetailsAsync(int page = 1, int pageSize = 10)
+        public async Task<List<VehicleCheckin>> GetAllWithDetailsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            return await _context.VehicleCheckins
+            var query = _context.VehicleCheckins
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Car)
@@ -112,15 +142,74 @@ namespace BE.vn.fpt.edu.repository
                 .Include(vc => vc.MaintenanceRequest)
                     .ThenInclude(mr => mr.User)
                 .Include(vc => vc.VehicleCheckinImages)
+                .AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(vc => 
+                    (vc.Car != null && vc.Car.LicensePlate != null && vc.Car.LicensePlate.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.VinNumber != null && vc.Car.VinNumber.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.FirstName != null && vc.Car.User.FirstName.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.LastName != null && vc.Car.User.LastName.Contains(searchTerm)));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(statusCode))
+            {
+                query = query.Where(vc => vc.StatusCode == statusCode);
+            }
+
+            // Apply date filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt <= toDate.Value.AddDays(1).AddTicks(-1));
+            }
+
+            return await query
                 .OrderByDescending(vc => vc.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync()
+        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            return await _context.VehicleCheckins.CountAsync();
+            var query = _context.VehicleCheckins.AsQueryable();
+
+            // Apply search filter
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(vc => 
+                    (vc.Car != null && vc.Car.LicensePlate != null && vc.Car.LicensePlate.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.VinNumber != null && vc.Car.VinNumber.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.FirstName != null && vc.Car.User.FirstName.Contains(searchTerm)) ||
+                    (vc.Car != null && vc.Car.User != null && vc.Car.User.LastName != null && vc.Car.User.LastName.Contains(searchTerm)));
+            }
+
+            // Apply status filter
+            if (!string.IsNullOrWhiteSpace(statusCode))
+            {
+                query = query.Where(vc => vc.StatusCode == statusCode);
+            }
+
+            // Apply date filter
+            if (fromDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt >= fromDate.Value);
+            }
+
+            if (toDate.HasValue)
+            {
+                query = query.Where(vc => vc.CreatedAt <= toDate.Value.AddDays(1).AddTicks(-1));
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<List<Car>> SearchCarsAsync(string searchTerm)
