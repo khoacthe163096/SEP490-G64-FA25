@@ -88,8 +88,8 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto, TotalReceipt>();
 
             // TypeComponent mappings
-            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.RequestDto, TypeComponent>();
+            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentRequestDto>();
+            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentResponseDto, TypeComponent>();
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BE.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();
