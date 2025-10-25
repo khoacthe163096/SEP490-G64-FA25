@@ -173,4 +173,52 @@ namespace BE.vn.fpt.edu.controllers
     {
         public string Token { get; set; } = string.Empty;
     }
+    
+    public class AuthController : ControllerBase
+    {
+        private readonly IUserService _userService;
+        private readonly EmailService _emailService;
+
+        public AuthController(IUserService userService, EmailService emailService)
+        {
+            _userService = userService;
+            _emailService = emailService;
+        }
+
+        // B1: Quên mật khẩu (gửi email xác nhận)
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            var user = await _userService.GetUserByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest(new { success = false, message = "Email không tồn tại." });
+
+            // Tạo mã reset
+            var token = Guid.NewGuid().ToString();
+
+            // Lưu token vào DB
+            await _userService.SaveResetTokenAsync(user.Id, token);
+
+            // Tạo link reset (ví dụ localhost, bạn thay domain thật)
+            var resetLink = $"https://localhost:5173/reset-password?token={token}";
+
+            // Gửi mail
+            await _emailService.SendEmailAsync(model.Email, "Đặt lại mật khẩu",
+                $"Nhấn vào liên kết sau để đặt lại mật khẩu: {resetLink}");
+
+            return Ok(new { success = true, message = "Đã gửi link đặt lại mật khẩu qua email." });
+        }
+
+        // B2: Reset mật khẩu
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            var result = await _userService.ResetPasswordAsync(model.Token, model.NewPassword);
+            if (!result)
+                return BadRequest(new { success = false, message = "Token không hợp lệ hoặc đã hết hạn." });
+
+            return Ok(new { success = true, message = "Đặt lại mật khẩu thành công." });
+        }
+    }
+
 }
