@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BE.vn.fpt.edu.models;
 
@@ -14,6 +15,9 @@ public partial class Component
     public decimal? UnitPrice { get; set; }
 
     public int? QuantityStock { get; set; }
+
+    [Column("is_active")]
+    public bool IsActive { get; set; } = true;
 
     public long? TypeComponentId { get; set; }
 

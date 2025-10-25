@@ -30,8 +30,14 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
 
             // Component mappings
-            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>();
+            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>()
+    .ForMember(dest => dest.TypeComponentName, opt => opt.MapFrom(src => src.TypeComponent != null ? src.TypeComponent.Name : null))
+    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
+
+            CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.IsActive, opt => opt.Ignore()); // don't overwrite IsActive from request
+
 
             // Employee mappings
             CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>();
