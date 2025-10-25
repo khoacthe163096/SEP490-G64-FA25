@@ -15,6 +15,12 @@ public partial class ServicePackage
 
     public string? StatusCode { get; set; }
 
+    public string? Code { get; set; }
+
+    public long? BranchId { get; set; }
+
+    public virtual Branch? Branch { get; set; }
+
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<Component> Components { get; set; } = new List<Component>();
