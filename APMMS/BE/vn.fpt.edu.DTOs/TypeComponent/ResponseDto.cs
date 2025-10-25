@@ -1,8 +1,9 @@
-namespace BE.vn.fpt.edu.DTOs.TypeComponent
+namespace BE.vn.fpt.edu.dtos
 {
-    public class ResponseDto
+    public class TypeComponentResponseDto
     {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
     }
 }
-
-
