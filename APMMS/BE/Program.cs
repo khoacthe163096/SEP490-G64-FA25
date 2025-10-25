@@ -66,6 +66,9 @@ builder.Services.AddBusinessServices();
 // explicit registrations for TypeComponent module
 builder.Services.AddScoped<BE.vn.fpt.edu.repository.IRepository.ITypeComponentRepository, BE.vn.fpt.edu.repository.TypeComponentRepository>();
 builder.Services.AddScoped<BE.vn.fpt.edu.interfaces.ITypeComponentService, BE.vn.fpt.edu.services.TypeComponentService>();
+// explicit registrations for Component module
+builder.Services.AddScoped<BE.vn.fpt.edu.repository.IRepository.IComponentRepository, BE.vn.fpt.edu.repository.ComponentRepository>();
+builder.Services.AddScoped<BE.vn.fpt.edu.interfaces.IComponentService, BE.vn.fpt.edu.services.ComponentService>();
 
 // Cloudinary Service
 builder.Services.AddSingleton<CloudinaryService>();
