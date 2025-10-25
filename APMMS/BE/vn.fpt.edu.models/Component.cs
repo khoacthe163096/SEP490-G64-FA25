@@ -15,6 +15,8 @@ public partial class Component
 
     public int? QuantityStock { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public long? TypeComponentId { get; set; }
 
     public long? BranchId { get; set; }
