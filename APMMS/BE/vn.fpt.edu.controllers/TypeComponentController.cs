@@ -1,5 +1,6 @@
 using BE.vn.fpt.edu.DTOs;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
+using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.services;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -33,7 +34,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TypeComponentRequestDto dto)
+        public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             var created = await _service.CreateAsync(dto);
@@ -41,7 +42,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpPut("{id:long}")]
-        public async Task<IActionResult> Update(long id, [FromBody] TypeComponentRequestDto dto)
+        public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
         {
             try
             {

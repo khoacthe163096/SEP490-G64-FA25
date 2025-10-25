@@ -1,24 +1,14 @@
-using AutoMapper;
-using BE.vn.fpt.edu.DTOs;
-using BE.vn.fpt.edu.DTOs.TypeComponent;
-using BE.vn.fpt.edu.models;
-using BE.vn.fpt.edu.repository;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using BE.vn.fpt.edu.interfaces;
+using BE.vn.fpt.edu.models;
+using BE.vn.fpt.edu.DTOs.TypeComponent;
+using BE.vn.fpt.edu.repository.IRepository;
 
 namespace BE.vn.fpt.edu.services
 {
-    public interface ITypeComponentService
-    {
-        Task<IEnumerable<TypeComponentResponseDto>> GetAllAsync(bool onlyActive = false);
-        Task<TypeComponentResponseDto> GetByIdAsync(long id);
-        Task<TypeComponentResponseDto> CreateAsync(TypeComponentRequestDto dto);
-        Task UpdateAsync(long id, TypeComponentRequestDto dto);
-        Task SetActiveAsync(long id, bool isActive);
-    }
-
     public class TypeComponentService : ITypeComponentService
     {
         private readonly ITypeComponentRepository _repo;
@@ -30,26 +20,27 @@ namespace BE.vn.fpt.edu.services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<TypeComponentResponseDto>> GetAllAsync(bool onlyActive = false)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(bool onlyActive = false)
         {
             var list = await _repo.GetAllAsync(onlyActive);
-            return _mapper.Map<IEnumerable<TypeComponentResponseDto>>(list);
+            return _mapper.Map<IEnumerable<ResponseDto>>(list);
         }
 
-        public async Task<TypeComponentResponseDto> GetByIdAsync(long id)
+        public async Task<ResponseDto> GetByIdAsync(long id)
         {
             var entity = await _repo.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<TypeComponentResponseDto>(entity);
+            return entity == null ? null : _mapper.Map<ResponseDto>(entity);
         }
 
-        public async Task<TypeComponentResponseDto> CreateAsync(TypeComponentRequestDto dto)
+        public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            // business validations (unique name, etc.) can be added here
             var entity = _mapper.Map<TypeComponent>(dto);
             var created = await _repo.CreateAsync(entity);
-            return _mapper.Map<TypeComponentResponseDto>(created);
+            return _mapper.Map<ResponseDto>(created);
         }
 
-        public async Task UpdateAsync(long id, TypeComponentRequestDto dto)
+        public async Task UpdateAsync(long id, RequestDto dto)
         {
             var existing = await _repo.GetByIdAsync(id);
             if (existing == null)
@@ -62,6 +53,7 @@ namespace BE.vn.fpt.edu.services
 
         public async Task SetActiveAsync(long id, bool isActive)
         {
+            // business checks (e.g., prevent disabling when components exist) can be added here
             await _repo.SetActiveAsync(id, isActive);
         }
     }

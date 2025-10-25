@@ -3,18 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using BE.vn.fpt.edu.models;
-
+using BE.vn.fpt.edu.repository.IRepository;
 namespace BE.vn.fpt.edu.repository
 {
-    public interface ITypeComponentRepository
-    {
-        Task<IEnumerable<TypeComponent>> GetAllAsync(bool onlyActive = false);
-        Task<TypeComponent> GetByIdAsync(long id);
-        Task<TypeComponent> CreateAsync(TypeComponent entity);
-        Task UpdateAsync(TypeComponent entity);
-        Task SetActiveAsync(long id, bool isActive);
-    }
-
     public class TypeComponentRepository : ITypeComponentRepository
     {
         private readonly CarMaintenanceDbContext _context;
@@ -25,10 +16,9 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<IEnumerable<TypeComponent>> GetAllAsync(bool onlyActive = false)
         {
-            IQueryable<TypeComponent> query = _context.TypeComponents.AsNoTracking();
-            if (onlyActive)
-                query = query.Where(x => x.IsActive);
-            return await query.OrderBy(x => x.Name).ToListAsync();
+            IQueryable<TypeComponent> q = _context.TypeComponents.AsNoTracking();
+            if (onlyActive) q = q.Where(x => x.IsActive);
+            return await q.OrderBy(x => x.Name).ToListAsync();
         }
 
         public async Task<TypeComponent> GetByIdAsync(long id)
@@ -49,10 +39,10 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task SetActiveAsync(long id, bool isActive)
         {
-            var entity = await _context.TypeComponents.FindAsync(id);
-            if (entity == null) return;
-            entity.IsActive = isActive;
-            _context.TypeComponents.Update(entity);
+            var e = await _context.TypeComponents.FindAsync(id);
+            if (e == null) return;
+            e.IsActive = isActive;
+            _context.TypeComponents.Update(e);
             await _context.SaveChangesAsync();
         }
     }
