@@ -1,4 +1,4 @@
-namespace BE.vn.fpt.edu.dtos
+namespace BE.vn.fpt.edu.DTOs.TypeComponent
 {
     public class TypeComponentResponseDto
     {
