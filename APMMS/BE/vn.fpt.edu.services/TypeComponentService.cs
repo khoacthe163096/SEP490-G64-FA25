@@ -6,6 +6,7 @@ using BE.vn.fpt.edu.repository;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BE.vn.fpt.edu.interfaces;
 
 namespace BE.vn.fpt.edu.services
 {
