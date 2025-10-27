@@ -94,8 +94,11 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto, TotalReceipt>();
 
             // TypeComponent mappings
-            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentRequestDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentResponseDto, TypeComponent>();
+            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>()
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.StatusCodeNavigation != null ? src.StatusCodeNavigation.Name : null));
+
+            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.RequestDto, TypeComponent>();
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BE.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();

@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
+using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;

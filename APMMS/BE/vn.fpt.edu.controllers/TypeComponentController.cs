@@ -13,24 +13,24 @@ namespace BE.vn.fpt.edu.controllers
     public class TypeComponentController : ControllerBase
     {
         private readonly ITypeComponentService _service;
+
         public TypeComponentController(ITypeComponentService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] bool onlyActive = false)
+        public async Task<IActionResult> GetAll()
         {
-            var result = await _service.GetAllAsync(onlyActive);
+            var result = await _service.GetAllAsync();
             return Ok(result);
         }
 
         [HttpGet("{id:long}")]
         public async Task<IActionResult> GetById(long id)
         {
-            var dto = await _service.GetByIdAsync(id);
-            if (dto == null) return NotFound();
-            return Ok(dto);
+            var result = await _service.GetByIdAsync(id);
+            return result == null ? NotFound() : Ok(result);
         }
 
         [HttpPost]
@@ -44,22 +44,22 @@ namespace BE.vn.fpt.edu.controllers
         [HttpPut("{id:long}")]
         public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
         {
-            try
-            {
-                await _service.UpdateAsync(id, dto);
-                return NoContent();
-            }
-            catch (InvalidOperationException)
-            {
-                return NotFound();
-            }
+            var updated = await _service.UpdateAsync(id, dto);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
-        [HttpPatch("{id:long}/status")]
-        public async Task<IActionResult> SetStatus(long id, [FromQuery] bool isActive)
+        [HttpDelete("{id:long}")]
+        public async Task<IActionResult> Delete(long id)
         {
-            await _service.SetActiveAsync(id, isActive);
-            return NoContent();
+            var ok = await _service.DeleteAsync(id);
+            return ok ? NoContent() : NotFound();
+        }
+
+        [HttpPatch("{id:long}/toggle")]
+        public async Task<IActionResult> ToggleStatus(long id)
+        {
+            var ok = await _service.ToggleStatusAsync(id);
+            return ok ? NoContent() : NotFound();
         }
     }
 }
