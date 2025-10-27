@@ -4,57 +4,80 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
-using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.repository.IRepository;
 
 namespace BE.vn.fpt.edu.services
 {
     public class TypeComponentService : ITypeComponentService
     {
-        private readonly ITypeComponentRepository _repo;
+        private readonly ITypeComponentRepository _repository;
         private readonly IMapper _mapper;
 
-        public TypeComponentService(ITypeComponentRepository repo, IMapper mapper)
+        public TypeComponentService(ITypeComponentRepository repository, IMapper mapper)
         {
-            _repo = repo;
+            _repository = repository;
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(bool onlyActive = false)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync()
         {
-            var list = await _repo.GetAllAsync(onlyActive);
-            return _mapper.Map<IEnumerable<ResponseDto>>(list);
+            var entities = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ResponseDto>>(entities);
         }
 
-        public async Task<ResponseDto> GetByIdAsync(long id)
+        public async Task<ResponseDto?> GetByIdAsync(long id)
         {
-            var entity = await _repo.GetByIdAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
             return entity == null ? null : _mapper.Map<ResponseDto>(entity);
         }
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            // business validations (unique name, etc.) can be added here
             var entity = _mapper.Map<TypeComponent>(dto);
-            var created = await _repo.CreateAsync(entity);
-            return _mapper.Map<ResponseDto>(created);
+            entity.StatusCode ??= "ACTIVE";
+
+            await _repository.AddAsync(entity);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<ResponseDto>(entity);
         }
 
-        public async Task UpdateAsync(long id, RequestDto dto)
+        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
         {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null)
-                throw new InvalidOperationException("TypeComponent not found");
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return null;
 
-            existing.Name = dto.Name;
-            existing.Description = dto.Description;
-            await _repo.UpdateAsync(existing);
+            entity.Name = dto.Name;
+            entity.Description = dto.Description;
+            entity.BranchId = dto.BranchId;
+            entity.StatusCode = dto.StatusCode;
+
+            _repository.Update(entity);
+            await _repository.SaveChangesAsync();
+
+            return _mapper.Map<ResponseDto>(entity);
         }
 
-        public async Task SetActiveAsync(long id, bool isActive)
+        public async Task<bool> DeleteAsync(long id)
         {
-            // business checks (e.g., prevent disabling when components exist) can be added here
-            await _repo.SetActiveAsync(id, isActive);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return false;
+
+            _repository.Delete(entity);
+            await _repository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ToggleStatusAsync(long id)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null) return false;
+
+            entity.StatusCode = entity.StatusCode == "ACTIVE" ? "INACTIVE" : "ACTIVE";
+            _repository.Update(entity);
+            await _repository.SaveChangesAsync();
+
+            return true;
         }
     }
 }

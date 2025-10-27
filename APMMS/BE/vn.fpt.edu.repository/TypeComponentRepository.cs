@@ -14,35 +14,40 @@ namespace BE.vn.fpt.edu.repository
             _context = context;
         }
 
-        public async Task<IEnumerable<TypeComponent>> GetAllAsync(bool onlyActive = false)
+        public async Task<IEnumerable<TypeComponent>> GetAllAsync()
         {
-            IQueryable<TypeComponent> q = _context.TypeComponents.AsNoTracking();
-            if (onlyActive) q = q.Where(x => x.IsActive);
-            return await q.OrderBy(x => x.Name).ToListAsync();
+            return await _context.TypeComponents
+                .Include(tc => tc.Branch)
+                .Include(tc => tc.StatusCodeNavigation)
+                .OrderBy(tc => tc.Name)
+                .ToListAsync();
         }
 
-        public async Task<TypeComponent> GetByIdAsync(long id)
-            => await _context.TypeComponents.FindAsync(id);
-
-        public async Task<TypeComponent> CreateAsync(TypeComponent entity)
+        public async Task<TypeComponent?> GetByIdAsync(long id)
         {
-            _context.TypeComponents.Add(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return await _context.TypeComponents
+                .Include(tc => tc.Branch)
+                .Include(tc => tc.StatusCodeNavigation)
+                .FirstOrDefaultAsync(tc => tc.Id == id);
         }
 
-        public async Task UpdateAsync(TypeComponent entity)
+        public async Task AddAsync(TypeComponent entity)
+        {
+            await _context.TypeComponents.AddAsync(entity);
+        }
+
+        public void Update(TypeComponent entity)
         {
             _context.TypeComponents.Update(entity);
-            await _context.SaveChangesAsync();
         }
 
-        public async Task SetActiveAsync(long id, bool isActive)
+        public void Delete(TypeComponent entity)
         {
-            var e = await _context.TypeComponents.FindAsync(id);
-            if (e == null) return;
-            e.IsActive = isActive;
-            _context.TypeComponents.Update(e);
+            _context.TypeComponents.Remove(entity);
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
         }
     }

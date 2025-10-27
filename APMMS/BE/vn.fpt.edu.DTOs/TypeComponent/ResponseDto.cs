@@ -10,6 +10,6 @@ namespace BE.vn.fpt.edu.DTOs.TypeComponent
         public string? BranchName { get; set; }
 
         public string? StatusCode { get; set; }
-        public string? StatusName { get; set; } // from StatusLookup table
+        public string? StatusName { get; set; } // Name from StatusLookup
     }
 }

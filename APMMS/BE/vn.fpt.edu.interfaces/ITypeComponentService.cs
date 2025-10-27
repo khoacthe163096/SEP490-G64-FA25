@@ -6,10 +6,11 @@ namespace BE.vn.fpt.edu.interfaces
 {
     public interface ITypeComponentService
     {
-        Task<IEnumerable<ResponseDto>> GetAllAsync(bool onlyActive = false);
-        Task<ResponseDto> GetByIdAsync(long id);
+        Task<IEnumerable<ResponseDto>> GetAllAsync();
+        Task<ResponseDto?> GetByIdAsync(long id);
         Task<ResponseDto> CreateAsync(RequestDto dto);
-        Task UpdateAsync(long id, RequestDto dto);
-        Task SetActiveAsync(long id, bool isActive);
+        Task<ResponseDto?> UpdateAsync(long id, RequestDto dto);
+        Task<bool> DeleteAsync(long id);
+        Task<bool> ToggleStatusAsync(long id);
     }
 }
