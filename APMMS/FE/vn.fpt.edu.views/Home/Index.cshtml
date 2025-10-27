@@ -23,7 +23,7 @@
                         Tối ưu hóa quy trình, tiết kiệm thời gian và chi phí.
                     </p>
                     <div class="hero-buttons">
-                        <a href="#" class="btn btn-outline-light btn-lg">
+                        <a href="#features" class="btn btn-outline-light btn-lg">
                             <i class="fas fa-info-circle"></i> Tìm hiểu thêm
                         </a>
                     </div>
@@ -51,7 +51,7 @@
 </section>
 
 <!-- Features Section -->
-<section class="features-section py-5">
+<section id="features" class="features-section py-5">
     <div class="container">
         <div class="row">
             <div class="col-lg-4 mb-4">
@@ -86,4 +86,38 @@
 </section>
 
 <!-- Login Modal -->
-@await Html.PartialAsync("_LoginModal")
+@await Html.PartialAsync("~/vn.fpt.edu.views/Auth/Login.cshtml")
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            console.log('Home page loaded, jQuery version:', $.fn.jquery);
+            
+            // Test if form exists
+            console.log('Login form exists:', $('#loginForm').length > 0);
+            console.log('Username input exists:', $('#username').length > 0);
+            console.log('Password input exists:', $('#password').length > 0);
+            
+            // Manual form binding for testing
+            $('#loginForm').off('submit').on('submit', function(e) {
+                console.log('Manual form submit handler triggered');
+                e.preventDefault();
+                
+                const username = $('#username').val();
+                const password = $('#password').val();
+                
+                console.log('Manual handler - Username:', username);
+                console.log('Manual handler - Password length:', password ? password.length : 0);
+                
+                if (!username || !password) {
+                    alert('Vui lòng nhập đầy đủ thông tin đăng nhập');
+                    return false;
+                }
+                
+                // Call the existing handleLogin function
+                handleLogin();
+                return false;
+            });
+        });
+    </script>
+}

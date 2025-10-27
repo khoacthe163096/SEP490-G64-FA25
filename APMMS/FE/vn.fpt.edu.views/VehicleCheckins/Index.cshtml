@@ -1,0 +1,500 @@
+@{
+    ViewData["Title"] = "Danh sách check-in xe";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Danh sách check-in xe</h4>
+                    <a href="/VehicleCheckins/Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Check-in xe mới
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Search and Filter -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên khách hàng, biển số xe, VIN...">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="statusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="PENDING">Chờ xử lý</option>
+                                <option value="CONFIRMED">Đã xác nhận</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" id="fromDateFilter" placeholder="Từ ngày">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" class="form-control" id="toDateFilter" placeholder="Đến ngày">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                <i class="fas fa-refresh"></i> Reset
+                            </button>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-success w-100" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel"></i> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Mã</th>
+                                    <th>Biển số xe</th>
+                                    <th>Chủ xe</th>
+                                    <th>Loại xe</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày check-in</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="checkinsTableBody">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Pagination will be generated here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCheckins();
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', debounce(loadCheckins, 500));
+            document.getElementById('statusFilter').addEventListener('change', loadCheckins);
+            document.getElementById('fromDateFilter').addEventListener('change', loadCheckins);
+            document.getElementById('toDateFilter').addEventListener('change', loadCheckins);
+        });
+
+        function loadCheckins() {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const fromDate = document.getElementById('fromDateFilter').value;
+            const toDate = document.getElementById('toDateFilter').value;
+
+            // Build query parameters
+            const params = new URLSearchParams({
+                page: currentPage,
+                pageSize: pageSize
+            });
+
+            if (search) params.append('searchTerm', search);
+            if (status) params.append('statusCode', status);
+            if (fromDate) params.append('fromDate', fromDate);
+            if (toDate) params.append('toDate', toDate);
+
+            console.log('Calling API: VehicleCheckins/ListData?' + params.toString());
+            
+            fetch(`/VehicleCheckins/ListData?${params.toString()}`)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response:', data); // Debug log
+                    console.log('Data length:', data.data ? data.data.length : 'undefined');
+                    if (data.data && data.data.length > 0) {
+                        console.log('First item status:', data.data[0].statusCode);
+                        console.log('First item maintenanceRequestStatus:', data.data[0].maintenanceRequestStatus);
+                    }
+                    if (data.success) {
+                        renderCheckinsTable(data.data);
+                        renderPagination(data.totalPages, data.currentPage);
+                    } else {
+                        showAlert('Lỗi khi tải dữ liệu: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
+                });
+        }
+
+
+        function renderCheckinsTable(checkins) {
+            console.log('renderCheckinsTable called with:', checkins);
+            const tbody = document.getElementById('checkinsTableBody');
+            tbody.innerHTML = '';
+
+            if (!checkins || checkins.length === 0) {
+                console.log('No data to render');
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            console.log('Rendering', checkins.length, 'checkins');
+            checkins.forEach((checkin, index) => {
+                console.log('Rendering checkin', index, ':', checkin);
+                console.log('StatusCode:', checkin.statusCode);
+                console.log('MaintenanceRequestStatus:', checkin.maintenanceRequestStatus);
+                const row = document.createElement('tr');
+                try {
+                    row.innerHTML = `
+                        <td><strong>${checkin.code || 'VCI-' + checkin.id}</strong></td>
+                        <td><strong>${checkin.licensePlate || '-'}</strong></td>
+                        <td>${checkin.customerName || '-'}</td>
+                        <td><span class="badge bg-info">${checkin.carName || '-'}</span></td>
+                        <td><span class="badge ${getStatusBadgeClass(checkin.statusCode)}">${getStatusText(checkin.statusCode)}</span></td>
+                        <td>${checkin.createdAt ? new Date(checkin.createdAt).toLocaleString('vi-VN') : '-'}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                ${checkin.statusCode === 'PENDING' ? 
+                                    `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
+                                        <i class="fas fa-check"></i>
+                                    </button>` : 
+                                    ``
+                                }
+                                ${checkin.statusCode === 'CONFIRMED' ? 
+                                    `<button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
+                                        <i class="fas fa-wrench"></i>
+                                    </button>` : 
+                                    ``
+                                }
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                    console.log('Successfully added row for checkin', checkin.id);
+                } catch (error) {
+                    console.error('Error creating row for checkin', checkin.id, ':', error);
+                }
+            });
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'PENDING': return 'bg-warning';
+                case 'CONFIRMED': return 'bg-success';
+                default: return 'bg-secondary';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'PENDING': return 'Chờ xử lý';
+                case 'CONFIRMED': return 'Đã xác nhận';
+                default: return status;
+            }
+        }
+
+        function renderPagination(totalPages, currentPage) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>`;
+            pagination.appendChild(prevLi);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                pagination.appendChild(li);
+            }
+
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>`;
+            pagination.appendChild(nextLi);
+        }
+
+        function changePage(page) {
+            if (page < 1) return;
+            currentPage = page;
+            loadCheckins();
+        }
+
+        function createMaintenanceTicket(checkinId) {
+            // Store checkinId for later use
+            window.currentCheckinId = checkinId;
+            
+            // Show custom modal instead of browser confirm
+            $('#createMaintenanceModal').modal('show');
+        }
+
+        function confirmCreateMaintenanceTicket() {
+            const checkinId = window.currentCheckinId;
+            if (!checkinId) return;
+            
+            // Get consulter ID from token
+            const token = localStorage.getItem('authToken');
+            let consulterId = 18; // Default fallback
+            
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    consulterId = parseInt(payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) || 18;
+                } catch (e) {
+                    console.log('Could not get consulter ID from token, using default');
+                }
+            }
+            
+            // Create maintenance ticket via API
+            fetch('https://localhost:7173/api/MaintenanceTicket/create-from-checkin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : '',
+                },
+                body: JSON.stringify({
+                    vehicleCheckinId: checkinId,
+                    consulterId: consulterId, // Get from token or use default
+                    technicianId: null,
+                    branchId: 1, // Default branch ID - should be from session
+                    scheduleServiceId: null,
+                    statusCode: 'PENDING',
+                    description: 'Tạo từ vehicle check-in'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Tạo phiếu bảo dưỡng thành công!', 'success');
+                    // Optionally redirect to maintenance tickets list
+                    setTimeout(() => {
+                        window.location.href = '/MaintenanceTickets';
+                    }, 1500);
+                } else {
+                    showAlert('Lỗi tạo phiếu bảo dưỡng: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi tạo phiếu bảo dưỡng', 'danger');
+            })
+            .finally(() => {
+                $('#createMaintenanceModal').modal('hide');
+            });
+        }
+
+        function deleteCheckin(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa check-in này?')) {
+                fetch(`/api/VehicleCheckin/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Xóa check-in thành công', 'success');
+                        loadCheckins();
+                    } else {
+                        showAlert('Lỗi khi xóa: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Có lỗi xảy ra khi xóa', 'danger');
+                });
+            }
+        }
+
+        function exportToExcel() {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const fromDate = document.getElementById('fromDateFilter').value;
+            const toDate = document.getElementById('toDateFilter').value;
+            
+            const params = new URLSearchParams({
+                searchTerm: search,
+                statusCode: status,
+                fromDate: fromDate,
+                toDate: toDate,
+                export: 'excel'
+            });
+            
+            window.open(`/api/VehicleCheckin/export?${params.toString()}`, '_blank');
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('fromDateFilter').value = '';
+            document.getElementById('toDateFilter').value = '';
+            currentPage = 1;
+            loadCheckins();
+        }
+
+        function confirmCheckin(id) {
+            // Lưu ID để sử dụng trong modal
+            window.pendingCheckinId = id;
+            // Hiển thị modal xác nhận
+            const confirmModal = new bootstrap.Modal(document.getElementById('confirmCheckinModal'));
+            confirmModal.show();
+        }
+
+        function confirmCheckinAction() {
+            // Lấy ID đã lưu và thực hiện cập nhật
+            const id = window.pendingCheckinId;
+            if (id) {
+                updateCheckinStatus(id, 'CONFIRMED');
+                // Đóng modal
+                const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmCheckinModal'));
+                confirmModal.hide();
+            }
+        }
+
+        async function updateCheckinStatus(id, status) {
+            try {
+                const response = await fetch(`https://localhost:7173/api/VehicleCheckin/${id}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ statusCode: status })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert('Cập nhật trạng thái thành công!', 'success');
+                    loadCheckins(); // Reload danh sách
+                } else {
+                    showAlert('Lỗi: ' + data.message, 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi cập nhật trạng thái', 'danger');
+            }
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.table-responsive'));
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+}
+
+<!-- Custom Modal for Creating Maintenance Ticket -->
+<div class="modal fade" id="createMaintenanceModal" tabindex="-1" aria-labelledby="createMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="createMaintenanceModalLabel">
+                    <i class="fas fa-wrench me-2"></i>
+                    Tạo Phiếu Bảo Dưỡng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
+                    <h5>Xác nhận tạo phiếu bảo dưỡng</h5>
+                    <p class="text-muted mb-0">
+                        Bạn có muốn tạo phiếu bảo dưỡng từ vehicle check-in này không?
+                    </p>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Sau khi tạo phiếu bảo dưỡng, bạn sẽ được chuyển hướng đến trang quản lý phiếu bảo dưỡng.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmCreateMaintenanceTicket()">
+                    <i class="fas fa-check me-1"></i>
+                    Tạo phiếu bảo dưỡng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xác nhận VehicleCheckin -->
+<div class="modal fade" id="confirmCheckinModal" tabindex="-1" aria-labelledby="confirmCheckinModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="confirmCheckinModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Xác nhận Vehicle Check-in
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-question-circle fa-3x text-success mb-3"></i>
+                    <h5>Xác nhận trạng thái</h5>
+                    <p class="text-muted mb-0">
+                        Bạn có chắc chắn muốn xác nhận vehicle check-in này không?
+                    </p>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Sau khi xác nhận, trạng thái sẽ chuyển từ "Chờ xử lý" thành "Đã xác nhận".
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Hủy
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmCheckinAction()">
+                    <i class="fas fa-check me-1"></i>
+                    Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

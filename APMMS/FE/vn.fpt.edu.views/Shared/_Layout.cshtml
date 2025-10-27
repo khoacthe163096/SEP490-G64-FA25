@@ -24,6 +24,120 @@
     <!-- Footer -->
     @await Html.PartialAsync("_Footer")
 
+    <!-- Floating Action Tab -->
+    <div id="floatingTab" class="floating-tab">
+        <div class="floating-tab-toggle">
+            <i class="fas fa-chevron-left"></i>
+        </div>
+        <div class="floating-tab-content">
+            <div class="floating-tab-item" data-action="booking">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Đặt lịch ngay</span>
+            </div>
+            <div class="floating-tab-item" data-action="messenger">
+                <i class="fab fa-facebook-messenger"></i>
+                <span>Messenger</span>
+            </div>
+            <div class="floating-tab-item" data-action="hotline">
+                <i class="fas fa-phone"></i>
+                <span>Hotline</span>
+            </div>
+            <div class="floating-tab-item" data-action="zalo">
+                <i class="fab fa-whatsapp"></i>
+                <span>Chat Zalo</span>
+            </div>
+            <div class="floating-tab-item" data-action="directions">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>Chỉ đường</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="bookingModalLabel">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        ĐĂNG KÝ NGAY - NHẬN ƯU ĐÃI LỚN
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="bookingForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="serviceType" class="form-label">Chọn loại dịch vụ <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="serviceType" required>
+                                        <option value="">-- Chọn dịch vụ --</option>
+                                        <option value="maintenance">Bảo Dưỡng & Sửa Chữa Ô Tô</option>
+                                        <option value="repair">Sửa chữa động cơ</option>
+                                        <option value="inspection">Kiểm tra tổng quát</option>
+                                        <option value="tire">Thay lốp & Cân bằng</option>
+                                        <option value="oil">Thay dầu & Lọc</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">Họ Và Tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="fullName" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="appointmentTime" class="form-label">Chọn Thời Gian <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="appointmentTime" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message" class="form-label">Lời nhắn</label>
+                                    <textarea class="form-control" id="message" rows="3" placeholder="Mô tả chi tiết về vấn đề của xe..."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="phone" class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="vehicleType" class="form-label">Loại Xe</label>
+                                    <input type="text" class="form-control" id="vehicleType" placeholder="VD: Toyota Camry, Honda Civic...">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="branch" class="form-label">Chọn loại chi nhánh <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="branch" required>
+                                        <option value="">-- Chọn chi nhánh --</option>
+                                        <option value="company">Văn Phòng Công Ty</option>
+                                        <option value="branch1">Chi nhánh 1</option>
+                                        <option value="branch2">Chi nhánh 2</option>
+                                        <option value="branch3">Chi nhánh 3</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="licensePlate" class="form-label">Biển Số Xe</label>
+                                    <input type="text" class="form-control" id="licensePlate" placeholder="VD: 30A-12345">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="mileage" class="form-label">Số Km</label>
+                                    <input type="number" class="form-control" id="mileage" placeholder="Số km hiện tại">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger btn-lg" id="submitBooking">
+                        <i class="fas fa-calendar-check me-2"></i>
+                        Đặt lịch
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js"></script>

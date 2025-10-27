@@ -1,0 +1,109 @@
+<!-- Top Bar -->
+<div class="top-bar">
+    <div class="top-bar-left">
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <button class="mobile-sidebar-toggle d-md-none">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h2 id="pageTitle">Dashboard APMMS</h2>
+    </div>
+    <div class="top-bar-right">
+        <div class="user-info">
+            <span id="userDisplayName">Đang tải...</span>
+            <div class="user-avatar dropdown" id="userAvatarDropdown">
+                <button class="avatar-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userDropdownToggle">
+                    <i class="fas fa-user" id="userAvatarIcon"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#" id="profileLink">
+                        <i class="fas fa-user me-2"></i>Profile
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" id="logoutLink">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Hiển thị tên user từ token
+function displayUserNameFromToken() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.log('No token found');
+            return;
+        }
+
+        // Decode token để lấy username
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+            
+            if (username) {
+                // Hiển thị tên user
+                document.getElementById('userDisplayName').textContent = username;
+                console.log('Displayed username from token:', username);
+            }
+        } catch (e) {
+            console.log('Could not decode token, using default name');
+            document.getElementById('userDisplayName').textContent = 'User';
+        }
+    } catch (error) {
+        console.error('Error displaying user name:', error);
+        document.getElementById('userDisplayName').textContent = 'User';
+    }
+}
+
+// Gọi hàm khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    displayUserNameFromToken();
+    
+    // Khởi tạo dropdown
+    const dropdownToggle = document.getElementById('userDropdownToggle');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    
+    if (dropdownToggle && dropdownMenu) {
+        // Toggle dropdown manually
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle dropdown
+            if (dropdownMenu.classList.contains('show')) {
+                dropdownMenu.classList.remove('show');
+            } else {
+                dropdownMenu.classList.add('show');
+            }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    }
+    
+    // Xử lý logout
+    document.getElementById('logoutLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userInfo');
+        // Force reload trang Home để cập nhật UI
+        window.location.href = '/?logout=true';
+    });
+    
+    // Xử lý profile
+    document.getElementById('profileLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/Profile';
+    });
+});
+</script>

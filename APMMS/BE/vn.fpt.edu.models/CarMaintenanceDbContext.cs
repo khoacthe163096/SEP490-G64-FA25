@@ -71,11 +71,12 @@ public partial class CarMaintenanceDbContext : DbContext
         }
     }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Address>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__address__3213E83F06B42C35");
+            entity.HasKey(e => e.Id).HasName("PK__address__3213E83FA867A268");
 
             entity.ToTable("address");
 
@@ -107,11 +108,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Branch>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__branch__3213E83FE3594657");
+            entity.HasKey(e => e.Id).HasName("PK__branch__3213E83F3F8BFA15");
 
             entity.ToTable("branch");
 
-            entity.HasIndex(e => e.Name, "UQ__branch__72E12F1BECC84B31").IsUnique();
+            entity.HasIndex(e => e.Name, "UQ__branch__72E12F1BE49CD06A").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AddressId).HasColumnName("address_id");
@@ -125,11 +126,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Car>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__car__3213E83F018A3F2D");
+            entity.HasKey(e => e.Id).HasName("PK__car__3213E83FBDC59A40");
 
             entity.ToTable("car");
 
-            entity.HasIndex(e => e.LicensePlate, "UQ__car__F72CD56E69C59AB5").IsUnique();
+            entity.HasIndex(e => e.LicensePlate, "UQ__car__F72CD56E212CBB61").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
@@ -166,36 +167,45 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Branch).WithMany(p => p.Cars)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__car__branch_id__403A8C7D");
+                .HasConstraintName("FK__car__branch_id__6A30C649");
 
             entity.HasOne(d => d.User).WithMany(p => p.Cars)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__car__user_id__3E52440B");
+                .HasConstraintName("FK__car__user_id__6B24EA82");
 
             entity.HasOne(d => d.VehicleType).WithMany(p => p.Cars)
                 .HasForeignKey(d => d.VehicleTypeId)
-                .HasConstraintName("FK__car__vehicle_typ__3F466844");
+                .HasConstraintName("FK__car__vehicle_typ__6C190EBB");
         });
 
         modelBuilder.Entity<Component>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__componen__3213E83FEF8FB5D3");
+            entity.HasKey(e => e.Id).HasName("PK__componen__3213E83F3DD56015");
 
             entity.ToTable("component");
 
-            entity.HasIndex(e => e.Code, "UQ__componen__357D4CF90AECE297").IsUnique();
+            entity.HasIndex(e => e.Code, "UQ__componen__357D4CF9B713CF39").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Code)
                 .HasMaxLength(50)
                 .HasColumnName("code");
+            entity.Property(e => e.ImageUrl)
+                .HasMaxLength(255)
+                .HasColumnName("image_url");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.PurchasePrice)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("purchase_price");
             entity.Property(e => e.QuantityStock)
                 .HasDefaultValue(0)
                 .HasColumnName("quantity_stock");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasColumnName("status_code");
             entity.Property(e => e.TypeComponentId).HasColumnName("type_component_id");
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
@@ -203,11 +213,15 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Branch).WithMany(p => p.Components)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__component__branc__2739D489");
+                .HasConstraintName("FK__component__branc__6D0D32F4");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.Components)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_component_status");
 
             entity.HasOne(d => d.TypeComponent).WithMany(p => p.Components)
                 .HasForeignKey(d => d.TypeComponentId)
-                .HasConstraintName("FK__component__type___47DBAE45");
+                .HasConstraintName("FK__component__type___6E01572D");
 
             entity.HasMany(d => d.ServicePackages).WithMany(p => p.Components)
                 .UsingEntity<Dictionary<string, object>>(
@@ -215,14 +229,14 @@ public partial class CarMaintenanceDbContext : DbContext
                     r => r.HasOne<ServicePackage>().WithMany()
                         .HasForeignKey("ServicePackageId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__component__servi__4D94879B"),
+                        .HasConstraintName("FK__component__servi__6FE99F9F"),
                     l => l.HasOne<Component>().WithMany()
                         .HasForeignKey("ComponentId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__component__compo__4CA06362"),
+                        .HasConstraintName("FK__component__compo__6EF57B66"),
                     j =>
                     {
-                        j.HasKey("ComponentId", "ServicePackageId").HasName("PK__componen__C7D9836B03299182");
+                        j.HasKey("ComponentId", "ServicePackageId").HasName("PK__componen__C7D9836BCB3A01AF");
                         j.ToTable("component_package");
                         j.IndexerProperty<long>("ComponentId").HasColumnName("component_id");
                         j.IndexerProperty<long>("ServicePackageId").HasColumnName("service_package_id");
@@ -231,7 +245,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Feedback>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__feedback__3213E83FA2E44621");
+            entity.HasKey(e => e.Id).HasName("PK__feedback__3213E83FCAEDCE67");
 
             entity.ToTable("feedback");
 
@@ -252,20 +266,20 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.Feedbacks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
-                .HasConstraintName("FK__feedback__mainte__797309D9");
+                .HasConstraintName("FK__feedback__mainte__70DDC3D8");
 
             entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
                 .HasForeignKey(d => d.ParentId)
-                .HasConstraintName("FK__feedback__parent__1CBC4616");
+                .HasConstraintName("FK__feedback__parent__71D1E811");
 
             entity.HasOne(d => d.User).WithMany(p => p.Feedbacks)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__feedback__user_i__787EE5A0");
+                .HasConstraintName("FK__feedback__user_i__72C60C4A");
         });
 
         modelBuilder.Entity<HistoryLog>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__history___3213E83F17401EB5");
+            entity.HasKey(e => e.Id).HasName("PK__history___3213E83FEEA81A96");
 
             entity.ToTable("history_log");
 
@@ -283,12 +297,12 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.HistoryLogs)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__history_l__user___7E37BEF6");
+                .HasConstraintName("FK__history_l__user___73BA3083");
         });
 
         modelBuilder.Entity<MaintenanceRequest>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83F40C9A30A");
+            entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83FF37A669A");
 
             entity.ToTable("maintenance_request");
 
@@ -306,11 +320,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Branch).WithMany(p => p.MaintenanceRequests)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__maintenan__branc__534D60F1");
+                .HasConstraintName("FK__maintenan__branc__74AE54BC");
 
             entity.HasOne(d => d.Car).WithMany(p => p.MaintenanceRequests)
                 .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__maintenan__car_i__5165187F");
+                .HasConstraintName("FK__maintenan__car_i__75A278F5");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceRequests)
                 .HasForeignKey(d => d.StatusCode)
@@ -318,12 +332,12 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.MaintenanceRequests)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__maintenan__user___5070F446");
+                .HasConstraintName("FK__maintenan__user___76969D2E");
         });
 
         modelBuilder.Entity<MaintenanceTicket>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83F50060CEC");
+            entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83F1B33439E");
 
             entity.ToTable("maintenance_ticket");
 
@@ -332,31 +346,47 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.ConsulterId).HasColumnName("consulter_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+            entity.Property(e => e.EndTime)
+                .HasColumnType("datetime")
+                .HasColumnName("end_time");
+            entity.Property(e => e.PriorityLevel)
+                .HasMaxLength(20)
+                .HasColumnName("priority_level");
             entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
+            entity.Property(e => e.StartTime)
+                .HasColumnType("datetime")
+                .HasColumnName("start_time");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
             entity.Property(e => e.TechnicianId).HasColumnName("technician_id");
+            entity.Property(e => e.TotalEstimatedCost)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("total_estimated_cost");
+            entity.Property(e => e.VehicleCheckinId).HasColumnName("vehicle_checkin_id");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__maintenan__branc__6754599E");
+                .HasConstraintName("FK__maintenan__branc__787EE5A0");
 
             entity.HasOne(d => d.Car).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__maintenan__car_i__6477ECF3");
+                .HasConstraintName("FK__maintenan__car_i__797309D9");
 
             entity.HasOne(d => d.Consulter).WithMany(p => p.MaintenanceTicketConsulters)
                 .HasForeignKey(d => d.ConsulterId)
-                .HasConstraintName("FK__maintenan__consu__656C112C");
+                .HasConstraintName("FK__maintenan__consu__7A672E12");
 
             entity.HasOne(d => d.ScheduleService).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.ScheduleServiceId)
-                .HasConstraintName("FK__maintenan__sched__6383C8BA");
+                .HasConstraintName("FK__maintenan__sched__7B5B524B");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.StatusCode)
@@ -364,12 +394,16 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Technician).WithMany(p => p.MaintenanceTicketTechnicians)
                 .HasForeignKey(d => d.TechnicianId)
-                .HasConstraintName("FK__maintenan__techn__66603565");
+                .HasConstraintName("FK__maintenan__techn__7C4F7684");
+
+            entity.HasOne(d => d.VehicleCheckin).WithMany(p => p.MaintenanceTickets)
+                .HasForeignKey(d => d.VehicleCheckinId)
+                .HasConstraintName("FK_maintenance_ticket_vehicle_checkin");
         });
 
         modelBuilder.Entity<MaintenanceTicketTechnician>(entity =>
         {
-            entity.HasKey(e => new { e.MaintenanceTicketId, e.TechnicianId }).HasName("PK__maintena__6AF1CD71FDA5026D");
+            entity.HasKey(e => new { e.MaintenanceTicketId, e.TechnicianId }).HasName("PK__maintena__6AF1CD718CA4D122");
 
             entity.ToTable("maintenance_ticket_technician");
 
@@ -386,21 +420,21 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.MaintenanceTicketTechnicians)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__maintenan__maint__0E6E26BF");
+                .HasConstraintName("FK__maintenan__maint__7F2BE32F");
 
             entity.HasOne(d => d.Technician).WithMany(p => p.MaintenanceTicketTechniciansNavigation)
                 .HasForeignKey(d => d.TechnicianId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__maintenan__techn__0F624AF8");
+                .HasConstraintName("FK__maintenan__techn__00200768");
         });
 
         modelBuilder.Entity<Permission>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__permissi__3213E83F06480003");
+            entity.HasKey(e => e.Id).HasName("PK__permissi__3213E83F8B38E440");
 
             entity.ToTable("permission");
 
-            entity.HasIndex(e => e.Code, "UQ__permissi__357D4CF914571226").IsUnique();
+            entity.HasIndex(e => e.Code, "UQ__permissi__357D4CF96127E27E").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Code)
@@ -413,11 +447,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Province>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__province__3213E83FAF90B665");
+            entity.HasKey(e => e.Id).HasName("PK__province__3213E83F0893D76B");
 
             entity.ToTable("province");
 
-            entity.HasIndex(e => e.Name, "UQ__province__72E12F1B02074DA7").IsUnique();
+            entity.HasIndex(e => e.Name, "UQ__province__72E12F1B3B47CF3E").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
@@ -431,7 +465,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__role__3213E83F5568318F");
+            entity.HasKey(e => e.Id).HasName("PK__role__3213E83F74558E4F");
 
             entity.ToTable("role");
 
@@ -446,14 +480,14 @@ public partial class CarMaintenanceDbContext : DbContext
                     r => r.HasOne<Permission>().WithMany()
                         .HasForeignKey("PermissionId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__role_perm__permi__2D27B809"),
+                        .HasConstraintName("FK__role_perm__permi__01142BA1"),
                     l => l.HasOne<Role>().WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__role_perm__role___2C3393D0"),
+                        .HasConstraintName("FK__role_perm__role___02084FDA"),
                     j =>
                     {
-                        j.HasKey("RoleId", "PermissionId").HasName("PK__role_per__C85A54635B06099E");
+                        j.HasKey("RoleId", "PermissionId").HasName("PK__role_per__C85A546362073B9E");
                         j.ToTable("role_permission");
                         j.IndexerProperty<long>("RoleId").HasColumnName("role_id");
                         j.IndexerProperty<long>("PermissionId").HasColumnName("permission_id");
@@ -462,7 +496,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<ScheduleService>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__schedule__3213E83FDF0C0532");
+            entity.HasKey(e => e.Id).HasName("PK__schedule__3213E83F16CBCA4D");
 
             entity.ToTable("schedule_service");
 
@@ -479,11 +513,11 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Branch).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__schedule___branc__60A75C0F");
+                .HasConstraintName("FK__schedule___branc__02FC7413");
 
             entity.HasOne(d => d.Car).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__schedule___car_i__5FB337D6");
+                .HasConstraintName("FK__schedule___car_i__03F0984C");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.StatusCode)
@@ -491,16 +525,20 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.User).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__schedule___user___5EBF139D");
+                .HasConstraintName("FK__schedule___user___04E4BC85");
         });
 
         modelBuilder.Entity<ServicePackage>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__service___3213E83F898223E8");
+            entity.HasKey(e => e.Id).HasName("PK__service___3213E83FF129E971");
 
             entity.ToTable("service_package");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
@@ -514,6 +552,10 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
 
+            entity.HasOne(d => d.Branch).WithMany(p => p.ServicePackages)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_service_package_branch");
+
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServicePackages)
                 .HasForeignKey(d => d.StatusCode)
                 .HasConstraintName("FK_service_package_status");
@@ -521,7 +563,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<ServiceTask>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__service___3213E83F0D074796");
+            entity.HasKey(e => e.Id).HasName("PK__service___3213E83F93ED7CE8");
 
             entity.ToTable("service_task");
 
@@ -544,7 +586,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
-                .HasConstraintName("FK__service_t__maint__6A30C649");
+                .HasConstraintName("FK__service_t__maint__07C12930");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.StatusCode)
@@ -553,7 +595,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<StatusLookup>(entity =>
         {
-            entity.HasKey(e => e.Code).HasName("PK__status_l__357D4CF81B29D667");
+            entity.HasKey(e => e.Code).HasName("PK__status_l__357D4CF8AECDDAF2");
 
             entity.ToTable("status_lookup");
 
@@ -570,7 +612,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<TicketComponent>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ticket_c__3213E83FED95E67C");
+            entity.HasKey(e => e.Id).HasName("PK__ticket_c__3213E83F939A6879");
 
             entity.ToTable("ticket_component");
 
@@ -586,16 +628,16 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Component).WithMany(p => p.TicketComponents)
                 .HasForeignKey(d => d.ComponentId)
-                .HasConstraintName("FK__ticket_co__compo__6E01572D");
+                .HasConstraintName("FK__ticket_co__compo__09A971A2");
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.TicketComponents)
                 .HasForeignKey(d => d.MaintenanceTicketId)
-                .HasConstraintName("FK__ticket_co__maint__6D0D32F4");
+                .HasConstraintName("FK__ticket_co__maint__0A9D95DB");
         });
 
         modelBuilder.Entity<TotalReceipt>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__total_re__3213E83F94F6B881");
+            entity.HasKey(e => e.Id).HasName("PK__total_re__3213E83F2AC58E45");
 
             entity.ToTable("total_receipt");
 
@@ -626,19 +668,19 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Accountant).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.AccountantId)
-                .HasConstraintName("FK__total_rec__accou__74AE54BC");
+                .HasConstraintName("FK__total_rec__accou__0B91BA14");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__total_rec__branc__75A278F5");
+                .HasConstraintName("FK__total_rec__branc__0C85DE4D");
 
             entity.HasOne(d => d.Car).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__total_rec__car_i__70DDC3D8");
+                .HasConstraintName("FK__total_rec__car_i__0D7A0286");
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.MaintenanceTicketId)
-                .HasConstraintName("FK__total_rec__maint__71D1E811");
+                .HasConstraintName("FK__total_rec__maint__0E6E26BF");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.StatusCode)
@@ -647,28 +689,40 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<TypeComponent>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__type_com__3213E83F1079E0A0");
+            entity.HasKey(e => e.Id).HasName("PK__type_com__3213E83FE8D2B9FE");
 
             entity.ToTable("type_component");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasColumnName("status_code");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.TypeComponents)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_type_component_branch");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.TypeComponents)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_type_component_status");
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__user__3213E83FC10C173A");
+            entity.HasKey(e => e.Id).HasName("PK__user__3213E83FB4BA35B1");
 
             entity.ToTable("user");
 
             entity.HasIndex(e => e.BranchId, "IX_user_branch_id");
 
-            entity.HasIndex(e => e.Username, "UQ__user__F3DBC5725BB1EDAA").IsUnique();
+            entity.HasIndex(e => e.Username, "UQ__user__F3DBC572E50C2831").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AddressId).HasColumnName("address_id");
@@ -728,15 +782,15 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Address).WithMany(p => p.Users)
                 .HasForeignKey(d => d.AddressId)
-                .HasConstraintName("FK__user__address_id__37A5467C");
+                .HasConstraintName("FK__user__address_id__10566F31");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.Users)
                 .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__user__branch_id__36B12243");
+                .HasConstraintName("FK__user__branch_id__114A936A");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__user__role_id__35BCFE0A");
+                .HasConstraintName("FK__user__role_id__123EB7A3");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.Users)
                 .HasForeignKey(d => d.StatusCode)
@@ -745,14 +799,18 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<VehicleCheckin>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83F0B264959");
+            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83FDBED5AEA");
 
             entity.ToTable("vehicle_checkin");
 
             entity.HasIndex(e => e.CarId, "IX_vehicle_checkin_car_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -766,13 +824,17 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
 
+            entity.HasOne(d => d.Branch).WithMany(p => p.VehicleCheckins)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK__vehicle_c__branc__14270015");
+
             entity.HasOne(d => d.Car).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__vehicle_c__car_i__5629CD9C");
+                .HasConstraintName("FK__vehicle_c__car_i__151B244E");
 
             entity.HasOne(d => d.MaintenanceRequest).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.MaintenanceRequestId)
-                .HasConstraintName("FK__vehicle_c__maint__571DF1D5");
+                .HasConstraintName("FK__vehicle_c__maint__160F4887");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.StatusCode)
@@ -781,7 +843,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<VehicleCheckinImage>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83FB2BBE90A");
+            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83F9DF416E0");
 
             entity.ToTable("vehicle_checkin_image");
 
@@ -790,19 +852,17 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.ImageUrl)
-                .HasMaxLength(255)
-                .HasColumnName("image_url");
+            entity.Property(e => e.ImageUrl).HasColumnName("image_url");
             entity.Property(e => e.VehicleCheckinId).HasColumnName("vehicle_checkin_id");
 
             entity.HasOne(d => d.VehicleCheckin).WithMany(p => p.VehicleCheckinImages)
                 .HasForeignKey(d => d.VehicleCheckinId)
-                .HasConstraintName("FK__vehicle_c__vehic__5AEE82B9");
+                .HasConstraintName("FK__vehicle_c__vehic__18EBB532");
         });
 
         modelBuilder.Entity<VehicleType>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83F0F86B948");
+            entity.HasKey(e => e.Id).HasName("PK__vehicle___3213E83F773A4907");
 
             entity.ToTable("vehicle_type");
 
@@ -817,7 +877,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
         modelBuilder.Entity<Ward>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__ward__3213E83F8C7A9D69");
+            entity.HasKey(e => e.Id).HasName("PK__ward__3213E83F0E42AF9F");
 
             entity.ToTable("ward");
 
@@ -833,7 +893,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasOne(d => d.Province).WithMany(p => p.Wards)
                 .HasForeignKey(d => d.ProvinceId)
-                .HasConstraintName("FK__ward__province_i__18EBB532");
+                .HasConstraintName("FK__ward__province_i__19DFD96B");
         });
 
         OnModelCreatingPartial(modelBuilder);

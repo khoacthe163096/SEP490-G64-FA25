@@ -1,0 +1,697 @@
+@{
+    ViewData["Title"] = "Chi tiết Phiếu Bảo Dưỡng";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-wrench me-2"></i>
+                        Chi tiết Phiếu Bảo Dưỡng
+                    </h4>
+                    <div>
+                        <a href="/MaintenanceTickets" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Quay lại
+                        </a>
+                        <a href="#" class="btn btn-warning" id="editTicketBtn">
+                            <i class="fas fa-edit me-1"></i>
+                            Chỉnh sửa
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="row">
+                <!-- Left Column - Ticket Info -->
+                <div class="col-md-8">
+                    <!-- Basic Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Thông tin cơ bản
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="basicInfo">
+                                <!-- Basic info will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vehicle Check-in Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-car me-2"></i>
+                                Thông tin Vehicle Check-in
+                            </h5>
+                        </div>
+                        <div class="card-body" id="checkinInfo">
+                            <!-- Check-in info will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Service Tasks -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tasks me-2"></i>
+                                Danh sách công việc
+                            </h5>
+                            <button class="btn btn-sm btn-primary" id="addServiceTaskBtn">
+                                <i class="fas fa-plus me-1"></i>
+                                Thêm công việc
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="serviceTasksList">
+                                <!-- Service tasks will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Components Used -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cogs me-2"></i>
+                                Phụ tùng sử dụng
+                            </h5>
+                            <button class="btn btn-sm btn-primary" id="addComponentBtn">
+                                <i class="fas fa-plus me-1"></i>
+                                Thêm phụ tùng
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="componentsList">
+                                <!-- Components will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Actions & Timeline -->
+                <div class="col-md-4">
+                    <!-- Status & Actions -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>
+                                Trạng thái & Thao tác
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <div id="statusBadge" class="mb-2">
+                                    <!-- Status badge will be loaded here -->
+                                </div>
+                                <div id="progressBar" class="mb-3">
+                                    <!-- Progress bar will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2" id="actionButtons">
+                                <!-- Action buttons will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>
+                                Lịch sử hoạt động
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="timeline">
+                                <!-- Timeline will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cost Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calculator me-2"></i>
+                                Tổng chi phí
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="costSummary">
+                                <!-- Cost summary will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Task Modal -->
+<div class="modal fade" id="addServiceTaskModal" tabindex="-1" aria-labelledby="addServiceTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addServiceTaskModalLabel">Thêm công việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceTaskForm">
+                    <div class="mb-3">
+                        <label for="taskName" class="form-label">Tên công việc <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="taskName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskNote" class="form-label">Ghi chú</label>
+                        <textarea class="form-control" id="taskNote" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveServiceTaskBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Component Modal -->
+<div class="modal fade" id="addComponentModal" tabindex="-1" aria-labelledby="addComponentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addComponentModalLabel">Thêm phụ tùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="componentForm">
+                    <div class="mb-3">
+                        <label for="componentSelect" class="form-label">Phụ tùng <span class="text-danger">*</span></label>
+                        <select class="form-select" id="componentSelect" required>
+                            <option value="">Chọn phụ tùng</option>
+                            <!-- Will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="componentQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="componentQuantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="componentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
+                        <input type="number" class="form-control" id="componentUnitPrice" min="0" step="1000">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveComponentBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let maintenanceTicketId = @ViewBag.MaintenanceTicketId;
+let maintenanceTicketData = null;
+
+$(document).ready(function() {
+    loadMaintenanceTicketDetails();
+    
+    // Modal events
+    $('#addServiceTaskBtn').on('click', function() {
+        $('#addServiceTaskModal').modal('show');
+    });
+    
+    $('#addComponentBtn').on('click', function() {
+        loadComponents();
+        $('#addComponentModal').modal('show');
+    });
+    
+    $('#saveServiceTaskBtn').on('click', function() {
+        saveServiceTask();
+    });
+    
+    $('#saveComponentBtn').on('click', function() {
+        saveComponent();
+    });
+    
+    $('#editTicketBtn').on('click', function() {
+        window.location.href = `/MaintenanceTickets/Edit/${maintenanceTicketId}`;
+    });
+});
+
+function loadMaintenanceTicketDetails() {
+    fetch(`/api/MaintenanceTicket/${maintenanceTicketId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                maintenanceTicketData = data.data;
+                displayBasicInfo(data.data);
+                displayCheckinInfo(data.data);
+                displayStatusAndActions(data.data);
+                displayTimeline(data.data);
+                displayCostSummary(data.data);
+                loadServiceTasks();
+                loadComponents();
+            } else {
+                showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
+        });
+}
+
+function displayBasicInfo(data) {
+    const basicInfo = $('#basicInfo');
+    const createdAt = new Date(data.createdDate).toLocaleDateString('vi-VN');
+    const startTime = data.startTime ? new Date(data.startTime).toLocaleDateString('vi-VN') : 'Chưa bắt đầu';
+    const endTime = data.endTime ? new Date(data.endTime).toLocaleDateString('vi-VN') : 'Chưa hoàn thành';
+    
+    basicInfo.html(`
+        <div class="col-md-6">
+            <strong>Mã phiếu:</strong><br>
+            ${data.code || 'MTK-' + data.id}
+        </div>
+        <div class="col-md-6">
+            <strong>Xe:</strong><br>
+            ${data.carName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Tư vấn viên:</strong><br>
+            ${data.consulterName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Kỹ thuật viên:</strong><br>
+            ${data.technicianName || 'Chưa gán'}
+        </div>
+        <div class="col-md-6">
+            <strong>Chi nhánh:</strong><br>
+            ${data.branchName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Dịch vụ:</strong><br>
+            ${data.scheduleServiceName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Ngày tạo:</strong><br>
+            ${createdAt}
+        </div>
+        <div class="col-md-6">
+            <strong>Mức độ ưu tiên:</strong><br>
+            ${getPriorityBadge(data.priorityLevel)}
+        </div>
+        <div class="col-md-6">
+            <strong>Bắt đầu:</strong><br>
+            ${startTime}
+        </div>
+        <div class="col-md-6">
+            <strong>Hoàn thành:</strong><br>
+            ${endTime}
+        </div>
+        <div class="col-12">
+            <strong>Mô tả:</strong><br>
+            ${data.description || 'Không có mô tả'}
+        </div>
+    `);
+}
+
+function displayCheckinInfo(data) {
+    const checkinInfo = $('#checkinInfo');
+    
+    if (data.vehicleCheckinId) {
+        checkinInfo.html(`
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Mã Check-in:</strong><br>
+                    VCI-${data.vehicleCheckinId}
+                </div>
+                <div class="col-md-6">
+                    <strong>Số km:</strong><br>
+                    ${data.mileage ? data.mileage.toLocaleString() + ' km' : 'N/A'}
+                </div>
+                <div class="col-12">
+                    <strong>Ghi chú từ Check-in:</strong><br>
+                    ${data.checkinNotes || 'Không có ghi chú'}
+                </div>
+                <div class="col-12">
+                    <strong>Ảnh tình trạng:</strong><br>
+                    ${data.checkinImages && data.checkinImages.length > 0 ? 
+                        data.checkinImages.map(img => `<img src="${img}" alt="Ảnh xe" class="img-thumbnail me-2" style="max-width: 150px;">`).join('') :
+                        'Không có ảnh'
+                    }
+                </div>
+            </div>
+        `);
+    } else {
+        checkinInfo.html('<p class="text-muted">Không có thông tin check-in</p>');
+    }
+}
+
+function displayStatusAndActions(data) {
+    const statusBadge = $('#statusBadge');
+    const progressBar = $('#progressBar');
+    const actionButtons = $('#actionButtons');
+    
+    // Status badge
+    statusBadge.html(getStatusBadge(data.statusCode));
+    
+    // Progress bar
+    const progress = getProgressPercentage(data.statusCode);
+    progressBar.html(`
+        <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
+                ${progress}%
+            </div>
+        </div>
+    `);
+    
+    // Action buttons
+    let buttons = '';
+    switch(data.statusCode) {
+        case 'PENDING':
+            buttons = `
+                <button class="btn btn-info" onclick="assignTechnician(${data.id})">
+                    <i class="fas fa-user-plus me-1"></i>
+                    Gán kỹ thuật viên
+                </button>
+            `;
+            break;
+        case 'ASSIGNED':
+            buttons = `
+                <button class="btn btn-warning" onclick="startMaintenance(${data.id})">
+                    <i class="fas fa-play me-1"></i>
+                    Bắt đầu bảo dưỡng
+                </button>
+            `;
+            break;
+        case 'IN_PROGRESS':
+            buttons = `
+                <button class="btn btn-success" onclick="completeMaintenance(${data.id})">
+                    <i class="fas fa-check me-1"></i>
+                    Hoàn thành
+                </button>
+            `;
+            break;
+        case 'COMPLETED':
+            buttons = `
+                <button class="btn btn-secondary" disabled>
+                    <i class="fas fa-check-circle me-1"></i>
+                    Đã hoàn thành
+                </button>
+            `;
+            break;
+    }
+    
+    actionButtons.html(buttons);
+}
+
+function displayTimeline(data) {
+    const timeline = $('#timeline');
+    const events = [];
+    
+    // Add events based on data
+    if (data.createdDate) {
+        events.push({
+            date: new Date(data.createdDate),
+            title: 'Tạo phiếu bảo dưỡng',
+            description: 'Phiếu bảo dưỡng được tạo',
+            icon: 'fas fa-plus-circle',
+            color: 'primary'
+        });
+    }
+    
+    if (data.technicianName) {
+        events.push({
+            date: new Date(data.createdDate), // You might want to track actual assignment date
+            title: 'Gán kỹ thuật viên',
+            description: `Gán cho ${data.technicianName}`,
+            icon: 'fas fa-user-plus',
+            color: 'info'
+        });
+    }
+    
+    if (data.startTime) {
+        events.push({
+            date: new Date(data.startTime),
+            title: 'Bắt đầu bảo dưỡng',
+            description: 'Bắt đầu thực hiện bảo dưỡng',
+            icon: 'fas fa-play',
+            color: 'warning'
+        });
+    }
+    
+    if (data.endTime) {
+        events.push({
+            date: new Date(data.endTime),
+            title: 'Hoàn thành bảo dưỡng',
+            description: 'Bảo dưỡng đã hoàn thành',
+            icon: 'fas fa-check-circle',
+            color: 'success'
+        });
+    }
+    
+    // Sort events by date
+    events.sort((a, b) => a.date - b.date);
+    
+    if (events.length === 0) {
+        timeline.html('<p class="text-muted">Chưa có hoạt động nào</p>');
+        return;
+    }
+    
+    let timelineHtml = '';
+    events.forEach((event, index) => {
+        const isLast = index === events.length - 1;
+        timelineHtml += `
+            <div class="d-flex ${!isLast ? 'mb-3' : ''}">
+                <div class="flex-shrink-0">
+                    <div class="bg-${event.color} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="${event.icon}"></i>
+                    </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h6 class="mb-1">${event.title}</h6>
+                    <p class="mb-1 text-muted">${event.description}</p>
+                    <small class="text-muted">${event.date.toLocaleDateString('vi-VN')} ${event.date.toLocaleTimeString('vi-VN')}</small>
+                </div>
+            </div>
+            ${!isLast ? '<hr class="my-2">' : ''}
+        `;
+    });
+    
+    timeline.html(timelineHtml);
+}
+
+function displayCostSummary(data) {
+    const costSummary = $('#costSummary');
+    const estimatedCost = data.totalEstimatedCost || 0;
+    
+    costSummary.html(`
+        <div class="text-center">
+            <h4 class="text-primary">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(estimatedCost)}</h4>
+            <p class="text-muted mb-0">Chi phí ước tính</p>
+        </div>
+        <hr>
+        <div class="row text-center">
+            <div class="col-6">
+                <h6 class="text-muted">Phụ tùng</h6>
+                <p class="mb-0">0 VNĐ</p>
+            </div>
+            <div class="col-6">
+                <h6 class="text-muted">Nhân công</h6>
+                <p class="mb-0">0 VNĐ</p>
+            </div>
+        </div>
+    `);
+}
+
+function loadServiceTasks() {
+    fetch(`/api/ServiceTask/by-maintenance-ticket/${maintenanceTicketId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayServiceTasks(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading service tasks:', error);
+        });
+}
+
+function displayServiceTasks(tasks) {
+    const container = $('#serviceTasksList');
+    
+    if (tasks.length === 0) {
+        container.html('<p class="text-muted">Chưa có công việc nào</p>');
+        return;
+    }
+    
+    let html = '';
+    tasks.forEach(task => {
+        const statusBadge = getTaskStatusBadge(task.statusCode);
+        html += `
+            <div class="card mb-2">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">${task.taskName}</h6>
+                            <p class="mb-1 text-muted">${task.description || 'Không có mô tả'}</p>
+                            ${task.note ? `<small class="text-muted">${task.note}</small>` : ''}
+                        </div>
+                        <div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.html(html);
+}
+
+function loadComponents() {
+    fetch(`/api/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayComponents(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading components:', error);
+        });
+}
+
+function displayComponents(components) {
+    const container = $('#componentsList');
+    
+    if (components.length === 0) {
+        container.html('<p class="text-muted">Chưa sử dụng phụ tùng nào</p>');
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Phụ tùng</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>';
+    
+    components.forEach(component => {
+        const total = component.quantity * (component.unitPrice || 0);
+        html += `
+            <tr>
+                <td>${component.componentName || 'N/A'}</td>
+                <td>${component.quantity}</td>
+                <td>${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice || 0)}</td>
+                <td>${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}</td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    container.html(html);
+}
+
+// Helper functions
+function getStatusBadge(statusCode) {
+    const statusMap = {
+        'PENDING': { class: 'bg-warning', text: 'Chờ xử lý' },
+        'ASSIGNED': { class: 'bg-info', text: 'Đã gán' },
+        'IN_PROGRESS': { class: 'bg-primary', text: 'Đang thực hiện' },
+        'COMPLETED': { class: 'bg-success', text: 'Hoàn thành' },
+        'CANCELLED': { class: 'bg-danger', text: 'Đã hủy' }
+    };
+    
+    const status = statusMap[statusCode] || { class: 'bg-secondary', text: statusCode };
+    return `<span class="badge ${status.class} fs-6">${status.text}</span>`;
+}
+
+function getPriorityBadge(priority) {
+    const priorityMap = {
+        'NORMAL': { class: 'bg-secondary', text: 'Bình thường' },
+        'HIGH': { class: 'bg-warning', text: 'Cao' },
+        'URGENT': { class: 'bg-danger', text: 'Khẩn cấp' }
+    };
+    
+    const priorityInfo = priorityMap[priority] || { class: 'bg-secondary', text: priority };
+    return `<span class="badge ${priorityInfo.class}">${priorityInfo.text}</span>`;
+}
+
+function getProgressPercentage(statusCode) {
+    const progressMap = {
+        'PENDING': 25,
+        'ASSIGNED': 50,
+        'IN_PROGRESS': 75,
+        'COMPLETED': 100,
+        'CANCELLED': 0
+    };
+    
+    return progressMap[statusCode] || 0;
+}
+
+function getTaskStatusBadge(statusCode) {
+    const statusMap = {
+        'PENDING': { class: 'bg-warning', text: 'Chờ' },
+        'IN_PROGRESS': { class: 'bg-primary', text: 'Đang làm' },
+        'DONE': { class: 'bg-success', text: 'Xong' }
+    };
+    
+    const status = statusMap[statusCode] || { class: 'bg-secondary', text: statusCode };
+    return `<span class="badge ${status.class}">${status.text}</span>`;
+}
+
+// Action functions
+function assignTechnician(ticketId) {
+    // Implementation for assigning technician
+    showAlert('Chức năng gán kỹ thuật viên đang được phát triển', 'info');
+}
+
+function startMaintenance(ticketId) {
+    // Implementation for starting maintenance
+    showAlert('Chức năng bắt đầu bảo dưỡng đang được phát triển', 'info');
+}
+
+function completeMaintenance(ticketId) {
+    // Implementation for completing maintenance
+    showAlert('Chức năng hoàn thành bảo dưỡng đang được phát triển', 'info');
+}
+
+function saveServiceTask() {
+    // Implementation for saving service task
+    showAlert('Chức năng thêm công việc đang được phát triển', 'info');
+}
+
+function saveComponent() {
+    // Implementation for saving component
+    showAlert('Chức năng thêm phụ tùng đang được phát triển', 'info');
+}
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    $('body').append(alertHtml);
+    
+    setTimeout(() => {
+        $('.alert').alert('close');
+    }, 3000);
+}
+</script>

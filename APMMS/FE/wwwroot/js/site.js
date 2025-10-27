@@ -199,27 +199,38 @@ $(document).ready(function () {
     });
 
     // Authentication and Profile Management
+    console.log('Initializing authentication...');
     initializeAuth();
     
     // Initialize all components
     console.log('APMMS Frontend initialized successfully');
+    
+    // Initialize Floating Tab
+    initializeFloatingTab();
 });
 
 // Authentication and Profile Management Functions
 function initializeAuth() {
+    console.log('initializeAuth called');
     // Check if user is logged in on page load
     checkLoginStatus();
     
     // Handle login form submission
+    console.log('Binding login form submit handler...');
+    console.log('Found login forms:', $('.login-form').length);
     $('.login-form').on('submit', function(e) {
         console.log('Form submitted, preventing default');
+        console.log('Form element:', this);
+        console.log('Form ID:', $(this).attr('id'));
         e.preventDefault();
         e.stopPropagation();
         
         // Check if it's login or register form
         if ($(this).find('#username').length > 0) {
+            console.log('Calling handleLogin');
             handleLogin();
         } else {
+            console.log('Calling handleRegister');
             handleRegister();
         }
         return false;
@@ -234,6 +245,16 @@ function initializeAuth() {
 
 async function checkLoginStatus() {
     try {
+        // Check token first
+        const token = localStorage.getItem('authToken');
+        console.log('Token in localStorage:', token ? 'Found' : 'Not found');
+        
+        if (!token) {
+            console.log('No token found, showing login button');
+            showLoginButton();
+            return;
+        }
+        
         // Check server for login status
         const response = await fetch('/Auth/GetUserInfo', {
             method: 'GET',
@@ -257,12 +278,28 @@ async function checkLoginStatus() {
         }
     } catch (error) {
         console.error('Check login status error:', error);
-        // Fallback to localStorage
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        // Fallback to authToken
+        const token = localStorage.getItem('authToken');
         
-        if (isLoggedIn && userInfo.username) {
-            showProfileDropdown(userInfo);
+        if (token) {
+            try {
+                // Decode token để lấy username
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+                
+                if (username) {
+                    showProfileDropdown({
+                        username: username,
+                        fullName: username,
+                        email: 'user@example.com',
+                        role: 'User'
+                    });
+                } else {
+                    showLoginButton();
+                }
+            } catch (e) {
+                showLoginButton();
+            }
         } else {
             showLoginButton();
         }
@@ -275,6 +312,10 @@ async function handleLogin() {
     const password = $('#password').val();
     
     console.log('Username:', username);
+    console.log('Password length:', password ? password.length : 0);
+    console.log('Form element:', $('#loginForm')[0]);
+    console.log('Username element:', $('#username')[0]);
+    console.log('Password element:', $('#password')[0]);
     
     if (!username || !password) {
         showAlert('Vui lòng nhập đầy đủ thông tin đăng nhập', 'warning');
@@ -289,7 +330,7 @@ async function handleLogin() {
     
     try {
         console.log('Calling Frontend AuthController: /Auth/Login');
-        // Call Frontend AuthController (which sets session variables)
+        // Call Frontend AuthController (which calls backend and sets session)
         const response = await fetch('/Auth/Login', {
             method: 'POST',
             headers: {
@@ -320,15 +361,18 @@ async function handleLogin() {
         }
         
         console.log('Response result:', result);
-        console.log('Role ID from API:', result.roleId);
-        console.log('Redirect URL from API:', result.redirectTo);
+        console.log('Success status:', result.success);
+        console.log('Token:', result.token ? 'Present' : 'Missing');
+        console.log('Role ID:', result.roleId);
+        console.log('Redirect To:', result.redirectTo);
         
         if (result.success) {
             // Store login info
+            localStorage.setItem('authToken', result.token);
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userInfo', JSON.stringify({
                 username: username,
-                fullName: username, // You can get this from API response
+                fullName: username,
                 email: 'user@example.com',
                 role: getRoleName(result.roleId),
                 roleId: result.roleId,
@@ -338,10 +382,10 @@ async function handleLogin() {
             // Hide modal
             $('#loginModal').modal('hide');
             
-            // Check if user should be redirected to dashboard
+            // Check if user should be redirected
             console.log('Checking redirect logic:');
-            console.log('result.redirectTo:', result.redirectTo);
-            console.log('result.redirectTo !== "/":', result.redirectTo !== '/');
+            console.log('Role ID:', result.roleId);
+            console.log('Redirect URL:', result.redirectTo);
             
             if (result.redirectTo && result.redirectTo !== '/') {
                 console.log('Redirecting to:', result.redirectTo);
@@ -412,6 +456,11 @@ function showProfileDropdown(userInfo) {
     $('#loginBtn').hide();
     $('#profileDropdown').show();
     
+    // Update profile name
+    if (userInfo.username) {
+        $('#profileName').text(userInfo.username);
+    }
+    
     // Update profile info
     $('#profileName').text(userInfo.fullName || userInfo.username);
     
@@ -419,6 +468,79 @@ function showProfileDropdown(userInfo) {
     if (userInfo.avatar) {
         $('#profileAvatar').attr('src', userInfo.avatar);
     }
+}
+
+// Load current user info for dashboard
+async function loadCurrentUser() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            // Redirect to login if no token
+            window.location.href = '/Auth/Login';
+            return;
+        }
+
+        const response = await fetch('/api/Auth/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const userInfo = await response.json();
+            updateUserDisplay(userInfo.data);
+        } else {
+            // Token invalid, redirect to login
+            localStorage.removeItem('authToken');
+            window.location.href = '/Auth/Login';
+        }
+    } catch (error) {
+        console.error('Error loading user info:', error);
+        // Redirect to login on error
+        window.location.href = '/Auth/Login';
+    }
+}
+
+// Update user display in top bar
+function updateUserDisplay(userInfo) {
+    const displayName = userInfo.fullName || userInfo.username || 'Người dùng';
+    document.getElementById('userDisplayName').textContent = displayName;
+    
+    // Update avatar if available
+    if (userInfo.avatar) {
+        const avatarIcon = document.getElementById('userAvatarIcon');
+        avatarIcon.style.display = 'none';
+        avatarIcon.parentElement.innerHTML = `<img src="${userInfo.avatar}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+    }
+}
+
+// Handle logout
+async function handleLogout() {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            await fetch('/api/Auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        // Clear token and redirect
+        localStorage.removeItem('authToken');
+        window.location.href = '/Auth/Login';
+    }
+}
+
+// Handle profile link
+function handleProfile() {
+    // TODO: Navigate to profile page
+    alert('Chức năng Profile đang được phát triển');
 }
 
 function showLoginButton() {
@@ -535,5 +657,104 @@ async function handleRegister() {
         $('.login-form')[1].reset();
         registerBtn.html(originalText);
         registerBtn.prop('disabled', false);
+    }
+}
+
+// Floating Tab Functions
+function initializeFloatingTab() {
+    console.log('Initializing floating tab...');
+    
+    // Toggle floating tab
+    $('.floating-tab-toggle').on('click', function() {
+        $('.floating-tab').toggleClass('collapsed');
+        
+        // Rotate arrow icon
+        const arrow = $(this).find('i');
+        if ($('.floating-tab').hasClass('collapsed')) {
+            arrow.removeClass('fa-chevron-left').addClass('fa-chevron-right');
+        } else {
+            arrow.removeClass('fa-chevron-right').addClass('fa-chevron-left');
+        }
+    });
+    
+    // Handle floating tab item clicks
+    $('.floating-tab-item[data-action="booking"]').on('click', function() {
+        $('#bookingModal').modal('show');
+    });
+    
+    $('.floating-tab-item[data-action="messenger"]').on('click', function() {
+        // Open Messenger (replace with actual Messenger link)
+        window.open('https://m.me/your-page', '_blank');
+    });
+    
+    $('.floating-tab-item[data-action="hotline"]').on('click', function() {
+        // Open phone dialer
+        window.open('tel:0123456789', '_self');
+    });
+    
+    $('.floating-tab-item[data-action="zalo"]').on('click', function() {
+        // Open Zalo (replace with actual Zalo link)
+        window.open('https://zalo.me/0123456789', '_blank');
+    });
+    
+    $('.floating-tab-item[data-action="directions"]').on('click', function() {
+        // Open Google Maps (replace with actual address)
+        window.open('https://maps.google.com/?q=your-address', '_blank');
+    });
+    
+    // Handle booking form submission
+    $('#submitBooking').on('click', function() {
+        handleBookingSubmission();
+    });
+    
+    console.log('Floating tab initialized successfully');
+}
+
+// Handle booking form submission
+async function handleBookingSubmission() {
+    const form = $('#bookingForm');
+    const submitBtn = $('#submitBooking');
+    
+    // Get form data
+    const formData = {
+        serviceType: $('#serviceType').val(),
+        fullName: $('#fullName').val(),
+        email: $('#email').val(),
+        phone: $('#phone').val(),
+        vehicleType: $('#vehicleType').val(),
+        branch: $('#branch').val(),
+        licensePlate: $('#licensePlate').val(),
+        mileage: $('#mileage').val(),
+        appointmentTime: $('#appointmentTime').val(),
+        message: $('#message').val()
+    };
+    
+    // Validation
+    if (!formData.serviceType || !formData.fullName || !formData.phone || !formData.branch || !formData.appointmentTime) {
+        showAlert('Vui lòng điền đầy đủ các trường bắt buộc (*)', 'warning');
+        return;
+    }
+    
+    // Show loading state
+    const originalText = submitBtn.html();
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+    submitBtn.prop('disabled', true);
+    
+    try {
+        // Simulate API call (replace with actual API endpoint)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Success
+        showAlert('Đặt lịch thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.', 'success');
+        $('#bookingModal').modal('hide');
+        form[0].reset();
+        
+    } catch (error) {
+        console.error('Booking error:', error);
+        showAlert('Có lỗi xảy ra khi đặt lịch. Vui lòng thử lại sau.', 'danger');
+    } finally {
+        // Reset button
+        submitBtn.html(originalText);
+        submitBtn.prop('disabled', false);
     }
 }

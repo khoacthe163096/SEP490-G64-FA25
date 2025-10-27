@@ -42,6 +42,7 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+    options.CustomSchemaIds(type => type.FullName);
 });
 
 // CORS
@@ -61,6 +62,9 @@ builder.Services.AddDbContext<CarMaintenanceDbContext>(options =>
 builder.Services.AddAutoMapper(typeof(BE.vn.fpt.edu.convert.MappingProfile).Assembly);
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
+
+// Cloudinary Service
+builder.Services.AddSingleton<CloudinaryService>();
 
 
 

@@ -23,6 +23,9 @@ namespace FE.vn.fpt.edu.extensions
             // Add Services
             services.AddScoped<UserService>();
             services.AddScoped<AuthService>();
+            services.AddScoped<VehicleCheckinService>();
+            services.AddScoped<MaintenanceTicketService>();
+            services.AddScoped<ComponentService>();
 
             return services;
         }

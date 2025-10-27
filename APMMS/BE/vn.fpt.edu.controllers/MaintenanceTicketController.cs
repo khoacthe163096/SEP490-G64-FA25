@@ -8,7 +8,7 @@ namespace BE.vn.fpt.edu.controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+   // [Authorize]
     public class MaintenanceTicketController : ControllerBase
     {
         private readonly IMaintenanceTicketService _maintenanceTicketService;
@@ -105,7 +105,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// L?y danh s�ch t?t c? Maintenance Tickets
+        /// L?y danh s�ch t?t c? Maintenance Tickets
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAllMaintenanceTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -177,7 +177,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
-        /// X�a Maintenance Ticket
+        /// X�a Maintenance Ticket
         /// </summary>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMaintenanceTicket(long id)
@@ -193,6 +193,69 @@ namespace BE.vn.fpt.edu.controllers
                 {
                     return NotFound(new { success = false, message = "Maintenance ticket not found" });
                 }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gán kỹ thuật viên cho Maintenance Ticket
+        /// </summary>
+        [HttpPut("{id}/assign-technician")]
+        public async Task<IActionResult> AssignTechnician(long id, [FromBody] AssignTechnicianDto request)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.AssignTechnicianAsync(id, request.TechnicianId);
+                return Ok(new { success = true, data = result, message = "Technician assigned successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Bắt đầu bảo dưỡng
+        /// </summary>
+        [HttpPut("{id}/start")]
+        public async Task<IActionResult> StartMaintenance(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.StartMaintenanceAsync(id);
+                return Ok(new { success = true, data = result, message = "Maintenance started successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hoàn thành bảo dưỡng
+        /// </summary>
+        [HttpPut("{id}/complete")]
+        public async Task<IActionResult> CompleteMaintenance(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.CompleteMaintenanceAsync(id);
+                return Ok(new { success = true, data = result, message = "Maintenance completed successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {

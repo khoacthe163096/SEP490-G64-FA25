@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BE.vn.fpt.edu.models;
@@ -19,7 +19,15 @@ public partial class Component
 
     public long? BranchId { get; set; }
 
+    public string? ImageUrl { get; set; }
+
+    public string? StatusCode { get; set; }
+
+    public decimal? PurchasePrice { get; set; }
+
     public virtual Branch? Branch { get; set; }
+
+    public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 

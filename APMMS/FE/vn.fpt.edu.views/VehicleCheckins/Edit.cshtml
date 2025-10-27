@@ -1,0 +1,527 @@
+@{
+    ViewData["Title"] = "Sửa thông tin check-in xe";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>
+                            Sửa thông tin check-in xe
+                        </h4>
+                        <div class="badge bg-white text-primary fs-6 shadow-sm" id="statusBadge">
+                            <i class="fas fa-clock me-1"></i>
+                            Đang tải...
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" style="background-color: #f8f9fa;">
+                    <form id="checkinForm" enctype="multipart/form-data">
+                        <input type="hidden" id="checkinId" name="id">
+                        
+                        <!-- Thông tin xe -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-car me-2"></i>
+                                    Thông tin xe
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="licensePlate" class="form-label">
+                                                <i class="fas fa-id-card me-1"></i>
+                                                Biển số xe <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="licensePlate" name="licensePlate" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="mileage" class="form-label">
+                                                <i class="fas fa-tachometer-alt me-1"></i>
+                                                Số km
+                                            </label>
+                                            <input type="number" class="form-control" id="mileage" name="mileage" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="vinNumber" class="form-label">
+                                                <i class="fas fa-barcode me-1"></i>
+                                                Số khung (VIN)
+                                            </label>
+                                            <input type="text" class="form-control" id="vinNumber" name="vinNumber">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="vehicleEngineNumber" class="form-label">
+                                                <i class="fas fa-cog me-1"></i>
+                                                Số máy
+                                            </label>
+                                            <input type="text" class="form-control" id="vehicleEngineNumber" name="vehicleEngineNumber">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin khách hàng -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-user me-2"></i>
+                                    Thông tin khách hàng
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="customerName" class="form-label">
+                                                <i class="fas fa-user-tag me-1"></i>
+                                                Tên khách hàng <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="customerName" name="customerName" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="customerPhone" class="form-label">
+                                                <i class="fas fa-phone me-1"></i>
+                                                Số điện thoại
+                                            </label>
+                                            <input type="tel" class="form-control" id="customerPhone" name="customerPhone">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thông tin check-in -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-clipboard-check me-2"></i>
+                                    Thông tin check-in
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="branchId" class="form-label">
+                                                <i class="fas fa-building me-1"></i>
+                                                Chi nhánh <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="branchName" name="branchName" readonly>
+                                            <input type="hidden" id="branchId" name="branchId">
+                                            <div class="form-text">Chi nhánh của nhân viên hiện tại</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="checkinDate" class="form-label">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                Ngày check-in <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="datetime-local" class="form-control" id="checkinDate" name="checkinDate" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="statusCode" class="form-label">
+                                                <i class="fas fa-flag me-1"></i>
+                                                Trạng thái <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" id="statusCode" name="statusCode" required>
+                                                <option value="">Chọn trạng thái</option>
+                                                <!-- Will be loaded dynamically -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="notes" class="form-label">
+                                                <i class="fas fa-sticky-note me-1"></i>
+                                                Ghi chú
+                                            </label>
+                                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Mô tả tình trạng xe, vấn đề cần sửa chữa..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hình ảnh -->
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header" style="background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50;">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-images me-2"></i>
+                                    Hình ảnh xe
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="images" class="form-label">
+                                        <i class="fas fa-upload me-1"></i>
+                                        Hình ảnh mới
+                                    </label>
+                                    <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                    <div class="form-text">Chọn hình ảnh mới để thay thế (để trống nếu không thay đổi)</div>
+                                </div>
+
+                                <!-- Current Images -->
+                                <div id="currentImagesSection" style="display: none;">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-image me-1"></i>
+                                            Hình ảnh hiện tại
+                                        </label>
+                                        <div id="currentImages" class="row">
+                                            <!-- Current images will be displayed here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <!-- Action Buttons -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Vui lòng kiểm tra thông tin trước khi cập nhật
+                                    </div>
+                                    <div class="btn-group">
+                                        <a href="/VehicleCheckins" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i> 
+                                            Quay lại
+                                        </a>
+                                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                                            <i class="fas fa-save me-1"></i> 
+                                            Cập nhật
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkinId = getCheckinIdFromUrl();
+            if (checkinId) {
+                loadCheckin(checkinId);
+                loadCurrentUserBranch();
+                loadStatuses();
+            }
+            
+            document.getElementById('checkinForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                updateCheckin();
+            });
+
+            // Xử lý upload ảnh
+            document.getElementById('images').addEventListener('change', function(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    uploadImages(files);
+                }
+            });
+        });
+
+        function getCheckinIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadCheckin(id) {
+            fetch(`/VehicleCheckins/GetDetails/${id}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    const checkin = data.data;
+                    console.log('Loaded checkin data:', checkin); // Debug log
+                    
+                    document.getElementById('checkinId').value = checkin.id;
+                    document.getElementById('licensePlate').value = checkin.licensePlate || '';
+                    document.getElementById('customerName').value = checkin.customerName || '';
+                    document.getElementById('customerPhone').value = checkin.customerPhone || '';
+                    document.getElementById('vinNumber').value = checkin.vinNumber || '';
+                    document.getElementById('vehicleEngineNumber').value = checkin.vehicleEngineNumber || '';
+                    document.getElementById('mileage').value = checkin.mileage || '';
+                    // Set branch từ dữ liệu checkin
+                    if (checkin.branchName) {
+                        document.getElementById('branchName').value = checkin.branchName;
+                    }
+                    if (checkin.branchId) {
+                        document.getElementById('branchId').value = checkin.branchId;
+                    }
+                    document.getElementById('statusCode').value = checkin.statusCode || '';
+                    document.getElementById('notes').value = checkin.notes || '';
+                    
+                    // Cập nhật status badge
+                    updateStatusBadge(checkin.statusCode);
+                    
+                    // Kiểm tra trạng thái - nếu đã CONFIRMED thì không cho phép chỉnh sửa
+                    if (checkin.statusCode === 'CONFIRMED') {
+                        showAlert('Vehicle check-in đã được xác nhận, không thể chỉnh sửa!', 'warning');
+                        // Disable tất cả input fields
+                        disableForm();
+                        // Chuyển hướng về trang danh sách sau 3 giây
+                        setTimeout(() => {
+                            window.location.href = '/VehicleCheckins';
+                        }, 3000);
+                        return;
+                    }
+                    
+                    // Set checkin date - sử dụng createdAt thay vì checkinDate
+                    if (checkin.createdAt) {
+                        const date = new Date(checkin.createdAt);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        document.getElementById('checkinDate').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    }
+                    
+                    // Display current images
+                    displayCurrentImages(checkin.images || []);
+                } else {
+                    showAlert('Lỗi khi tải thông tin check-in: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi tải thông tin check-in: ' + error.message, 'danger');
+            });
+        }
+
+        function loadCurrentUserBranch() {
+            // Lấy dữ liệu chi nhánh thật từ database có sẵn
+            console.log('Loading branches from API...');
+            
+            fetch('https://localhost:7173/api/Branch')
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API Response:', data);
+                    if (data.success && data.data && data.data.length > 0) {
+                        // Lấy chi nhánh đầu tiên từ database
+                        const firstBranch = data.data[0];
+                        document.getElementById('branchName').value = firstBranch.name;
+                        document.getElementById('branchId').value = firstBranch.id;
+                        console.log('Loaded branch from database:', firstBranch.name, 'ID:', firstBranch.id);
+                    } else {
+                        console.error('No branch data found in database');
+                        document.getElementById('branchName').value = 'Không có chi nhánh';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading branches from database:', error);
+                    document.getElementById('branchName').value = 'Lỗi tải chi nhánh: ' + error.message;
+                });
+        }
+
+        function loadStatuses() {
+            // Chỉ hiển thị 2 trạng thái cho VehicleCheckin
+            console.log('Loading VehicleCheckin statuses...');
+            
+            const statusSelect = document.getElementById('statusCode');
+            // Xóa option mặc định trừ "Chọn trạng thái"
+            statusSelect.innerHTML = '<option value="">Chọn trạng thái</option>';
+            
+            // Chỉ thêm 2 trạng thái cho VehicleCheckin
+            const vehicleCheckinStatuses = [
+                { code: 'PENDING', name: 'Chờ xử lý' },
+                { code: 'CONFIRMED', name: 'Đã xác nhận' }
+            ];
+            
+            vehicleCheckinStatuses.forEach(status => {
+                const option = document.createElement('option');
+                option.value = status.code;
+                option.textContent = status.name;
+                statusSelect.appendChild(option);
+            });
+            
+            console.log('Loaded VehicleCheckin statuses:', vehicleCheckinStatuses.length, 'statuses');
+        }
+
+        function displayCurrentImages(images) {
+            const container = document.getElementById('currentImages');
+            const section = document.getElementById('currentImagesSection');
+            
+            if (images.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            images.forEach((image, index) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-2 mb-2';
+                col.innerHTML = `
+                    <div class="card">
+                        <img src="${image.imageUrl}" class="card-img-top" style="height: 100px; object-fit: cover;" 
+                             alt="Hình ${index + 1}">
+                        <div class="card-body p-1">
+                            <small class="text-muted">Hình ${index + 1}</small>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        }
+
+        function updateCheckin() {
+            const formData = new FormData(document.getElementById('checkinForm'));
+            const checkinId = document.getElementById('checkinId').value;
+
+            console.log('Updating checkin:', checkinId); // Debug log
+            console.log('Form data:', Object.fromEntries(formData.entries())); // Debug log
+
+            fetch(`/VehicleCheckins/Update/${checkinId}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status); // Debug log
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Update response:', data); // Debug log
+                if (data.success) {
+                    showAlert('Cập nhật check-in thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/VehicleCheckins';
+                    }, 1500);
+                } else {
+                    showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi cập nhật check-in: ' + error.message, 'danger');
+            });
+        }
+
+        function uploadImages(files) {
+            const checkinId = document.getElementById('checkinId').value;
+            if (!checkinId) {
+                showAlert('Không tìm thấy ID check-in', 'danger');
+                return;
+            }
+
+            // Upload all files at once using the multiple upload endpoint
+            const formData = new FormData();
+            Array.from(files).forEach((file, index) => {
+                formData.append('files', file);
+            });
+
+            fetch(`https://localhost:7173/api/Image/upload-multiple-cloudinary?vehicleCheckinId=${checkinId}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('Upload result:', result);
+                if (result.success) {
+                    console.log('Images uploaded successfully:', result.data);
+                    showAlert(`Upload thành công ${result.data.length} ảnh!`, 'success');
+                    
+                    // Reload current images to show the new ones
+                    loadCurrentImages(checkinId);
+                } else {
+                    console.error('Upload failed:', result.message);
+                    showAlert('Lỗi upload ảnh: ' + result.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showAlert('Lỗi upload ảnh: ' + error.message, 'danger');
+            });
+        }
+
+        function updateStatusBadge(statusCode) {
+            const statusBadge = document.getElementById('statusBadge');
+            if (statusCode === 'PENDING') {
+                statusBadge.innerHTML = '<i class="fas fa-clock me-1"></i>Chờ xử lý';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50; border: none;';
+            } else if (statusCode === 'CONFIRMED') {
+                statusBadge.innerHTML = '<i class="fas fa-check-circle me-1"></i>Đã xác nhận';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50; border: none;';
+            } else {
+                statusBadge.innerHTML = '<i class="fas fa-question-circle me-1"></i>Không xác định';
+                statusBadge.style.cssText = 'background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50; border: none;';
+            }
+        }
+
+        function disableForm() {
+            // Disable tất cả input fields trong form
+            const form = document.getElementById('checkinForm');
+            const inputs = form.querySelectorAll('input, textarea, select, button');
+            inputs.forEach(input => {
+                input.disabled = true;
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+    </script>
+}
+

@@ -34,10 +34,12 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public long? BranchId { get; set; }
         
         // Basic info
+        public string? Code { get; set; }
         public string? CarName { get; set; }
         public string? ConsulterName { get; set; }
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
+        public string? CustomerName { get; set; }
         public DateTime? CreatedDate { get; set; }
     }
 }

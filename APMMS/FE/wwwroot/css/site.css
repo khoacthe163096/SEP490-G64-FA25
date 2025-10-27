@@ -1273,3 +1273,177 @@ main {
         margin-bottom: 20px;
     }
 }
+
+/* Floating Action Tab Styles */
+.floating-tab {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.floating-tab.collapsed {
+    right: -200px;
+}
+
+.floating-tab.collapsed .floating-tab-content {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.floating-tab-toggle {
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    background: #dc3545;
+    border-radius: 50% 0 0 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+    z-index: 1001;
+}
+
+.floating-tab.collapsed .floating-tab-toggle {
+    left: -15px;
+    right: auto;
+}
+
+.floating-tab-toggle:hover {
+    background: #c82333;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.floating-tab-content {
+    background: #dc3545;
+    border-radius: 25px 0 0 25px;
+    padding: 15px 5px;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+    min-width: 200px;
+    opacity: 1;
+    visibility: visible;
+    transition: all 0.3s ease;
+}
+
+.floating-tab-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 20px;
+    margin: 5px 0;
+    text-decoration: none;
+}
+
+.floating-tab-item:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateX(-5px);
+    color: white;
+    text-decoration: none;
+}
+
+.floating-tab-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+.floating-tab-item span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Booking Modal Styles */
+#bookingModal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+#bookingModal .modal-header {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+    padding: 20px 30px;
+}
+
+#bookingModal .modal-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+#bookingModal .modal-body {
+    padding: 30px;
+}
+
+#bookingModal .form-label {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+#bookingModal .form-control,
+#bookingModal .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#bookingModal .form-control:focus,
+#bookingModal .form-select:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+#bookingModal .btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 30px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+#bookingModal .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    background: linear-gradient(135deg, #c82333, #bd2130);
+}
+
+/* Responsive Floating Tab */
+@media (max-width: 768px) {
+    .floating-tab {
+        right: -150px;
+    }
+    
+    .floating-tab.active {
+        right: 0;
+    }
+    
+    .floating-tab-content {
+        min-width: 150px;
+    }
+    
+    .floating-tab-item span {
+        font-size: 12px;
+    }
+    
+    .floating-tab-item {
+        padding: 8px 12px;
+    }
+}

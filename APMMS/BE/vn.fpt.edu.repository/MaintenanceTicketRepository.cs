@@ -24,6 +24,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.MaintenanceTickets
                 .Include(mt => mt.Car)
+                    .ThenInclude(c => c.User)
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
@@ -35,6 +36,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.MaintenanceTickets
                 .Include(mt => mt.Car)
+                    .ThenInclude(c => c.User)
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)

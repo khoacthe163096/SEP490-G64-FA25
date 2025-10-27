@@ -26,8 +26,8 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IServicePackageRepository, ServicePackageRepository>();
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IAutoOwnerRepository, AutoOwnerRepository>();
-            services.AddScoped<ICarOfOutoOwnerRepository, CarOfOutoOwnerRepository>();
-            // services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Not implemented yet
+            services.AddScoped<ICarOfAutoOwnerRepository, CarOfAutoOwnerRepository>();
+            services.AddScoped<IFeedbackRepository, FeedbackRepository>(); // Not implemented yet
             services.AddScoped<IHistoryLogRepository, HistoryLogRepository>();
             services.AddScoped<IProfileRepository, ProfileRepository>();
             services.AddScoped<IReportRepository, ReportRepository>();
@@ -45,7 +45,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IServicePackageService, ServicePackageService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IAutoOwnerService, AutoOwnerService>();
-            services.AddScoped<ICarOfOutoOwnerService, CarOfOutoOwnerService>();
+            services.AddScoped<ICarOfAutoOwnerService, CarOfAutoOwnerService>();
             services.AddScoped<IFeedbackService, FeedbackService>();
             services.AddScoped<IHistoryLogService, HistoryLogService>();
             services.AddScoped<IProfileService, ProfileService>();
