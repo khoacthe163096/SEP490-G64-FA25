@@ -89,12 +89,18 @@ namespace vn.fpt.edu.controllers
         /// L?y danh s�ch t?t c? vehicle check-in (c� ph�n trang)
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllVehicleCheckins([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllVehicleCheckins(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] string? statusCode = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
         {
             try
             {
-                var result = await _vehicleCheckinService.GetAllVehicleCheckinsAsync(page, pageSize);
-                var totalCount = await _vehicleCheckinService.GetTotalCountAsync();
+                var result = await _vehicleCheckinService.GetAllVehicleCheckinsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
+                var totalCount = await _vehicleCheckinService.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate);
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
                 
                 return Ok(new { 

@@ -11,10 +11,28 @@ namespace FE.vn.fpt.edu.services
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page, int pageSize)
+        public async Task<object?> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            // Backend currently supports page and pageSize
-            return await _apiAdapter.GetAsync<object>($"VehicleCheckin?page={page}&pageSize={pageSize}");
+            var queryParams = new List<string>
+            {
+                $"page={page}",
+                $"pageSize={pageSize}"
+            };
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+                queryParams.Add($"searchTerm={Uri.EscapeDataString(searchTerm)}");
+
+            if (!string.IsNullOrWhiteSpace(statusCode))
+                queryParams.Add($"statusCode={Uri.EscapeDataString(statusCode)}");
+
+            if (fromDate.HasValue)
+                queryParams.Add($"fromDate={fromDate.Value:yyyy-MM-dd}");
+
+            if (toDate.HasValue)
+                queryParams.Add($"toDate={toDate.Value:yyyy-MM-dd}");
+
+            var queryString = string.Join("&", queryParams);
+            return await _apiAdapter.GetAsync<object>($"VehicleCheckin?{queryString}");
         }
 
         public async Task<object?> GetByIdAsync(long id)
