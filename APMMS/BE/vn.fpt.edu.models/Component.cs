@@ -1,41 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace BE.vn.fpt.edu.models;
-
-public partial class Component
+namespace BE.vn.fpt.edu.models
 {
-    public long Id { get; set; }
+    public partial class Component
+    {
+        public Component()
+        {
+            TicketComponents = new HashSet<TicketComponent>();
+            ServicePackages = new HashSet<ServicePackage>();
+        }
 
-    public string Name { get; set; } = null!;
+        public long Id { get; set; }
+        public long? BranchId { get; set; }
+        public string? Code { get; set; }
+        public string? ImageUrl { get; set; }
+        public string? Name { get; set; }
+        public decimal? PurchasePrice { get; set; }
+        public int? QuantityStock { get; set; }
+        public string? StatusCode { get; set; }
+        public long? TypeComponentId { get; set; }
+        public decimal? UnitPrice { get; set; }
 
-    public string? Code { get; set; }
+        // Navigation
+        public virtual Branch? Branch { get; set; }
+        public virtual StatusLookup? StatusCodeNavigation { get; set; }
+        public virtual TypeComponent? TypeComponent { get; set; }
 
-    public decimal? UnitPrice { get; set; }
+        // Many-to-many with ServicePackage is represented in DbContext using a join table; keep collection
+        public virtual ICollection<ServicePackage> ServicePackages { get; set; }
 
-    public int? QuantityStock { get; set; }
-
-    [Column("is_active")]
-    public bool IsActive { get; set; } = true;
-
-    public long? TypeComponentId { get; set; }
-
-    public long? BranchId { get; set; }
-
-    public string? ImageUrl { get; set; }
-
-    public string? StatusCode { get; set; }
-
-    public decimal? PurchasePrice { get; set; }
-
-    public virtual Branch? Branch { get; set; }
-
-    public virtual StatusLookup? StatusCodeNavigation { get; set; }
-
-    public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
-
-    public virtual TypeComponent? TypeComponent { get; set; }
-
-    public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
+        public virtual ICollection<TicketComponent> TicketComponents { get; set; }
+    }
 }

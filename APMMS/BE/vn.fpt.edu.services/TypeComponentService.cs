@@ -10,74 +10,53 @@ namespace BE.vn.fpt.edu.services
 {
     public class TypeComponentService : ITypeComponentService
     {
-        private readonly ITypeComponentRepository _repository;
+        private readonly ITypeComponentRepository _repo;
         private readonly IMapper _mapper;
 
-        public TypeComponentService(ITypeComponentRepository repository, IMapper mapper)
+        public TypeComponentService(ITypeComponentRepository repo, IMapper mapper)
         {
-            _repository = repository;
+            _repo = repo;
             _mapper = mapper;
-        }
-
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync()
-        {
-            var entities = await _repository.GetAllAsync();
-            return _mapper.Map<IEnumerable<ResponseDto>>(entities);
-        }
-
-        public async Task<ResponseDto?> GetByIdAsync(long id)
-        {
-            var entity = await _repository.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<ResponseDto>(entity);
         }
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
             var entity = _mapper.Map<TypeComponent>(dto);
-            entity.StatusCode ??= "ACTIVE";
-
-            await _repository.AddAsync(entity);
-            await _repository.SaveChangesAsync();
-
-            return _mapper.Map<ResponseDto>(entity);
+            var created = await _repo.AddAsync(entity);
+            return _mapper.Map<ResponseDto>(created);
         }
 
-        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
+        public async Task DisableEnableAsync(long id, string statusCode)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return null;
-
-            entity.Name = dto.Name;
-            entity.Description = dto.Description;
-            entity.BranchId = dto.BranchId;
-            entity.StatusCode = dto.StatusCode;
-
-            _repository.Update(entity);
-            await _repository.SaveChangesAsync();
-
-            return _mapper.Map<ResponseDto>(entity);
+            await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task<bool> DeleteAsync(long id)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return false;
-
-            _repository.Delete(entity);
-            await _repository.SaveChangesAsync();
-            return true;
+            var list = await _repo.GetAllAsync(branchId, statusCode);
+            return _mapper.Map<IEnumerable<ResponseDto>>(list);
         }
 
-        public async Task<bool> ToggleStatusAsync(long id)
+        public async Task<ResponseDto?> GetByIdAsync(long id)
         {
-            var entity = await _repository.GetByIdAsync(id);
-            if (entity == null) return false;
+            var entity = await _repo.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<ResponseDto>(entity);
+        }
 
-            entity.StatusCode = entity.StatusCode == "ACTIVE" ? "INACTIVE" : "ACTIVE";
-            _repository.Update(entity);
-            await _repository.SaveChangesAsync();
+        public async Task<ResponseDto?> UpdateAsync(RequestDto dto)
+        {
+            if (!dto.Id.HasValue) return null;
+            var exist = await _repo.GetByIdAsync(dto.Id.Value);
+            if (exist == null) return null;
 
-            return true;
+            // Map changed fields
+            exist.Name = dto.Name;
+            exist.Description = dto.Description;
+            exist.BranchId = dto.BranchId;
+            exist.StatusCode = dto.StatusCode;
+
+            var updated = await _repo.UpdateAsync(exist);
+            return _mapper.Map<ResponseDto>(updated);
         }
     }
 }

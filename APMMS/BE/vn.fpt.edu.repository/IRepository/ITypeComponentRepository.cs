@@ -6,11 +6,11 @@ namespace BE.vn.fpt.edu.repository.IRepository
 {
     public interface ITypeComponentRepository
     {
-        Task<IEnumerable<TypeComponent>> GetAllAsync();
+        Task<IEnumerable<TypeComponent>> GetAllAsync(long? branchId = null, string? statusCode = null);
         Task<TypeComponent?> GetByIdAsync(long id);
-        Task AddAsync(TypeComponent entity);
-        void Update(TypeComponent entity);
-        void Delete(TypeComponent entity);
-        Task SaveChangesAsync();
+        Task<TypeComponent> AddAsync(TypeComponent entity);
+        Task<TypeComponent> UpdateAsync(TypeComponent entity);
+        Task DisableEnableAsync(long id, string statusCode);
+        Task<bool> ExistsAsync(long id);
     }
 }

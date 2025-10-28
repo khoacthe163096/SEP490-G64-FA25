@@ -13,53 +13,47 @@ namespace BE.vn.fpt.edu.controllers
     public class TypeComponentController : ControllerBase
     {
         private readonly ITypeComponentService _service;
-
         public TypeComponentController(ITypeComponentService service)
         {
             _service = service;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<ResponseDto>>> GetAll([FromQuery] long? branchId, [FromQuery] string? statusCode)
         {
-            var result = await _service.GetAllAsync();
-            return Ok(result);
+            var list = await _service.GetAllAsync(branchId, statusCode);
+            return Ok(list);
         }
 
-        [HttpGet("{id:long}")]
-        public async Task<IActionResult> GetById(long id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ResponseDto>> Get(long id)
         {
-            var result = await _service.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+            var item = await _service.GetByIdAsync(id);
+            if (item == null) return NotFound();
+            return Ok(item);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] RequestDto dto)
+        public async Task<ActionResult<ResponseDto>> Create([FromBody] RequestDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             var created = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
         }
 
-        [HttpPut("{id:long}")]
-        public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ResponseDto>> Update(long id, [FromBody] RequestDto dto)
         {
-            var updated = await _service.UpdateAsync(id, dto);
-            return updated == null ? NotFound() : Ok(updated);
+            dto.Id = id;
+            var updated = await _service.UpdateAsync(dto);
+            if (updated == null) return NotFound();
+            return Ok(updated);
         }
 
-        [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id)
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> SetStatus(long id, [FromQuery] string statusCode)
         {
-            var ok = await _service.DeleteAsync(id);
-            return ok ? NoContent() : NotFound();
-        }
-
-        [HttpPatch("{id:long}/toggle")]
-        public async Task<IActionResult> ToggleStatus(long id)
-        {
-            var ok = await _service.ToggleStatusAsync(id);
-            return ok ? NoContent() : NotFound();
+            await _service.DisableEnableAsync(id, statusCode);
+            return NoContent();
         }
     }
 }
