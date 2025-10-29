@@ -9,6 +9,13 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public long? TechnicianId { get; set; }
         public string? StatusCode { get; set; }
         public long? BranchId { get; set; }
+        public string? Code { get; set; }
+        public decimal? TotalEstimatedCost { get; set; }
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public string? PriorityLevel { get; set; }
+        public string? Description { get; set; }
         
         // Navigation properties
         public string? CarName { get; set; }
@@ -16,6 +23,15 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
         public string? ScheduleServiceName { get; set; }
+        
+        // Customer info
+        public string? CustomerName { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerAddress { get; set; }
+        
+        // Vehicle info
+        public string? LicensePlate { get; set; }
+        public string? CarModel { get; set; }
         
         // Vehicle Check-in info (nếu được tạo từ check-in)
         public long? VehicleCheckinId { get; set; }

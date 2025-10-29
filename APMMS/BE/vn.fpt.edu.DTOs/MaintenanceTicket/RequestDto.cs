@@ -32,7 +32,9 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         [Required(ErrorMessage = "Consulter ID is required")]
         public long ConsulterId { get; set; }
 
-        public long? TechnicianId { get; set; }
+        public long? TechnicianId { get; set; } // Kỹ thuật viên chính (giữ để tương thích)
+
+        public List<long>? TechnicianIds { get; set; } // Danh sách kỹ thuật viên
 
         [Required(ErrorMessage = "Branch ID is required")]
         public long BranchId { get; set; }

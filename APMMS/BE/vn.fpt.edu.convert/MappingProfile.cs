@@ -46,7 +46,30 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.HistoryLog.RequestDto, HistoryLog>();
 
             // MaintenanceTicket mappings
-            CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>();
+            CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>()
+                // Basic fields
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.StartTime))
+                .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? ($"{src.Consulter.FirstName} {src.Consulter.LastName}").Trim() : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? ($"{src.Technician.FirstName} {src.Technician.LastName}").Trim() : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.ScheduleServiceName, opt => opt.MapFrom(src => src.ScheduleService != null ? src.ScheduleService.ScheduledDate.ToString("dd/MM/yyyy") : null))
+                // Customer info from car owner
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? ($"{src.Car.User.FirstName} {src.Car.User.LastName}").Trim() : null))
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? src.Car.User.Phone : null))
+                .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null && src.Car.User.Address != null ?
+                    string.Join(", ", new [] {
+                        src.Car.User.Address.Street,
+                        src.Car.User.Address.Ward != null ? src.Car.User.Address.Ward.Name : null,
+                        src.Car.User.Address.Province != null ? src.Car.User.Address.Province.Name : null
+                    }.Where(s => !string.IsNullOrWhiteSpace(s))) : null))
+                // Vehicle info
+                .ForMember(dest => dest.LicensePlate, opt => opt.MapFrom(src => src.Car != null ? src.Car.LicensePlate : null))
+                .ForMember(dest => dest.CarModel, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarModel : null))
+                // Vehicle checkin info
+                .ForMember(dest => dest.Mileage, opt => opt.MapFrom(src => src.VehicleCheckin != null ? src.VehicleCheckin.Mileage : null))
+                .ForMember(dest => dest.CheckinNotes, opt => opt.MapFrom(src => src.VehicleCheckin != null ? src.VehicleCheckin.Notes : null))
+                .ForMember(dest => dest.CheckinImages, opt => opt.MapFrom(src => src.VehicleCheckin != null && src.VehicleCheckin.VehicleCheckinImages != null ? src.VehicleCheckin.VehicleCheckinImages.Select(i => i.ImageUrl).ToList() : new List<string>()));
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.StartTime ?? DateTime.Now.AddDays(-src.Id)))
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))

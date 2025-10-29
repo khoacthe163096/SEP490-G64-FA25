@@ -12,6 +12,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task<MaintenanceTicket> UpdateAsync(MaintenanceTicket maintenanceTicket);
         Task<bool> DeleteAsync(long id);
         Task<bool> ExistsAsync(long id);
+        Task<bool> CodeExistsAsync(string code);
     }
 }
 

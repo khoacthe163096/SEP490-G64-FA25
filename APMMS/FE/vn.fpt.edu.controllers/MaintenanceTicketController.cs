@@ -47,7 +47,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Edit(int id)
         {
             ViewBag.MaintenanceTicketId = id;
-			return View("~/vn.fpt.edu.views/MaintenanceTickets/Edit.cshtml");
+			return View("~/vn.fpt.edu.views/MaintenanceTickets/Details.cshtml");
         }
 
         [HttpGet]

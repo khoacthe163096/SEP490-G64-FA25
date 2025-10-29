@@ -25,10 +25,18 @@ namespace BE.vn.fpt.edu.repository
             return await _context.MaintenanceTickets
                 .Include(mt => mt.Car)
                     .ThenInclude(c => c.User)
+                        .ThenInclude(u => u.Address)
+                            .ThenInclude(a => a.Ward)
+                .Include(mt => mt.Car)
+                    .ThenInclude(c => c.User)
+                        .ThenInclude(u => u.Address)
+                            .ThenInclude(a => a.Province)
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
                 .Include(mt => mt.ScheduleService)
+                .Include(mt => mt.VehicleCheckin)
+                    .ThenInclude(vc => vc.VehicleCheckinImages)
                 .FirstOrDefaultAsync(mt => mt.Id == id);
         }
 
@@ -88,6 +96,11 @@ namespace BE.vn.fpt.edu.repository
         public async Task<bool> ExistsAsync(long id)
         {
             return await _context.MaintenanceTickets.AnyAsync(mt => mt.Id == id);
+        }
+
+        public async Task<bool> CodeExistsAsync(string code)
+        {
+            return await _context.MaintenanceTickets.AnyAsync(mt => mt.Code == code);
         }
     }
 }

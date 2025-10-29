@@ -257,8 +257,21 @@ $(document).ready(function() {
 
 function loadMaintenanceTicketDetails() {
     fetch(`/api/MaintenanceTicket/${maintenanceTicketId}`)
-        .then(response => response.json())
+        .then(async response => {
+            if (!response.ok) {
+                // Try read json; fallback to text
+                try { return { __httpError: true, status: response.status, ...(await response.json()) }; }
+                catch { return { __httpError: true, status: response.status, message: await response.text() }; }
+            }
+            return response.json();
+        })
         .then(data => {
+            if (data.__httpError) {
+                const msg = data.status === 404 ? 'Không tìm thấy phiếu bảo dưỡng hoặc đã bị xóa.' : (data.message || 'Lỗi tải dữ liệu');
+                showAlert(msg, 'danger');
+                setTimeout(() => window.location.href = '/MaintenanceTickets', 1200);
+                return;
+            }
             if (data.success) {
                 maintenanceTicketData = data.data;
                 displayBasicInfo(data.data);
@@ -292,6 +305,27 @@ function displayBasicInfo(data) {
         <div class="col-md-6">
             <strong>Xe:</strong><br>
             ${data.carName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Biển số:</strong><br>
+            ${data.licensePlate || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Mẫu xe:</strong><br>
+            ${data.carModel || 'N/A'}
+        </div>
+        <div class="col-12"><hr class="my-2"></div>
+        <div class="col-md-6">
+            <strong>Khách hàng:</strong><br>
+            ${data.customerName || 'N/A'}
+        </div>
+        <div class="col-md-6">
+            <strong>Điện thoại:</strong><br>
+            ${data.customerPhone || 'N/A'}
+        </div>
+        <div class="col-12">
+            <strong>Địa chỉ:</strong><br>
+            ${data.customerAddress || 'N/A'}
         </div>
         <div class="col-md-6">
             <strong>Tư vấn viên:</strong><br>
@@ -345,17 +379,6 @@ function displayCheckinInfo(data) {
                 <div class="col-md-6">
                     <strong>Số km:</strong><br>
                     ${data.mileage ? data.mileage.toLocaleString() + ' km' : 'N/A'}
-                </div>
-                <div class="col-12">
-                    <strong>Ghi chú từ Check-in:</strong><br>
-                    ${data.checkinNotes || 'Không có ghi chú'}
-                </div>
-                <div class="col-12">
-                    <strong>Ảnh tình trạng:</strong><br>
-                    ${data.checkinImages && data.checkinImages.length > 0 ? 
-                        data.checkinImages.map(img => `<img src="${img}" alt="Ảnh xe" class="img-thumbnail me-2" style="max-width: 150px;">`).join('') :
-                        'Không có ảnh'
-                    }
                 </div>
             </div>
         `);

@@ -3,6 +3,7 @@ using BE.vn.fpt.edu.DTOs.MaintenanceTicket;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.repository.IRepository;
 using BE.vn.fpt.edu.models;
+using System.Linq;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -11,20 +12,25 @@ namespace BE.vn.fpt.edu.services
         private readonly IMaintenanceTicketRepository _maintenanceTicketRepository;
         private readonly IVehicleCheckinRepository _vehicleCheckinRepository;
         private readonly IMapper _mapper;
+        private readonly CarMaintenanceDbContext _context;
 
         public MaintenanceTicketService(
             IMaintenanceTicketRepository maintenanceTicketRepository,
             IVehicleCheckinRepository vehicleCheckinRepository,
-            IMapper mapper)
+            IMapper mapper,
+            CarMaintenanceDbContext context)
         {
             _maintenanceTicketRepository = maintenanceTicketRepository;
             _vehicleCheckinRepository = vehicleCheckinRepository;
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<ResponseDto> CreateMaintenanceTicketAsync(RequestDto request)
         {
             var maintenanceTicket = _mapper.Map<MaintenanceTicket>(request);
+            // Tự sinh code 7 ký tự ngẫu nhiên
+            maintenanceTicket.Code = await GenerateUniqueCodeAsync();
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
             return _mapper.Map<ResponseDto>(createdTicket);
         }
@@ -46,20 +52,37 @@ namespace BE.vn.fpt.edu.services
                 VehicleCheckinId = request.VehicleCheckinId,
                 CarId = vehicleCheckin.CarId,
                 ConsulterId = request.ConsulterId,
-                TechnicianId = request.TechnicianId,
+                TechnicianId = request.TechnicianId ?? (request.TechnicianIds != null && request.TechnicianIds.Count > 0 ? request.TechnicianIds[0] : null), // Kỹ thuật viên chính là người đầu tiên
                 BranchId = request.BranchId,
                 ScheduleServiceId = request.ScheduleServiceId,
                 StatusCode = request.StatusCode ?? "PENDING",
                 PriorityLevel = "NORMAL",
-                Description = request.Description
+                Description = request.Description,
+                Code = await GenerateUniqueCodeAsync() // Tự sinh code 7 ký tự ngẫu nhiên
             };
 
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
 
+            // Lưu nhiều kỹ thuật viên vào bảng MaintenanceTicketTechnician
+            if (request.TechnicianIds != null && request.TechnicianIds.Count > 0)
+            {
+                foreach (var technicianId in request.TechnicianIds.Distinct())
+                {
+                    _context.MaintenanceTicketTechnicians.Add(new MaintenanceTicketTechnician
+                    {
+                        MaintenanceTicketId = createdTicket.Id,
+                        TechnicianId = technicianId,
+                        AssignedDate = DateTime.UtcNow,
+                        RoleInTicket = technicianId == maintenanceTicket.TechnicianId ? "PRIMARY" : "ASSISTANT"
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
             // Lấy thông tin đầy đủ để trả về
             var fullTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
             
-            // Map thủ công thay vì dùng AutoMapper
+            // Map thủ công thay vì dùng AutoMapper và điền đầy đủ thông tin để FE hiển thị ngay
             var response = new ResponseDto
             {
                 Id = fullTicket.Id,
@@ -68,7 +91,32 @@ namespace BE.vn.fpt.edu.services
                 TechnicianId = fullTicket.TechnicianId,
                 BranchId = fullTicket.BranchId,
                 StatusCode = fullTicket.StatusCode,
-                ScheduleServiceId = fullTicket.ScheduleServiceId
+                ScheduleServiceId = fullTicket.ScheduleServiceId,
+                Code = fullTicket.Code,
+                TotalEstimatedCost = fullTicket.TotalEstimatedCost,
+                CreatedDate = fullTicket.StartTime, // dùng StartTime làm created hiển thị
+                StartTime = fullTicket.StartTime,
+                EndTime = fullTicket.EndTime,
+                PriorityLevel = fullTicket.PriorityLevel,
+                Description = fullTicket.Description,
+                // Tên hiển thị
+                CarName = fullTicket.Car != null ? fullTicket.Car.CarName : null,
+                ConsulterName = fullTicket.Consulter != null ? ($"{fullTicket.Consulter.FirstName} {fullTicket.Consulter.LastName}").Trim() : null,
+                TechnicianName = fullTicket.Technician != null ? ($"{fullTicket.Technician.FirstName} {fullTicket.Technician.LastName}").Trim() : null,
+                BranchName = fullTicket.Branch != null ? fullTicket.Branch.Name : null,
+                ScheduleServiceName = fullTicket.ScheduleService != null ? fullTicket.ScheduleService.ScheduledDate.ToString("dd/MM/yyyy") : null,
+                // Khách hàng và xe
+                CustomerName = fullTicket.Car != null && fullTicket.Car.User != null ? ($"{fullTicket.Car.User.FirstName} {fullTicket.Car.User.LastName}").Trim() : null,
+                CustomerPhone = fullTicket.Car != null && fullTicket.Car.User != null ? fullTicket.Car.User.Phone : null,
+                CustomerAddress = fullTicket.Car != null && fullTicket.Car.User != null && fullTicket.Car.User.Address != null
+                    ? string.Join(", ", new [] {
+                        fullTicket.Car.User.Address.Street,
+                        fullTicket.Car.User.Address.Ward != null ? fullTicket.Car.User.Address.Ward.Name : null,
+                        fullTicket.Car.User.Address.Province != null ? fullTicket.Car.User.Address.Province.Name : null
+                    }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                    : null,
+                LicensePlate = fullTicket.Car != null ? fullTicket.Car.LicensePlate : null,
+                CarModel = fullTicket.Car != null ? fullTicket.Car.CarModel : null
             };
 
             // Thêm thông tin từ Vehicle Check-in
@@ -168,6 +216,26 @@ namespace BE.vn.fpt.edu.services
             maintenanceTicket.EndTime = DateTime.UtcNow;
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
             return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
+        /// <summary>
+        /// Tạo mã phiếu bảo dưỡng 7 ký tự ngẫu nhiên (số + chữ cái), đảm bảo không trùng
+        /// </summary>
+        private async Task<string> GenerateUniqueCodeAsync()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            const int codeLength = 7;
+            var random = new Random();
+            string code;
+            
+            // Tạo lại code cho đến khi không trùng
+            do
+            {
+                code = new string(Enumerable.Repeat(chars, codeLength)
+                    .Select(s => s[random.Next(s.Length)]).ToArray());
+            } while (await _maintenanceTicketRepository.CodeExistsAsync(code));
+            
+            return code;
         }
     }
 }
