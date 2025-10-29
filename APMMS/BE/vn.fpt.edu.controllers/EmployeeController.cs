@@ -58,32 +58,7 @@ namespace BE.vn.fpt.edu.controllers
             var employees = await _employeeService.FilterAsync(isDelete, roleId);
             return Ok(employees);
         }
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
-        {
-            var userIdClaim = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-            if (userIdClaim == null) return Unauthorized();
-
-            var userId = long.Parse(userIdClaim.Value);
-            var profile = await _employeeService.GetProfileAsync(userId);
-            if (profile == null) return NotFound();
-
-            return Ok(profile);
-        }
-
-        [HttpPut("profile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
-        {
-            var userIdClaim = User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier");
-            if (userIdClaim == null) return Unauthorized();
-
-            var userId = long.Parse(userIdClaim.Value);
-            var updated = await _employeeService.UpdateProfileAsync(userId, dto);
-            if (updated == null) return NotFound();
-
-            return Ok(updated);
-        }
-
+   
 
     }
 }

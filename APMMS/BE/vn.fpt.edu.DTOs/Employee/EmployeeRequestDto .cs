@@ -2,7 +2,7 @@ namespace BE.vn.fpt.edu.DTOs.Employee
 {
     public class EmployeeRequestDto
     {
-        public string? Code { get; set; }
+        //public string? Code { get; set; }
         public string Username { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string? FirstName { get; set; }
@@ -13,5 +13,7 @@ namespace BE.vn.fpt.edu.DTOs.Employee
         public string? Image { get; set; }
         public long? RoleId { get; set; }
         public long? BranchId { get; set; }
+        public string? TaxCode { get; set; }
+
     }
 }

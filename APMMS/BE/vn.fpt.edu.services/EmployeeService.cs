@@ -5,18 +5,19 @@ using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace BE.vn.fpt.edu.services
 {
     public class EmployeeService : IEmployeeService
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper _mapper;
+        private readonly CarMaintenanceDbContext _db;
 
-        public EmployeeService(IEmployeeRepository employeeRepository, IMapper mapper)
+        public EmployeeService(IEmployeeRepository employeeRepository, IMapper mapper, CarMaintenanceDbContext db)
         {
             _employeeRepository = employeeRepository;
             _mapper = mapper;
+            _db = db;
         }
 
         public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync()
@@ -32,13 +33,21 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<EmployeeResponseDto>(employee);
         }
 
+        // ✅ CHỈNH Ở ĐÂY: tự sinh Code theo Role
         public async Task<EmployeeResponseDto> CreateAsync(EmployeeRequestDto dto)
         {
             var employee = _mapper.Map<User>(dto);
+
+            // Sinh mã tự động nếu chưa có
+            var prefix = await GetRolePrefixAsync(dto.RoleId);
+            employee.Code = await GenerateUniqueEmployeeCodeAsync(prefix);
+
             employee.CreatedDate = DateTime.Now;
             employee.IsDelete = false;
+
             await _employeeRepository.AddAsync(employee);
             await _employeeRepository.SaveChangesAsync();
+
             return _mapper.Map<EmployeeResponseDto>(employee);
         }
 
@@ -65,6 +74,48 @@ namespace BE.vn.fpt.edu.services
             await _employeeRepository.SaveChangesAsync();
             return true;
         }
+
+        // 🆕 Lấy prefix theo Role (ưu tiên theo Role.Name trong DB)
+        private async Task<string> GetRolePrefixAsync(long? roleId)
+        {
+            if (roleId == null) return "EM"; // fallback
+
+            var role = await _db.Roles.AsNoTracking()
+                                      .Where(r => r.Id == roleId.Value)
+                                      .Select(r => r.Name)
+                                      .FirstOrDefaultAsync();
+
+            var name = role?.Trim().ToLowerInvariant() ?? string.Empty;
+
+            return name switch
+            {
+                "consulter" => "CL",
+                "accountant" => "AC",
+                "technician" => "TC",
+                "warehouse keeper" => "WK",
+                _ => "EM"
+            };
+        }
+
+        // 🆕 Sinh mã duy nhất: PREFIX + 5 số ngẫu nhiên (vd: CL04218)
+        private async Task<string> GenerateUniqueEmployeeCodeAsync(string prefix)
+        {
+            const int digits = 5;
+            var rnd = new Random();
+
+            for (int i = 0; i < 50; i++)
+            {
+                var number = rnd.Next(0, (int)Math.Pow(10, digits)).ToString($"D{digits}");
+                var code = $"{prefix}{number}";
+
+                var exists = await _db.Users.AsNoTracking().AnyAsync(u => u.Code == code);
+                if (!exists) return code;
+            }
+
+            // Fallback (hầu như không bao giờ xảy ra)
+            return $"{prefix}{DateTime.UtcNow:HHmmssff}";
+        }
+
         public async Task<IEnumerable<EmployeeResponseDto>> GetAllAsync(string? status = null, int? roleId = null, string? roleName = null)
         {
             var query = _employeeRepository.GetAll()
@@ -72,7 +123,6 @@ namespace BE.vn.fpt.edu.services
                 .Include(e => e.Branch)
                 .AsQueryable();
 
-            // ✅ Filter theo trạng thái
             if (!string.IsNullOrEmpty(status))
             {
                 if (status.ToLower() == "active")
@@ -81,24 +131,19 @@ namespace BE.vn.fpt.edu.services
                     query = query.Where(e => e.IsDelete == true);
             }
 
-            // ✅ Filter theo RoleId
             if (roleId.HasValue)
-            {
                 query = query.Where(e => e.RoleId == roleId.Value);
-            }
 
-            // ✅ Filter theo RoleName
             if (!string.IsNullOrEmpty(roleName))
-            {
                 query = query.Where(e => e.Role.Name.ToLower().Contains(roleName.ToLower()));
-            }
 
             var employees = await query.ToListAsync();
             return _mapper.Map<IEnumerable<EmployeeResponseDto>>(employees);
         }
+
         public async Task<IEnumerable<EmployeeResponseDto>> FilterAsync(bool? isDelete, long? roleId)
         {
-            var query = _employeeRepository.GetAll(); // IQueryable<User>
+            var query = _employeeRepository.GetAll();
 
             if (isDelete.HasValue)
                 query = query.Where(e => e.IsDelete == isDelete.Value);
@@ -109,6 +154,7 @@ namespace BE.vn.fpt.edu.services
             var employees = await query.ToListAsync();
             return employees.Select(e => _mapper.Map<EmployeeResponseDto>(e));
         }
+
         public async Task<EmployeeProfileDto?> GetProfileAsync(long userId)
         {
             var employee = await _employeeRepository.GetByIdAsync(userId);
@@ -148,9 +194,5 @@ namespace BE.vn.fpt.edu.services
 
             return await GetProfileAsync(userId);
         }
-
-
     }
 }
-
-
