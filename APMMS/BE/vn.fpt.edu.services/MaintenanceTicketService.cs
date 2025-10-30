@@ -31,6 +31,7 @@ namespace BE.vn.fpt.edu.services
             var maintenanceTicket = _mapper.Map<MaintenanceTicket>(request);
             // Tự sinh code 7 ký tự ngẫu nhiên
             maintenanceTicket.Code = await GenerateUniqueCodeAsync();
+            maintenanceTicket.CreatedAt = DateTime.UtcNow;
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
             return _mapper.Map<ResponseDto>(createdTicket);
         }
@@ -61,6 +62,7 @@ namespace BE.vn.fpt.edu.services
                 Code = await GenerateUniqueCodeAsync() // Tự sinh code 7 ký tự ngẫu nhiên
             };
 
+            maintenanceTicket.CreatedAt = DateTime.UtcNow;
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
 
             // Lưu nhiều kỹ thuật viên vào bảng MaintenanceTicketTechnician
@@ -94,7 +96,7 @@ namespace BE.vn.fpt.edu.services
                 ScheduleServiceId = fullTicket.ScheduleServiceId,
                 Code = fullTicket.Code,
                 TotalEstimatedCost = fullTicket.TotalEstimatedCost,
-                CreatedDate = fullTicket.StartTime, // dùng StartTime làm created hiển thị
+                CreatedDate = fullTicket.CreatedAt,
                 StartTime = fullTicket.StartTime,
                 EndTime = fullTicket.EndTime,
                 PriorityLevel = fullTicket.PriorityLevel,
@@ -116,7 +118,17 @@ namespace BE.vn.fpt.edu.services
                     }.Where(s => !string.IsNullOrWhiteSpace(s)))
                     : null,
                 LicensePlate = fullTicket.Car != null ? fullTicket.Car.LicensePlate : null,
-                CarModel = fullTicket.Car != null ? fullTicket.Car.CarModel : null
+                CarModel = fullTicket.Car != null ? fullTicket.Car.CarModel : null,
+                // Danh sách tất cả kỹ thuật viên
+                Technicians = fullTicket.MaintenanceTicketTechnicians != null && fullTicket.MaintenanceTicketTechnicians.Count > 0
+                    ? fullTicket.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
+                    {
+                        TechnicianId = mtt.TechnicianId,
+                        TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
+                        RoleInTicket = mtt.RoleInTicket,
+                        AssignedDate = mtt.AssignedDate
+                    }).ToList()
+                    : new List<TechnicianInfoDto>()
             };
 
             // Thêm thông tin từ Vehicle Check-in
@@ -145,7 +157,21 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket == null)
                 throw new ArgumentException("Maintenance ticket not found");
 
-            return _mapper.Map<ResponseDto>(maintenanceTicket);
+            var response = _mapper.Map<ResponseDto>(maintenanceTicket);
+            
+            // Thêm danh sách kỹ thuật viên
+            if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
+            {
+                response.Technicians = maintenanceTicket.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
+                {
+                    TechnicianId = mtt.TechnicianId,
+                    TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
+                    RoleInTicket = mtt.RoleInTicket,
+                    AssignedDate = mtt.AssignedDate
+                }).ToList();
+            }
+            
+            return response;
         }
 
         public async Task<List<ListResponseDto>> GetAllMaintenanceTicketsAsync(int page = 1, int pageSize = 10)
@@ -192,6 +218,48 @@ namespace BE.vn.fpt.edu.services
             maintenanceTicket.StatusCode = "ASSIGNED";
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
             return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
+        public async Task<ResponseDto> AddTechniciansAsync(long id, List<long> technicianIds)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            if (technicianIds == null || technicianIds.Count == 0)
+                return _mapper.Map<ResponseDto>(maintenanceTicket);
+
+            // Thêm các bản ghi mới vào bảng trung gian nếu chưa tồn tại
+            var existing = maintenanceTicket.MaintenanceTicketTechnicians.Select(x => x.TechnicianId).ToHashSet();
+            foreach (var techId in technicianIds.Distinct())
+            {
+                if (!existing.Contains(techId))
+                {
+                    _context.MaintenanceTicketTechnicians.Add(new MaintenanceTicketTechnician
+                    {
+                        MaintenanceTicketId = id,
+                        TechnicianId = techId,
+                        AssignedDate = DateTime.UtcNow,
+                        RoleInTicket = "ASSISTANT"
+                    });
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            // Trả về chi tiết mới nhất
+            var refreshed = await _maintenanceTicketRepository.GetByIdAsync(id);
+            var response = _mapper.Map<ResponseDto>(refreshed);
+            if (refreshed?.MaintenanceTicketTechnicians != null)
+            {
+                response.Technicians = refreshed.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
+                {
+                    TechnicianId = mtt.TechnicianId,
+                    TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
+                    RoleInTicket = mtt.RoleInTicket,
+                    AssignedDate = mtt.AssignedDate
+                }).ToList();
+            }
+            return response;
         }
 
         public async Task<ResponseDto> StartMaintenanceAsync(long id)

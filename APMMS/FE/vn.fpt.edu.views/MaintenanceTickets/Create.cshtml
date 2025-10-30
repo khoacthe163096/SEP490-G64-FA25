@@ -365,7 +365,7 @@ function displaySelectedCheckin(checkin) {
 
 function loadConsulterFromToken() {
     const token = localStorage.getItem('authToken');
-    const select = $('#consulterId');
+            const select = $('#consulterId');
     select.empty();
     if (!token) {
         select.append('<option value="">Không xác định tư vấn viên</option>');

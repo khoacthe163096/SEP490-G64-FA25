@@ -20,9 +20,12 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         // Navigation properties
         public string? CarName { get; set; }
         public string? ConsulterName { get; set; }
-        public string? TechnicianName { get; set; }
+        public string? TechnicianName { get; set; } // Kỹ thuật viên chính (giữ để tương thích)
         public string? BranchName { get; set; }
         public string? ScheduleServiceName { get; set; }
+        
+        // Danh sách tất cả kỹ thuật viên
+        public List<TechnicianInfoDto>? Technicians { get; set; }
         
         // Customer info
         public string? CustomerName { get; set; }
@@ -38,6 +41,14 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public int? Mileage { get; set; }
         public string? CheckinNotes { get; set; }
         public List<string>? CheckinImages { get; set; }
+    }
+
+    public class TechnicianInfoDto
+    {
+        public long TechnicianId { get; set; }
+        public string? TechnicianName { get; set; }
+        public string? RoleInTicket { get; set; } // PRIMARY hoặc ASSISTANT
+        public DateTime? AssignedDate { get; set; }
     }
 
     public class ListResponseDto

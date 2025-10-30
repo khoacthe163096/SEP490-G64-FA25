@@ -222,6 +222,27 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Thêm nhiều kỹ thuật viên cho Maintenance Ticket
+        /// </summary>
+        [HttpPut("{id}/technicians")]
+        public async Task<IActionResult> AddTechnicians(long id, [FromBody] List<long> technicianIds)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.AddTechniciansAsync(id, technicianIds ?? new List<long>());
+                return Ok(new { success = true, data = result, message = "Technicians added successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Bắt đầu bảo dưỡng
         /// </summary>
         [HttpPut("{id}/start")]

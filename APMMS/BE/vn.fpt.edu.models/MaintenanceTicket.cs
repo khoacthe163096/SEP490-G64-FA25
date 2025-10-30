@@ -33,6 +33,8 @@ public partial class MaintenanceTicket
 
     public string? PriorityLevel { get; set; }
 
+    public DateTime? CreatedAt { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }

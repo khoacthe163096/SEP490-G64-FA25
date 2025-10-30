@@ -253,10 +253,15 @@ $(document).ready(function() {
     $('#editTicketBtn').on('click', function() {
         window.location.href = `/MaintenanceTickets/Edit/${maintenanceTicketId}`;
     });
+
+    // Gán kỹ thuật viên (mở modal chọn nhiều)
+    $(document).on('click', '#assignTechnicianBtn', function() {
+        openAssignTechniciansModal();
+    });
 });
 
 function loadMaintenanceTicketDetails() {
-    fetch(`/api/MaintenanceTicket/${maintenanceTicketId}`)
+    fetch(`https://localhost:7173/api/MaintenanceTicket/${maintenanceTicketId}`)
         .then(async response => {
             if (!response.ok) {
                 // Try read json; fallback to text
@@ -333,7 +338,15 @@ function displayBasicInfo(data) {
         </div>
         <div class="col-md-6">
             <strong>Kỹ thuật viên:</strong><br>
-            ${data.technicianName || 'Chưa gán'}
+            ${data.technicians && data.technicians.length > 0 
+                ? data.technicians.map(t => {
+                    const roleBadge = t.roleInTicket === 'PRIMARY' 
+                        ? '<span class="badge bg-success ms-1">Chính</span>' 
+                        : '<span class="badge bg-info ms-1">Phụ</span>';
+                    return `<div class="mb-1">${t.technicianName || 'N/A'} ${roleBadge}</div>`;
+                }).join('')
+                : (data.technicianName ? `<div>${data.technicianName}</div>` : '<div>Chưa gán</div>')
+            }
         </div>
         <div class="col-md-6">
             <strong>Chi nhánh:</strong><br>
@@ -410,7 +423,7 @@ function displayStatusAndActions(data) {
     switch(data.statusCode) {
         case 'PENDING':
             buttons = `
-                <button class="btn btn-info" onclick="assignTechnician(${data.id})">
+                <button class="btn btn-info" id="assignTechnicianBtn">
                     <i class="fas fa-user-plus me-1"></i>
                     Gán kỹ thuật viên
                 </button>
@@ -443,6 +456,104 @@ function displayStatusAndActions(data) {
     }
     
     actionButtons.html(buttons);
+}
+
+// Modal chọn kỹ thuật viên
+function openAssignTechniciansModal() {
+    const modalHtml = `
+    <div class="modal fade" id="assignTechniciansModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Gán kỹ thuật viên</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc username...">
+              <small class="text-muted">Gõ để lọc nhanh. Kết quả hiển thị tức thì như Google.</small>
+            </div>
+            <div id="assignTechContainer" class="row g-2"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-primary" id="saveAssignTechBtn">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    $('body').append(modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('assignTechniciansModal'));
+    modal.show();
+
+    // Tải danh sách kỹ thuật viên
+    fetch('https://localhost:7173/api/Employee/filter?roleId=4')
+      .then(r => r.json())
+      .then(list => {
+        const container = $('#assignTechContainer');
+        container.empty();
+        const employees = (list || []).map(emp => ({
+          id: emp.id,
+          name: (`${emp.firstName || ''} ${emp.lastName || ''}`).trim() || emp.username || `#${emp.id}`,
+          username: emp.username || ''
+        }));
+
+        function render(listToRender) {
+          container.empty();
+          if (!listToRender || listToRender.length === 0) {
+            container.html('<div class="text-center text-muted py-3">Không có kỹ thuật viên phù hợp</div>');
+            return;
+          }
+          listToRender.forEach(emp => {
+            const checked = (maintenanceTicketData.technicians || []).some(t => t.technicianId === emp.id) ? 'checked' : '';
+            container.append(`
+              <div class="col-md-6">
+                <div class="form-check border rounded p-2">
+                  <input class="form-check-input assign-tech-checkbox" type="checkbox" value="${emp.id}" id="assign_${emp.id}" ${checked}>
+                  <label class="form-check-label w-100" for="assign_${emp.id}"><strong>${emp.name}</strong><br><small class="text-muted">${emp.username}</small></label>
+                </div>
+              </div>
+            `);
+          });
+        }
+
+        // Lần đầu render tất cả
+        render(employees);
+
+        // Lọc theo thời gian thực với debounce
+        let t;
+        $('#assignTechSearch').on('input', function() {
+          clearTimeout(t);
+          const q = $(this).val().toLowerCase();
+          t = setTimeout(() => {
+            if (!q) { render(employees); return; }
+            const filtered = employees.filter(e => e.name.toLowerCase().includes(q) || e.username.toLowerCase().includes(q));
+            render(filtered);
+          }, 120);
+        });
+      });
+
+    $(document).on('click', '#saveAssignTechBtn', function() {
+      const ids = [];
+      $('.assign-tech-checkbox:checked').each(function(){ ids.push(parseInt($(this).val())); });
+      fetch(`https://localhost:7173/api/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ids)
+      }).then(r => r.json()).then(res => {
+        if (res.success) {
+          maintenanceTicketData = res.data;
+          displayBasicInfo(maintenanceTicketData);
+          displayStatusAndActions(maintenanceTicketData);
+          showAlert('Gán kỹ thuật viên thành công', 'success');
+          bootstrap.Modal.getInstance(document.getElementById('assignTechniciansModal')).hide();
+          $('#assignTechniciansModal').remove();
+        } else {
+          showAlert(res.message || 'Gán kỹ thuật viên thất bại', 'danger');
+        }
+      }).catch(()=> showAlert('Lỗi kết nối máy chủ', 'danger'));
+    });
 }
 
 function displayTimeline(data) {
@@ -545,7 +656,7 @@ function displayCostSummary(data) {
 }
 
 function loadServiceTasks() {
-    fetch(`/api/ServiceTask/by-maintenance-ticket/${maintenanceTicketId}`)
+    fetch(`https://localhost:7173/api/ServiceTask/by-maintenance-ticket/${maintenanceTicketId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -590,7 +701,7 @@ function displayServiceTasks(tasks) {
 }
 
 function loadComponents() {
-    fetch(`/api/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
+    fetch(`https://localhost:7173/api/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {

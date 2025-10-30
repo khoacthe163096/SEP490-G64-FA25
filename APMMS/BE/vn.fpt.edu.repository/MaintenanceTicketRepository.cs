@@ -37,6 +37,8 @@ namespace BE.vn.fpt.edu.repository
                 .Include(mt => mt.ScheduleService)
                 .Include(mt => mt.VehicleCheckin)
                     .ThenInclude(vc => vc.VehicleCheckinImages)
+                .Include(mt => mt.MaintenanceTicketTechnicians)
+                    .ThenInclude(mtt => mtt.Technician)
                 .FirstOrDefaultAsync(mt => mt.Id == id);
         }
 
