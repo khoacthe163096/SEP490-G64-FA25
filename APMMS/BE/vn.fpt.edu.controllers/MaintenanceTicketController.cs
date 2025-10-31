@@ -225,11 +225,11 @@ namespace BE.vn.fpt.edu.controllers
         /// Thêm nhiều kỹ thuật viên cho Maintenance Ticket
         /// </summary>
         [HttpPut("{id}/technicians")]
-        public async Task<IActionResult> AddTechnicians(long id, [FromBody] List<long> technicianIds)
+        public async Task<IActionResult> AddTechnicians(long id, [FromBody] AssignTechniciansDto request)
         {
             try
             {
-                var result = await _maintenanceTicketService.AddTechniciansAsync(id, technicianIds ?? new List<long>());
+                var result = await _maintenanceTicketService.AddTechniciansAsync(id, request?.TechnicianIds ?? new List<long>(), request?.PrimaryId);
                 return Ok(new { success = true, data = result, message = "Technicians added successfully" });
             }
             catch (ArgumentException ex)

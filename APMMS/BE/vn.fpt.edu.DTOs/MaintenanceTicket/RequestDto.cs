@@ -66,6 +66,12 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         [Required(ErrorMessage = "Technician ID is required")]
         public long TechnicianId { get; set; }
     }
+
+    public class AssignTechniciansDto
+    {
+        public List<long>? TechnicianIds { get; set; }
+        public long? PrimaryId { get; set; }
+    }
 }
 
 

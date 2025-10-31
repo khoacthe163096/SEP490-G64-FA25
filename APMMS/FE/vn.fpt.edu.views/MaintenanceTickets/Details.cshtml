@@ -473,6 +473,12 @@ function openAssignTechniciansModal() {
               <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc username...">
               <small class="text-muted">Gõ để lọc nhanh. Kết quả hiển thị tức thì như Google.</small>
             </div>
+            <div class="mb-3">
+              <label class="form-label">Chọn kỹ thuật viên chính</label>
+              <select id="primaryTechSelect" class="form-select">
+                <option value="">-- Chưa chọn --</option>
+              </select>
+            </div>
             <div id="assignTechContainer" class="row g-2"></div>
           </div>
           <div class="modal-footer">
@@ -516,6 +522,14 @@ function openAssignTechniciansModal() {
               </div>
             `);
           });
+          // Build primary select options
+          const primarySelect = $('#primaryTechSelect');
+          primarySelect.empty();
+          primarySelect.append('<option value="">-- Chưa chọn --</option>');
+          listToRender.forEach(emp => {
+            const isPrimary = (maintenanceTicketData.technicians || []).some(t => t.technicianId === emp.id && t.roleInTicket === 'PRIMARY');
+            primarySelect.append(`<option value="${emp.id}" ${isPrimary ? 'selected' : ''}>${emp.name}</option>`);
+          });
         }
 
         // Lần đầu render tất cả
@@ -537,10 +551,13 @@ function openAssignTechniciansModal() {
     $(document).on('click', '#saveAssignTechBtn', function() {
       const ids = [];
       $('.assign-tech-checkbox:checked').each(function(){ ids.push(parseInt($(this).val())); });
+      const primaryIdVal = $('#primaryTechSelect').val();
+      const primaryId = primaryIdVal ? parseInt(primaryIdVal) : null;
+      if (primaryId && !ids.includes(primaryId)) ids.push(primaryId);
       fetch(`https://localhost:7173/api/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(ids)
+        body: JSON.stringify({ technicianIds: ids, primaryId })
       }).then(r => r.json()).then(res => {
         if (res.success) {
           maintenanceTicketData = res.data;

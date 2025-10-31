@@ -220,7 +220,7 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
 
-        public async Task<ResponseDto> AddTechniciansAsync(long id, List<long> technicianIds)
+        public async Task<ResponseDto> AddTechniciansAsync(long id, List<long> technicianIds, long? primaryId)
         {
             var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
             if (maintenanceTicket == null)
@@ -240,9 +240,20 @@ namespace BE.vn.fpt.edu.services
                         MaintenanceTicketId = id,
                         TechnicianId = techId,
                         AssignedDate = DateTime.UtcNow,
-                        RoleInTicket = "ASSISTANT"
+                        RoleInTicket = (primaryId.HasValue && primaryId.Value == techId) ? "PRIMARY" : "ASSISTANT"
                     });
                 }
+            }
+            // Cập nhật role cho các bản ghi đã tồn tại nếu có primaryId
+            if (primaryId.HasValue)
+            {
+                foreach (var mtt in _context.MaintenanceTicketTechnicians.Where(x => x.MaintenanceTicketId == id))
+                {
+                    mtt.RoleInTicket = (mtt.TechnicianId == primaryId.Value) ? "PRIMARY" : "ASSISTANT";
+                }
+                // cập nhật TechnicianId chính trên ticket
+                maintenanceTicket.TechnicianId = primaryId.Value;
+                _context.MaintenanceTickets.Update(maintenanceTicket);
             }
             await _context.SaveChangesAsync();
 
