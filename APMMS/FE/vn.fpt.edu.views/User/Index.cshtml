@@ -27,10 +27,8 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <select class="form-select" id="roleFilter">
-                                <option value="">Tất cả vai trò</option>
-                                <option value="7">Auto Owner</option>
-                                <option value="8">Guest</option>
+                            <select class="form-select" id="roleFilter" style="display: none;">
+                                <option value="7" selected>Auto Owner</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -92,7 +90,7 @@
             const status = document.getElementById('statusFilter').value;
             const role = document.getElementById('roleFilter').value;
 
-            fetch(`/api/User?page=${currentPage}&pageSize=${pageSize}&search=${search}&status=${status}&role=${role}`)
+            fetch(`https://localhost:7173/api/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&role=${role}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -119,13 +117,15 @@
 
             users.forEach(user => {
                 const row = document.createElement('tr');
+                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '-';
+                const isActive = user.statusCode === 'ACTIVE' || (user.statusCode == null && !user.isDelete);
                 row.innerHTML = `
                     <td>${user.id}</td>
-                    <td>${user.firstName} ${user.lastName}</td>
+                    <td>${fullName}</td>
                     <td>${user.email || '-'}</td>
-                    <td>${user.phoneNumber || '-'}</td>
-                    <td><span class="badge bg-info">${user.roleName || '-'}</span></td>
-                    <td><span class="badge ${user.isActive ? 'bg-success' : 'bg-secondary'}">${user.isActive ? 'Hoạt động' : 'Không hoạt động'}</span></td>
+                    <td>${user.phone || '-'}</td>
+                    <td><span class="badge bg-info">${user.roleName || 'Auto Owner'}</span></td>
+                    <td><span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">${isActive ? 'Hoạt động' : 'Không hoạt động'}</span></td>
                     <td>${user.createdDate ? new Date(user.createdDate).toLocaleDateString('vi-VN') : '-'}</td>
                     <td>
                         <div class="btn-group" role="group">
@@ -180,19 +180,17 @@
 
         function deleteUser(id) {
             if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-                fetch(`/api/User/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
+                fetch(`https://localhost:7173/api/AutoOwner/${id}`, {
+                    method: 'DELETE'
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                .then(response => {
+                    if (response.ok || response.status === 204) {
                         showAlert('Xóa người dùng thành công', 'success');
                         loadUsers();
                     } else {
-                        showAlert('Lỗi khi xóa: ' + data.message, 'danger');
+                        return response.json().then(data => {
+                            showAlert('Lỗi khi xóa: ' + (data.message || 'Unknown error'), 'danger');
+                        });
                     }
                 })
                 .catch(error => {

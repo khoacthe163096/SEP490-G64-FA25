@@ -5,6 +5,8 @@ namespace BE.vn.fpt.edu.repository.IRepository
     public interface IAutoOwnerRepository
     {
         Task<List<User>> GetAllAsync(int page = 1, int pageSize = 10);
+        Task<List<User>> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null);
+        Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null);
         Task<User?> GetByIdAsync(long id);
         Task<User?> GetByEmailAsync(string email);
         Task<List<User>> GetByCarIdAsync(long carId);

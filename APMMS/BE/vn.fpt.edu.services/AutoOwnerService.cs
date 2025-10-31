@@ -24,6 +24,24 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<List<ResponseDto>>(users);
         }
 
+        public async Task<object> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null)
+        {
+            var users = await _repository.GetWithFiltersAsync(page, pageSize, search, status, roleId);
+            var totalCount = await _repository.GetTotalCountAsync(search, status, roleId);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            
+            return new
+            {
+                success = true,
+                data = _mapper.Map<List<ResponseDto>>(users),
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                currentPage = page,
+                totalCount = totalCount
+            };
+        }
+
         public async Task<ResponseDto?> GetByIdAsync(long id)
         {
             var user = await _repository.GetByIdAsync(id);

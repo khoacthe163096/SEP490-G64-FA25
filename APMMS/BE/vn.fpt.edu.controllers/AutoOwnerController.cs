@@ -16,10 +16,23 @@ namespace BE.vn.fpt.edu.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] long? role = null)
         {
-            var result = await _service.GetAllAsync(page, pageSize);
-            return Ok(result);
+            // Nếu có search, status hoặc role thì dùng filter
+            if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(status) || role.HasValue)
+            {
+                var result = await _service.GetWithFiltersAsync(page, pageSize, search, status, role);
+                return Ok(result);
+            }
+            
+            // Nếu không có filter thì dùng method cũ
+            var users = await _service.GetAllAsync(page, pageSize);
+            return Ok(new { success = true, data = users, page = page, pageSize = pageSize });
         }
 
         [HttpGet("{id:long}")]

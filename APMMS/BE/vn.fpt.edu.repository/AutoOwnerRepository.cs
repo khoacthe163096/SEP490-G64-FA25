@@ -27,6 +27,103 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
+        public async Task<List<User>> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null)
+        {
+            var query = _context.Users
+                .Include(u => u.Cars)
+                .Include(u => u.Role)
+                .Include(u => u.Address)
+                .Where(u => (u.IsDelete == false || u.IsDelete == null));
+
+            // Luôn filter theo Auto Owner (roleId = 7 hoặc Role.Name == "Auto Owner")
+            // Nếu roleId được chỉ định, chỉ dùng nếu là 7 (Auto Owner)
+            if (roleId.HasValue && roleId.Value == 7)
+            {
+                query = query.Where(u => u.RoleId == 7);
+            }
+            else
+            {
+                // Luôn chỉ lấy Auto Owner
+                query = query.Where(u => u.Role != null && (u.Role.Name == "Auto Owner" || u.RoleId == 7));
+            }
+
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(u =>
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchLower)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchLower)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(searchLower)) ||
+                    (u.Phone != null && u.Phone.Contains(search)) ||
+                    (u.Username != null && u.Username.ToLower().Contains(searchLower))
+                );
+            }
+
+            // Status filter
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (status.ToUpper() == "ACTIVE")
+                {
+                    query = query.Where(u => u.StatusCode == "ACTIVE" || (u.StatusCode == null && u.IsDelete == false));
+                }
+                else if (status.ToUpper() == "INACTIVE")
+                {
+                    query = query.Where(u => u.StatusCode == "INACTIVE" || u.IsDelete == true);
+                }
+            }
+
+            return await query
+                .OrderByDescending(u => u.CreatedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null)
+        {
+            var query = _context.Users
+                .Where(u => (u.IsDelete == false || u.IsDelete == null));
+
+            // Filter theo role Auto Owner (roleId = 7) hoặc role được chỉ định
+            if (roleId.HasValue)
+            {
+                query = query.Where(u => u.RoleId == roleId.Value);
+            }
+            else
+            {
+                query = query.Where(u => u.Role != null && u.Role.Name == "Auto Owner");
+            }
+
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchLower = search.ToLower();
+                query = query.Where(u =>
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchLower)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchLower)) ||
+                    (u.Email != null && u.Email.ToLower().Contains(searchLower)) ||
+                    (u.Phone != null && u.Phone.Contains(search)) ||
+                    (u.Username != null && u.Username.ToLower().Contains(searchLower))
+                );
+            }
+
+            // Status filter
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (status.ToUpper() == "ACTIVE")
+                {
+                    query = query.Where(u => u.StatusCode == "ACTIVE" || (u.StatusCode == null && u.IsDelete == false));
+                }
+                else if (status.ToUpper() == "INACTIVE")
+                {
+                    query = query.Where(u => u.StatusCode == "INACTIVE" || u.IsDelete == true);
+                }
+            }
+
+            return await query.CountAsync();
+        }
+
         public async Task<User?> GetByIdAsync(long id)
         {
             return await _context.Users

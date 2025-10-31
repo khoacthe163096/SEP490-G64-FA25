@@ -26,7 +26,8 @@ namespace BE.vn.fpt.edu.convert
             // Auth mappings removed - using database entities directly
 
             // AutoOwner mappings
-            CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>();
+            CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null));
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
 
             // Component mappings
