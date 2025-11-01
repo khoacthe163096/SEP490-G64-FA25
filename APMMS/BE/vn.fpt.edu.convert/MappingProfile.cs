@@ -16,6 +16,7 @@ using BE.vn.fpt.edu.DTOs.ServiceTask;
 using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
+using System.Linq;
 
 namespace BE.vn.fpt.edu.convert
 {
@@ -35,7 +36,18 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>();
 
             // Employee mappings
-            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>();
+            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => 
+                    src.Address != null 
+                        ? string.Join("-", new[] { 
+                            src.Address.Street, 
+                            src.Address.Ward != null ? src.Address.Ward.Name : null, 
+                            src.Address.Province != null ? src.Address.Province.Name : null 
+                          }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                        : null))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
             CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>();
 
             // Feedback mappings

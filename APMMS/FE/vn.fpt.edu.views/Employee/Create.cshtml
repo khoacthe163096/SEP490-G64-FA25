@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Thêm nhân viên mới";
+    ViewData["Title"] = "Tạo nhân viên";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
 
@@ -7,111 +7,141 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Thêm nhân viên mới</h4>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Tạo nhân viên</h4>
+                    <button type="button" class="btn-close" onclick="window.location.href='/Employees'" aria-label="Close"></button>
                 </div>
                 <div class="card-body">
-                    <form id="employeeForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="firstName" class="form-label">Họ <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="firstName" name="firstName" required>
-                                </div>
+                    <div class="row">
+                        <!-- Left Section: Avatar -->
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <img id="avatarPreview" 
+                                     src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect width='150' height='150' fill='%23e0e0e0'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23999' font-size='60'%3E👤%3C/text%3E%3C/svg%3E" 
+                                     alt="Avatar" 
+                                     class="rounded-circle" 
+                                     style="width: 150px; height: 150px; object-fit: cover; background-color: #e0e0e0; border: 3px solid #dee2e6;" />
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="lastName" class="form-label">Tên <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="lastName" name="lastName" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="email" name="email" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="phoneNumber" class="form-label">Số điện thoại</label>
-                                    <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="roleId" class="form-label">Vai trò <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="roleId" name="roleId" required>
-                                        <option value="">Chọn vai trò</option>
-                                        <option value="1">Admin</option>
-                                        <option value="2">Branch Manager</option>
-                                        <option value="3">Accountant</option>
-                                        <option value="4">Technician</option>
-                                        <option value="5">Warehouse Keeper</option>
-                                        <option value="6">Consulter</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="branchId" name="branchId" required>
-                                        <option value="">Chọn chi nhánh</option>
-                                        <!-- Will be loaded dynamically -->
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="username" class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="username" name="username" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Mật khẩu <span class="text-danger">*</span></label>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="address" class="form-label">Địa chỉ</label>
-                                    <textarea class="form-control" id="address" name="address" rows="3"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
-                                    <label class="form-check-label" for="isActive">
-                                        Kích hoạt tài khoản
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="/Employees" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Quay lại
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Lưu
+                            <button type="button" class="btn btn-primary" onclick="document.getElementById('avatarUpload').click()">
+                                <i class="fas fa-upload"></i> Tải ảnh lên
                             </button>
+                            <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="previewAvatar(this)" />
                         </div>
-                    </form>
+
+                        <!-- Right Section: Form -->
+                        <div class="col-md-8">
+                            <h6 class="mb-3">Thông tin nhân viên</h6>
+                            <form id="employeeForm">
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="username" class="form-label">Tài khoản<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" id="username" name="username" placeholder="VD: employee" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="password" class="form-label">Mật khẩu<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="password" class="form-control" id="password" name="password" required="required" placeholder="VD: Employee123">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="fullName" class="form-label">Họ và tên<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" id="fullName" name="fullName" placeholder="VD: Nguyễn Nhân Viên" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="age" class="form-label">Tuổi<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="number" class="form-control" id="age" name="age" placeholder="VD: 22" min="1" max="150" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="gender" class="form-label">Giới tính</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <select class="form-select" id="gender" name="gender">
+                                            <option value="">Giới tính</option>
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nữ">Nữ</option>
+                                            <option value="Khác">Khác</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="phone" class="form-label">Điện thoại<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="tel" class="form-control" id="phone" name="phone" placeholder="VD: 0396xxxxxx" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="email" class="form-label">Email<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="email" class="form-control" id="email" name="email" placeholder="VD: employee@gmail.com" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="citizenId" class="form-label">CMT/CCCD<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" id="citizenId" name="citizenId" placeholder="VD: xxxxxxxxxx (12 số)" maxlength="12" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="address" class="form-label">Địa chỉ<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <textarea class="form-control" id="address" name="address" rows="3" placeholder="VD: 11 Ngõ ABC, Đường DEF, Huyện GHI, Tỉnh KLM, Thành phố NOU" required="required"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="taxCode" class="form-label">Mã số thuế<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <input type="text" class="form-control" id="taxCode" name="taxCode" placeholder="VD: xxxxxxxxxx (10 số)" maxlength="10" required="required">
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4">
+                                        <label for="roleId" class="form-label">Chức vụ<span class="text-danger">*</span></label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <select class="form-select" id="roleId" name="roleId" required="required">
+                                            <option value="">Chức vụ</option>
+                                            <option value="3">Accountant</option>
+                                            <option value="4">Technician</option>
+                                            <option value="5">Warehouse Keeper</option>
+                                            <option value="6">Consulter</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-4">
+                                    <div class="col-md-12 d-flex justify-content-end gap-2">
+                                        <a href="/Employees" class="btn btn-secondary">Đóng</a>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-plus"></i> Tạo nhân viên
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,60 +151,86 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            loadBranches();
-            
             document.getElementById('employeeForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 createEmployee();
             });
         });
 
-        function loadBranches() {
-            fetch('/api/Branch')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const select = document.getElementById('branchId');
-                        data.data.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            option.textContent = branch.name;
-                            select.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading branches:', error);
-                });
+        // Avatar preview function
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
         }
 
         function createEmployee() {
-            const formData = new FormData(document.getElementById('employeeForm'));
-            const employeeData = Object.fromEntries(formData.entries());
-            employeeData.isActive = document.getElementById('isActive').checked;
+            const form = document.getElementById('employeeForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
 
-            fetch('/api/Employee', {
+            // Split full name into first and last name
+            const fullName = document.getElementById('fullName').value.trim();
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                firstName: firstName,
+                lastName: lastName,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                gender: document.getElementById('gender').value || null,
+                roleId: parseInt(document.getElementById('roleId').value),
+                taxCode: document.getElementById('taxCode').value,
+                image: '', // Will be handled separately if needed
+                branchId: null // Can be set from current user context if needed
+            };
+
+            // Handle image upload if file is selected
+            const imageFile = document.getElementById('avatarUpload').files[0];
+            if (imageFile) {
+                // TODO: Upload image to server first, then get URL
+                // For now, we'll create without image
+                alert('Tính năng upload ảnh đang được phát triển. Nhân viên sẽ được tạo không có ảnh.');
+            }
+
+            fetch('https://localhost:7173/api/Employee', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(employeeData)
+                body: JSON.stringify(formData)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showAlert('Thêm nhân viên thành công!', 'success');
-                    setTimeout(() => {
-                        window.location.href = '/Employees';
-                    }, 1500);
-                } else {
-                    showAlert('Lỗi: ' + data.message, 'danger');
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                    });
                 }
+                return response.json();
+            })
+            .then(data => {
+                // Show success message
+                showAlert('Tạo nhân viên thành công!', 'success');
+
+                // Redirect to employee list after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = '/Employees';
+                }, 1500);
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi thêm nhân viên', 'danger');
+                showAlert('Có lỗi xảy ra khi tạo nhân viên: ' + error.message, 'danger');
             });
         }
 
@@ -185,7 +241,7 @@
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
-            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('form'));
+            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.row'));
             
             setTimeout(() => {
                 alertDiv.remove();

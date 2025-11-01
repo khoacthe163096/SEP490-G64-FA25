@@ -1,114 +1,182 @@
 @{
-    ViewData["Title"] = "Chi tiết nhân viên";
+    ViewData["Title"] = "Thông tin chi tiết nhân viên";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/Employees">Danh sách nhân viên</a></li>
+        <li class="breadcrumb-item active" id="employeeNameBreadcrumb">-</li>
+    </ol>
+</nav>
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Chi tiết nhân viên</h4>
-                    <div>
-                        <a href="/Employees/Edit/@ViewBag.EmployeeId" class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Sửa
-                        </a>
-                        <a href="/Employees" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Quay lại
-                        </a>
+                <div id="loadingSpinner" class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div id="loadingSpinner" class="text-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
-                    
-                    <div id="employeeDetails" style="display: none;">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin cá nhân</h5>
-                                    <hr>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>ID:</strong></div>
-                                        <div class="col-sm-8" id="employeeId">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Họ tên:</strong></div>
-                                        <div class="col-sm-8" id="fullName">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Email:</strong></div>
-                                        <div class="col-sm-8" id="email">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Số điện thoại:</strong></div>
-                                        <div class="col-sm-8" id="phoneNumber">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Địa chỉ:</strong></div>
-                                        <div class="col-sm-8" id="address">-</div>
-                                    </div>
-                                </div>
+                
+                <div id="employeeDetails" style="display: none;">
+                    <div class="row">
+                        <!-- Left Section: Avatar and Name -->
+                        <div class="col-md-3 text-center" style="background-color: #f8f9fa; padding: 40px 20px;">
+                            <div class="mb-4">
+                                <img id="employeeAvatar" src="" alt="Avatar" 
+                                     class="rounded-circle" 
+                                     style="width: 150px; height: 150px; object-fit: cover; background-color: #e0e0e0; border: 3px solid #dee2e6;"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'150\'%3E%3Crect width=\'150\' height=\'150\' fill=\'%23e0e0e0\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'60\'%3E👤%3C/text%3E%3C/svg%3E';">
                             </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin tài khoản</h5>
-                                    <hr>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Tên đăng nhập:</strong></div>
-                                        <div class="col-sm-8" id="username">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Vai trò:</strong></div>
-                                        <div class="col-sm-8" id="roleName">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Chi nhánh:</strong></div>
-                                        <div class="col-sm-8" id="branchName">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Trạng thái:</strong></div>
-                                        <div class="col-sm-8" id="status">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
-                                        <div class="col-sm-8" id="createdDate">-</div>
-                                    </div>
-                                </div>
-                            </div>
+                            <h4 id="employeeFullName" class="mb-0" style="font-weight: 600;">-</h4>
                         </div>
 
-                        <!-- Additional Information -->
-                        <div class="row">
-                            <div class="col-12">
-                                <h5>Thông tin bổ sung</h5>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="row mb-2">
-                                            <div class="col-sm-4"><strong>Lần đăng nhập cuối:</strong></div>
-                                            <div class="col-sm-8" id="lastLogin">-</div>
+                        <!-- Right Section: Tabs and Details -->
+                        <div class="col-md-9">
+                            <!-- Tabs -->
+                            <ul class="nav nav-tabs mb-3" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#personal" type="button" role="tab" 
+                                            aria-controls="personal" aria-selected="true">
+                                        Thông tin cá nhân
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="edit-tab" data-bs-toggle="tab" 
+                                            data-bs-target="#edit" type="button" role="tab" 
+                                            aria-controls="edit" aria-selected="false">
+                                        Chỉnh sửa thông tin
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content">
+                                <!-- Personal Information Tab -->
+                                <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                                    <h5 class="mb-4">Thông tin chi tiết</h5>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Mã:</label>
+                                                <div id="employeeCode" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Tên nhân viên:</label>
+                                                <div id="employeeName" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Tuổi:</label>
+                                                <div id="employeeAge" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Giới tính:</label>
+                                                <div id="employeeGender" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Số điện thoại:</label>
+                                                <div id="employeePhone" class="text-muted">-</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Email:</label>
+                                                <div id="employeeEmail" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Địa chỉ:</label>
+                                                <div id="employeeAddress" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">CMT/CCCD:</label>
+                                                <div id="employeeCitizenId" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Mã số thuế:</label>
+                                                <div id="employeeTaxCode" class="text-muted">-</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Tình trạng:</label>
+                                                <div id="employeeStatus">-</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="row mb-2">
-                                            <div class="col-sm-4"><strong>Ghi chú:</strong></div>
-                                            <div class="col-sm-8" id="notes">-</div>
+                                </div>
+
+                                <!-- Edit Tab -->
+                                <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
+                                    <form id="editEmployeeForm">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="editFirstName" class="form-label fw-bold">Họ và tên:</label>
+                                                    <input type="text" class="form-control" id="editFirstName" required>
+                                                    <small class="text-muted">Nhập đầy đủ họ và tên</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editAge" class="form-label fw-bold">Tuổi:</label>
+                                                    <input type="number" class="form-control" id="editAge" min="1" max="150">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editPhone" class="form-label fw-bold">Số điện thoại:</label>
+                                                    <input type="tel" class="form-control" id="editPhone">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editGender" class="form-label fw-bold">Giới tính:</label>
+                                                    <select class="form-select" id="editGender">
+                                                        <option value="">-- Chọn giới tính --</option>
+                                                        <option value="Nam">Nam</option>
+                                                        <option value="Nữ">Nữ</option>
+                                                        <option value="Khác">Khác</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="editEmail" class="form-label fw-bold">Email:</label>
+                                                    <input type="email" class="form-control" id="editEmail">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editAddress" class="form-label fw-bold">Địa chỉ:</label>
+                                                    <input type="text" class="form-control" id="editAddress">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editTaxCode" class="form-label fw-bold">Mã số thuế:</label>
+                                                    <input type="text" class="form-control" id="editTaxCode">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editCitizenId" class="form-label fw-bold">CMT/CCCD:</label>
+                                                    <input type="text" class="form-control" id="editCitizenId">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="editImage" class="form-label fw-bold">Hình ảnh:</label>
+                                                    <input type="file" class="form-control" id="editImage" accept="image/*">
+                                                    <small class="text-muted">Chọn file hình ảnh mới (nếu cần)</small>
+                                                    <div id="currentImagePreview" class="mt-2"></div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div class="d-flex justify-content-end">
+                                            <button type="button" class="btn btn-secondary me-2" onclick="resetEditForm()">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Lưu thông tin
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span id="errorText">Có lỗi xảy ra khi tải thông tin nhân viên</span>
-                    </div>
+                </div>
+                
+                <div id="errorMessage" class="alert alert-danger m-3" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorText">Có lỗi xảy ra khi tải thông tin nhân viên</span>
                 </div>
             </div>
         </div>
@@ -133,53 +201,224 @@
         }
 
         function loadEmployeeDetails(id) {
-            fetch(`/api/Employee/${id}`, {
+            fetch(`https://localhost:7173/api/Employee/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 document.getElementById('loadingSpinner').style.display = 'none';
                 
-                if (data.success) {
+                // API trả về trực tiếp EmployeeResponseDto
+                if (data && data.id) {
+                    displayEmployeeDetails(data);
+                } else if (data && data.success && data.data) {
                     displayEmployeeDetails(data.data);
                 } else {
-                    showError('Lỗi khi tải thông tin: ' + data.message);
+                    showError('Không tìm thấy thông tin nhân viên');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('loadingSpinner').style.display = 'none';
-                showError('Có lỗi xảy ra khi tải thông tin nhân viên');
+                showError('Có lỗi xảy ra khi tải thông tin nhân viên: ' + error.message);
             });
         }
 
+        let currentEmployee = null;
+        let originalFormData = null;
+
         function displayEmployeeDetails(employee) {
-            document.getElementById('employeeId').textContent = employee.id || '-';
-            document.getElementById('fullName').textContent = `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || '-';
-            document.getElementById('email').textContent = employee.email || '-';
-            document.getElementById('phoneNumber').textContent = employee.phoneNumber || '-';
-            document.getElementById('address').textContent = employee.address || '-';
-            document.getElementById('username').textContent = employee.username || '-';
-            document.getElementById('roleName').innerHTML = employee.roleName ? 
-                `<span class="badge bg-info">${employee.roleName}</span>` : '-';
-            document.getElementById('branchName').textContent = employee.branchName || '-';
-            document.getElementById('status').innerHTML = employee.isActive ? 
-                '<span class="badge bg-success">Hoạt động</span>' : 
-                '<span class="badge bg-secondary">Không hoạt động</span>';
-            document.getElementById('createdDate').textContent = employee.createdDate ? 
-                new Date(employee.createdDate).toLocaleString('vi-VN') : '-';
-            document.getElementById('lastLogin').textContent = employee.lastLogin ? 
-                new Date(employee.lastLogin).toLocaleString('vi-VN') : '-';
-            document.getElementById('notes').textContent = employee.notes || '-';
+            currentEmployee = employee;
+            const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim() || '-';
+            
+            // Breadcrumb
+            document.getElementById('employeeNameBreadcrumb').textContent = fullName;
+            
+            // Avatar
+            const avatar = document.getElementById('employeeAvatar');
+            if (employee.image) {
+                avatar.src = employee.image;
+            }
+            
+            // Left section
+            document.getElementById('employeeFullName').textContent = fullName;
+            
+            // Details
+            document.getElementById('employeeCode').textContent = employee.code || '-';
+            document.getElementById('employeeName').textContent = fullName;
+            document.getElementById('employeeAge').textContent = employee.age ? employee.age + ' tuổi' : '-';
+            document.getElementById('employeeGender').textContent = 
+                employee.gender === 'Male' || employee.gender === 'Nam' ? 'Nam' :
+                employee.gender === 'Female' || employee.gender === 'Nữ' ? 'Nữ' : 
+                employee.gender || '-';
+            document.getElementById('employeePhone').textContent = employee.phone || '-';
+            document.getElementById('employeeEmail').textContent = employee.email || '-';
+            document.getElementById('employeeAddress').textContent = employee.fullAddress || '-';
+            document.getElementById('employeeCitizenId').textContent = employee.citizenId || '-';
+            document.getElementById('employeeTaxCode').textContent = employee.taxCode || '-';
+            
+            // Status
+            const isActive = !employee.isDelete;
+            const statusDiv = document.getElementById('employeeStatus');
+            statusDiv.innerHTML = isActive 
+                ? '<span class="badge bg-success" style="padding: 5px 10px;">Có hiệu lực</span>'
+                : '<span class="badge bg-secondary" style="padding: 5px 10px;">Không hiệu lực</span>';
+            
+            // Load data into edit form
+            loadEditForm(employee);
             
             document.getElementById('employeeDetails').style.display = 'block';
+        }
+
+        function loadEditForm(employee) {
+            // Combine first and last name for display
+            const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
+
+            document.getElementById('editFirstName').value = fullName;
+            document.getElementById('editAge').value = employee.age || '';
+            document.getElementById('editPhone').value = employee.phone || '';
+            document.getElementById('editGender').value = 
+                employee.gender === 'Male' || employee.gender === 'Nam' ? 'Nam' :
+                employee.gender === 'Female' || employee.gender === 'Nữ' ? 'Nữ' : 
+                employee.gender || '';
+            document.getElementById('editEmail').value = employee.email || '';
+            document.getElementById('editAddress').value = employee.fullAddress || '';
+            document.getElementById('editTaxCode').value = employee.taxCode || '';
+            document.getElementById('editCitizenId').value = employee.citizenId || '';
+
+            // Image preview
+            const imagePreview = document.getElementById('currentImagePreview');
+            if (employee.image) {
+                imagePreview.innerHTML = `
+                    <img src="${employee.image}" alt="Current image" 
+                         style="max-width: 150px; max-height: 150px; border-radius: 5px;">
+                `;
+            } else {
+                imagePreview.innerHTML = '<span class="text-muted">Chưa có hình ảnh</span>';
+            }
+
+            // Store original data
+            originalFormData = {
+                firstName: fullName,
+                age: employee.age || '',
+                phone: employee.phone || '',
+                gender: document.getElementById('editGender').value,
+                email: employee.email || '',
+                address: employee.fullAddress || '',
+                taxCode: employee.taxCode || '',
+                citizenId: employee.citizenId || ''
+            };
+        }
+
+        function resetEditForm() {
+            if (originalFormData) {
+                document.getElementById('editFirstName').value = originalFormData.firstName;
+                document.getElementById('editAge').value = originalFormData.age;
+                document.getElementById('editPhone').value = originalFormData.phone;
+                document.getElementById('editGender').value = originalFormData.gender;
+                document.getElementById('editEmail').value = originalFormData.email;
+                document.getElementById('editAddress').value = originalFormData.address;
+                document.getElementById('editTaxCode').value = originalFormData.taxCode;
+                document.getElementById('editCitizenId').value = originalFormData.citizenId;
+                document.getElementById('editImage').value = '';
+            }
         }
 
         function showError(message) {
             document.getElementById('errorText').textContent = message;
             document.getElementById('errorMessage').style.display = 'block';
+        }
+
+        // Handle edit form submission
+        document.getElementById('editEmployeeForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveEmployeeChanges();
+        });
+
+        function saveEmployeeChanges() {
+            if (!currentEmployee) {
+                showError('Không tìm thấy thông tin nhân viên');
+                return;
+            }
+
+            // Split full name into first and last name
+            const fullNameInput = document.getElementById('editFirstName').value.trim();
+            const nameParts = fullNameInput.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            const formData = {
+                username: currentEmployee.username || '',
+                password: '', // Don't update password if empty - backend should handle this
+                firstName: firstName,
+                lastName: lastName,
+                email: document.getElementById('editEmail').value,
+                phone: document.getElementById('editPhone').value,
+                gender: document.getElementById('editGender').value,
+                image: currentEmployee.image || '', // Will be updated if new image is uploaded
+                roleId: currentEmployee.roleId || null,
+                branchId: currentEmployee.branchId || null,
+                taxCode: document.getElementById('editTaxCode').value
+            };
+
+            // Handle image upload if file is selected
+            const imageFile = document.getElementById('editImage').files[0];
+            if (imageFile) {
+                // TODO: Upload image to server first, then get URL
+                // For now, we'll skip image upload and keep existing image
+                alert('Tính năng upload ảnh đang được phát triển. Vui lòng sử dụng API riêng để upload ảnh.');
+            }
+
+            fetch(`https://localhost:7173/api/Employee/${currentEmployee.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reload employee details
+                loadEmployeeDetails(currentEmployee.id);
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <i class="fas fa-check-circle"></i> Cập nhật thông tin thành công!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.tab-content'));
+                
+                // Switch to personal info tab
+                const personalTab = document.getElementById('personal-tab');
+                if (personalTab) {
+                    personalTab.click();
+                }
+
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('Có lỗi xảy ra khi cập nhật thông tin: ' + error.message);
+            });
         }
     </script>
 }

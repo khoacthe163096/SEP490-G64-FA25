@@ -194,5 +194,23 @@ namespace BE.vn.fpt.edu.services
 
             return await GetProfileAsync(userId);
         }
+
+        public async Task<object> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null)
+        {
+            var employees = await _employeeRepository.GetWithFiltersAsync(page, pageSize, search, status, roleId);
+            var totalCount = await _employeeRepository.GetTotalCountAsync(search, status, roleId);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            
+            return new
+            {
+                success = true,
+                data = _mapper.Map<List<EmployeeResponseDto>>(employees),
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                currentPage = page,
+                totalCount = totalCount
+            };
+        }
     }
 }

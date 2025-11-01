@@ -7,40 +7,34 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header">
                     <h4 class="mb-0">Danh sách nhân viên</h4>
-                    <a href="/Employees/Create" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Thêm nhân viên
-                    </a>
                 </div>
                 <div class="card-body">
                     <!-- Search and Filter -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm nhân viên...">
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="statusFilter">
-                                <option value="">Tất cả trạng thái</option>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-6 d-flex gap-2">
+                            <a href="/Employees/Create" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Thêm mới
+                            </a>
+                            <button class="btn btn-secondary" onclick="editSelectedStatus()">
+                                <i class="fas fa-edit"></i> Sửa trạng thái
+                            </button>
+                            <select class="form-select" id="statusFilter" style="width: auto;">
+                                <option value="">Chọn trạng thái</option>
                                 <option value="ACTIVE">Hoạt động</option>
                                 <option value="INACTIVE">Không hoạt động</option>
                             </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="roleFilter">
-                                <option value="">Tất cả vai trò</option>
-                                <option value="1">Admin</option>
-                                <option value="2">Branch Manager</option>
+                            <select class="form-select" id="roleFilter" style="width: auto;">
+                                <option value="">Chọn chức vụ</option>
                                 <option value="3">Accountant</option>
                                 <option value="4">Technician</option>
                                 <option value="5">Warehouse Keeper</option>
                                 <option value="6">Consulter</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                                <i class="fas fa-refresh"></i> Reset
-                            </button>
+                        <div class="col-md-6 d-flex justify-content-end">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm nhân viên" style="max-width: 300px;">
                         </div>
                     </div>
 
@@ -49,14 +43,16 @@
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Họ tên</th>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th style="width: 60px;">STT</th>
+                                    <th>Tên</th>
+                                    <th>Mã</th>
                                     <th>Email</th>
                                     <th>Số điện thoại</th>
-                                    <th>Vai trò</th>
-                                    <th>Chi nhánh</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
+                                    <th>Chức vụ</th>
+                                    <th>Tình trạng</th>
                                 </tr>
                             </thead>
                             <tbody id="employeesTableBody">
@@ -96,21 +92,28 @@
             const status = document.getElementById('statusFilter').value;
             const role = document.getElementById('roleFilter').value;
 
-            fetch(`/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${search}&status=${status}&role=${role}`)
-                .then(response => response.json())
+            fetch(`https://localhost:7173/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
                         renderEmployeesTable(data.data);
                         renderPagination(data.totalPages, data.currentPage);
                     } else {
-                        showAlert('Lỗi khi tải dữ liệu: ' + data.message, 'danger');
+                        showAlert('Lỗi khi tải dữ liệu: ' + (data.message || 'Unknown error'), 'danger');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
+                    showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
                 });
         }
+
+        let selectedEmployees = new Set();
 
         function renderEmployeesTable(employees) {
             const tbody = document.getElementById('employeesTableBody');
@@ -121,32 +124,78 @@
                 return;
             }
 
-            employees.forEach(employee => {
+            const startIndex = (currentPage - 1) * pageSize;
+            employees.forEach((employee, index) => {
                 const row = document.createElement('tr');
+                const isActive = !employee.isDelete; // IsDelete = false means active
+                const stt = startIndex + index + 1;
+                const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
+                
                 row.innerHTML = `
-                    <td>${employee.id}</td>
-                    <td>${employee.firstName} ${employee.lastName}</td>
-                    <td>${employee.email || '-'}</td>
-                    <td>${employee.phoneNumber || '-'}</td>
-                    <td><span class="badge bg-info">${employee.roleName || '-'}</span></td>
-                    <td>${employee.branchName || '-'}</td>
-                    <td><span class="badge ${employee.isActive ? 'bg-success' : 'bg-secondary'}">${employee.isActive ? 'Hoạt động' : 'Không hoạt động'}</span></td>
                     <td>
-                        <div class="btn-group" role="group">
-                            <a href="/Employees/Details/${employee.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="/Employees/Edit/${employee.id}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${employee.id})" title="Xóa">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <input type="checkbox" class="employee-checkbox" value="${employee.id}" onchange="toggleEmployeeSelection(${employee.id})">
+                    </td>
+                    <td>${stt}</td>
+                    <td>
+                        <a href="/Employees/Details/${employee.id}" style="text-decoration: none; color: inherit;">
+                            ${fullName || '-'}
+                        </a>
+                    </td>
+                    <td>${employee.code || '-'}</td>
+                    <td>${employee.email || '-'}</td>
+                    <td>${employee.phone || '-'}</td>
+                    <td><span class="badge bg-info">${employee.roleName || '-'}</span></td>
+                    <td>
+                        <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}" style="padding: 5px 10px;">
+                            ${isActive ? 'CÓ HIỆU LỰC' : 'KHÔNG HIỆU LỰC'}
+                        </span>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const employeeId = parseInt(checkbox.value);
+                if (selectAll.checked) {
+                    selectedEmployees.add(employeeId);
+                } else {
+                    selectedEmployees.delete(employeeId);
+                }
+            });
+        }
+
+        function toggleEmployeeSelection(employeeId) {
+            const checkbox = document.querySelector(`.employee-checkbox[value="${employeeId}"]`);
+            if (checkbox.checked) {
+                selectedEmployees.add(employeeId);
+            } else {
+                selectedEmployees.delete(employeeId);
+            }
+            updateSelectAllCheckbox();
+        }
+
+        function updateSelectAllCheckbox() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            if (checkboxes.length === 0) {
+                selectAll.checked = false;
+                return;
+            }
+            selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
+
+        function editSelectedStatus() {
+            if (selectedEmployees.size === 0) {
+                alert('Vui lòng chọn ít nhất một nhân viên');
+                return;
+            }
+            // TODO: Implement status edit functionality
+            alert('Chức năng sửa trạng thái đang được phát triển');
         }
 
         function renderPagination(totalPages, currentPage) {
@@ -155,25 +204,66 @@
 
             if (totalPages <= 1) return;
 
+            // First page button
+            const firstLi = document.createElement('li');
+            firstLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            firstLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(1); return false;">&laquo;&laquo;</a>`;
+            pagination.appendChild(firstLi);
+
             // Previous button
             const prevLi = document.createElement('li');
             prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>`;
+            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">&laquo;</a>`;
             pagination.appendChild(prevLi);
 
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
+            // Page numbers (show max 5 pages around current)
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(1); return false;">1</a>`;
+                pagination.appendChild(li);
+                if (startPage > 2) {
+                    const dots = document.createElement('li');
+                    dots.className = 'page-item disabled';
+                    dots.innerHTML = `<span class="page-link">...</span>`;
+                    pagination.appendChild(dots);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
                 const li = document.createElement('li');
                 li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>`;
+                pagination.appendChild(li);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const dots = document.createElement('li');
+                    dots.className = 'page-item disabled';
+                    dots.innerHTML = `<span class="page-link">...</span>`;
+                    pagination.appendChild(dots);
+                }
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>`;
                 pagination.appendChild(li);
             }
 
             // Next button
             const nextLi = document.createElement('li');
             nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>`;
+            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">&raquo;</a>`;
             pagination.appendChild(nextLi);
+
+            // Last page button
+            const lastLi = document.createElement('li');
+            lastLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            lastLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">&raquo;&raquo;</a>`;
+            pagination.appendChild(lastLi);
         }
 
         function changePage(page) {
@@ -184,24 +274,33 @@
 
         function deleteEmployee(id) {
             if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
-                fetch(`/api/Employee/${id}`, {
+                fetch(`https://localhost:7173/api/Employee/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                .then(response => {
+                    if (response.status === 204) {
+                        // NoContent response
                         showAlert('Xóa nhân viên thành công', 'success');
                         loadEmployees();
+                    } else if (response.ok) {
+                        return response.json().then(data => {
+                            if (data.message || data.success) {
+                                showAlert('Xóa nhân viên thành công', 'success');
+                                loadEmployees();
+                            } else {
+                                showAlert('Lỗi khi xóa: ' + (data.message || 'Unknown error'), 'danger');
+                            }
+                        });
                     } else {
-                        showAlert('Lỗi khi xóa: ' + data.message, 'danger');
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi xóa', 'danger');
+                    showAlert('Có lỗi xảy ra khi xóa: ' + error.message, 'danger');
                 });
             }
         }
@@ -211,6 +310,8 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('roleFilter').value = '';
             currentPage = 1;
+            selectedEmployees.clear();
+            document.getElementById('selectAll').checked = false;
             loadEmployees();
         }
 

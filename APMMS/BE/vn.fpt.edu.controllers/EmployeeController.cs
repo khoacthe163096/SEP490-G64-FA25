@@ -16,17 +16,23 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null,
+            [FromQuery] long? role = null)
         {
-            var employees = await _employeeService.GetAllAsync();
-            return Ok(employees);
+            // Luôn dùng filter method để đảm bảo format response đồng nhất
+            var result = await _employeeService.GetWithFiltersAsync(page, pageSize, search, status, role);
+            return Ok(result);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id)
         {
             var employee = await _employeeService.GetByIdAsync(id);
-            if (employee == null) return NotFound();
+            if (employee == null) return NotFound(new { success = false, message = "Employee not found" });
             return Ok(employee);
         }
 
