@@ -92,6 +92,26 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
+        public async Task<List<ServiceTask>> GetByTechnicianIdAsync(long technicianId)
+        {
+            // ✅ Lấy tất cả maintenance tickets mà technician này được gán (PRIMARY hoặc ASSISTANT)
+            // ServiceTasks thuộc những tickets này sẽ được hiển thị
+            return await _context.ServiceTasks
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Car)
+                        .ThenInclude(c => c!.User)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Technician)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.MaintenanceTicketTechnicians)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Branch)
+                .Where(st => st.MaintenanceTicket != null && 
+                    (st.MaintenanceTicket.TechnicianId == technicianId || 
+                     st.MaintenanceTicket.MaintenanceTicketTechnicians.Any(mtt => mtt.TechnicianId == technicianId)))
+                .ToListAsync();
+        }
+
         public async Task<ServiceTask> UpdateAsync(ServiceTask serviceTask)
         {
             _context.ServiceTasks.Update(serviceTask);

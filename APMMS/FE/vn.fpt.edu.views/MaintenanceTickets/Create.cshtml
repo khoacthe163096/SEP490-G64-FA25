@@ -101,6 +101,9 @@
                                     </select>
                                 </div>
                             </div>
+                            <!-- ✅ QUY TRÌNH ĐÚNG: Không cho phép chọn kỹ thuật viên khi tạo phiếu -->
+                            <!-- Kỹ thuật viên chỉ được gán sau khi phiếu được tạo, thông qua trang Details -->
+                            <!--
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Kỹ thuật viên</label>
@@ -111,7 +114,6 @@
                                     </div>
                                     <small class="form-text text-muted">Chọn một hoặc nhiều kỹ thuật viên</small>
                                     
-                                    <!-- Preview đã chọn -->
                                     <div class="mt-3 border rounded p-2" id="selectedTechniciansPreview" style="background-color: #e7f3ff; display: none;">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <strong class="text-primary">
@@ -120,11 +122,17 @@
                                             </strong>
                                         </div>
                                         <div id="selectedTechniciansList" class="text-muted small">
-                                            <!-- Danh sách tên sẽ được hiển thị ở đây -->
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            -->
+                        </div>
+                        
+                        <!-- Thông báo cho user biết quy trình đúng -->
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Kỹ thuật viên sẽ được gán sau khi phiếu bảo dưỡng được tạo, thông qua trang chi tiết phiếu.
                         </div>
 
                         <div class="row">
@@ -198,7 +206,7 @@ let selectedCheckinId = null;
 $(document).ready(function() {
     loadVehicleCheckins();
     loadConsulterFromToken();
-    loadTechniciansByRole();
+    // loadTechniciansByRole(); // ✅ Đã comment - không cho phép chọn kỹ thuật viên khi tạo
     loadBranchesAndSelectUserBranch();
     
     // Filter events
@@ -206,10 +214,10 @@ $(document).ready(function() {
         loadVehicleCheckins();
     });
     
-    // Cập nhật preview khi checkbox thay đổi
-    $(document).on('change', '.technician-checkbox', function() {
-        updateSelectedTechniciansPreview();
-    });
+    // ✅ Đã comment - không cần xử lý checkbox kỹ thuật viên
+    // $(document).on('change', '.technician-checkbox', function() {
+    //     updateSelectedTechniciansPreview();
+    // });
     
     // Form submission
     $('#maintenanceTicketForm').on('submit', function(e) {
@@ -383,6 +391,10 @@ function loadConsulterFromToken() {
     }
 }
 
+// ✅ Các hàm liên quan đến kỹ thuật viên đã được comment vì không cho phép chọn khi tạo phiếu
+// Kỹ thuật viên sẽ được gán sau khi phiếu được tạo, thông qua trang Details
+
+/*
 // Lưu danh sách kỹ thuật viên để hiển thị preview
 let techniciansList = [];
 
@@ -457,6 +469,7 @@ function updateSelectedTechniciansPreview() {
         listDiv.html('<em>Không có thông tin</em>');
     }
 }
+*/
 
 function loadBranchesAndSelectUserBranch() {
     const token = localStorage.getItem('authToken');
@@ -522,20 +535,17 @@ function createMaintenanceTicket() {
         return;
     }
     
-    // Lấy danh sách kỹ thuật viên đã chọn từ checkbox
-    const technicianIds = [];
-    $('.technician-checkbox:checked').each(function() {
-        technicianIds.push(parseInt($(this).val()));
-    });
+    // ✅ QUY TRÌNH ĐÚNG: Không gán kỹ thuật viên khi tạo phiếu
+    // Kỹ thuật viên chỉ được gán sau khi phiếu được tạo
     
     const formData = {
         vehicleCheckinId: selectedCheckinId,
         consulterId: $('#consulterId').val(),
-        technicianId: technicianIds.length > 0 ? technicianIds[0] : null, // Kỹ thuật viên chính là người đầu tiên
-        technicianIds: technicianIds.length > 0 ? technicianIds : null, // Danh sách tất cả kỹ thuật viên
+        technicianId: null, // ✅ Luôn null khi tạo phiếu
+        technicianIds: null, // ✅ Luôn null khi tạo phiếu
         branchId: $('#branchId').val(),
         scheduleServiceId: $('#scheduleServiceId').val() || null,
-        statusCode: $('#statusCode').val(),
+        statusCode: 'PENDING', // ✅ Luôn PENDING khi tạo từ check-in
         priorityLevel: $('#priorityLevel').val(),
         description: $('#description').val()
     };

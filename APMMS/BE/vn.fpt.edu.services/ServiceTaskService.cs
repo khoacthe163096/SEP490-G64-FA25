@@ -62,6 +62,12 @@ namespace BE.vn.fpt.edu.services
             return serviceTasks.Select(MapToListResponseDTO).ToList();
         }
 
+        public async Task<List<ServiceTaskListResponseDto>> GetServiceTasksByTechnicianIdAsync(long technicianId)
+        {
+            var serviceTasks = await _serviceTaskRepository.GetByTechnicianIdAsync(technicianId);
+            return serviceTasks.Select(MapToListResponseDTO).ToList();
+        }
+
         public async Task<bool> DeleteServiceTaskAsync(long id)
         {
             return await _serviceTaskRepository.DeleteAsync(id);

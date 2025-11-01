@@ -159,6 +159,23 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Lấy ServiceTasks theo Technician ID
+        /// </summary>
+        [HttpGet("by-technician/{technicianId}")]
+        public async Task<IActionResult> GetServiceTasksByTechnicianId(long technicianId)
+        {
+            try
+            {
+                var result = await _serviceTaskService.GetServiceTasksByTechnicianIdAsync(technicianId);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Xóa ServiceTask
         /// </summary>
         [HttpDelete("{id}")]

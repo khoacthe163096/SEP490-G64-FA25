@@ -673,23 +673,34 @@ function displayCostSummary(data) {
 }
 
 function loadServiceTasks() {
-    fetch(`https://localhost:7173/api/ServiceTask/by-maintenance-ticket/${maintenanceTicketId}`)
+    // Lấy token để authenticate
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`https://localhost:7173/api/ServiceTask/by-ticket/${maintenanceTicketId}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                displayServiceTasks(data.data);
+                displayServiceTasks(data.data || []);
+            } else {
+                console.error('Error loading service tasks:', data.message);
+                $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
             }
         })
         .catch(error => {
             console.error('Error loading service tasks:', error);
+            $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
         });
 }
 
 function displayServiceTasks(tasks) {
     const container = $('#serviceTasksList');
     
-    if (tasks.length === 0) {
-        container.html('<p class="text-muted">Chưa có công việc nào</p>');
+    if (!tasks || tasks.length === 0) {
+        container.html('<p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa có công việc nào</p>');
         return;
     }
     
@@ -697,16 +708,26 @@ function displayServiceTasks(tasks) {
     tasks.forEach(task => {
         const statusBadge = getTaskStatusBadge(task.statusCode);
         html += `
-            <div class="card mb-2">
+            <div class="card mb-2 border-start border-3 ${getTaskBorderColor(task.statusCode)}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="mb-1">${task.taskName}</h6>
-                            <p class="mb-1 text-muted">${task.description || 'Không có mô tả'}</p>
-                            ${task.note ? `<small class="text-muted">${task.note}</small>` : ''}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">${escapeHtml(task.taskName || 'N/A')}</h6>
+                            ${task.description ? `<p class="mb-1 text-muted small">${escapeHtml(task.description)}</p>` : ''}
+                            ${task.note ? `<div class="mt-2"><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${escapeHtml(task.note)}</small></div>` : ''}
                         </div>
-                        <div>
+                        <div class="ms-3 text-end">
                             ${statusBadge}
+                            ${task.statusCode === 'PENDING' ? `
+                                <button class="btn btn-sm btn-primary mt-2" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')" title="Bắt đầu">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                            ` : ''}
+                            ${task.statusCode === 'IN_PROGRESS' ? `
+                                <button class="btn btn-sm btn-success mt-2" onclick="updateTaskStatus(${task.id}, 'DONE')" title="Hoàn thành">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -715,6 +736,49 @@ function displayServiceTasks(tasks) {
     });
     
     container.html(html);
+}
+
+function updateTaskStatus(taskId, newStatus) {
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`https://localhost:7173/api/ServiceTask/${taskId}/status`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({ statusCode: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Cập nhật trạng thái công việc thành công!', 'success');
+            loadServiceTasks(); // Reload danh sách
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi cập nhật trạng thái', 'danger');
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getTaskBorderColor(statusCode) {
+    const colorMap = {
+        'PENDING': 'border-warning',
+        'IN_PROGRESS': 'border-primary',
+        'DONE': 'border-success',
+        'CANCELLED': 'border-danger'
+    };
+    return colorMap[statusCode] || 'border-secondary';
 }
 
 function loadComponents() {
@@ -821,8 +885,62 @@ function completeMaintenance(ticketId) {
 }
 
 function saveServiceTask() {
-    // Implementation for saving service task
-    showAlert('Chức năng thêm công việc đang được phát triển', 'info');
+    const taskName = $('#taskName').val().trim();
+    const taskDescription = $('#taskDescription').val().trim();
+    const taskNote = $('#taskNote').val().trim();
+    
+    if (!taskName) {
+        showAlert('Vui lòng nhập tên công việc', 'warning');
+        return;
+    }
+    
+    const taskData = {
+        maintenanceTicketId: maintenanceTicketId,
+        taskName: taskName,
+        description: taskDescription || null,
+        note: taskNote || null,
+        statusCode: 'PENDING' // Mặc định là PENDING
+    };
+    
+    // Lấy token để authenticate
+    const token = localStorage.getItem('authToken');
+    
+    // Show loading
+    const btn = $('#saveServiceTaskBtn');
+    const originalText = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
+    btn.prop('disabled', true);
+    
+    fetch('https://localhost:7173/api/ServiceTask', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify(taskData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        
+        if (data.success) {
+            showAlert('Thêm công việc thành công!', 'success');
+            $('#addServiceTaskModal').modal('hide');
+            // Reset form
+            $('#serviceTaskForm')[0].reset();
+            // Reload danh sách công việc
+            loadServiceTasks();
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể thêm công việc'), 'danger');
+        }
+    })
+    .catch(error => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi thêm công việc', 'danger');
+    });
 }
 
 function saveComponent() {
