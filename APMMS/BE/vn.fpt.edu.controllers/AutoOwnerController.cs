@@ -69,15 +69,29 @@ namespace BE.vn.fpt.edu.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            try
+            {
+                var result = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         [HttpPut("{id:long}")]
         public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.UpdateAsync(id, dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message, stackTrace = ex.StackTrace });
+            }
         }
 
         [HttpDelete("{id:long}")]

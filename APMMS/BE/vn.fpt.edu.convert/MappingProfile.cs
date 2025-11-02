@@ -28,8 +28,12 @@ namespace BE.vn.fpt.edu.convert
 
             // AutoOwner mappings
             CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>()
-                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null));
-            CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
+            CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>()
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
 
             // Component mappings
             CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>();

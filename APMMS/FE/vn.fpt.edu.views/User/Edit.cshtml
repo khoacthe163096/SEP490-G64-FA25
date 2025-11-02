@@ -113,8 +113,8 @@
                     document.getElementById('lastName').value = owner.lastName || '';
                     document.getElementById('email').value = owner.email || '';
                     document.getElementById('phone').value = owner.phone || '';
-                    document.getElementById('address').value = owner.addressId || '';
-                    document.getElementById('isActive').checked = owner.statusCode === 'Active';
+                    document.getElementById('address').value = owner.address || '';
+                    document.getElementById('isActive').checked = owner.statusCode === 'ACTIVE';
                 })
                 .catch(error => {
                     console.error('❌ Lỗi load dữ liệu:', error);
@@ -132,7 +132,8 @@
                 lastName: formData.get('lastName'),
                 email: formData.get('email'),
                 phone: formData.get('phone'),
-                statusCode: document.getElementById('isActive').checked ? 'Active' : 'Inactive'
+                address: formData.get('address'),
+                statusCode: document.getElementById('isActive').checked ? 'ACTIVE' : 'INACTIVE'
             };
 
             fetch(`https://localhost:7173/api/autoowner/${id}`, {

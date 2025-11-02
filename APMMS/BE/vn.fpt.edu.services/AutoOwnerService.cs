@@ -53,10 +53,13 @@ namespace BE.vn.fpt.edu.services
             var user = _mapper.Map<User>(dto);
 
             // Business rules
-            user.RoleId = 7; // Giả định RoleId=3 là AutoOwner, sửa nếu cần
+            user.RoleId = 7; // AutoOwner role
             user.StatusCode = "ACTIVE";
             user.CreatedDate = DateTime.UtcNow;
             user.IsDelete = false;
+            
+            // Explicitly set Address to ensure it's saved
+            user.Address = dto.Address;
 
             await _repository.CreateAsync(user);
             return _mapper.Map<ResponseDto>(user);
@@ -69,6 +72,8 @@ namespace BE.vn.fpt.edu.services
                 throw new KeyNotFoundException("Auto Owner not found.");
 
             _mapper.Map(dto, existing);
+            // Explicitly set Address to ensure it's updated
+            existing.Address = dto.Address;
             existing.LastModifiedDate = DateTime.UtcNow;
 
             await _repository.UpdateAsync(existing);
