@@ -23,9 +23,9 @@ namespace FE.vn.fpt.edu.controllers
 
         [HttpGet]
         [Route("ListData")]
-        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var data = await _service.GetAllAsync(page, pageSize);
+            var data = await _service.GetAllAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
             return Json(data);
         }
 
