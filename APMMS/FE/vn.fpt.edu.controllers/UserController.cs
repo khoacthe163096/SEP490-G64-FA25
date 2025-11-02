@@ -36,5 +36,13 @@ namespace FE.vn.fpt.edu.controllers
             ViewBag.UserId = id;
             return View();
         }
+        [HttpGet]
+        [Route("Car/{id}")]
+        public IActionResult Car(int id)
+        {
+            ViewBag.UserId = id;
+            return View();
+        }
+
     }
 }

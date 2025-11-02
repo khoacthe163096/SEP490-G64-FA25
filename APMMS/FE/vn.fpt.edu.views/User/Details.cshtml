@@ -13,6 +13,10 @@
                         <a href="/Users/Edit/@ViewBag.UserId" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Sửa
                         </a>
+                        <a href="/CarOfAutoOwner/Index?ownerId=@ViewBag.UserId" class="btn btn-primary">
+                            Xem danh sách xe
+                        </a>
+
                         <a href="/Users" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Quay lại
                         </a>
@@ -24,84 +28,32 @@
                             <span class="visually-hidden">Đang tải...</span>
                         </div>
                     </div>
-                    
+
                     <div id="userDetails" style="display: none;">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin cá nhân</h5>
-                                    <hr>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>ID:</strong></div>
-                                        <div class="col-sm-8" id="userId">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Họ tên:</strong></div>
-                                        <div class="col-sm-8" id="fullName">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Email:</strong></div>
-                                        <div class="col-sm-8" id="email">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Số điện thoại:</strong></div>
-                                        <div class="col-sm-8" id="phoneNumber">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Địa chỉ:</strong></div>
-                                        <div class="col-sm-8" id="address">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="mb-4">
-                                    <h5>Thông tin tài khoản</h5>
-                                    <hr>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Tên đăng nhập:</strong></div>
-                                        <div class="col-sm-8" id="username">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Vai trò:</strong></div>
-                                        <div class="col-sm-8" id="roleName">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Trạng thái:</strong></div>
-                                        <div class="col-sm-8" id="status">-</div>
-                                    </div>
-                                    <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
-                                        <div class="col-sm-8" id="createdDate">-</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Information -->
-                        <div class="row">
-                            <div class="col-12">
-                                <h5>Thông tin bổ sung</h5>
+                                <h5>Thông tin cá nhân</h5>
                                 <hr>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="row mb-2">
-                                            <div class="col-sm-4"><strong>Lần đăng nhập cuối:</strong></div>
-                                            <div class="col-sm-8" id="lastLogin">-</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="row mb-2">
-                                            <div class="col-sm-4"><strong>Ghi chú:</strong></div>
-                                            <div class="col-sm-8" id="notes">-</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="mb-2"><strong>ID:</strong> <span id="userId">-</span></div>
+                                <div class="mb-2"><strong>Họ tên:</strong> <span id="fullName">-</span></div>
+                                <div class="mb-2"><strong>Email:</strong> <span id="email">-</span></div>
+                                <div class="mb-2"><strong>Số điện thoại:</strong> <span id="phoneNumber">-</span></div>
+                                <div class="mb-2"><strong>Địa chỉ:</strong> <span id="address">-</span></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h5>Thông tin tài khoản</h5>
+                                <hr>
+                                <div class="mb-2"><strong>Tên đăng nhập:</strong> <span id="username">-</span></div>
+                                <div class="mb-2"><strong>Vai trò:</strong> <span id="roleName">-</span></div>
+                                <div class="mb-2"><strong>Trạng thái:</strong> <span id="status">-</span></div>
+                                <div class="mb-2"><strong>Ngày tạo:</strong> <span id="createdDate">-</span></div>
+                                <div class="mb-2"><strong>Lần đăng nhập cuối:</strong> <span id="lastLogin">-</span></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+
+                    <div id="errorMessage" class="alert alert-danger mt-3" style="display: none;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span id="errorText">Có lỗi xảy ra khi tải thông tin người dùng</span>
                     </div>
@@ -113,7 +65,7 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const userId = getUserIdFromUrl();
             if (userId) {
                 loadUserDetails(userId);
@@ -128,47 +80,40 @@
             return segments[segments.length - 1];
         }
 
+        // ✅ CHỈNH LẠI URL API CHO ĐÚNG
         function loadUserDetails(id) {
-            fetch(`/api/User/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                
-                if (data.success) {
-                    displayUserDetails(data.data);
-                } else {
-                    showError('Lỗi khi tải thông tin: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('loadingSpinner').style.display = 'none';
-                showError('Có lỗi xảy ra khi tải thông tin người dùng');
-            });
+            fetch(`https://localhost:7173/api/AutoOwner/${id}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                    return response.json();
+                })
+                .then(user => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    displayUserDetails(user);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    showError('Không tìm thấy người dùng hoặc có lỗi khi tải dữ liệu.');
+                });
         }
 
         function displayUserDetails(user) {
             document.getElementById('userId').textContent = user.id || '-';
             document.getElementById('fullName').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || '-';
             document.getElementById('email').textContent = user.email || '-';
-            document.getElementById('phoneNumber').textContent = user.phoneNumber || '-';
+            document.getElementById('phoneNumber').textContent = user.phone || '-';
             document.getElementById('address').textContent = user.address || '-';
             document.getElementById('username').textContent = user.username || '-';
-            document.getElementById('roleName').innerHTML = user.roleName ? 
-                `<span class="badge bg-info">${user.roleName}</span>` : '-';
-            document.getElementById('status').innerHTML = user.isActive ? 
-                '<span class="badge bg-success">Hoạt động</span>' : 
-                '<span class="badge bg-secondary">Không hoạt động</span>';
-            document.getElementById('createdDate').textContent = user.createdDate ? 
-                new Date(user.createdDate).toLocaleString('vi-VN') : '-';
-            document.getElementById('lastLogin').textContent = user.lastLogin ? 
-                new Date(user.lastLogin).toLocaleString('vi-VN') : '-';
-            document.getElementById('notes').textContent = user.notes || '-';
-            
+            document.getElementById('roleName').innerHTML = `<span class="badge bg-info">${user.roleName || 'Auto Owner'}</span>`;
+            document.getElementById('status').innerHTML = user.isActive
+                ? '<span class="badge bg-success">Hoạt động</span>'
+                : '<span class="badge bg-secondary">Không hoạt động</span>';
+            document.getElementById('createdDate').textContent = user.createdDate
+                ? new Date(user.createdDate).toLocaleString('vi-VN') : '-';
+            document.getElementById('lastLogin').textContent = user.lastLogin
+                ? new Date(user.lastLogin).toLocaleString('vi-VN') : '-';
+
             document.getElementById('userDetails').style.display = 'block';
         }
 
