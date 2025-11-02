@@ -7,10 +7,12 @@ namespace FE.vn.fpt.edu.controllers
     public class MaintenanceTicketController : Controller
     {
         private readonly MaintenanceTicketService _service;
+        private readonly IConfiguration _configuration;
 
-        public MaintenanceTicketController(MaintenanceTicketService service)
+        public MaintenanceTicketController(MaintenanceTicketService service, IConfiguration configuration)
         {
             _service = service;
+            _configuration = configuration;
         }
         [HttpGet]
         [Route("")]
@@ -47,6 +49,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Edit(int id)
         {
             ViewBag.MaintenanceTicketId = id;
+            ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
 			return View("~/vn.fpt.edu.views/MaintenanceTickets/Details.cshtml");
         }
 
@@ -55,6 +58,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Details(int id)
         {
             ViewBag.MaintenanceTicketId = id;
+            ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
 			return View("~/vn.fpt.edu.views/MaintenanceTickets/Details.cshtml");
         }
     }

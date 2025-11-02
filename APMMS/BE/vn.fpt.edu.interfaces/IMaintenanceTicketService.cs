@@ -17,6 +17,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> AddTechniciansAsync(long id, List<long> technicianIds, long? primaryId);
         Task<ResponseDto> StartMaintenanceAsync(long id);
         Task<ResponseDto> CompleteMaintenanceAsync(long id);
+        Task<ResponseDto> CancelMaintenanceTicketAsync(long id);
     }
 }
 

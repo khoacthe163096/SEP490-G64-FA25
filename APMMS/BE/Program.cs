@@ -3,7 +3,6 @@ using BE.vn.fpt.edu.extensions;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.services;
 using BE.vn.fpt.edu.models;
-using BE.vn.fpt.edu.middleware;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

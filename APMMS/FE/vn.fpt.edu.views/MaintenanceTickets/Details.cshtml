@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Chi tiết Phiếu Bảo Dưỡng";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -225,7 +226,27 @@
     </div>
 </div>
 
+<!-- Confirm Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Xác nhận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmModalBody">
+                <!-- Content will be set dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" id="confirmModalBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+const API_BASE_URL = '@apiBaseUrl';
 let maintenanceTicketId = @ViewBag.MaintenanceTicketId;
 let maintenanceTicketData = null;
 
@@ -261,7 +282,7 @@ $(document).ready(function() {
 });
 
 function loadMaintenanceTicketDetails() {
-    fetch(`https://localhost:7173/api/MaintenanceTicket/${maintenanceTicketId}`)
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}`)
         .then(async response => {
             if (!response.ok) {
                 // Try read json; fallback to text
@@ -420,29 +441,49 @@ function displayStatusAndActions(data) {
     
     // Action buttons
     let buttons = '';
+    const canCancel = data.statusCode !== 'COMPLETED' && data.statusCode !== 'CANCELLED';
+    
     switch(data.statusCode) {
         case 'PENDING':
             buttons = `
-                <button class="btn btn-info" id="assignTechnicianBtn">
+                <button class="btn btn-info mb-2" id="assignTechnicianBtn">
                     <i class="fas fa-user-plus me-1"></i>
                     Gán kỹ thuật viên
                 </button>
+                ${canCancel ? `
+                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                    <i class="fas fa-times-circle me-1"></i>
+                    Hủy phiếu
+                </button>
+                ` : ''}
             `;
             break;
         case 'ASSIGNED':
             buttons = `
-                <button class="btn btn-warning" onclick="startMaintenance(${data.id})">
+                <button class="btn btn-warning mb-2" onclick="startMaintenance(${data.id})">
                     <i class="fas fa-play me-1"></i>
                     Bắt đầu bảo dưỡng
                 </button>
+                ${canCancel ? `
+                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                    <i class="fas fa-times-circle me-1"></i>
+                    Hủy phiếu
+                </button>
+                ` : ''}
             `;
             break;
         case 'IN_PROGRESS':
             buttons = `
-                <button class="btn btn-success" onclick="completeMaintenance(${data.id})">
+                <button class="btn btn-success mb-2" onclick="completeMaintenance(${data.id})">
                     <i class="fas fa-check me-1"></i>
                     Hoàn thành
                 </button>
+                ${canCancel ? `
+                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                    <i class="fas fa-times-circle me-1"></i>
+                    Hủy phiếu
+                </button>
+                ` : ''}
             `;
             break;
         case 'COMPLETED':
@@ -450,6 +491,14 @@ function displayStatusAndActions(data) {
                 <button class="btn btn-secondary" disabled>
                     <i class="fas fa-check-circle me-1"></i>
                     Đã hoàn thành
+                </button>
+            `;
+            break;
+        case 'CANCELLED':
+            buttons = `
+                <button class="btn btn-danger" disabled>
+                    <i class="fas fa-times-circle me-1"></i>
+                    Đã hủy
                 </button>
             `;
             break;
@@ -494,7 +543,7 @@ function openAssignTechniciansModal() {
     modal.show();
 
     // Tải danh sách kỹ thuật viên
-    fetch('https://localhost:7173/api/Employee/filter?roleId=4')
+    fetch(`${API_BASE_URL}/Employee/filter?roleId=4`)
       .then(r => r.json())
       .then(list => {
         const container = $('#assignTechContainer');
@@ -554,7 +603,7 @@ function openAssignTechniciansModal() {
       const primaryIdVal = $('#primaryTechSelect').val();
       const primaryId = primaryIdVal ? parseInt(primaryIdVal) : null;
       if (primaryId && !ids.includes(primaryId)) ids.push(primaryId);
-      fetch(`https://localhost:7173/api/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
+      fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ technicianIds: ids, primaryId })
@@ -618,6 +667,16 @@ function displayTimeline(data) {
         });
     }
     
+    if (data.statusCode === 'CANCELLED') {
+        events.push({
+            date: new Date(data.createdDate), // Hoặc có thể có cancelledDate nếu có
+            title: 'Hủy phiếu bảo dưỡng',
+            description: 'Phiếu bảo dưỡng đã được hủy',
+            icon: 'fas fa-times-circle',
+            color: 'danger'
+        });
+    }
+    
     // Sort events by date
     events.sort((a, b) => a.date - b.date);
     
@@ -676,7 +735,7 @@ function loadServiceTasks() {
     // Lấy token để authenticate
     const token = localStorage.getItem('authToken');
     
-    fetch(`https://localhost:7173/api/ServiceTask/by-ticket/${maintenanceTicketId}`, {
+    fetch(`${API_BASE_URL}/ServiceTask/by-ticket/${maintenanceTicketId}`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : ''
         }
@@ -741,7 +800,7 @@ function displayServiceTasks(tasks) {
 function updateTaskStatus(taskId, newStatus) {
     const token = localStorage.getItem('authToken');
     
-    fetch(`https://localhost:7173/api/ServiceTask/${taskId}/status`, {
+    fetch(`${API_BASE_URL}/ServiceTask/${taskId}/status`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -782,7 +841,7 @@ function getTaskBorderColor(statusCode) {
 }
 
 function loadComponents() {
-    fetch(`https://localhost:7173/api/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
+    fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -874,14 +933,133 @@ function assignTechnician(ticketId) {
     showAlert('Chức năng gán kỹ thuật viên đang được phát triển', 'info');
 }
 
+function showConfirmModal(message, onConfirm) {
+    $('#confirmModalBody').html(message);
+    $('#confirmModalBtn').off('click').on('click', function() {
+        $('#confirmModal').modal('hide');
+        if (onConfirm) onConfirm();
+    });
+    $('#confirmModal').modal('show');
+}
+
 function startMaintenance(ticketId) {
-    // Implementation for starting maintenance
-    showAlert('Chức năng bắt đầu bảo dưỡng đang được phát triển', 'info');
+    showConfirmModal(
+        '<p>Bạn có chắc chắn muốn bắt đầu bảo dưỡng không?</p>',
+        function() {
+            executeStartMaintenance(ticketId);
+        }
+    );
+}
+
+function executeStartMaintenance(ticketId) {
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${ticketId}/start`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Lỗi khi bắt đầu bảo dưỡng');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('Bắt đầu bảo dưỡng thành công!', 'success');
+            loadMaintenanceTicketDetails(); // Reload để cập nhật UI
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể bắt đầu bảo dưỡng'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra: ' + error.message, 'danger');
+    });
 }
 
 function completeMaintenance(ticketId) {
-    // Implementation for completing maintenance
-    showAlert('Chức năng hoàn thành bảo dưỡng đang được phát triển', 'info');
+    showConfirmModal(
+        '<p>Bạn có chắc chắn muốn hoàn thành phiếu bảo dưỡng này không?</p>',
+        function() {
+            executeCompleteMaintenance(ticketId);
+        }
+    );
+}
+
+function executeCompleteMaintenance(ticketId) {
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${ticketId}/complete`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Lỗi khi hoàn thành phiếu bảo dưỡng');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('Hoàn thành phiếu bảo dưỡng thành công!', 'success');
+            loadMaintenanceTicketDetails(); // Reload để cập nhật UI
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể hoàn thành phiếu'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra: ' + error.message, 'danger');
+    });
+}
+
+function cancelMaintenanceTicket(ticketId) {
+    showConfirmModal(
+        '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>Cảnh báo!</strong></div><p>Bạn có chắc chắn muốn hủy phiếu bảo dưỡng này không? Hành động này không thể hoàn tác.</p>',
+        function() {
+            executeCancelMaintenanceTicket(ticketId);
+        }
+    );
+}
+
+function executeCancelMaintenanceTicket(ticketId) {
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${ticketId}/cancel`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(async response => {
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Lỗi khi hủy phiếu bảo dưỡng');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('Hủy phiếu bảo dưỡng thành công!', 'success');
+            loadMaintenanceTicketDetails(); // Reload để cập nhật UI
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể hủy phiếu'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra: ' + error.message, 'danger');
+    });
 }
 
 function saveServiceTask() {
@@ -911,7 +1089,7 @@ function saveServiceTask() {
     btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
     btn.prop('disabled', true);
     
-    fetch('https://localhost:7173/api/ServiceTask', {
+    fetch(`${API_BASE_URL}/ServiceTask`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

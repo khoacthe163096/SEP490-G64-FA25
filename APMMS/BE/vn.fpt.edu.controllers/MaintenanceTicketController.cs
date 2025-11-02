@@ -283,5 +283,26 @@ namespace BE.vn.fpt.edu.controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Hủy phiếu bảo dưỡng (status = CANCELLED)
+        /// </summary>
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelMaintenanceTicket(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.CancelMaintenanceTicketAsync(id);
+                return Ok(new { success = true, data = result, message = "Phiếu bảo dưỡng đã được hủy thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
     }
 }

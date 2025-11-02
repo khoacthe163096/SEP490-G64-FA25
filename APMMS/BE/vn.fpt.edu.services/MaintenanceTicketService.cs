@@ -336,6 +336,36 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
 
+        public async Task<ResponseDto> CancelMaintenanceTicketAsync(long id)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            // ✅ VALIDATION: Không cho phép hủy phiếu đã hoàn thành hoặc đã hủy
+            if (maintenanceTicket.StatusCode == "COMPLETED")
+                throw new ArgumentException("Không thể hủy phiếu đã hoàn thành.");
+
+            if (maintenanceTicket.StatusCode == "CANCELLED")
+                throw new ArgumentException("Phiếu này đã được hủy trước đó.");
+
+            // Lưu trạng thái cũ để ghi log
+            var oldStatus = maintenanceTicket.StatusCode;
+
+            maintenanceTicket.StatusCode = "CANCELLED";
+            var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+
+            // ✅ Tạo history log để ghi nhận việc hủy phiếu
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId, // Consulter là người hủy phiếu
+                action: "CANCEL_MAINTENANCE",
+                oldData: $"Status: {oldStatus}",
+                newData: $"Status: CANCELLED, CancelledAt: {DateTime.UtcNow}"
+            );
+
+            return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
         /// <summary>
         /// Tạo mã phiếu bảo dưỡng 7 ký tự ngẫu nhiên (số + chữ cái), đảm bảo không trùng
         /// </summary>

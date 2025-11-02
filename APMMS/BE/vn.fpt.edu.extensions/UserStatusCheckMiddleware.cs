@@ -2,7 +2,7 @@ using BE.vn.fpt.edu.models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace BE.vn.fpt.edu.middleware
+namespace BE.vn.fpt.edu.extensions
 {
     /// <summary>
     /// Middleware để check trạng thái tài khoản INACTIVE khi user đã đăng nhập
@@ -71,5 +71,4 @@ namespace BE.vn.fpt.edu.middleware
         }
     }
 }
-
 
