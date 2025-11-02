@@ -1,29 +1,24 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BE.vn.fpt.edu.models
 {
-    [Table("type_component")]
-    public class TypeComponent
+    public partial class TypeComponent
     {
-        [Key]
-        [Column("id")]
+        public TypeComponent()
+        {
+            Components = new HashSet<Component>();
+        }
+
         public long Id { get; set; }
+        public long? BranchId { get; set; }
+        public string? Description { get; set; }
+        public string? Name { get; set; }
+        public string? StatusCode { get; set; }
 
-        [Required]
-        [MaxLength(100)]
-        [Column("name")]
-        public string Name { get; set; }
-
-        [MaxLength(255)]
-        [Column("description")]
-        public string Description { get; set; }
-
-        [Column("is_active")] //non hard delete
-        public bool IsActive { get; set; } = true;
-
-        // navigation property
-        public virtual ICollection<Component> Components { get; set; } = new List<Component>();
+        // Navigation
+        public virtual Branch? Branch { get; set; }
+        public virtual StatusLookup? StatusCodeNavigation { get; set; }
+        public virtual ICollection<Component> Components { get; set; }
     }
 }

@@ -20,47 +20,70 @@ namespace BE.vn.fpt.edu.services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(bool onlyActive = false, long? typeComponentId = null, long? branchId = null)
-        {
-            var list = await _repo.GetAllAsync(onlyActive, typeComponentId, branchId);
-            return _mapper.Map<IEnumerable<ResponseDto>>(list);
-        }
-
-        public async Task<ResponseDto> GetByIdAsync(long id)
-        {
-            var entity = await _repo.GetByIdAsync(id);
-            return entity == null ? null : _mapper.Map<ResponseDto>(entity);
-        }
-
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            // Business validations (unique code, non-negative price/quantity, FK existence) can be added here
             var entity = _mapper.Map<Component>(dto);
-            // ensure default IsActive true
-            entity.IsActive = true;
-            var created = await _repo.CreateAsync(entity);
-            return _mapper.Map<ResponseDto>(created);
+            var created = await _repo.AddAsync(entity);
+            var response = _mapper.Map<ResponseDto>(created);
+            // map nested names if needed
+            response.TypeComponentName = created.TypeComponent?.Name;
+            response.BranchName = created.Branch?.Name;
+            return response;
         }
 
-        public async Task UpdateAsync(long id, RequestDto dto)
+        public async Task DisableEnableAsync(long id, string statusCode)
         {
-            var existing = await _repo.GetByIdAsync(id);
-            if (existing == null) throw new InvalidOperationException("Component not found");
-
-            existing.Name = dto.Name;
-            existing.Code = dto.Code;
-            existing.UnitPrice = dto.UnitPrice ?? existing.UnitPrice;
-            existing.QuantityStock = dto.QuantityStock ?? existing.QuantityStock;
-            existing.TypeComponentId = dto.TypeComponentId ?? existing.TypeComponentId;
-            existing.BranchId = dto.BranchId ?? existing.BranchId;
-            existing.ImageUrl = dto.ImageUrl ?? existing.ImageUrl;
-
-            await _repo.UpdateAsync(existing);
+            await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task SetActiveAsync(long id, bool isActive)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
         {
-            await _repo.SetActiveAsync(id, isActive);
+            var list = await _repo.GetAllAsync(branchId, typeComponentId, statusCode, search);
+            var mapped = _mapper.Map<IEnumerable<ResponseDto>>(list);
+            // enrich nested names
+            foreach (var dst in mapped)
+            {
+                var src = System.Linq.Enumerable.FirstOrDefault(list, x => x.Id == dst.Id);
+                if (src != null)
+                {
+                    dst.TypeComponentName = src.TypeComponent?.Name;
+                    dst.BranchName = src.Branch?.Name;
+                }
+            }
+            return mapped;
+        }
+
+        public async Task<ResponseDto?> GetByIdAsync(long id)
+        {
+            var e = await _repo.GetByIdAsync(id);
+            if (e == null) return null;
+            var dto = _mapper.Map<ResponseDto>(e);
+            dto.TypeComponentName = e.TypeComponent?.Name;
+            dto.BranchName = e.Branch?.Name;
+            return dto;
+        }
+
+        public async Task<ResponseDto?> UpdateAsync(RequestDto dto)
+        {
+            if (!dto.Id.HasValue) return null;
+            var exist = await _repo.GetByIdAsync(dto.Id.Value);
+            if (exist == null) return null;
+
+            exist.Code = dto.Code;
+            exist.Name = dto.Name;
+            exist.ImageUrl = dto.ImageUrl;
+            exist.QuantityStock = dto.QuantityStock;
+            exist.UnitPrice = dto.UnitPrice;
+            exist.PurchasePrice = dto.PurchasePrice;
+            exist.BranchId = dto.BranchId;
+            exist.TypeComponentId = dto.TypeComponentId;
+            exist.StatusCode = dto.StatusCode;
+
+            var updated = await _repo.UpdateAsync(exist);
+            var resp = _mapper.Map<ResponseDto>(updated);
+            resp.TypeComponentName = updated.TypeComponent?.Name;
+            resp.BranchName = updated.Branch?.Name;
+            return resp;
         }
     }
 }

@@ -30,13 +30,13 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
 
             // Component mappings
-            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>()
-    .ForMember(dest => dest.TypeComponentName, opt => opt.MapFrom(src => src.TypeComponent != null ? src.TypeComponent.Name : null))
-    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive));
-
             CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.IsActive, opt => opt.Ignore()); // don't overwrite IsActive from request
+                .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L));
+
+            CreateMap<Component, BE.vn.fpt.edu.DTOs.Component.ResponseDto>()
+                .ForMember(dest => dest.TypeComponentName, opt => opt.Ignore())
+                .ForMember(dest => dest.BranchName, opt => opt.Ignore());
 
 
             // Employee mappings
@@ -76,8 +76,13 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.Role.RequestDto, Role>();
 
             // ServicePackage mappings
-            CreateMap<ServicePackage, BE.vn.fpt.edu.DTOs.ServicePackage.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.ServicePackage.RequestDto, ServicePackage>();
+            CreateMap<BE.vn.fpt.edu.DTOs.ServicePackage.RequestDto, ServicePackage>()
+             .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
+             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L))
+             .ForMember(dest => dest.Components, opt => opt.Ignore()); // handle manually in service
+
+            CreateMap<ServicePackage, BE.vn.fpt.edu.DTOs.ServicePackage.ResponseDto>()
+                .ForMember(dest => dest.Components, opt => opt.Ignore()); // fill manually
 
             // ServiceSchedule mappings
             CreateMap<ScheduleService, BE.vn.fpt.edu.DTOs.ServiceSchedule.ResponseDto>();
@@ -92,10 +97,13 @@ namespace BE.vn.fpt.edu.convert
             // TotalReceipt mappings
             CreateMap<TotalReceipt, BE.vn.fpt.edu.DTOs.TotalReceipt.ResponseDto>();
             CreateMap<BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto, TotalReceipt>();
-
+            
             // TypeComponent mappings
-            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentRequestDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.TypeComponentResponseDto, TypeComponent>();
+            CreateMap<BE.vn.fpt.edu.DTOs.TypeComponent.RequestDto, TypeComponent>()
+            .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
+            .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L));
+
+            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>();
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BE.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();
