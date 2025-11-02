@@ -18,7 +18,6 @@ namespace BE.vn.fpt.edu.repository
             return await _context.Users
                 .Include(u => u.Cars)
                 .Include(u => u.Role)
-                .Include(u => u.Address)
                 .Where(u => (u.IsDelete == false || u.IsDelete == null) &&
                             u.Role != null && u.Role.Name == "Auto Owner")
                 .OrderByDescending(u => u.CreatedDate)
@@ -32,7 +31,6 @@ namespace BE.vn.fpt.edu.repository
             var query = _context.Users
                 .Include(u => u.Cars)
                 .Include(u => u.Role)
-                .Include(u => u.Address)
                 .Where(u => (u.IsDelete == false || u.IsDelete == null));
 
             // Luôn filter theo Auto Owner (roleId = 7 hoặc Role.Name == "Auto Owner")
@@ -83,6 +81,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null)
         {
             var query = _context.Users
+                .Include(u => u.Role)
                 .Where(u => (u.IsDelete == false || u.IsDelete == null));
 
             // Filter theo role Auto Owner (roleId = 7) hoặc role được chỉ định
@@ -92,7 +91,8 @@ namespace BE.vn.fpt.edu.repository
             }
             else
             {
-                query = query.Where(u => u.Role != null && u.Role.Name == "Auto Owner");
+                // Luôn filter theo Auto Owner nếu không có roleId
+                query = query.Where(u => u.RoleId == 7 || (u.Role != null && u.Role.Name == "Auto Owner"));
             }
 
             // Search filter
@@ -129,7 +129,6 @@ namespace BE.vn.fpt.edu.repository
             return await _context.Users
                 .Include(u => u.Cars)
                 .Include(u => u.Role)
-                .Include(u => u.Address)
                 .FirstOrDefaultAsync(u => u.Id == id && (u.IsDelete == false || u.IsDelete == null));
         }
 

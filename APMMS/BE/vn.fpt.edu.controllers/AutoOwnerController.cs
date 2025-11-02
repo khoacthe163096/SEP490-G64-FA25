@@ -23,16 +23,38 @@ namespace BE.vn.fpt.edu.Controllers
             [FromQuery] string? status = null,
             [FromQuery] long? role = null)
         {
-            // Nếu có search, status hoặc role thì dùng filter
-            if (!string.IsNullOrWhiteSpace(search) || !string.IsNullOrWhiteSpace(status) || role.HasValue)
+            try
             {
-                var result = await _service.GetWithFiltersAsync(page, pageSize, search, status, role);
-                return Ok(result);
+                // Normalize empty strings to null
+                if (string.IsNullOrWhiteSpace(search)) search = null;
+                if (string.IsNullOrWhiteSpace(status)) status = null;
+                
+                // Nếu có search, status hoặc role thì dùng filter
+                if (search != null || status != null || role.HasValue)
+                {
+                    var result = await _service.GetWithFiltersAsync(page, pageSize, search, status, role);
+                    return Ok(result);
+                }
+                
+                // Nếu không có filter thì dùng method cũ nhưng vẫn trả về format đầy đủ
+                var users = await _service.GetAllAsync(page, pageSize);
+                var totalCount = await _service.GetTotalCountAsync(null, null, null);
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                
+                return Ok(new { 
+                    success = true, 
+                    data = users, 
+                    page = page, 
+                    pageSize = pageSize,
+                    totalPages = totalPages,
+                    currentPage = page,
+                    totalCount = totalCount
+                });
             }
-            
-            // Nếu không có filter thì dùng method cũ
-            var users = await _service.GetAllAsync(page, pageSize);
-            return Ok(new { success = true, data = users, page = page, pageSize = pageSize });
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi khi tải dữ liệu: " + ex.Message });
+            }
         }
 
         [HttpGet("{id:long}")]

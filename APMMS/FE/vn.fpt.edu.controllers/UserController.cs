@@ -7,10 +7,18 @@ namespace FE.vn.fpt.edu.controllers
     // [Authorize] // Tạm thời comment để test
     public class UserController : Controller
     {
+        private readonly IConfiguration _configuration;
+
+        public UserController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         [HttpGet]
         [Route("")]
         public IActionResult Index()
         {
+            ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
             return View();
         }
 

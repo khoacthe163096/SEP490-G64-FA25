@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Danh sách người dùng";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -85,24 +86,34 @@
             document.getElementById('roleFilter').addEventListener('change', loadUsers);
         });
 
+        const API_BASE_URL = '@apiBaseUrl';
+        
         function loadUsers() {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('statusFilter').value;
             const role = document.getElementById('roleFilter').value;
 
-            fetch(`https://localhost:7173/api/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search)}&status=${status}&role=${role}`)
-                .then(response => response.json())
+            fetch(`${API_BASE_URL}/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`)
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}: ${response.statusText}` }));
+                        throw new Error(errorData.message || 'Lỗi khi tải dữ liệu');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
-                        renderUsersTable(data.data);
-                        renderPagination(data.totalPages, data.currentPage);
+                        renderUsersTable(data.data || []);
+                        renderPagination(data.totalPages || 1, data.currentPage || currentPage);
                     } else {
-                        showAlert('Lỗi khi tải dữ liệu: ' + data.message, 'danger');
+                        showAlert('Lỗi khi tải dữ liệu: ' + (data.message || 'Unknown error'), 'danger');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tải dữ liệu', 'danger');
+                    showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
+                    // Hiển thị empty table
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu</td></tr>';
                 });
         }
 
@@ -180,7 +191,7 @@
 
         function deleteUser(id) {
             if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-                fetch(`https://localhost:7173/api/AutoOwner/${id}`, {
+                fetch(`${API_BASE_URL}/AutoOwner/${id}`, {
                     method: 'DELETE'
                 })
                 .then(response => {

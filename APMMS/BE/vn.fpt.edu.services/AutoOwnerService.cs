@@ -79,5 +79,10 @@ namespace BE.vn.fpt.edu.services
         {
             return await _repository.DeleteAsync(id);
         }
+
+        public async Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null)
+        {
+            return await _repository.GetTotalCountAsync(search, status, roleId);
+        }
     }
 }

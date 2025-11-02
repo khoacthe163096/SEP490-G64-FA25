@@ -10,5 +10,6 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CreateAsync(RequestDto dto);
         Task<ResponseDto> UpdateAsync(long id, RequestDto dto);
         Task<bool> DeleteAsync(long id);
+        Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null);
     }
 }
