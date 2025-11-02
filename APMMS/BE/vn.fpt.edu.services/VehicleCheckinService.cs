@@ -76,15 +76,15 @@ namespace BE.vn.fpt.edu.services
             return await MapToResponseDTO(vehicleCheckin);
         }
 
-        public async Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10)
         {
-            var vehicleCheckins = await _vehicleCheckinRepository.GetAllWithDetailsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
+            var vehicleCheckins = await _vehicleCheckinRepository.GetAllWithDetailsAsync(page, pageSize);
             return vehicleCheckins.Select(MapToListResponseDTO).ToList();
         }
 
-        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<int> GetTotalCountAsync()
         {
-            return await _vehicleCheckinRepository.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate);
+            return await _vehicleCheckinRepository.GetTotalCountAsync();
         }
 
         public async Task<List<ListResponseDto>> GetVehicleCheckinsByCarIdAsync(long carId)

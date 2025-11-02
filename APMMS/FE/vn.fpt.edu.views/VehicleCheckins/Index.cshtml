@@ -17,20 +17,25 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo tên khách hàng, biển số xe, VIN...">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm theo biển số...">
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" id="statusFilter">
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="PENDING">Chờ xử lý</option>
-                                <option value="CONFIRMED">Đã xác nhận</option>
+                                <option value="IN_PROGRESS">Đang xử lý</option>
+                                <option value="COMPLETED">Hoàn thành</option>
+                                <option value="CANCELLED">Hủy</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="date" class="form-control" id="fromDateFilter" placeholder="Từ ngày">
+                            <select class="form-select" id="branchFilter">
+                                <option value="">Tất cả chi nhánh</option>
+                                <!-- Will be loaded dynamically -->
+                            </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="date" class="form-control" id="toDateFilter" placeholder="Đến ngày">
+                            <input type="date" class="form-control" id="dateFilter" placeholder="Lọc theo ngày">
                         </div>
                         <div class="col-md-2">
                             <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
@@ -83,34 +88,24 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             loadCheckins();
+            loadBranches();
             
             // Search functionality
             document.getElementById('searchInput').addEventListener('input', debounce(loadCheckins, 500));
             document.getElementById('statusFilter').addEventListener('change', loadCheckins);
-            document.getElementById('fromDateFilter').addEventListener('change', loadCheckins);
-            document.getElementById('toDateFilter').addEventListener('change', loadCheckins);
+            document.getElementById('branchFilter').addEventListener('change', loadCheckins);
+            document.getElementById('dateFilter').addEventListener('change', loadCheckins);
         });
 
         function loadCheckins() {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('statusFilter').value;
-            const fromDate = document.getElementById('fromDateFilter').value;
-            const toDate = document.getElementById('toDateFilter').value;
+            const branch = document.getElementById('branchFilter').value;
+            const date = document.getElementById('dateFilter').value;
 
-            // Build query parameters
-            const params = new URLSearchParams({
-                page: currentPage,
-                pageSize: pageSize
-            });
-
-            if (search) params.append('searchTerm', search);
-            if (status) params.append('statusCode', status);
-            if (fromDate) params.append('fromDate', fromDate);
-            if (toDate) params.append('toDate', toDate);
-
-            console.log('Calling API: VehicleCheckins/ListData?' + params.toString());
+            console.log('Calling API: VehicleCheckin?page=' + currentPage + '&pageSize=' + pageSize);
             
-            fetch(`/VehicleCheckins/ListData?${params.toString()}`)
+            fetch(`/VehicleCheckins/ListData?page=${currentPage}&pageSize=${pageSize}`)
                 .then(response => {
                     console.log('Response status:', response.status);
                     console.log('Response headers:', response.headers);
@@ -139,6 +134,25 @@
                 });
         }
 
+        function loadBranches() {
+            // Tạm thời comment để tránh lỗi API không tồn tại
+            // fetch('/api/Branch')
+            //     .then(response => response.json())
+            //     .then(data => {
+            //         if (data.success) {
+            //             const select = document.getElementById('branchFilter');
+            //             data.data.forEach(branch => {
+            //                 const option = document.createElement('option');
+            //                 option.value = branch.id;
+            //                 option.textContent = branch.name;
+            //                 select.appendChild(option);
+            //             });
+            //         }
+            //     })
+            //     .catch(error => {
+            //         console.error('Error loading branches:', error);
+            //     });
+        }
 
         function renderCheckinsTable(checkins) {
             console.log('renderCheckinsTable called with:', checkins);
@@ -329,14 +343,11 @@
         function exportToExcel() {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('statusFilter').value;
-            const fromDate = document.getElementById('fromDateFilter').value;
-            const toDate = document.getElementById('toDateFilter').value;
+            const branch = document.getElementById('branchFilter').value;
+            const date = document.getElementById('dateFilter').value;
             
             const params = new URLSearchParams({
-                searchTerm: search,
-                statusCode: status,
-                fromDate: fromDate,
-                toDate: toDate,
+                search, status, branch, date,
                 export: 'excel'
             });
             
@@ -346,8 +357,8 @@
         function resetFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = '';
-            document.getElementById('fromDateFilter').value = '';
-            document.getElementById('toDateFilter').value = '';
+            document.getElementById('branchFilter').value = '';
+            document.getElementById('dateFilter').value = '';
             currentPage = 1;
             loadCheckins();
         }
