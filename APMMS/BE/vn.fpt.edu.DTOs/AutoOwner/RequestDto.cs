@@ -12,6 +12,6 @@
         public string? Image { get; set; }
         public string? TaxCode { get; set; }
         public long? BranchId { get; set; }
-        public long? AddressId { get; set; }
+        public string? Address { get; set; }
     }
 }

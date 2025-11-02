@@ -29,7 +29,9 @@ namespace FE.vn.fpt.edu.viewmodels
         
         [Display(Name = "Vai trò")]
         public string? Role { get; set; }
-        
+        [Display(Name = "Địa chỉ")]
+        public string? Address { get; set; }
+
         [Display(Name = "Chi nhánh")]
         public string? Branch { get; set; }
         
