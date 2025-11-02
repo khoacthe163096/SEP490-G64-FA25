@@ -32,7 +32,17 @@ namespace BE.vn.fpt.edu.services
                 };
             }
 
-            var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0);
+            // ✅ Check if account is inactive
+            if (user.IsDelete == true || user.StatusCode == "INACTIVE")
+            {
+                return new LoginResponseDto
+                {
+                    Success = false,
+                    Message = "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
+                };
+            }
+
+            var token = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0, user.BranchId);
 
             return new LoginResponseDto
             {
@@ -110,7 +120,17 @@ namespace BE.vn.fpt.edu.services
             if (user == null)
                 return new LoginResponseDto { Success = false, Message = "User not found" };
 
-            var newToken = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0);
+            // ✅ Check if account is inactive
+            if (user.IsDelete == true || user.StatusCode == "INACTIVE")
+            {
+                return new LoginResponseDto
+                {
+                    Success = false,
+                    Message = "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
+                };
+            }
+
+            var newToken = _jwtService.GenerateToken(user.Id, user.Username, user.Role?.Name ?? "User", user.RoleId ?? 0, user.BranchId);
 
             return new LoginResponseDto
             {

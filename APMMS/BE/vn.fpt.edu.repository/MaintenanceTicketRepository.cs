@@ -25,12 +25,6 @@ namespace BE.vn.fpt.edu.repository
             return await _context.MaintenanceTickets
                 .Include(mt => mt.Car)
                     .ThenInclude(c => c.User)
-                        .ThenInclude(u => u.Address)
-                            .ThenInclude(a => a.Ward)
-                .Include(mt => mt.Car)
-                    .ThenInclude(c => c.User)
-                        .ThenInclude(u => u.Address)
-                            .ThenInclude(a => a.Province)
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)

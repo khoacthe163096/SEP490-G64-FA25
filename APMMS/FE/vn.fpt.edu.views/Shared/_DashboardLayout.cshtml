@@ -42,6 +42,37 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard layout loaded');
             
+            // ✅ Hide Employee List menu for non-Admin and non-Branch Manager roles
+            const employeeListMenu = document.getElementById('employeeListMenuItem');
+            if (employeeListMenu) {
+                try {
+                    // Decode JWT token to get roleId
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                        
+                        console.log('Current user RoleId:', roleId);
+                        
+                        // Only Admin (1) and Branch Manager (2) can see this menu
+                        if (roleId !== 1 && roleId !== 2) {
+                            employeeListMenu.style.display = 'none';
+                            console.log('Employee List menu hidden for role:', roleId);
+                        } else {
+                            console.log('Employee List menu shown for role:', roleId);
+                        }
+                    } else {
+                        // If no token, hide the menu
+                        employeeListMenu.style.display = 'none';
+                        console.log('No token found, hiding Employee List menu');
+                    }
+                } catch (e) {
+                    console.error('Error checking role:', e);
+                    // On error, hide the menu for security
+                    employeeListMenu.style.display = 'none';
+                }
+            }
+            
             // Sidebar toggle functionality
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');

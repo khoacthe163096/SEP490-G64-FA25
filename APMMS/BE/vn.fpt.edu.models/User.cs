@@ -39,8 +39,6 @@ public partial class User
 
     public long? BranchId { get; set; }
 
-    public long? AddressId { get; set; }
-
     public long? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -49,7 +47,11 @@ public partial class User
 
     public DateTime? LastModifiedDate { get; set; }
 
-    public virtual Address? Address { get; set; }
+    public DateOnly? Dob { get; set; }
+
+    public string? CitizenId { get; set; }
+
+    public string? Address { get; set; }
 
     public virtual Branch? Branch { get; set; }
 

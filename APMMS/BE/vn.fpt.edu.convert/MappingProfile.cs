@@ -39,16 +39,11 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
-                .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => 
-                    src.Address != null 
-                        ? string.Join("-", new[] { 
-                            src.Address.Street, 
-                            src.Address.Ward != null ? src.Address.Ward.Name : null, 
-                            src.Address.Province != null ? src.Address.Province.Name : null 
-                          }.Where(s => !string.IsNullOrWhiteSpace(s)))
-                        : null))
-                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
-            CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>();
+                .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Dob, opt => opt.MapFrom(src => src.Dob.HasValue ? new DateTime(src.Dob.Value.Year, src.Dob.Value.Month, src.Dob.Value.Day) : (DateTime?)null));
+            CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>()
+                .ForMember(dest => dest.Dob, opt => opt.MapFrom(src => ParseDobString(src.Dob)));
 
             // Feedback mappings
             CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>();
@@ -70,12 +65,7 @@ namespace BE.vn.fpt.edu.convert
                 // Customer info from car owner
                 .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? ($"{src.Car.User.FirstName} {src.Car.User.LastName}").Trim() : null))
                 .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? src.Car.User.Phone : null))
-                .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null && src.Car.User.Address != null ?
-                    string.Join(", ", new [] {
-                        src.Car.User.Address.Street,
-                        src.Car.User.Address.Ward != null ? src.Car.User.Address.Ward.Name : null,
-                        src.Car.User.Address.Province != null ? src.Car.User.Address.Province.Name : null
-                    }.Where(s => !string.IsNullOrWhiteSpace(s))) : null))
+                .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null && !string.IsNullOrWhiteSpace(src.Car.User.Address) ? src.Car.User.Address : null))
                 // Vehicle info
                 .ForMember(dest => dest.LicensePlate, opt => opt.MapFrom(src => src.Car != null ? src.Car.LicensePlate : null))
                 .ForMember(dest => dest.CarModel, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarModel : null))
@@ -135,6 +125,22 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<Car, BE.vn.fpt.edu.DTOs.CarOfAutoOwner.ResponseDto>();
             CreateMap<BE.vn.fpt.edu.DTOs.CarOfAutoOwner.RequestDto, Car>();
 
+        }
+
+        private static DateOnly? ParseDobString(string? dobString)
+        {
+            if (string.IsNullOrWhiteSpace(dobString))
+                return null;
+            
+            // Parse dd-MM-yyyy format
+            if (DateOnly.TryParseExact(dobString, "dd-MM-yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly date))
+                return date;
+            
+            // Fallback: try standard formats
+            if (DateTime.TryParse(dobString, out DateTime dt))
+                return DateOnly.FromDateTime(dt);
+            
+            return null;
         }
     }
 }

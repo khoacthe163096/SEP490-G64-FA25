@@ -4,6 +4,7 @@ using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -44,9 +45,20 @@ namespace BE.vn.fpt.edu.services
 
             employee.CreatedDate = DateTime.Now;
             employee.IsDelete = false;
+            
+            // ✅ Set StatusCode default là ACTIVE nếu không được set
+            employee.StatusCode = string.IsNullOrWhiteSpace(dto.StatusCode) ? "ACTIVE" : dto.StatusCode;
 
-            await _employeeRepository.AddAsync(employee);
-            await _employeeRepository.SaveChangesAsync();
+            try
+            {
+                await _employeeRepository.AddAsync(employee);
+                await _employeeRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+            {
+                // Check if it's a username unique constraint violation - this is the username constraint
+                throw new ArgumentException($"Tên đăng nhập '{dto.Username}' đã tồn tại. Vui lòng chọn tên khác.");
+            }
 
             return _mapper.Map<EmployeeResponseDto>(employee);
         }
@@ -59,8 +71,16 @@ namespace BE.vn.fpt.edu.services
             _mapper.Map(dto, employee);
             employee.LastModifiedDate = DateTime.Now;
 
-            await _employeeRepository.UpdateAsync(employee);
-            await _employeeRepository.SaveChangesAsync();
+            try
+            {
+                await _employeeRepository.UpdateAsync(employee);
+                await _employeeRepository.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx && sqlEx.Number == 2627)
+            {
+                // Check if it's a username unique constraint violation - this is the username constraint
+                throw new ArgumentException($"Tên đăng nhập '{dto.Username}' đã tồn tại. Vui lòng chọn tên khác.");
+            }
 
             return _mapper.Map<EmployeeResponseDto>(employee);
         }
@@ -211,6 +231,28 @@ namespace BE.vn.fpt.edu.services
                 currentPage = page,
                 totalCount = totalCount
             };
+        }
+        
+        /// <summary>
+        /// ✅ Cập nhật Status của Employee (ACTIVE hoặc INACTIVE)
+        /// </summary>
+        public async Task<EmployeeResponseDto?> UpdateStatusAsync(long id, string statusCode)
+        {
+            var employee = await _employeeRepository.GetByIdAsync(id);
+            if (employee == null)
+                throw new ArgumentException("Employee not found");
+            
+            // Validate status
+            if (statusCode != "ACTIVE" && statusCode != "INACTIVE")
+                throw new ArgumentException($"Invalid status: {statusCode}. Only ACTIVE or INACTIVE is allowed.");
+            
+            employee.StatusCode = statusCode;
+            employee.LastModifiedDate = DateTime.Now;
+            
+            await _employeeRepository.UpdateAsync(employee);
+            await _employeeRepository.SaveChangesAsync();
+            
+            return _mapper.Map<EmployeeResponseDto>(employee);
         }
     }
 }

@@ -104,12 +104,8 @@ namespace BE.vn.fpt.edu.services
                 // Khách hàng và xe
                 CustomerName = fullTicket.Car != null && fullTicket.Car.User != null ? ($"{fullTicket.Car.User.FirstName} {fullTicket.Car.User.LastName}").Trim() : null,
                 CustomerPhone = fullTicket.Car != null && fullTicket.Car.User != null ? fullTicket.Car.User.Phone : null,
-                CustomerAddress = fullTicket.Car != null && fullTicket.Car.User != null && fullTicket.Car.User.Address != null
-                    ? string.Join(", ", new [] {
-                        fullTicket.Car.User.Address.Street,
-                        fullTicket.Car.User.Address.Ward != null ? fullTicket.Car.User.Address.Ward.Name : null,
-                        fullTicket.Car.User.Address.Province != null ? fullTicket.Car.User.Address.Province.Name : null
-                    }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                CustomerAddress = fullTicket.Car != null && fullTicket.Car.User != null && !string.IsNullOrWhiteSpace(fullTicket.Car.User.Address)
+                    ? fullTicket.Car.User.Address
                     : null,
                 LicensePlate = fullTicket.Car != null ? fullTicket.Car.LicensePlate : null,
                 CarModel = fullTicket.Car != null ? fullTicket.Car.CarModel : null,

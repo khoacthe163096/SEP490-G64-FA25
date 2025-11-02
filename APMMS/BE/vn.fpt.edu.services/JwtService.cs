@@ -15,7 +15,7 @@ namespace BE.vn.fpt.edu.services
             _configuration = configuration;
         }
 
-        public string GenerateToken(long userId, string username, string roleName, long roleId)
+        public string GenerateToken(long userId, string username, string roleName, long roleId, long? branchId = null)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? ""));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -29,6 +29,12 @@ namespace BE.vn.fpt.edu.services
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             };
+            
+            // Add BranchId claim if provided
+            if (branchId.HasValue)
+            {
+                claims = claims.Append(new Claim("BranchId", branchId.Value.ToString())).ToArray();
+            }
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],

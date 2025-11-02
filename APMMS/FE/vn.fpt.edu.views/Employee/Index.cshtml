@@ -13,19 +13,19 @@
                 <div class="card-body">
                     <!-- Search and Filter -->
                     <div class="row mb-3 align-items-center">
-                        <div class="col-md-6 d-flex gap-2">
-                            <a href="/Employees/Create" class="btn btn-primary">
+                        <div class="col-md-6 d-flex gap-2 align-items-center">
+                            <a href="/Employees/Create" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Thêm mới
                             </a>
-                            <button class="btn btn-secondary" onclick="editSelectedStatus()">
+                            <button class="btn btn-secondary btn-sm" onclick="editSelectedStatus()">
                                 <i class="fas fa-edit"></i> Sửa trạng thái
                             </button>
-                            <select class="form-select" id="statusFilter" style="width: auto;">
+                            <select class="form-select" id="statusFilter" style="width: 180px;">
                                 <option value="">Chọn trạng thái</option>
                                 <option value="ACTIVE">Hoạt động</option>
                                 <option value="INACTIVE">Không hoạt động</option>
                             </select>
-                            <select class="form-select" id="roleFilter" style="width: auto;">
+                            <select class="form-select" id="roleFilter" style="width: 180px;">
                                 <option value="">Chọn chức vụ</option>
                                 <option value="3">Accountant</option>
                                 <option value="4">Technician</option>
@@ -33,7 +33,7 @@
                                 <option value="6">Consulter</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex justify-content-end">
+                        <div class="col-md-6 d-flex justify-content-end align-items-center">
                             <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm nhân viên" style="max-width: 300px;">
                         </div>
                     </div>
@@ -73,6 +73,48 @@
     </div>
 </div>
 
+<!-- ✅ Modal chọn trạng thái -->
+<div class="modal fade" id="statusUpdateModal" tabindex="-1" aria-labelledby="statusUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="statusUpdateModalLabel">
+                    <i class="fas fa-edit me-2"></i>
+                    Cập nhật trạng thái nhân viên
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Bạn đang cập nhật trạng thái cho <strong id="selectedCount">0</strong> nhân viên
+                </div>
+                
+                <div class="mb-3">
+                    <label for="newStatusSelect" class="form-label fw-bold">Chọn trạng thái mới:</label>
+                    <select class="form-select form-select-lg" id="newStatusSelect">
+                        <option value="ACTIVE">✅ Hoạt động (ACTIVE)</option>
+                        <option value="INACTIVE">❌ Ngưng hoạt động (INACTIVE)</option>
+                    </select>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Nhân viên INACTIVE sẽ không thể đăng nhập hệ thống.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmUpdateStatus()">
+                    <i class="fas fa-check me-1"></i>Xác nhận cập nhật
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         let currentPage = 1;
@@ -92,7 +134,15 @@
             const status = document.getElementById('statusFilter').value;
             const role = document.getElementById('roleFilter').value;
 
-            fetch(`https://localhost:7173/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`)
+            // ✅ Get JWT token from localStorage
+            const token = localStorage.getItem('authToken');
+
+            fetch(`https://localhost:7173/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -127,7 +177,9 @@
             const startIndex = (currentPage - 1) * pageSize;
             employees.forEach((employee, index) => {
                 const row = document.createElement('tr');
-                const isActive = !employee.isDelete; // IsDelete = false means active
+                // ✅ Hiển thị status từ StatusCode (ACTIVE/INACTIVE)
+                const statusCode = employee.statusCode || 'ACTIVE';
+                const isActive = statusCode === 'ACTIVE';
                 const stt = startIndex + index + 1;
                 const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
                 
@@ -147,7 +199,7 @@
                     <td><span class="badge bg-info">${employee.roleName || '-'}</span></td>
                     <td>
                         <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}" style="padding: 5px 10px;">
-                            ${isActive ? 'CÓ HIỆU LỰC' : 'KHÔNG HIỆU LỰC'}
+                            ${isActive ? 'HOẠT ĐỘNG' : 'NGƯNG HOẠT ĐỘNG'}
                         </span>
                     </td>
                 `;
@@ -191,11 +243,77 @@
 
         function editSelectedStatus() {
             if (selectedEmployees.size === 0) {
-                alert('Vui lòng chọn ít nhất một nhân viên');
+                showAlert('Vui lòng chọn ít nhất một nhân viên', 'warning');
                 return;
             }
-            // TODO: Implement status edit functionality
-            alert('Chức năng sửa trạng thái đang được phát triển');
+            
+            // Update selected count in modal
+            document.getElementById('selectedCount').textContent = selectedEmployees.size;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('statusUpdateModal'));
+            modal.show();
+        }
+        
+        function confirmUpdateStatus() {
+            // Get selected status
+            const newStatus = document.getElementById('newStatusSelect').value;
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('statusUpdateModal'));
+            modal.hide();
+            
+            // Update all selected employees
+            updateMultipleEmployeeStatuses(Array.from(selectedEmployees), newStatus);
+        }
+        
+        async function updateMultipleEmployeeStatuses(employeeIds, newStatus) {
+            const token = localStorage.getItem('authToken');
+            let successCount = 0;
+            let failCount = 0;
+            
+            showAlert(`Đang cập nhật ${employeeIds.length} nhân viên...`, 'info');
+            
+            // Update all employees sequentially
+            for (const empId of employeeIds) {
+                try {
+                    const response = await fetch(`https://localhost:7173/api/Employee/${empId}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({ statusCode: newStatus })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        console.error(`Failed to update employee ${empId}:`, data.message);
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error(`Error updating employee ${empId}:`, error);
+                }
+            }
+            
+            // Clear selection
+            selectedEmployees.clear();
+            document.getElementById('selectAll').checked = false;
+            document.querySelectorAll('.employee-checkbox').forEach(cb => cb.checked = false);
+            
+            // Reload data
+            loadEmployees();
+            
+            // Show result
+            if (failCount === 0) {
+                showAlert(`Đã cập nhật thành công ${successCount} nhân viên sang trạng thái "${newStatus}"`, 'success');
+            } else {
+                showAlert(`Đã cập nhật ${successCount} nhân viên thành công, ${failCount} nhân viên thất bại`, 'warning');
+            }
         }
 
         function renderPagination(totalPages, currentPage) {
@@ -274,10 +392,12 @@
 
         function deleteEmployee(id) {
             if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
+                const token = localStorage.getItem('authToken');
                 fetch(`https://localhost:7173/api/Employee/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 })
                 .then(response => {

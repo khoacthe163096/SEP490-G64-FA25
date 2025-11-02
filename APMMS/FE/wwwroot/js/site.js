@@ -113,7 +113,7 @@ $(document).ready(function () {
         var btn = $(this);
         var originalText = btn.html();
         
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Ðang xử lý...');
         btn.prop('disabled', true);
         
         // Simulate loading
@@ -283,7 +283,7 @@ async function checkLoginStatus() {
         
         if (token) {
             try {
-                // Decode token để lấy username
+                // Decode token d? l?y username
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
                 
@@ -325,7 +325,7 @@ async function handleLogin() {
     // Show loading state
     const loginBtn = $('.btn-login');
     const originalText = loginBtn.html();
-    loginBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...');
+    loginBtn.html('<i class="fas fa-spinner fa-spin"></i> Ðang đăng nhập...');
     loginBtn.prop('disabled', true);
     
     try {
@@ -389,7 +389,7 @@ async function handleLogin() {
             
             if (result.redirectTo && result.redirectTo !== '/') {
                 console.log('Redirecting to:', result.redirectTo);
-                showAlert('Đăng nhập thành công! Chuyển hướng đến Dashboard...', 'success');
+                showAlert('Ðăng nhập thành công! Chuyển huớng đến Dashboard...', 'success');
                 setTimeout(() => {
                     console.log('Executing redirect to:', result.redirectTo);
                     window.location.href = result.redirectTo;
@@ -402,10 +402,32 @@ async function handleLogin() {
                     email: 'user@example.com',
                     role: getRoleName(result.roleId)
                 });
-                showAlert('Đăng nhập thành công!', 'success');
+                showAlert('Ðang nh?p thành công!', 'success');
             }
         } else {
-            showAlert(result.error || 'Đăng nhập thất bại', 'danger');
+            // ? Check if account is inactive
+            const errorMessage = result.error || 'Đăng nhập thất bại';
+            console.log('Error message:', errorMessage);
+            console.log('Checking for inactive account...');
+            if (errorMessage.toLowerCase().includes('vô hiệuu hóa') || errorMessage.toLowerCase().includes('inactive')) {
+                console.log('Detected inactive account, showing modal...');
+                // Show special modal for inactive account
+                const modalElement = document.getElementById('accountDisabledModal');
+                console.log('Modal element:', modalElement);
+                if (modalElement) {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                    console.log('Modal shown');
+                } else {
+                    console.error('Modal element not found!');
+                    showAlert(errorMessage, 'danger');
+                }
+                // Hide login modal
+                $('#loginModal').modal('hide');
+            } else {
+                console.log('Regular error, showing alert');
+                showAlert(errorMessage, 'danger');
+            }
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -438,9 +460,9 @@ async function handleLogout() {
             // Show login button
             showLoginButton();
             
-            showAlert('Đã đăng xuất thành công!', 'info');
+            showAlert('Ðã dang xuất thành công!', 'info');
         } else {
-            showAlert('Lỗi khi đăng xuất', 'warning');
+            showAlert('Lỗi khi dang xuất', 'warning');
         }
     } catch (error) {
         console.error('Logout error:', error);
@@ -448,7 +470,7 @@ async function handleLogout() {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('userInfo');
         showLoginButton();
-        showAlert('Đã đăng xuất', 'info');
+        showAlert('Ðã dang xuất', 'info');
     }
 }
 
@@ -620,7 +642,7 @@ async function handleRegister() {
     // Show loading state
     const registerBtn = $('.btn-register');
     const originalText = registerBtn.html();
-    registerBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...');
+    registerBtn.html('<i class="fas fa-spinner fa-spin"></i> Ðang đăng ký...');
     registerBtn.prop('disabled', true);
     
     try {
@@ -641,13 +663,13 @@ async function handleRegister() {
         const result = await response.json();
         
         if (result.success) {
-            showAlert('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+            showAlert('Ðwng ký thành công! Vui lòng dang nhập.', 'success');
             $('#registerModal').modal('hide');
             $('#loginModal').modal('show');
             // Pre-fill username
             $('#username').val(username);
         } else {
-            showAlert(result.error || 'Đăng ký thất bại', 'danger');
+            showAlert(result.error || 'Ðăng ký thất bại', 'danger');
         }
     } catch (error) {
         console.error('Register error:', error);
@@ -731,13 +753,13 @@ async function handleBookingSubmission() {
     
     // Validation
     if (!formData.serviceType || !formData.fullName || !formData.phone || !formData.branch || !formData.appointmentTime) {
-        showAlert('Vui lòng điền đầy đủ các trường bắt buộc (*)', 'warning');
+        showAlert('Vui lòng điền đầy đủ các truờng bắt buộc (*)', 'warning');
         return;
     }
     
     // Show loading state
     const originalText = submitBtn.html();
-    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+    submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Ðang x? lý...');
     submitBtn.prop('disabled', true);
     
     try {
@@ -745,7 +767,7 @@ async function handleBookingSubmission() {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Success
-        showAlert('Đặt lịch thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.', 'success');
+        showAlert('Ðặt lịch thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.', 'success');
         $('#bookingModal').modal('hide');
         form[0].reset();
         

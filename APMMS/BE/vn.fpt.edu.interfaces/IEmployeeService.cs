@@ -13,8 +13,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<EmployeeProfileDto?> GetProfileAsync(long userId);
         Task<EmployeeProfileDto?> UpdateProfileAsync(long userId, UpdateProfileDto dto);
         Task<object> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null);
-
-
+        Task<EmployeeResponseDto?> UpdateStatusAsync(long id, string statusCode);
     }
 }
 

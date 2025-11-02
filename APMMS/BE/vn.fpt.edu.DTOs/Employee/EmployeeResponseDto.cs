@@ -17,8 +17,8 @@ namespace BE.vn.fpt.edu.DTOs.Employee
         public bool? IsDelete { get; set; }
         public string? TaxCode { get; set; }
         public string? FullAddress { get; set; }
-        public int? Age { get; set; }
+        public DateTime? Dob { get; set; }
         public string? CitizenId { get; set; }
-
+        public string? StatusCode { get; set; }
     }
 }

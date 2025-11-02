@@ -1,7 +1,6 @@
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace BE.vn.fpt.edu.repository
@@ -29,10 +28,6 @@ namespace BE.vn.fpt.edu.repository
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Branch)
-                .Include(u => u.Address)
-                    .ThenInclude(a => a.Ward)
-                .Include(u => u.Address)
-                    .ThenInclude(a => a.Province)
                 .FirstOrDefaultAsync(u => u.Id == id && u.RoleId >= 3 && u.RoleId <= 6);
         }
 
@@ -92,16 +87,18 @@ namespace BE.vn.fpt.edu.repository
                 );
             }
 
-            // Status filter
+            // Status filter - CHỈ theo StatusCode
             if (!string.IsNullOrWhiteSpace(status))
             {
                 if (status.ToUpper() == "ACTIVE")
                 {
-                    query = query.Where(u => (u.StatusCode == "ACTIVE" || u.StatusCode == null) && (u.IsDelete == false || u.IsDelete == null));
+                    // ACTIVE = StatusCode là ACTIVE hoặc null (default là ACTIVE)
+                    query = query.Where(u => u.StatusCode == "ACTIVE" || u.StatusCode == null);
                 }
                 else if (status.ToUpper() == "INACTIVE")
                 {
-                    query = query.Where(u => u.StatusCode == "INACTIVE" || u.IsDelete == true);
+                    // INACTIVE = StatusCode là INACTIVE
+                    query = query.Where(u => u.StatusCode == "INACTIVE");
                 }
             }
 
@@ -136,16 +133,18 @@ namespace BE.vn.fpt.edu.repository
                 );
             }
 
-            // Status filter
+            // Status filter - CHỈ theo StatusCode
             if (!string.IsNullOrWhiteSpace(status))
             {
                 if (status.ToUpper() == "ACTIVE")
                 {
-                    query = query.Where(u => (u.StatusCode == "ACTIVE" || u.StatusCode == null) && (u.IsDelete == false || u.IsDelete == null));
+                    // ACTIVE = StatusCode là ACTIVE hoặc null (default là ACTIVE)
+                    query = query.Where(u => u.StatusCode == "ACTIVE" || u.StatusCode == null);
                 }
                 else if (status.ToUpper() == "INACTIVE")
                 {
-                    query = query.Where(u => u.StatusCode == "INACTIVE" || u.IsDelete == true);
+                    // INACTIVE = StatusCode là INACTIVE
+                    query = query.Where(u => u.StatusCode == "INACTIVE");
                 }
             }
 

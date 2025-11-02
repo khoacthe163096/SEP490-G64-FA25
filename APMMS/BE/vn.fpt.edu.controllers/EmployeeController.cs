@@ -1,11 +1,14 @@
 using BE.vn.fpt.edu.DTOs.Employee;
 using BE.vn.fpt.edu.interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Branch Manager,Admin")]
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
@@ -39,16 +42,52 @@ namespace BE.vn.fpt.edu.controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] EmployeeRequestDto dto)
         {
-            var result = await _employeeService.CreateAsync(dto);
-            return Ok(result);
+            try
+            {
+                // Get RoleId from JWT claims
+                var roleIdClaim = User.FindFirst("RoleId")?.Value;
+                var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
+                
+                // If logged in as Branch Manager (roleId = 2), auto-set branchId from JWT
+                if (roleId == 2 && dto.BranchId == null || dto.BranchId == 0)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var branchId))
+                    {
+                        dto.BranchId = branchId;
+                    }
+                }
+                
+                var result = await _employeeService.CreateAsync(dto);
+                return Ok(new { success = true, data = result, message = "Employee created successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message, stackTrace = ex.StackTrace, innerException = ex.InnerException?.Message });
+            }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] EmployeeRequestDto dto)
         {
-            var result = await _employeeService.UpdateAsync(id, dto);
-            if (result == null) return NotFound();
-            return Ok(result);
+            try
+            {
+                var result = await _employeeService.UpdateAsync(id, dto);
+                if (result == null) return NotFound(new { success = false, message = "Employee not found" });
+                return Ok(new { success = true, data = result, message = "Employee updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
@@ -58,13 +97,34 @@ namespace BE.vn.fpt.edu.controllers
             if (!success) return NotFound();
             return Ok(new { message = "Employee deleted successfully (soft delete)." });
         }
+        
         [HttpGet("filter")]
         public async Task<IActionResult> FilterEmployees([FromQuery] bool? isDelete, [FromQuery] long? roleId)
         {
             var employees = await _employeeService.FilterAsync(isDelete, roleId);
             return Ok(employees);
         }
-   
+        
+        /// <summary>
+        /// ✅ Cập nhật Status của Employee (ACTIVE hoặc INACTIVE)
+        /// </summary>
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(long id, [FromBody] EmployeeUpdateStatusDto request)
+        {
+            try
+            {
+                var result = await _employeeService.UpdateStatusAsync(id, request.StatusCode);
+                return Ok(new { success = true, data = result, message = "Status updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
 
     }
 }

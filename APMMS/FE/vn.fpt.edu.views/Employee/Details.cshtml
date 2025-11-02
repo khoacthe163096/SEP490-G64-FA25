@@ -201,9 +201,11 @@
         }
 
         function loadEmployeeDetails(id) {
+            const token = localStorage.getItem('authToken');
             fetch(`https://localhost:7173/api/Employee/${id}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             })
             .then(response => {
@@ -376,11 +378,12 @@
                 alert('Tính năng upload ảnh đang được phát triển. Vui lòng sử dụng API riêng để upload ảnh.');
             }
 
+            const token = localStorage.getItem('authToken');
             fetch(`https://localhost:7173/api/Employee/${currentEmployee.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(formData)
             })

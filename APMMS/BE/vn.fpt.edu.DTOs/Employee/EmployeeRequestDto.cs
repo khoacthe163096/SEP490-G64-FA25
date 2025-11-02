@@ -11,9 +11,19 @@ namespace BE.vn.fpt.edu.DTOs.Employee
         public string? Phone { get; set; }
         public string? Gender { get; set; }
         public string? Image { get; set; }
+        public string? Dob { get; set; } // Format: dd-MM-yyyy
+        public string? CitizenId { get; set; }
+        public string? Address { get; set; }
         public long? RoleId { get; set; }
         public long? BranchId { get; set; }
         public string? TaxCode { get; set; }
-
+        public string? StatusCode { get; set; }
+    }
+    
+    public class EmployeeUpdateStatusDto
+    {
+        public string StatusCode { get; set; } = null!;
     }
 }
+
+

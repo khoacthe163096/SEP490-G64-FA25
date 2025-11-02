@@ -47,6 +47,21 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="dob" class="form-label">Ngày sinh</label>
+                                    <input type="date" class="form-control" id="dob" name="dob">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="citizenId" class="form-label">CMT/CCCD</label>
+                                    <input type="text" class="form-control" id="citizenId" name="citizenId" maxlength="20">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="roleId" class="form-label">Vai trò <span class="text-danger">*</span></label>
                                     <select class="form-select" id="roleId" name="roleId" required>
                                         <option value="">Chọn vai trò</option>
@@ -142,9 +157,11 @@
         }
 
         function loadEmployee(id) {
+            const token = localStorage.getItem('authToken');
             fetch(`/api/Employee/${id}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             })
             .then(response => response.json())
@@ -155,11 +172,13 @@
                     document.getElementById('firstName').value = employee.firstName || '';
                     document.getElementById('lastName').value = employee.lastName || '';
                     document.getElementById('email').value = employee.email || '';
-                    document.getElementById('phoneNumber').value = employee.phoneNumber || '';
+                    document.getElementById('phoneNumber').value = employee.phone || '';
+                    document.getElementById('dob').value = employee.dob ? new Date(employee.dob).toISOString().split('T')[0] : '';
+                    document.getElementById('citizenId').value = employee.citizenId || '';
                     document.getElementById('roleId').value = employee.roleId || '';
                     document.getElementById('username').value = employee.username || '';
-                    document.getElementById('address').value = employee.address || '';
-                    document.getElementById('isActive').checked = employee.isActive || false;
+                    document.getElementById('address').value = employee.fullAddress || '';
+                    document.getElementById('isActive').checked = !employee.statusCode || employee.statusCode === 'ACTIVE';
                 } else {
                     showAlert('Lỗi khi tải thông tin nhân viên: ' + data.message, 'danger');
                 }
@@ -196,9 +215,11 @@
         }
 
         function loadEmployeeBranch(employeeId) {
+            const token = localStorage.getItem('authToken');
             fetch(`/api/Employee/${employeeId}`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             })
             .then(response => response.json())
@@ -215,20 +236,42 @@
         function updateEmployee() {
             const formData = new FormData(document.getElementById('employeeForm'));
             const employeeData = Object.fromEntries(formData.entries());
-            employeeData.isActive = document.getElementById('isActive').checked;
+            
+            // Map isActive to StatusCode
+            employeeData.statusCode = document.getElementById('isActive').checked ? 'ACTIVE' : 'INACTIVE';
+            delete employeeData.isActive;
             
             // Remove empty password
             if (!employeeData.password) {
                 delete employeeData.password;
             }
+            
+            // Rename fields to match backend
+            if (employeeData.phoneNumber) {
+                employeeData.phone = employeeData.phoneNumber;
+                delete employeeData.phoneNumber;
+            }
+            if (employeeData.address) {
+                // Address is already correct
+            }
+            
+            // Format dob from YYYY-MM-DD to dd-MM-yyyy
+            if (employeeData.dob) {
+                const date = new Date(employeeData.dob + 'T00:00:00');
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                employeeData.dob = `${day}-${month}-${year}`;
+            }
 
             const employeeId = document.getElementById('employeeId').value;
+            const token = localStorage.getItem('authToken');
 
             fetch(`/api/Employee/${employeeId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(employeeData)
             })
