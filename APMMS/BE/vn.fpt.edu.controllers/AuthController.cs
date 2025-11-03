@@ -161,7 +161,24 @@ namespace BE.vn.fpt.edu.controllers
                 Data = new { isValid }
             });
         }
+
+        [Authorize]
+        [HttpPost("change-password")]
+        [ProducesResponseType(typeof(ChangePasswordResponseDto), 200)]
+        [ProducesResponseType(typeof(ChangePasswordResponseDto), 400)]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var result = await _authService.ChangePasswordAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+
     }
+
 
 
     public class RefreshTokenDto
@@ -172,8 +189,13 @@ namespace BE.vn.fpt.edu.controllers
     public class ValidateTokenDto
     {
         public string Token { get; set; } = string.Empty;
+
+        
+        }
     }
-    
+
+
+
+
     
 
-}
