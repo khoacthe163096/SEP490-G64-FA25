@@ -1,16 +1,13 @@
-using BE.vn.fpt.edu.models;
+using BE.models;
 
 namespace BE.vn.fpt.edu.repository.IRepository
 {
     public interface IServicePackageRepository
     {
-        Task<IEnumerable<ServicePackage>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null);
+        Task<IEnumerable<ServicePackage>> GetAllAsync();
         Task<ServicePackage?> GetByIdAsync(long id);
-        Task<ServicePackage> AddAsync(ServicePackage entity);
-        Task<ServicePackage> UpdateAsync(ServicePackage entity);
-        Task DisableEnableAsync(long id, string statusCode);
-        Task<bool> ExistsAsync(long id);
+        Task<ServicePackage> AddAsync(ServicePackage entity, List<long>? componentIds);
+        Task<ServicePackage> UpdateAsync(ServicePackage entity, List<long>? componentIds);
+        Task<bool> DeleteAsync(long id);
     }
 }
-
-

@@ -4,12 +4,10 @@ namespace BE.vn.fpt.edu.interfaces
 {
     public interface IServicePackageService
     {
-        Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null);
+        Task<IEnumerable<ResponseDto>> GetAllAsync();
         Task<ResponseDto?> GetByIdAsync(long id);
         Task<ResponseDto> CreateAsync(RequestDto dto);
-        Task<ResponseDto?> UpdateAsync(RequestDto dto);
-        Task DisableEnableAsync(long id, string statusCode);
+        Task<ResponseDto?> UpdateAsync(long id, RequestDto dto);
+        Task<bool> DeleteAsync(long id);
     }
 }
-
-
