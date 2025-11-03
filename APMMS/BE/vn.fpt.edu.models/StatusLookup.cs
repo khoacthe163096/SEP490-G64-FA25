@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.vn.fpt.edu.models;
+namespace BE.models;
 
 public partial class StatusLookup
 {
@@ -10,6 +10,8 @@ public partial class StatusLookup
     public string? Name { get; set; }
 
     public string? Description { get; set; }
+
+    public virtual ICollection<Component> Components { get; set; } = new List<Component>();
 
     public virtual ICollection<MaintenanceRequest> MaintenanceRequests { get; set; } = new List<MaintenanceRequest>();
 
@@ -22,6 +24,8 @@ public partial class StatusLookup
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
 
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
+
+    public virtual ICollection<TypeComponent> TypeComponents { get; set; } = new List<TypeComponent>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 

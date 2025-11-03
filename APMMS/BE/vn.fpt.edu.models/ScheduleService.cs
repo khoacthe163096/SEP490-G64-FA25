@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.vn.fpt.edu.models;
+namespace BE.models;
 
 public partial class ScheduleService
 {

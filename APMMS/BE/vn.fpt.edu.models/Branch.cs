@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.vn.fpt.edu.models;
+namespace BE.models;
 
 public partial class Branch
 {
@@ -23,7 +23,11 @@ public partial class Branch
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
+    public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
+
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
+
+    public virtual ICollection<TypeComponent> TypeComponents { get; set; } = new List<TypeComponent>();
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 
