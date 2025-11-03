@@ -243,6 +243,27 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Xóa tất cả kỹ thuật viên khỏi Maintenance Ticket
+        /// </summary>
+        [HttpDelete("{id}/technicians")]
+        public async Task<IActionResult> RemoveTechnicians(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.RemoveTechniciansAsync(id);
+                return Ok(new { success = true, data = result, message = "Technicians removed successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Bắt đầu bảo dưỡng
         /// </summary>
         [HttpPut("{id}/start")]

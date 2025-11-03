@@ -371,7 +371,16 @@ function displayBasicInfo(data) {
                     const roleBadge = t.roleInTicket === 'PRIMARY' 
                         ? '<span class="badge bg-success ms-1">Chính</span>' 
                         : '<span class="badge bg-info ms-1">Phụ</span>';
-                    return `<div class="mb-1">${t.technicianName || 'N/A'} ${roleBadge}</div>`;
+                    const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
+                    const removeBtn = canRemove 
+                        ? `<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
+                            <i class="fas fa-times"></i>
+                           </button>`
+                        : '';
+                    return `<div class="mb-1 d-flex align-items-center">
+                        <span>${t.technicianName || 'N/A'} ${roleBadge}</span>
+                        ${removeBtn}
+                    </div>`;
                 }).join('')
                 : (data.technicianName ? `<div>${data.technicianName}</div>` : '<div>Chưa gán</div>')
             }
@@ -481,6 +490,10 @@ function displayStatusAndActions(data) {
             break;
         case 'IN_PROGRESS':
             buttons = `
+                <button class="btn btn-info mb-2" onclick="openAssignTechniciansModal()">
+                    <i class="fas fa-user-plus me-1"></i>
+                    Thêm kỹ thuật viên
+                </button>
                 <button class="btn btn-success mb-2" onclick="completeMaintenance(${data.id})">
                     <i class="fas fa-check me-1"></i>
                     Hoàn thành
@@ -521,10 +534,17 @@ function openAssignTechniciansModal() {
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Gán kỹ thuật viên</h5>
+            <h5 class="modal-title">${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
+            ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? `
+            <div class="alert alert-info mb-3">
+              <i class="fas fa-info-circle me-1"></i>
+              <strong>Danh sách hiện tại:</strong> ${maintenanceTicketData.technicians.map(t => t.technicianName).join(', ')}
+              <br><small>Bạn có thể thêm kỹ thuật viên mới hoặc bỏ chọn để xóa người không còn tham gia.</small>
+            </div>
+            ` : ''}
             <div class="mb-3">
               <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc username...">
               <small class="text-muted">Gõ để lọc nhanh. Kết quả hiển thị tức thì như Google.</small>
@@ -1033,6 +1053,78 @@ function completeMaintenance(ticketId) {
             executeCompleteMaintenance(ticketId);
         }
     );
+}
+
+function removeSingleTechnician(ticketId, technicianId) {
+    // Tìm tên kỹ thuật viên để hiển thị trong popup
+    const technician = maintenanceTicketData?.technicians?.find(t => t.technicianId === technicianId);
+    const technicianName = technician ? technician.technicianName : 'kỹ thuật viên này';
+    
+    showConfirmModal(
+        `<p>Bạn có chắc chắn muốn xóa <strong>${technicianName}</strong> khỏi phiếu bảo dưỡng?</p>`,
+        function() {
+            executeRemoveTechnician(ticketId, technicianId);
+        }
+    );
+}
+
+function executeRemoveTechnician(ticketId, technicianId) {
+    if (!maintenanceTicketData || !maintenanceTicketData.technicians) {
+        showAlert('Không tìm thấy dữ liệu kỹ thuật viên', 'danger');
+        return;
+    }
+
+    // Lấy danh sách kỹ thuật viên còn lại (loại bỏ người được xóa)
+    const remainingTechnicians = maintenanceTicketData.technicians
+        .filter(t => t.technicianId !== technicianId)
+        .map(t => t.technicianId);
+
+    // Xác định primary mới (nếu người bị xóa là primary, chọn người đầu tiên còn lại)
+    let primaryId = null;
+    const currentPrimary = maintenanceTicketData.technicians.find(t => t.roleInTicket === 'PRIMARY');
+    
+    if (remainingTechnicians.length > 0) {
+        // Còn kỹ thuật viên khác
+        if (currentPrimary && currentPrimary.technicianId === technicianId) {
+            // Nếu xóa primary, chọn người đầu tiên còn lại làm primary
+            primaryId = remainingTechnicians[0];
+        } else if (currentPrimary) {
+            // Giữ nguyên primary hiện tại nếu không bị xóa
+            primaryId = currentPrimary.technicianId;
+        } else {
+            // Nếu không có primary, chọn người đầu tiên
+            primaryId = remainingTechnicians[0];
+        }
+    }
+    // Nếu remainingTechnicians.length === 0, primaryId sẽ là null (không còn ai)
+
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${ticketId}/technicians`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+            technicianIds: remainingTechnicians, 
+            primaryId: primaryId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Xóa kỹ thuật viên thành công', 'success');
+            maintenanceTicketData = data.data;
+            displayBasicInfo(maintenanceTicketData);
+            displayStatusAndActions(maintenanceTicketData);
+        } else {
+            showAlert(data.message || 'Xóa kỹ thuật viên thất bại', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error removing technician:', error);
+        showAlert('Có lỗi xảy ra khi xóa kỹ thuật viên', 'danger');
+    });
 }
 
 function executeCompleteMaintenance(ticketId) {
