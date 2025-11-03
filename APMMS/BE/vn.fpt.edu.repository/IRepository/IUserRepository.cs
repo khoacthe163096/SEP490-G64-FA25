@@ -15,5 +15,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task<bool> EmailExistsAsync(string email);
         Task AddAsync(User user);
         Task SaveChangesAsync();
+        Task UpdateAsync(User user);
+
     }
 }

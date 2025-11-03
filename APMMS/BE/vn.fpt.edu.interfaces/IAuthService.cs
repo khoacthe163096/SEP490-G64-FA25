@@ -9,5 +9,8 @@ namespace BE.vn.fpt.edu.interfaces
         Task<LogoutResponseDto> LogoutAsync(string token);
         Task<bool> ValidateTokenAsync(string token);
         Task<LoginResponseDto> RefreshTokenAsync(string token);
+        Task<ChangePasswordResponseDto> ChangePasswordAsync(ChangePasswordDto dto);
+
+
     }
 }

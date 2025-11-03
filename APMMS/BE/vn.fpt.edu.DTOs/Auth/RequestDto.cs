@@ -34,4 +34,16 @@ namespace BE.vn.fpt.edu.DTOs.Auth
         public string? Phone { get; set; }
         public long? RoleId { get; set; }
     }
+    public class ChangePasswordDto
+    {
+        [Required(ErrorMessage = "UserId is required")]
+        public long UserId { get; set; }
+
+        [Required(ErrorMessage = "Old password is required")]
+        public string OldPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "New password is required")]
+        [MinLength(6, ErrorMessage = "New password must be at least 6 characters")]
+        public string NewPassword { get; set; } = string.Empty;
+    }
 }
