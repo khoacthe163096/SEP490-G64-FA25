@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using AutoMapper;
-using BE.vn.fpt.edu.interfaces;
-using BE.vn.fpt.edu.models;
+using BE.models;
 using BE.vn.fpt.edu.DTOs.Component;
+using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.repository.IRepository;
 
 namespace BE.vn.fpt.edu.services
@@ -20,70 +17,40 @@ namespace BE.vn.fpt.edu.services
             _mapper = mapper;
         }
 
-        public async Task<ResponseDto> CreateAsync(RequestDto dto)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync()
         {
-            var entity = _mapper.Map<Component>(dto);
-            var created = await _repo.AddAsync(entity);
-            var response = _mapper.Map<ResponseDto>(created);
-            // map nested names if needed
-            response.TypeComponentName = created.TypeComponent?.Name;
-            response.BranchName = created.Branch?.Name;
-            return response;
-        }
-
-        public async Task DisableEnableAsync(long id, string statusCode)
-        {
-            await _repo.DisableEnableAsync(id, statusCode);
-        }
-
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
-        {
-            var list = await _repo.GetAllAsync(branchId, typeComponentId, statusCode, search);
-            var mapped = _mapper.Map<IEnumerable<ResponseDto>>(list);
-            // enrich nested names
-            foreach (var dst in mapped)
-            {
-                var src = System.Linq.Enumerable.FirstOrDefault(list, x => x.Id == dst.Id);
-                if (src != null)
-                {
-                    dst.TypeComponentName = src.TypeComponent?.Name;
-                    dst.BranchName = src.Branch?.Name;
-                }
-            }
-            return mapped;
+            var list = await _repo.GetAllAsync();
+            return _mapper.Map<IEnumerable<ResponseDto>>(list);
         }
 
         public async Task<ResponseDto?> GetByIdAsync(long id)
         {
-            var e = await _repo.GetByIdAsync(id);
-            if (e == null) return null;
-            var dto = _mapper.Map<ResponseDto>(e);
-            dto.TypeComponentName = e.TypeComponent?.Name;
-            dto.BranchName = e.Branch?.Name;
-            return dto;
+            var entity = await _repo.GetByIdAsync(id);
+            return entity == null ? null : _mapper.Map<ResponseDto>(entity);
         }
 
-        public async Task<ResponseDto?> UpdateAsync(RequestDto dto)
+        public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            if (!dto.Id.HasValue) return null;
-            var exist = await _repo.GetByIdAsync(dto.Id.Value);
-            if (exist == null) return null;
+            var entity = _mapper.Map<Component>(dto);
+            var created = await _repo.AddAsync(entity);
+            return _mapper.Map<ResponseDto>(created);
+        }
 
-            exist.Code = dto.Code;
-            exist.Name = dto.Name;
-            exist.ImageUrl = dto.ImageUrl;
-            exist.QuantityStock = dto.QuantityStock;
-            exist.UnitPrice = dto.UnitPrice;
-            exist.PurchasePrice = dto.PurchasePrice;
-            exist.BranchId = dto.BranchId;
-            exist.TypeComponentId = dto.TypeComponentId;
-            exist.StatusCode = dto.StatusCode;
+        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
+        {
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null)
+                return null;
 
-            var updated = await _repo.UpdateAsync(exist);
-            var resp = _mapper.Map<ResponseDto>(updated);
-            resp.TypeComponentName = updated.TypeComponent?.Name;
-            resp.BranchName = updated.Branch?.Name;
-            return resp;
+            _mapper.Map(dto, existing);
+            await _repo.UpdateAsync(existing);
+
+            return _mapper.Map<ResponseDto>(existing);
+        }
+
+        public async Task<bool> DeleteAsync(long id)
+        {
+            return await _repo.DeleteAsync(id);
         }
     }
 }
