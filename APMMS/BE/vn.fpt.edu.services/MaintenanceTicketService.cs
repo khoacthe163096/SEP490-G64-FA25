@@ -216,25 +216,31 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket == null)
                 throw new ArgumentException("Maintenance ticket not found");
 
-            // ✅ VALIDATION: Chỉ cho phép gán kỹ thuật viên khi phiếu ở trạng thái PENDING
-            if (maintenanceTicket.StatusCode != "PENDING")
-                throw new ArgumentException($"Không thể gán kỹ thuật viên cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể gán khi phiếu ở trạng thái PENDING.");
+            // ✅ VALIDATION: Chỉ cho phép gán/cập nhật kỹ thuật viên khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS
+            if (maintenanceTicket.StatusCode != "PENDING" && maintenanceTicket.StatusCode != "ASSIGNED" && maintenanceTicket.StatusCode != "IN_PROGRESS")
+                throw new ArgumentException($"Không thể gán/cập nhật kỹ thuật viên cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể gán khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS.");
 
-            if (technicianIds == null || technicianIds.Count == 0)
-                throw new ArgumentException("Phải chọn ít nhất một kỹ thuật viên");
+            // Cho phép danh sách rỗng (để xóa tất cả)
+            // Không validate bắt buộc phải có ít nhất 1 kỹ thuật viên
             
-            // ✅ VALIDATION: Đảm bảo phiếu chưa có kỹ thuật viên được gán
-            if (maintenanceTicket.TechnicianId.HasValue || maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
-                throw new ArgumentException("Phiếu này đã có kỹ thuật viên được gán. Không thể gán lại.");
-
             // Lưu trạng thái cũ để ghi log
             var oldStatus = maintenanceTicket.StatusCode;
+            
+            // Lấy danh sách kỹ thuật viên hiện tại
+            var existingTechnicians = maintenanceTicket.MaintenanceTicketTechnicians?.ToList() ?? new List<MaintenanceTicketTechnician>();
+            var existingIds = existingTechnicians.Select(x => x.TechnicianId).ToHashSet();
+            
+            // Xóa những người không còn trong danh sách mới
+            var toRemove = existingTechnicians.Where(e => !technicianIds.Contains(e.TechnicianId)).ToList();
+            if (toRemove.Count > 0)
+            {
+                _context.MaintenanceTicketTechnicians.RemoveRange(toRemove);
+            }
 
-            // Thêm các bản ghi mới vào bảng trung gian nếu chưa tồn tại
-            var existing = maintenanceTicket.MaintenanceTicketTechnicians.Select(x => x.TechnicianId).ToHashSet();
+            // Thêm các kỹ thuật viên mới (chưa có trong danh sách)
             foreach (var techId in technicianIds.Distinct())
             {
-                if (!existing.Contains(techId))
+                if (!existingIds.Contains(techId))
                 {
                     _context.MaintenanceTicketTechnicians.Add(new MaintenanceTicketTechnician
                     {
@@ -265,9 +271,30 @@ namespace BE.vn.fpt.edu.services
                     mtt.RoleInTicket = (mtt.TechnicianId == technicianIds[0]) ? "PRIMARY" : "ASSISTANT";
                 }
             }
+            else
+            {
+                // Nếu không còn kỹ thuật viên nào, xóa technician chính
+                maintenanceTicket.TechnicianId = null;
+            }
 
-            // ✅ QUAN TRỌNG: Chuyển trạng thái từ PENDING sang IN_PROGRESS khi gán kỹ thuật viên
-            maintenanceTicket.StatusCode = "IN_PROGRESS";
+            // ✅ Chuyển trạng thái: 
+            // - Nếu có kỹ thuật viên và đang PENDING → IN_PROGRESS
+            // - Nếu không còn kỹ thuật viên và đang IN_PROGRESS/ASSIGNED → PENDING
+            if (technicianIds.Count > 0)
+            {
+                if (maintenanceTicket.StatusCode == "PENDING")
+                {
+                    maintenanceTicket.StatusCode = "IN_PROGRESS";
+                }
+            }
+            else
+            {
+                // Không còn kỹ thuật viên, chuyển về PENDING
+                if (maintenanceTicket.StatusCode == "IN_PROGRESS" || maintenanceTicket.StatusCode == "ASSIGNED")
+                {
+                    maintenanceTicket.StatusCode = "PENDING";
+                }
+            }
             _context.MaintenanceTickets.Update(maintenanceTicket);
             await _context.SaveChangesAsync();
 
@@ -278,6 +305,66 @@ namespace BE.vn.fpt.edu.services
                 action: "ASSIGN_TECHNICIAN",
                 oldData: $"Status: {oldStatus}, Technicians: None",
                 newData: $"Status: IN_PROGRESS, Technicians: {techNames}, Primary: {maintenanceTicket.TechnicianId}"
+            );
+
+            // Trả về chi tiết mới nhất
+            var refreshed = await _maintenanceTicketRepository.GetByIdAsync(id);
+            var response = _mapper.Map<ResponseDto>(refreshed);
+            if (refreshed?.MaintenanceTicketTechnicians != null)
+            {
+                response.Technicians = refreshed.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
+                {
+                    TechnicianId = mtt.TechnicianId,
+                    TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
+                    RoleInTicket = mtt.RoleInTicket,
+                    AssignedDate = mtt.AssignedDate
+                }).ToList();
+            }
+            return response;
+        }
+
+        public async Task<ResponseDto> RemoveTechniciansAsync(long id)
+        {
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            // ✅ VALIDATION: Chỉ cho phép xóa kỹ thuật viên khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS
+            if (maintenanceTicket.StatusCode != "PENDING" && maintenanceTicket.StatusCode != "ASSIGNED" && maintenanceTicket.StatusCode != "IN_PROGRESS")
+                throw new ArgumentException($"Không thể xóa kỹ thuật viên cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể xóa khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS.");
+
+            // Lưu thông tin cũ để ghi log
+            var oldStatus = maintenanceTicket.StatusCode;
+            var oldTechnicianIds = maintenanceTicket.MaintenanceTicketTechnicians?.Select(x => x.TechnicianId).ToList() ?? new List<long>();
+            var oldPrimaryId = maintenanceTicket.TechnicianId;
+
+            // Xóa tất cả kỹ thuật viên khỏi bảng trung gian
+            if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
+            {
+                _context.MaintenanceTicketTechnicians.RemoveRange(maintenanceTicket.MaintenanceTicketTechnicians);
+            }
+
+            // Xóa technician chính
+            maintenanceTicket.TechnicianId = null;
+
+            // ✅ Chuyển trạng thái về PENDING nếu đang ở IN_PROGRESS hoặc ASSIGNED
+            if (maintenanceTicket.StatusCode == "IN_PROGRESS" || maintenanceTicket.StatusCode == "ASSIGNED")
+            {
+                maintenanceTicket.StatusCode = "PENDING";
+            }
+
+            _context.MaintenanceTickets.Update(maintenanceTicket);
+            await _context.SaveChangesAsync();
+
+            // ✅ Tạo history log để ghi nhận việc xóa kỹ thuật viên
+            var techNames = oldTechnicianIds.Count > 0 
+                ? string.Join(", ", oldTechnicianIds.Select(techId => $"Technician ID: {techId}"))
+                : "None";
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId,
+                action: "REMOVE_TECHNICIAN",
+                oldData: $"Status: {oldStatus}, Technicians: {techNames}, Primary: {oldPrimaryId}",
+                newData: $"Status: {maintenanceTicket.StatusCode}, Technicians: None, Primary: None"
             );
 
             // Trả về chi tiết mới nhất
