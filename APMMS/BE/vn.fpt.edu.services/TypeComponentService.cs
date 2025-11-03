@@ -1,9 +1,7 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using AutoMapper;
+using BE.models;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.interfaces;
-using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 
 namespace BE.vn.fpt.edu.services
@@ -19,21 +17,9 @@ namespace BE.vn.fpt.edu.services
             _mapper = mapper;
         }
 
-        public async Task<ResponseDto> CreateAsync(RequestDto dto)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync()
         {
-            var entity = _mapper.Map<TypeComponent>(dto);
-            var created = await _repo.AddAsync(entity);
-            return _mapper.Map<ResponseDto>(created);
-        }
-
-        public async Task DisableEnableAsync(long id, string statusCode)
-        {
-            await _repo.DisableEnableAsync(id, statusCode);
-        }
-
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null)
-        {
-            var list = await _repo.GetAllAsync(branchId, statusCode);
+            var list = await _repo.GetAllAsync();
             return _mapper.Map<IEnumerable<ResponseDto>>(list);
         }
 
@@ -43,20 +29,28 @@ namespace BE.vn.fpt.edu.services
             return entity == null ? null : _mapper.Map<ResponseDto>(entity);
         }
 
-        public async Task<ResponseDto?> UpdateAsync(RequestDto dto)
+        public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            if (!dto.Id.HasValue) return null;
-            var exist = await _repo.GetByIdAsync(dto.Id.Value);
-            if (exist == null) return null;
+            var entity = _mapper.Map<TypeComponent>(dto);
+            var created = await _repo.AddAsync(entity);
+            return _mapper.Map<ResponseDto>(created);
+        }
 
-            // Map changed fields
-            exist.Name = dto.Name;
-            exist.Description = dto.Description;
-            exist.BranchId = dto.BranchId;
-            exist.StatusCode = dto.StatusCode;
+        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
+        {
+            var existing = await _repo.GetByIdAsync(id);
+            if (existing == null)
+                return null;
 
-            var updated = await _repo.UpdateAsync(exist);
-            return _mapper.Map<ResponseDto>(updated);
+            _mapper.Map(dto, existing);
+            await _repo.UpdateAsync(existing);
+
+            return _mapper.Map<ResponseDto>(existing);
+        }
+
+        public async Task<bool> DeleteAsync(long id)
+        {
+            return await _repo.DeleteAsync(id);
         }
     }
 }
