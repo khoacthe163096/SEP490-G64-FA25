@@ -3,10 +3,181 @@
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
 
+<style>
+    .employee-profile-container {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0;
+    }
+    
+    .employee-avatar-section {
+        background: #f8f9fa;
+        padding: 40px 30px;
+        text-align: center;
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .employee-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #dee2e6;
+        background: #e9ecef;
+    }
+    
+    .employee-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-top: 20px;
+        color: #212529;
+    }
+    
+    .employee-details-section {
+        background: white;
+        padding: 30px;
+    }
+    
+    .info-tabs {
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 30px;
+    }
+    
+    .info-tabs .nav-link {
+        color: #6c757d;
+        padding: 12px 20px;
+        border: none;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .info-tabs .nav-link:hover {
+        color: #495057;
+    }
+    
+    .info-tabs .nav-link.active {
+        color: #212529;
+        border-bottom-color: #212529;
+        font-weight: 500;
+    }
+    
+    .info-field {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    
+    .info-field:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    
+    .info-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        color: #212529;
+        font-weight: 400;
+    }
+    
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 4px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+    
+    .form-label i {
+        margin-right: 8px;
+        color: #6c757d;
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 10px 12px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+    
+    .btn-save {
+        background: #007bff;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 4px;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .btn-save:hover {
+        background: #0056b3;
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 4px;
+        font-weight: 500;
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+        color: white;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+    
+    .status-badge.active {
+        background: #28a745;
+        color: white;
+    }
+    
+    .status-badge.inactive {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .image-preview-container {
+        margin-top: 15px;
+        padding: 15px;
+        background: white;
+        border-radius: 4px;
+        border: 1px dashed #ced4da;
+    }
+    
+    .image-preview-container img {
+        border-radius: 4px;
+    }
+</style>
+
 <!-- Breadcrumb -->
-<nav aria-label="breadcrumb" class="mb-3">
+<nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/Employees">Danh sách nhân viên</a></li>
+        <li class="breadcrumb-item"><a href="/Employees"><i class="fas fa-users me-1"></i>Danh sách nhân viên</a></li>
         <li class="breadcrumb-item active" id="employeeNameBreadcrumb">-</li>
     </ol>
 </nav>
@@ -14,42 +185,53 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div id="loadingSpinner" class="text-center p-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Đang tải...</span>
+            <div class="employee-profile-container">
+                <div id="loadingSpinner" class="text-center p-5" style="background: white; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <div>
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                        <p class="mt-3 text-muted">Đang tải thông tin nhân viên...</p>
                     </div>
                 </div>
                 
                 <div id="employeeDetails" style="display: none;">
-                    <div class="row">
+                    <div class="row g-0">
                         <!-- Left Section: Avatar and Name -->
-                        <div class="col-md-3 text-center" style="background-color: #f8f9fa; padding: 40px 20px;">
+                        <div class="col-md-3 employee-avatar-section">
                             <div class="mb-4">
                                 <img id="employeeAvatar" src="" alt="Avatar" 
-                                     class="rounded-circle" 
-                                     style="width: 150px; height: 150px; object-fit: cover; background-color: #e0e0e0; border: 3px solid #dee2e6;"
-                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'150\'%3E%3Crect width=\'150\' height=\'150\' fill=\'%23e0e0e0\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%23999\' font-size=\'60\'%3E👤%3C/text%3E%3C/svg%3E';">
+                                     class="employee-avatar"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'180\'%3E%3Crect width=\'180\' height=\'180\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'80\'%3E👤%3C/text%3E%3C/svg%3E';">
                             </div>
-                            <h4 id="employeeFullName" class="mb-0" style="font-weight: 600;">-</h4>
+                            <h4 id="employeeFullName" class="employee-name">-</h4>
+                            <div id="employeeRole" class="mt-2" style="font-size: 0.9rem; color: #6c757d;"></div>
+                            
+                            <!-- Upload Image Section -->
+                            <div class="mt-4">
+                                <label for="editImage" class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #212529;">
+                                    <i class="fas fa-image me-1"></i> Cập nhật ảnh đại diện
+                                </label>
+                                <input type="file" class="form-control form-control-sm" id="editImage" accept="image/*" style="max-width: 200px;">
+                            </div>
                         </div>
 
                         <!-- Right Section: Tabs and Details -->
-                        <div class="col-md-9">
+                        <div class="col-md-9 employee-details-section">
                             <!-- Tabs -->
-                            <ul class="nav nav-tabs mb-3" role="tablist">
+                            <ul class="nav nav-tabs info-tabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" 
                                             data-bs-target="#personal" type="button" role="tab" 
                                             aria-controls="personal" aria-selected="true">
-                                        Thông tin cá nhân
+                                        <i class="fas fa-user me-2"></i>Thông tin cá nhân
                                     </button>
                                 </li>
                                 <li class="nav-item" role="presentation">
                                     <button class="nav-link" id="edit-tab" data-bs-toggle="tab" 
                                             data-bs-target="#edit" type="button" role="tab" 
                                             aria-controls="edit" aria-selected="false">
-                                        Chỉnh sửa thông tin
+                                        <i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin
                                     </button>
                                 </li>
                             </ul>
@@ -58,50 +240,57 @@
                             <div class="tab-content">
                                 <!-- Personal Information Tab -->
                                 <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
-                                    <h5 class="mb-4">Thông tin chi tiết</h5>
-                                    
-                                    <div class="row mb-3">
+                                    <div class="row">
                                         <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Mã:</label>
-                                                <div id="employeeCode" class="text-muted">-</div>
+                                            <div class="info-field">
+                                                <div class="info-label">Mã nhân viên</div>
+                                                <div class="info-value" id="employeeCode">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Tên nhân viên:</label>
-                                                <div id="employeeName" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Họ và tên</div>
+                                                <div class="info-value" id="employeeName">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Tuổi:</label>
-                                                <div id="employeeAge" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Giới tính</div>
+                                                <div class="info-value" id="employeeGender">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Giới tính:</label>
-                                                <div id="employeeGender" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Ngày sinh</div>
+                                                <div class="info-value" id="employeeDob">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Số điện thoại:</label>
-                                                <div id="employeePhone" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Số điện thoại</div>
+                                                <div class="info-value" id="employeePhone">-</div>
                                             </div>
                                         </div>
+                                        
                                         <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Email:</label>
-                                                <div id="employeeEmail" class="text-muted">-</div>
+                                            <div class="info-field">
+                                                <div class="info-label">Email</div>
+                                                <div class="info-value" id="employeeEmail">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Địa chỉ:</label>
-                                                <div id="employeeAddress" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Địa chỉ</div>
+                                                <div class="info-value" id="employeeAddress">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">CMT/CCCD:</label>
-                                                <div id="employeeCitizenId" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">CMT/CCCD</div>
+                                                <div class="info-value" id="employeeCitizenId">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Mã số thuế:</label>
-                                                <div id="employeeTaxCode" class="text-muted">-</div>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Mã số thuế</div>
+                                                <div class="info-value" id="employeeTaxCode">-</div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-bold">Tình trạng:</label>
+                                            
+                                            <div class="info-field">
+                                                <div class="info-label">Tình trạng</div>
                                                 <div id="employeeStatus">-</div>
                                             </div>
                                         </div>
@@ -111,60 +300,85 @@
                                 <!-- Edit Tab -->
                                 <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
                                     <form id="editEmployeeForm">
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="editFirstName" class="form-label fw-bold">Họ và tên:</label>
-                                                    <input type="text" class="form-control" id="editFirstName" required>
-                                                    <small class="text-muted">Nhập đầy đủ họ và tên</small>
+                                        <div class="form-section">
+                                            <h5 class="mb-4" style="color: #212529; font-weight: 500;">
+                                                Cập nhật thông tin
+                                            </h5>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-4">
+                                                        <label for="editFirstName" class="form-label">
+                                                            <i class="fas fa-user"></i> Họ và tên
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editFirstName" required>
+                                                        <small class="text-muted">Nhập đầy đủ họ và tên</small>
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editPhone" class="form-label">
+                                                            <i class="fas fa-phone"></i> Số điện thoại
+                                                        </label>
+                                                        <input type="tel" class="form-control" id="editPhone">
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editGender" class="form-label">
+                                                            <i class="fas fa-venus-mars"></i> Giới tính
+                                                        </label>
+                                                        <select class="form-select" id="editGender">
+                                                            <option value="">-- Chọn giới tính --</option>
+                                                            <option value="Nam">Nam</option>
+                                                            <option value="Nữ">Nữ</option>
+                                                            <option value="Khác">Khác</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editDob" class="form-label">
+                                                            <i class="fas fa-calendar-alt"></i> Ngày sinh
+                                                        </label>
+                                                        <input type="date" class="form-control" id="editDob">
+                                                    </div>
                                                 </div>
-                                                <div class="mb-3">
-                                                    <label for="editAge" class="form-label fw-bold">Tuổi:</label>
-                                                    <input type="number" class="form-control" id="editAge" min="1" max="150">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editPhone" class="form-label fw-bold">Số điện thoại:</label>
-                                                    <input type="tel" class="form-control" id="editPhone">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editGender" class="form-label fw-bold">Giới tính:</label>
-                                                    <select class="form-select" id="editGender">
-                                                        <option value="">-- Chọn giới tính --</option>
-                                                        <option value="Nam">Nam</option>
-                                                        <option value="Nữ">Nữ</option>
-                                                        <option value="Khác">Khác</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="editEmail" class="form-label fw-bold">Email:</label>
-                                                    <input type="email" class="form-control" id="editEmail">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editAddress" class="form-label fw-bold">Địa chỉ:</label>
-                                                    <input type="text" class="form-control" id="editAddress">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editTaxCode" class="form-label fw-bold">Mã số thuế:</label>
-                                                    <input type="text" class="form-control" id="editTaxCode">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editCitizenId" class="form-label fw-bold">CMT/CCCD:</label>
-                                                    <input type="text" class="form-control" id="editCitizenId">
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="editImage" class="form-label fw-bold">Hình ảnh:</label>
-                                                    <input type="file" class="form-control" id="editImage" accept="image/*">
-                                                    <small class="text-muted">Chọn file hình ảnh mới (nếu cần)</small>
-                                                    <div id="currentImagePreview" class="mt-2"></div>
+                                                
+                                                <div class="col-md-6">
+                                                    <div class="mb-4">
+                                                        <label for="editEmail" class="form-label">
+                                                            <i class="fas fa-envelope"></i> Email
+                                                        </label>
+                                                        <input type="email" class="form-control" id="editEmail">
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editAddress" class="form-label">
+                                                            <i class="fas fa-map-marker-alt"></i> Địa chỉ
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editAddress">
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editTaxCode" class="form-label">
+                                                            <i class="fas fa-receipt"></i> Mã số thuế
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editTaxCode">
+                                                    </div>
+                                                    
+                                                    <div class="mb-4">
+                                                        <label for="editCitizenId" class="form-label">
+                                                            <i class="fas fa-id-badge"></i> CMT/CCCD
+                                                        </label>
+                                                        <input type="text" class="form-control" id="editCitizenId">
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="d-flex justify-content-end">
-                                            <button type="button" class="btn btn-secondary me-2" onclick="resetEditForm()">Hủy</button>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fas fa-save"></i> Lưu thông tin
+                                        
+                                        <div class="d-flex justify-content-end gap-3">
+                                            <button type="button" class="btn btn-cancel" onclick="resetEditForm()">
+                                                <i class="fas fa-times me-1"></i>Hủy
+                                            </button>
+                                            <button type="submit" class="btn btn-save text-white">
+                                                <i class="fas fa-save me-1"></i> Lưu thông tin
                                             </button>
                                         </div>
                                     </form>
@@ -174,7 +388,7 @@
                     </div>
                 </div>
                 
-                <div id="errorMessage" class="alert alert-danger m-3" style="display: none;">
+                <div id="errorMessage" class="alert alert-danger m-3" style="display: none; border-radius: 10px;">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span id="errorText">Có lỗi xảy ra khi tải thông tin nhân viên</span>
                 </div>
@@ -186,6 +400,9 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Initialize image preview handler
+            initializeImagePreview();
+            
             const employeeId = getEmployeeIdFromUrl();
             if (employeeId) {
                 loadEmployeeDetails(employeeId);
@@ -193,6 +410,59 @@
                 showError('Không tìm thấy ID nhân viên');
             }
         });
+        
+        function initializeImagePreview() {
+            const editImageInput = document.getElementById('editImage');
+            if (editImageInput) {
+                editImageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    
+                    if (file) {
+                        // Validate file type
+                        if (!file.type.startsWith('image/')) {
+                            alert('Vui lòng chọn file hình ảnh hợp lệ');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Validate file size (max 5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('Kích thước file không được vượt quá 5MB');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Create preview and update avatar
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const imageDataUrl = event.target.result;
+                            
+                            // Update avatar immediately for preview
+                            const employeeAvatar = document.getElementById('employeeAvatar');
+                            if (employeeAvatar) {
+                                employeeAvatar.src = imageDataUrl;
+                            }
+                        };
+                        reader.onerror = function() {
+                            alert('Có lỗi xảy ra khi đọc file');
+                            e.target.value = '';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        // No file selected - restore original avatar
+                        const employeeAvatar = document.getElementById('employeeAvatar');
+                        if (employeeAvatar && currentEmployee) {
+                            if (currentEmployee.image) {
+                                employeeAvatar.src = currentEmployee.image;
+                            } else {
+                                // Reset to default placeholder
+                                employeeAvatar.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'180\'%3E%3Crect width=\'180\' height=\'180\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'80\'%3E👤%3C/text%3E%3C/svg%3E';
+                            }
+                        }
+                    }
+                });
+            }
+        }
 
         function getEmployeeIdFromUrl() {
             const path = window.location.pathname;
@@ -217,6 +487,9 @@
             .then(data => {
                 document.getElementById('loadingSpinner').style.display = 'none';
                 
+                // Debug: log data to see structure
+                console.log('Employee data received:', data);
+                
                 // API trả về trực tiếp EmployeeResponseDto
                 if (data && data.id) {
                     displayEmployeeDetails(data);
@@ -238,6 +511,11 @@
 
         function displayEmployeeDetails(employee) {
             currentEmployee = employee;
+            
+            // Log employee data to debug
+            console.log('Current employee data:', employee);
+            console.log('Employee ID:', employee.id);
+            
             const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim() || '-';
             
             // Breadcrumb
@@ -252,17 +530,51 @@
             // Left section
             document.getElementById('employeeFullName').textContent = fullName;
             
+            // Role
+            const roleDiv = document.getElementById('employeeRole');
+            if (employee.roleName) {
+                roleDiv.innerHTML = `<i class="fas fa-user-tag me-1"></i>${employee.roleName}`;
+            }
+            
             // Details
             document.getElementById('employeeCode').textContent = employee.code || '-';
             document.getElementById('employeeName').textContent = fullName;
-            document.getElementById('employeeAge').textContent = employee.age ? employee.age + ' tuổi' : '-';
             document.getElementById('employeeGender').textContent = 
                 employee.gender === 'Male' || employee.gender === 'Nam' ? 'Nam' :
                 employee.gender === 'Female' || employee.gender === 'Nữ' ? 'Nữ' : 
                 employee.gender || '-';
+            
+            // Display date of birth (handle both dob and Dob)
+            const dobElement = document.getElementById('employeeDob');
+            if (dobElement) {
+                const dobValue = employee.dob || employee.Dob || employee.dateOfBirth || employee.DateOfBirth;
+                console.log('Date of birth value:', dobValue);
+                
+                if (dobValue) {
+                    try {
+                        const dob = new Date(dobValue);
+                        if (!isNaN(dob.getTime())) {
+                            const formattedDate = dob.toLocaleDateString('vi-VN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit'
+                            });
+                            dobElement.textContent = formattedDate;
+                        } else {
+                            dobElement.textContent = '-';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing date:', e, dobValue);
+                        dobElement.textContent = '-';
+                    }
+                } else {
+                    dobElement.textContent = '-';
+                }
+            }
+            
             document.getElementById('employeePhone').textContent = employee.phone || '-';
             document.getElementById('employeeEmail').textContent = employee.email || '-';
-            document.getElementById('employeeAddress').textContent = employee.fullAddress || '-';
+            document.getElementById('employeeAddress').textContent = employee.fullAddress || employee.address || '-';
             document.getElementById('employeeCitizenId').textContent = employee.citizenId || '-';
             document.getElementById('employeeTaxCode').textContent = employee.taxCode || '-';
             
@@ -270,8 +582,8 @@
             const isActive = !employee.isDelete;
             const statusDiv = document.getElementById('employeeStatus');
             statusDiv.innerHTML = isActive 
-                ? '<span class="badge bg-success" style="padding: 5px 10px;">Có hiệu lực</span>'
-                : '<span class="badge bg-secondary" style="padding: 5px 10px;">Không hiệu lực</span>';
+                ? '<span class="status-badge active"><i class="fas fa-check-circle me-1"></i>Có hiệu lực</span>'
+                : '<span class="status-badge inactive"><i class="fas fa-times-circle me-1"></i>Không hiệu lực</span>';
             
             // Load data into edit form
             loadEditForm(employee);
@@ -284,36 +596,50 @@
             const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
 
             document.getElementById('editFirstName').value = fullName;
-            document.getElementById('editAge').value = employee.age || '';
             document.getElementById('editPhone').value = employee.phone || '';
             document.getElementById('editGender').value = 
                 employee.gender === 'Male' || employee.gender === 'Nam' ? 'Nam' :
                 employee.gender === 'Female' || employee.gender === 'Nữ' ? 'Nữ' : 
                 employee.gender || '';
+            
+            // Load date of birth
+            const dobInput = document.getElementById('editDob');
+            if (dobInput) {
+                const dobValue = employee.dob || employee.Dob;
+                if (dobValue) {
+                    try {
+                        const dob = new Date(dobValue);
+                        if (!isNaN(dob.getTime())) {
+                            // Format to YYYY-MM-DD for date input
+                            const year = dob.getFullYear();
+                            const month = String(dob.getMonth() + 1).padStart(2, '0');
+                            const day = String(dob.getDate()).padStart(2, '0');
+                            dobInput.value = `${year}-${month}-${day}`;
+                        } else {
+                            dobInput.value = '';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing date for input:', e);
+                        dobInput.value = '';
+                    }
+                } else {
+                    dobInput.value = '';
+                }
+            }
+            
             document.getElementById('editEmail').value = employee.email || '';
-            document.getElementById('editAddress').value = employee.fullAddress || '';
+            document.getElementById('editAddress').value = employee.fullAddress || employee.address || '';
             document.getElementById('editTaxCode').value = employee.taxCode || '';
             document.getElementById('editCitizenId').value = employee.citizenId || '';
-
-            // Image preview
-            const imagePreview = document.getElementById('currentImagePreview');
-            if (employee.image) {
-                imagePreview.innerHTML = `
-                    <img src="${employee.image}" alt="Current image" 
-                         style="max-width: 150px; max-height: 150px; border-radius: 5px;">
-                `;
-            } else {
-                imagePreview.innerHTML = '<span class="text-muted">Chưa có hình ảnh</span>';
-            }
 
             // Store original data
             originalFormData = {
                 firstName: fullName,
-                age: employee.age || '',
                 phone: employee.phone || '',
                 gender: document.getElementById('editGender').value,
+                dob: dobInput ? dobInput.value : '',
                 email: employee.email || '',
-                address: employee.fullAddress || '',
+                address: employee.fullAddress || employee.address || '',
                 taxCode: employee.taxCode || '',
                 citizenId: employee.citizenId || ''
             };
@@ -322,14 +648,23 @@
         function resetEditForm() {
             if (originalFormData) {
                 document.getElementById('editFirstName').value = originalFormData.firstName;
-                document.getElementById('editAge').value = originalFormData.age;
                 document.getElementById('editPhone').value = originalFormData.phone;
                 document.getElementById('editGender').value = originalFormData.gender;
+                const dobInput = document.getElementById('editDob');
+                if (dobInput) {
+                    dobInput.value = originalFormData.dob || '';
+                }
                 document.getElementById('editEmail').value = originalFormData.email;
                 document.getElementById('editAddress').value = originalFormData.address;
                 document.getElementById('editTaxCode').value = originalFormData.taxCode;
                 document.getElementById('editCitizenId').value = originalFormData.citizenId;
                 document.getElementById('editImage').value = '';
+                
+                // Restore original avatar image when resetting
+                const employeeAvatar = document.getElementById('employeeAvatar');
+                if (employeeAvatar && currentEmployee && currentEmployee.image) {
+                    employeeAvatar.src = currentEmployee.image;
+                }
             }
         }
 
@@ -356,19 +691,64 @@
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
 
+            // Format date of birth from input (format: dd-MM-yyyy for backend)
+            let dobFormatted = null;
+            const dobInput = document.getElementById('editDob');
+            if (dobInput && dobInput.value) {
+                try {
+                    const dobDate = new Date(dobInput.value);
+                    if (!isNaN(dobDate.getTime())) {
+                        const day = String(dobDate.getDate()).padStart(2, '0');
+                        const month = String(dobDate.getMonth() + 1).padStart(2, '0');
+                        const year = dobDate.getFullYear();
+                        dobFormatted = `${day}-${month}-${year}`;
+                    }
+                } catch (e) {
+                    console.error('Error formatting date of birth:', e);
+                }
+            }
+
+            // Validate required fields
+            if (!currentEmployee.username && !currentEmployee.userName) {
+                showError('Không tìm thấy thông tin username của nhân viên');
+                return;
+            }
+            
+            if (!currentEmployee.id) {
+                showError('Không tìm thấy ID nhân viên. Vui lòng làm mới trang và thử lại.');
+                return;
+            }
+
             const formData = {
-                username: currentEmployee.username || '',
-                password: '', // Don't update password if empty - backend should handle this
-                firstName: firstName,
-                lastName: lastName,
-                email: document.getElementById('editEmail').value,
-                phone: document.getElementById('editPhone').value,
-                gender: document.getElementById('editGender').value,
-                image: currentEmployee.image || '', // Will be updated if new image is uploaded
-                roleId: currentEmployee.roleId || null,
-                branchId: currentEmployee.branchId || null,
-                taxCode: document.getElementById('editTaxCode').value
+                username: currentEmployee.username || currentEmployee.userName,
+                password: '', // Empty password - backend should preserve existing password
+                firstName: firstName || null,
+                lastName: lastName || null,
+                email: document.getElementById('editEmail').value || null,
+                phone: document.getElementById('editPhone').value || null,
+                gender: document.getElementById('editGender').value || null,
+                image: currentEmployee.image || null,
+                dob: dobFormatted,
+                // roleId and branchId are not in response DTO, so we need to fetch them
+                // For now, try to get from response or leave null (backend might preserve existing values)
+                roleId: currentEmployee.roleId || currentEmployee.RoleId || null,
+                branchId: currentEmployee.branchId || currentEmployee.BranchId || null,
+                taxCode: document.getElementById('editTaxCode').value || null,
+                address: document.getElementById('editAddress').value || null,
+                citizenId: document.getElementById('editCitizenId').value || null,
+                statusCode: currentEmployee.statusCode || 'ACTIVE'
             };
+            
+            // Remove null/empty values except username and password (they are required by DTO)
+            // But keep roleId and branchId as null if not available (backend should preserve existing)
+            Object.keys(formData).forEach(key => {
+                if (key !== 'username' && key !== 'password' && key !== 'roleId' && key !== 'branchId' && (formData[key] === null || formData[key] === '')) {
+                    delete formData[key];
+                }
+            });
+            
+            console.log('Sending update request with data:', formData);
+            console.log('Employee ID being updated:', currentEmployee.id);
 
             // Handle image upload if file is selected
             const imageFile = document.getElementById('editImage').files[0];
@@ -379,6 +759,9 @@
             }
 
             const token = localStorage.getItem('authToken');
+            console.log('Updating employee ID:', currentEmployee.id);
+            console.log('Form data:', formData);
+            
             fetch(`https://localhost:7173/api/Employee/${currentEmployee.id}`, {
                 method: 'PUT',
                 headers: {
@@ -387,11 +770,24 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => {
+            .then(async response => {
                 if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || `HTTP error! status: ${response.status}`);
-                    });
+                    // Try to get error message from response
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    } catch (e) {
+                        // If response is not JSON, use status text
+                        if (response.status === 404) {
+                            errorMessage = 'Không tìm thấy nhân viên với ID này. Vui lòng làm mới trang và thử lại.';
+                        } else if (response.status === 401) {
+                            errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                        } else if (response.status === 403) {
+                            errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+                        }
+                    }
+                    throw new Error(errorMessage);
                 }
                 return response.json();
             })
@@ -402,11 +798,15 @@
                 // Show success message
                 const alertDiv = document.createElement('div');
                 alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.style.borderRadius = '10px';
                 alertDiv.innerHTML = `
-                    <i class="fas fa-check-circle"></i> Cập nhật thông tin thành công!
+                    <i class="fas fa-check-circle me-2"></i> Cập nhật thông tin thành công!
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 `;
-                document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.tab-content'));
+                const detailsSection = document.querySelector('.employee-details-section');
+                if (detailsSection) {
+                    detailsSection.insertBefore(alertDiv, detailsSection.querySelector('.info-tabs'));
+                }
                 
                 // Switch to personal info tab
                 const personalTab = document.getElementById('personal-tab');

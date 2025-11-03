@@ -68,7 +68,31 @@ namespace BE.vn.fpt.edu.services
             var employee = await _employeeRepository.GetByIdAsync(id);
             if (employee == null) return null;
 
+            // Store current values before mapping to preserve them if they are null/empty
+            var currentPassword = employee.Password;
+            var currentRoleId = employee.RoleId;
+            var currentBranchId = employee.BranchId;
+            
             _mapper.Map(dto, employee);
+            
+            // If password is empty or whitespace, keep the original password (don't update password)
+            if (string.IsNullOrWhiteSpace(dto.Password))
+            {
+                employee.Password = currentPassword;
+            }
+            
+            // If roleId is null, keep the original roleId
+            if (dto.RoleId == null || dto.RoleId == 0)
+            {
+                employee.RoleId = currentRoleId;
+            }
+            
+            // If branchId is null, keep the original branchId
+            if (dto.BranchId == null || dto.BranchId == 0)
+            {
+                employee.BranchId = currentBranchId;
+            }
+            
             employee.LastModifiedDate = DateTime.Now;
 
             try

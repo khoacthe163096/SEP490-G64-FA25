@@ -8,7 +8,6 @@ namespace BE.vn.fpt.edu.controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Branch Manager,Admin")]
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeService _employeeService;
@@ -19,6 +18,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -32,6 +32,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> GetById(long id)
         {
             var employee = await _employeeService.GetByIdAsync(id);
@@ -40,6 +41,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> Create([FromBody] EmployeeRequestDto dto)
         {
             try
@@ -72,6 +74,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> Update(long id, [FromBody] EmployeeRequestDto dto)
         {
             try
@@ -91,6 +94,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> Delete(long id)
         {
             var success = await _employeeService.DeleteAsync(id);
@@ -99,6 +103,7 @@ namespace BE.vn.fpt.edu.controllers
         }
         
         [HttpGet("filter")]
+        [Authorize] // Cho phép tất cả user đã đăng nhập (bao gồm Consulter) truy cập để lấy danh sách technician
         public async Task<IActionResult> FilterEmployees([FromQuery] bool? isDelete, [FromQuery] long? roleId)
         {
             var employees = await _employeeService.FilterAsync(isDelete, roleId);
@@ -109,6 +114,7 @@ namespace BE.vn.fpt.edu.controllers
         /// ✅ Cập nhật Status của Employee (ACTIVE hoặc INACTIVE)
         /// </summary>
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "Branch Manager,Admin")]
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] EmployeeUpdateStatusDto request)
         {
             try

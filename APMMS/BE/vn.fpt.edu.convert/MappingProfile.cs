@@ -84,7 +84,7 @@ namespace BE.vn.fpt.edu.convert
                 .ForMember(dest => dest.CheckinNotes, opt => opt.MapFrom(src => src.VehicleCheckin != null ? src.VehicleCheckin.Notes : null))
                 .ForMember(dest => dest.CheckinImages, opt => opt.MapFrom(src => src.VehicleCheckin != null && src.VehicleCheckin.VehicleCheckinImages != null ? src.VehicleCheckin.VehicleCheckinImages.Select(i => i.ImageUrl).ToList() : new List<string>()));
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
-                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.StartTime ?? DateTime.Now.AddDays(-src.Id)))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
                 .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}".Trim() : null))
                 .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}".Trim() : null))

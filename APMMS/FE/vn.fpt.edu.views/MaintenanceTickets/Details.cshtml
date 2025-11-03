@@ -282,7 +282,13 @@ $(document).ready(function() {
 });
 
 function loadMaintenanceTicketDetails() {
-    fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}`)
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
         .then(async response => {
             if (!response.ok) {
                 // Try read json; fallback to text
@@ -306,7 +312,8 @@ function loadMaintenanceTicketDetails() {
                 displayTimeline(data.data);
                 displayCostSummary(data.data);
                 loadServiceTasks();
-                loadComponents();
+                // loadComponents(); // Tạm thời comment vì chức năng phụ tùng chưa làm
+                $('#componentsList').html('<p class="text-muted text-center py-3"><i class="fas fa-info-circle me-2"></i>Chức năng phụ tùng đang được phát triển</p>');
             } else {
                 showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
             }
@@ -543,8 +550,19 @@ function openAssignTechniciansModal() {
     modal.show();
 
     // Tải danh sách kỹ thuật viên
-    fetch(`${API_BASE_URL}/Employee/filter?roleId=4`)
-      .then(r => r.json())
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/Employee/filter?roleId=4`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+      .then(r => {
+          if (!r.ok) {
+              throw new Error(`HTTP error! status: ${r.status}`);
+          }
+          return r.json();
+      })
       .then(list => {
         const container = $('#assignTechContainer');
         container.empty();
@@ -595,6 +613,11 @@ function openAssignTechniciansModal() {
             render(filtered);
           }, 120);
         });
+      })
+      .catch(error => {
+          console.error('Error loading employees:', error);
+          $('#assignTechContainer').html('<div class="text-center text-danger py-3">Lỗi tải danh sách kỹ thuật viên: ' + error.message + '</div>');
+          showAlert('Không thể tải danh sách kỹ thuật viên. Vui lòng thử lại sau.', 'danger');
       });
 
     $(document).on('click', '#saveAssignTechBtn', function() {
@@ -603,9 +626,13 @@ function openAssignTechniciansModal() {
       const primaryIdVal = $('#primaryTechSelect').val();
       const primaryId = primaryIdVal ? parseInt(primaryIdVal) : null;
       if (primaryId && !ids.includes(primaryId)) ids.push(primaryId);
+      const token = localStorage.getItem('authToken');
       fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ technicianIds: ids, primaryId })
       }).then(r => r.json()).then(res => {
         if (res.success) {
@@ -841,8 +868,23 @@ function getTaskBorderColor(statusCode) {
 }
 
 function loadComponents() {
-    fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`)
-        .then(response => response.json())
+    // Tạm thời comment vì chức năng phụ tùng chưa làm
+    $('#componentsList').html('<p class="text-muted text-center py-3"><i class="fas fa-info-circle me-2"></i>Chức năng phụ tùng đang được phát triển</p>');
+    
+    /* 
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 displayComponents(data.data);
@@ -850,7 +892,9 @@ function loadComponents() {
         })
         .catch(error => {
             console.error('Error loading components:', error);
+            $('#componentsList').html('<p class="text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
         });
+    */
 }
 
 function displayComponents(components) {

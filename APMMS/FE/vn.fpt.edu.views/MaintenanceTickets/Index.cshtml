@@ -245,7 +245,9 @@ function displayMaintenanceTickets(tickets) {
 
             tickets.forEach(ticket => {
         const statusBadge = getStatusBadge(ticket.statusCode);
-        const createdAt = ticket.startTime ? new Date(ticket.startTime).toLocaleDateString('vi-VN') : `ID: ${ticket.id}`;
+        const createdAt = ticket.createdDate ? 
+            new Date(ticket.createdDate).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 
+            '-';
         const estimatedCost = ticket.totalEstimatedCost ? 
             new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(ticket.totalEstimatedCost) : 
             'Chưa tính';
