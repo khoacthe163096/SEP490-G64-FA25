@@ -136,5 +136,37 @@ namespace BE.vn.fpt.edu.services
             var hashedInput = HashPassword(password);
             return hashedInput == storedPassword || password == storedPassword;
         }
+
+        public async Task<ChangePasswordResponseDto> ChangePasswordAsync(ChangePasswordDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(dto.UserId);
+            if (user == null)
+            {
+                return new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = "User not found"
+                };
+            }
+
+            if (!VerifyPassword(dto.OldPassword, user.Password))
+            {
+                return new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = "Old password is incorrect"
+                };
+            }
+
+            user.Password = HashPassword(dto.NewPassword);
+            await _userRepository.UpdateAsync(user);
+
+            return new ChangePasswordResponseDto
+            {
+                Success = true,
+                Message = "Password changed successfully"
+            };
+        }
+
     }
 }
