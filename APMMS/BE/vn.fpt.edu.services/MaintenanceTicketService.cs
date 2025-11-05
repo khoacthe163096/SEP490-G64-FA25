@@ -75,6 +75,18 @@ namespace BE.vn.fpt.edu.services
             // ✅ KHÔNG lưu kỹ thuật viên vào bảng MaintenanceTicketTechnician
             // Kỹ thuật viên chỉ được gán thông qua endpoint AddTechniciansAsync
 
+            // ✅ Tạo history log để ghi nhận việc tạo phiếu
+            var consulterName = createdTicket.Consulter != null 
+                ? ($"{createdTicket.Consulter.FirstName} {createdTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            await CreateHistoryLogAsync(
+                userId: request.ConsulterId,
+                action: "CREATE_TICKET",
+                maintenanceTicketId: createdTicket.Id,
+                oldData: null,
+                newData: $"Phiếu bảo dưỡng được tạo bởi {consulterName} lúc {DateTime.UtcNow:dd/MM/yyyy HH:mm:ss}"
+            );
+
             // Lấy thông tin đầy đủ để trả về
             var fullTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
             
@@ -136,8 +148,32 @@ namespace BE.vn.fpt.edu.services
             if (existingTicket == null)
                 throw new ArgumentException("Maintenance ticket not found");
 
+            // Lưu thông tin cũ để so sánh
+            var oldDescription = existingTicket.Description;
+            var oldPriority = existingTicket.PriorityLevel;
+
             _mapper.Map(request, existingTicket);
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(existingTicket);
+
+            // ✅ Tạo history log để ghi nhận việc cập nhật thông tin
+            var updaterName = updatedTicket.Consulter != null 
+                ? ($"{updatedTicket.Consulter.FirstName} {updatedTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            var changes = new List<string>();
+            if (oldDescription != updatedTicket.Description) changes.Add("mô tả");
+            if (oldPriority != updatedTicket.PriorityLevel) changes.Add($"mức ưu tiên: {oldPriority} → {updatedTicket.PriorityLevel}");
+            
+            if (changes.Count > 0)
+            {
+                await CreateHistoryLogAsync(
+                    userId: request.ConsulterId,
+                    action: "UPDATE_INFO",
+                    maintenanceTicketId: id,
+                    oldData: $"Description: {oldDescription}, Priority: {oldPriority}",
+                    newData: $"Description: {updatedTicket.Description}, Priority: {updatedTicket.PriorityLevel}"
+                );
+            }
+
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
 
@@ -193,8 +229,33 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket == null)
                 throw new ArgumentException("Maintenance ticket not found");
 
+            var oldStatus = maintenanceTicket.StatusCode;
             maintenanceTicket.StatusCode = statusCode;
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            
+            // ✅ Tạo history log để ghi nhận việc cập nhật trạng thái
+            var userName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            var statusMap = new Dictionary<string, string>
+            {
+                { "PENDING", "Chờ xử lý" },
+                { "ASSIGNED", "Đã gán" },
+                { "IN_PROGRESS", "Đang thực hiện" },
+                { "COMPLETED", "Hoàn thành" },
+                { "CANCELLED", "Đã hủy" }
+            };
+            var oldStatusName = statusMap.ContainsKey(oldStatus) ? statusMap[oldStatus] : oldStatus;
+            var newStatusName = statusMap.ContainsKey(statusCode) ? statusMap[statusCode] : statusCode;
+            
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId,
+                action: "UPDATE_STATUS",
+                maintenanceTicketId: id,
+                oldData: $"Status: {oldStatus}",
+                newData: $"Cập nhật trạng thái: '{oldStatusName}' → '{newStatusName}' bởi {userName}"
+            );
+            
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
 
@@ -299,16 +360,32 @@ namespace BE.vn.fpt.edu.services
             await _context.SaveChangesAsync();
 
             // ✅ Tạo history log để ghi nhận việc gán kỹ thuật viên
-            var techNames = string.Join(", ", technicianIds.Select(techId => $"Technician ID: {techId}"));
-            await CreateHistoryLogAsync(
-                userId: maintenanceTicket.ConsulterId,
-                action: "ASSIGN_TECHNICIAN",
-                oldData: $"Status: {oldStatus}, Technicians: None",
-                newData: $"Status: IN_PROGRESS, Technicians: {techNames}, Primary: {maintenanceTicket.TechnicianId}"
-            );
+            var refreshed = await _maintenanceTicketRepository.GetByIdAsync(id);
+            var technicianDetails = refreshed?.MaintenanceTicketTechnicians?.Select(mtt => 
+            {
+                var techName = mtt.Technician != null 
+                    ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() 
+                    : $"ID: {mtt.TechnicianId}";
+                var role = mtt.RoleInTicket == "PRIMARY" ? "Chính" : "Phụ";
+                return $"{techName} ({role})";
+            }).ToList() ?? new List<string>();
+            
+            var consulterName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            
+            foreach (var techDetail in technicianDetails)
+            {
+                await CreateHistoryLogAsync(
+                    userId: maintenanceTicket.ConsulterId,
+                    action: "ASSIGN_TECHNICIAN",
+                    maintenanceTicketId: id,
+                    oldData: $"Status: {oldStatus}",
+                    newData: $"Gán kỹ thuật viên {techDetail} bởi {consulterName}"
+                );
+            }
 
             // Trả về chi tiết mới nhất
-            var refreshed = await _maintenanceTicketRepository.GetByIdAsync(id);
             var response = _mapper.Map<ResponseDto>(refreshed);
             if (refreshed?.MaintenanceTicketTechnicians != null)
             {
@@ -333,10 +410,24 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket.StatusCode != "PENDING" && maintenanceTicket.StatusCode != "ASSIGNED" && maintenanceTicket.StatusCode != "IN_PROGRESS")
                 throw new ArgumentException($"Không thể xóa kỹ thuật viên cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể xóa khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS.");
 
-            // Lưu thông tin cũ để ghi log
+            // Lưu thông tin cũ để ghi log (phải lấy trước khi xóa)
             var oldStatus = maintenanceTicket.StatusCode;
             var oldTechnicianIds = maintenanceTicket.MaintenanceTicketTechnicians?.Select(x => x.TechnicianId).ToList() ?? new List<long>();
             var oldPrimaryId = maintenanceTicket.TechnicianId;
+            
+            // Lấy tên kỹ thuật viên đã bị xóa (trước khi xóa)
+            var removedTechnicians = new List<string>();
+            if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
+            {
+                foreach (var mtt in maintenanceTicket.MaintenanceTicketTechnicians)
+                {
+                    if (mtt.Technician != null)
+                    {
+                        var techName = ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim();
+                        removedTechnicians.Add(techName);
+                    }
+                }
+            }
 
             // Xóa tất cả kỹ thuật viên khỏi bảng trung gian
             if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
@@ -357,15 +448,21 @@ namespace BE.vn.fpt.edu.services
             await _context.SaveChangesAsync();
 
             // ✅ Tạo history log để ghi nhận việc xóa kỹ thuật viên
-            var techNames = oldTechnicianIds.Count > 0 
-                ? string.Join(", ", oldTechnicianIds.Select(techId => $"Technician ID: {techId}"))
-                : "None";
-            await CreateHistoryLogAsync(
-                userId: maintenanceTicket.ConsulterId,
-                action: "REMOVE_TECHNICIAN",
-                oldData: $"Status: {oldStatus}, Technicians: {techNames}, Primary: {oldPrimaryId}",
-                newData: $"Status: {maintenanceTicket.StatusCode}, Technicians: None, Primary: None"
-            );
+            
+            var consulterName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            
+            foreach (var techName in removedTechnicians)
+            {
+                await CreateHistoryLogAsync(
+                    userId: maintenanceTicket.ConsulterId,
+                    action: "REMOVE_TECHNICIAN",
+                    maintenanceTicketId: id,
+                    oldData: $"Status: {oldStatus}",
+                    newData: $"Gỡ kỹ thuật viên {techName} khỏi phiếu bởi {consulterName}"
+                );
+            }
 
             // Trả về chi tiết mới nhất
             var refreshed = await _maintenanceTicketRepository.GetByIdAsync(id);
@@ -389,9 +486,34 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket == null)
                 throw new ArgumentException("Maintenance ticket not found");
 
+            var oldStatus = maintenanceTicket.StatusCode;
             maintenanceTicket.StatusCode = "IN_PROGRESS";
             maintenanceTicket.StartTime = DateTime.UtcNow;
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            
+            // ✅ Tạo history log để ghi nhận việc cập nhật trạng thái
+            var userName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            var statusMap = new Dictionary<string, string>
+            {
+                { "PENDING", "Chờ xử lý" },
+                { "ASSIGNED", "Đã gán" },
+                { "IN_PROGRESS", "Đang thực hiện" },
+                { "COMPLETED", "Hoàn thành" },
+                { "CANCELLED", "Đã hủy" }
+            };
+            var oldStatusName = statusMap.ContainsKey(oldStatus) ? statusMap[oldStatus] : oldStatus;
+            var newStatusName = statusMap.ContainsKey("IN_PROGRESS") ? statusMap["IN_PROGRESS"] : "IN_PROGRESS";
+            
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId,
+                action: "UPDATE_STATUS",
+                maintenanceTicketId: id,
+                oldData: $"Status: {oldStatus}",
+                newData: $"Cập nhật trạng thái: '{oldStatusName}' → '{newStatusName}' bởi {userName}"
+            );
+            
             return _mapper.Map<ResponseDto>(updatedTicket);
         }
 
@@ -413,11 +535,18 @@ namespace BE.vn.fpt.edu.services
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
 
             // ✅ Tạo history log để ghi nhận việc hoàn thành bảo dưỡng
+            var userName = maintenanceTicket.Technician != null 
+                ? ($"{maintenanceTicket.Technician.FirstName} {maintenanceTicket.Technician.LastName}").Trim() 
+                : (maintenanceTicket.Consulter != null 
+                    ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                    : "Unknown");
+            
             await CreateHistoryLogAsync(
-                userId: maintenanceTicket.TechnicianId, // Technician là người hoàn thành
+                userId: maintenanceTicket.TechnicianId ?? maintenanceTicket.ConsulterId,
                 action: "COMPLETE_MAINTENANCE",
+                maintenanceTicketId: id,
                 oldData: $"Status: {oldStatus}",
-                newData: $"Status: COMPLETED, EndTime: {DateTime.UtcNow}"
+                newData: $"Phiếu hoàn thành bởi {userName}"
             );
 
             return _mapper.Map<ResponseDto>(updatedTicket);
@@ -443,11 +572,16 @@ namespace BE.vn.fpt.edu.services
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
 
             // ✅ Tạo history log để ghi nhận việc hủy phiếu
+            var userName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            
             await CreateHistoryLogAsync(
-                userId: maintenanceTicket.ConsulterId, // Consulter là người hủy phiếu
+                userId: maintenanceTicket.ConsulterId,
                 action: "CANCEL_MAINTENANCE",
+                maintenanceTicketId: id,
                 oldData: $"Status: {oldStatus}",
-                newData: $"Status: CANCELLED, CancelledAt: {DateTime.UtcNow}"
+                newData: $"Phiếu bị hủy bởi {userName}"
             );
 
             return _mapper.Map<ResponseDto>(updatedTicket);
@@ -476,17 +610,35 @@ namespace BE.vn.fpt.edu.services
         /// <summary>
         /// Helper method để tạo history log
         /// </summary>
-        private async Task CreateHistoryLogAsync(long? userId, string action, string? oldData = null, string? newData = null)
+        private async Task CreateHistoryLogAsync(long? userId, string action, long? maintenanceTicketId = null, string? oldData = null, string? newData = null)
         {
             var historyLog = new HistoryLog
             {
                 UserId = userId,
+                MaintenanceTicketId = maintenanceTicketId,
                 Action = action,
                 OldData = oldData,
                 NewData = newData,
                 CreatedAt = DateTime.UtcNow
             };
             await _historyLogRepository.CreateAsync(historyLog);
+        }
+
+        /// <summary>
+        /// Lấy lịch sử hoạt động của Maintenance Ticket
+        /// </summary>
+        public async Task<List<BE.vn.fpt.edu.DTOs.HistoryLog.ResponseDto>> GetHistoryLogsAsync(long id)
+        {
+            var historyLogs = await _historyLogRepository.GetByMaintenanceTicketIdAsync(id);
+            return historyLogs.Select(h => new BE.vn.fpt.edu.DTOs.HistoryLog.ResponseDto
+            {
+                Id = h.Id,
+                UserId = h.UserId,
+                UserName = h.User != null ? ($"{h.User.FirstName} {h.User.LastName}").Trim() : null,
+                Action = h.Action,
+                NewData = h.NewData,
+                CreatedAt = h.CreatedAt
+            }).ToList();
         }
     }
 }

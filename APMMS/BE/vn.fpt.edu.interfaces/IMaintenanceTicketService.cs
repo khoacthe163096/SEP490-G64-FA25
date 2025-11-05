@@ -19,6 +19,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> StartMaintenanceAsync(long id);
         Task<ResponseDto> CompleteMaintenanceAsync(long id);
         Task<ResponseDto> CancelMaintenanceTicketAsync(long id);
+        Task<List<BE.vn.fpt.edu.DTOs.HistoryLog.ResponseDto>> GetHistoryLogsAsync(long id);
     }
 }
 

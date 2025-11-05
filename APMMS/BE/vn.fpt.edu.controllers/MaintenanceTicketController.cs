@@ -84,6 +84,23 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Lấy lịch sử hoạt động của Maintenance Ticket
+        /// </summary>
+        [HttpGet("{id}/history")]
+        public async Task<IActionResult> GetHistoryLogs(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.GetHistoryLogsAsync(id);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// L?y Maintenance Ticket theo ID
         /// </summary>
         [HttpGet("{id}")]

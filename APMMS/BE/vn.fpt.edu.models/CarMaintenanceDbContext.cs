@@ -255,10 +255,16 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.NewData).HasColumnName("new_data");
             entity.Property(e => e.OldData).HasColumnName("old_data");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
 
             entity.HasOne(d => d.User).WithMany(p => p.HistoryLogs)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__history_l__user___73BA3083");
+            
+            entity.HasOne(d => d.MaintenanceTicket).WithMany()
+                .HasForeignKey(d => d.MaintenanceTicketId)
+                .HasConstraintName("FK_history_log_maintenance_ticket")
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MaintenanceRequest>(entity =>

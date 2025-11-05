@@ -19,6 +19,15 @@ namespace BE.vn.fpt.edu.repository
             await _context.SaveChangesAsync();
             return historyLog;
         }
+
+        public async Task<List<HistoryLog>> GetByMaintenanceTicketIdAsync(long maintenanceTicketId)
+        {
+            return await _context.HistoryLogs
+                .Include(h => h.User)
+                .Where(h => h.MaintenanceTicketId == maintenanceTicketId)
+                .OrderByDescending(h => h.CreatedAt)
+                .ToListAsync();
+        }
     }
 }
 
