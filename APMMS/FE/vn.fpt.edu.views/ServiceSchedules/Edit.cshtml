@@ -1,0 +1,214 @@
+@{
+    ViewData["Title"] = "Chỉnh sửa lịch hẹn";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
+    var scheduleId = ViewBag.ServiceScheduleId;
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Chỉnh sửa lịch hẹn
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <form id="scheduleForm" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Khách hàng</label>
+                                    <input type="text" class="form-control" id="userName" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Xe</label>
+                                    <input type="text" class="form-control" id="carInfo" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="branchId" required>
+                                        <option value="">Chọn chi nhánh</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduledDate" class="form-label">Ngày và giờ hẹn <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="scheduledDate" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="statusCode" class="form-label">Trạng thái</label>
+                                    <select class="form-select" id="statusCode">
+                                        <option value="PENDING">Chờ xử lý</option>
+                                        <option value="CONFIRMED">Đã xác nhận</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Lưu ý:</strong> Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/ServiceSchedules/Details/@scheduleId" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                Lưu thay đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const API_BASE_URL = '@apiBaseUrl';
+        const scheduleId = @scheduleId;
+
+        $(document).ready(function() {
+            loadBranches();
+            loadScheduleDetails();
+
+            $('#scheduleForm').on('submit', function(e) {
+                e.preventDefault();
+                updateSchedule();
+            });
+        });
+
+        function loadScheduleDetails() {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/ServiceSchedule/${scheduleId}`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success && result.data) {
+                    const schedule = result.data;
+                    
+                    if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED') {
+                        alert('Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành');
+                        window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                        return;
+                    }
+
+                    $('#userName').val(schedule.userName || '');
+                    $('#carInfo').val(`${schedule.carName || ''} - ${schedule.licensePlate || ''}`);
+                    $('#branchId').val(schedule.branchId || '');
+                    
+                    const date = new Date(schedule.scheduledDate);
+                    const dateTimeLocal = date.toISOString().slice(0, 16);
+                    $('#scheduledDate').val(dateTimeLocal);
+                    
+                    // Set min date to tomorrow
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const minDate = tomorrow.toISOString().slice(0, 16);
+                    $('#scheduledDate').attr('min', minDate);
+                    
+                    $('#statusCode').val(schedule.statusCode || 'PENDING');
+
+                    $('#loadingSpinner').hide();
+                    $('#scheduleForm').show();
+                } else {
+                    alert('Không tìm thấy lịch hẹn');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading schedule:', error);
+                $('#loadingSpinner').html('<p class="text-danger">Lỗi tải dữ liệu: ' + error.message + '</p>');
+            });
+        }
+
+        function loadBranches() {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/Branch`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success && result.data) {
+                    const select = $('#branchId');
+                    result.data.forEach(branch => {
+                        select.append(`<option value="${branch.id}">${branch.name || 'N/A'}</option>`);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading branches:', error);
+            });
+        }
+
+        function updateSchedule() {
+            const token = localStorage.getItem('authToken');
+            const scheduledDate = new Date($('#scheduledDate').val());
+
+            const payload = {
+                branchId: parseInt($('#branchId').val()),
+                scheduledDate: scheduledDate.toISOString(),
+                statusCode: $('#statusCode').val()
+            };
+
+            fetch(`${API_BASE_URL}/ServiceSchedule/${scheduleId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async response => {
+                const result = await response.json();
+                if (result.success) {
+                    alert('Cập nhật lịch hẹn thành công!');
+                    window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                } else {
+                    alert('Lỗi: ' + (result.message || 'Không thể cập nhật lịch hẹn'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating schedule:', error);
+                alert('Lỗi khi cập nhật lịch hẹn');
+            });
+        }
+    </script>
+}
+
