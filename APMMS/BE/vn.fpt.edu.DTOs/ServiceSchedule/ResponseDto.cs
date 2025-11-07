@@ -29,6 +29,10 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
 
         public string? AcceptNote { get; set; }
 
+        public long? ConsultantBranchId { get; set; }
+
+        public string? ConsultantBranchName { get; set; }
+
         public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
     }
 

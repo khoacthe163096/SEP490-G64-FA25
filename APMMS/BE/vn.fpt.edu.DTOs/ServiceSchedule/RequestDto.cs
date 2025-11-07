@@ -16,6 +16,8 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         [Required(ErrorMessage = "Branch ID is required")]
         public long BranchId { get; set; }
 
+        public long? ServiceCategoryId { get; set; }
+
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string? StatusCode { get; set; } = "PENDING"; // Default status: PENDING, CONFIRMED, CANCELLED, COMPLETED
     }
@@ -64,5 +66,7 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public string? Message { get; set; }
 
         public string? ServiceType { get; set; }
+
+        public long? ServiceCategoryId { get; set; }
     }
 }
