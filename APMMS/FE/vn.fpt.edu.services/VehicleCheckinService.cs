@@ -34,7 +34,7 @@ namespace FE.vn.fpt.edu.services
             var queryString = string.Join("&", queryParams);
             return await _apiAdapter.GetAsync<object>($"VehicleCheckin?{queryString}");
         }
-
+        //Update
         public async Task<object?> GetByIdAsync(long id)
         {
             try
