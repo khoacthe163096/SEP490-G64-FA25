@@ -1,6 +1,7 @@
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace BE.vn.fpt.edu.repository
 {
@@ -28,6 +29,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
@@ -39,6 +42,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .OrderByDescending(s => s.ScheduledDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -53,6 +58,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
@@ -66,6 +73,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .Where(s => s.BranchId == branchId)
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
@@ -79,6 +88,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .Where(s => s.StatusCode == statusCode)
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
@@ -92,6 +103,8 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
+                .Include(s => s.ScheduleServiceNotes)
+                    .ThenInclude(n => n.Consultant)
                 .Where(s => s.ScheduledDate >= startDate && s.ScheduledDate <= endDate)
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
