@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
 {
     public class ResponseDto
@@ -25,6 +28,8 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public DateTime? AcceptedAt { get; set; }
 
         public string? AcceptNote { get; set; }
+
+        public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
     }
 
     public class ListResponseDto
@@ -48,5 +53,7 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public DateTime? AcceptedAt { get; set; }
 
         public string? AcceptNote { get; set; }
+
+        public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
     }
 }
