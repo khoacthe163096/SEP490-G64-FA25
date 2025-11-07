@@ -60,6 +60,53 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Lấy danh sách ghi chú của lịch hẹn
+        /// </summary>
+        [HttpGet("{id}/notes")]
+        public async Task<IActionResult> GetNotes(long id)
+        {
+            try
+            {
+                var result = await _serviceScheduleService.GetNotesAsync(id);
+                return Ok(new { success = true, data = result });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Thêm ghi chú vào lịch hẹn
+        /// </summary>
+        [HttpPost("{id}/notes")]
+        public async Task<IActionResult> AddNote(long id, [FromBody] AddNoteDto request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new { success = false, message = "Request body is required" });
+            }
+
+            try
+            {
+                var result = await _serviceScheduleService.AddNoteAsync(id, request);
+                return Ok(new { success = true, data = result, message = "Note added successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Lấy lịch hẹn theo ID
         /// </summary>
         [HttpGet("{id}")]
