@@ -17,6 +17,14 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public long? BranchId { get; set; }
         public string? BranchName { get; set; }
         public string? BranchPhone { get; set; }
+
+        public long? AcceptedById { get; set; }
+
+        public string? AcceptedByName { get; set; }
+
+        public DateTime? AcceptedAt { get; set; }
+
+        public string? AcceptNote { get; set; }
     }
 
     public class ListResponseDto
@@ -32,5 +40,13 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public string? StatusName { get; set; }
         public long? BranchId { get; set; }
         public string? BranchName { get; set; }
+
+        public long? AcceptedById { get; set; }
+
+        public string? AcceptedByName { get; set; }
+
+        public DateTime? AcceptedAt { get; set; }
+
+        public string? AcceptNote { get; set; }
     }
 }
