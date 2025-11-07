@@ -153,7 +153,10 @@ async function checkLoginStatus() {
                 username: result.username,
                 fullName: result.fullName || result.username,
                 email: result.email || 'user@example.com',
-                role: result.role || 'Auto Owner'
+                role: result.role || getRoleName(result.roleId),
+                roleId: result.roleId || 0,
+                userId: result.userId || result.id || null,
+                id: result.userId || result.id || null
             };
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
             localStorage.setItem('isLoggedIn', 'true');
