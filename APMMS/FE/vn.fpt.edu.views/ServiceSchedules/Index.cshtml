@@ -65,12 +65,13 @@
                                     <th>Ngày hẹn</th>
                                     <th>Giờ hẹn</th>
                                     <th>Trạng thái</th>
+                                    <th>Người xử lý</th>
                                     <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="serviceSchedulesTableBody">
                                 <tr>
-                                    <td colspan="9" class="text-center">
+                                    <td colspan="10" class="text-center">
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
@@ -166,12 +167,12 @@
 
                     displayServiceSchedules(schedules);
                 } else {
-                    $('#serviceSchedulesTableBody').html('<tr><td colspan="9" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                    $('#serviceSchedulesTableBody').html('<tr><td colspan="10" class="text-center text-muted">Không có dữ liệu</td></tr>');
                 }
             })
             .catch(error => {
                 console.error('Error loading schedules:', error);
-                $('#serviceSchedulesTableBody').html('<tr><td colspan="9" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
+                $('#serviceSchedulesTableBody').html('<tr><td colspan="10" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
             });
         }
 
@@ -180,14 +181,26 @@
             tbody.empty();
 
             if (schedules.length === 0) {
-                tbody.html('<tr><td colspan="9" class="text-center text-muted">Không có lịch hẹn nào</td></tr>');
+                tbody.html('<tr><td colspan="10" class="text-center text-muted">Không có lịch hẹn nào</td></tr>');
                 return;
+            }
+
+            let currentUserId = null;
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    currentUserId = Number(userInfo.userId || userInfo.id || userInfo.UserId);
+                }
+            } catch (err) {
+                console.warn('Không thể đọc thông tin người dùng hiện tại:', err);
             }
 
             schedules.forEach((schedule, index) => {
                 const date = new Date(schedule.scheduledDate);
                 const formattedDate = date.toLocaleDateString('vi-VN');
                 const formattedTime = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                const acceptedAt = schedule.acceptedAt ? new Date(schedule.acceptedAt).toLocaleString('vi-VN') : null;
 
                 let statusBadge = '';
                 switch(schedule.statusCode) {
@@ -207,6 +220,34 @@
                         statusBadge = '<span class="badge bg-secondary">' + (schedule.statusName || schedule.statusCode) + '</span>';
                 }
 
+                const acceptedInfo = schedule.acceptedByName
+                    ? `<div><strong>${schedule.acceptedByName}</strong>${acceptedAt ? `<br><small class="text-muted">${acceptedAt}</small>` : ''}${schedule.acceptNote ? `<br><small class="text-muted">${schedule.acceptNote}</small>` : ''}</div>`
+                    : '<span class="text-muted">Chưa nhận</span>';
+
+                const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED';
+                const acceptButtonHtml = (!schedule.acceptedById && !actionsDisabled)
+                    ? `<button class="btn btn-sm btn-outline-success me-1" onclick="acceptSchedule(${schedule.id})" title="Nhận đơn">
+                            <i class="fas fa-handshake"></i>
+                       </button>`
+                    : '';
+
+                const acceptedLabelHtml = (schedule.acceptedById && Number(schedule.acceptedById) === currentUserId)
+                    ? '<span class="badge bg-success text-white me-1">Bạn đã nhận</span>'
+                    : '';
+
+                const viewButtonHtml = `<a href="/ServiceSchedules/Details/${schedule.id}" class="btn btn-sm btn-outline-info me-1" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>`;
+
+                const editAndCancelButtons = !actionsDisabled ? `
+                                <a href="/ServiceSchedules/Edit/${schedule.id}" class="btn btn-sm btn-outline-primary me-1" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger" onclick="cancelSchedule(${schedule.id})" title="Hủy lịch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : '';
+
                 const row = `
                     <tr>
                         <td>${(currentPage - 1) * pageSize + index + 1}</td>
@@ -217,18 +258,13 @@
                         <td>${formattedDate}</td>
                         <td>${formattedTime}</td>
                         <td>${statusBadge}</td>
+                        <td>${acceptedInfo}</td>
                         <td>
-                            <a href="/ServiceSchedules/Details/${schedule.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            ${schedule.statusCode !== 'CANCELLED' && schedule.statusCode !== 'COMPLETED' ? `
-                                <a href="/ServiceSchedules/Edit/${schedule.id}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="cancelSchedule(${schedule.id})" title="Hủy lịch">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            ` : ''}
+                            ${acceptButtonHtml}
+                            ${acceptedLabelHtml}
+                            ${viewButtonHtml}
+                            ${schedule.acceptedById && Number(schedule.acceptedById) !== currentUserId ? '<span class="badge bg-success-subtle text-success me-1">Đã nhận</span>' : ''}
+                            ${editAndCancelButtons}
                         </td>
                     </tr>
                 `;
@@ -261,6 +297,128 @@
                     alert('Lỗi khi hủy lịch hẹn');
                 });
             }
+        }
+
+        async function acceptSchedule(id) {
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                alert('Vui lòng đăng nhập bằng tài khoản tư vấn viên để nhận đơn.');
+                return;
+            }
+
+            // Lấy userInfo từ localStorage hoặc từ API
+            let userInfo = null;
+            const userInfoStr = localStorage.getItem('userInfo');
+            
+            if (userInfoStr) {
+                try {
+                    userInfo = JSON.parse(userInfoStr);
+                } catch (error) {
+                    console.error('Không thể phân tích thông tin người dùng:', error);
+                }
+            }
+
+            // Nếu không có roleId trong localStorage, lấy từ API
+            if (!userInfo || !userInfo.roleId) {
+                try {
+                    const response = await fetch('/Auth/GetUserInfo', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.isLoggedIn) {
+                        userInfo = {
+                            ...userInfo,
+                            roleId: result.roleId || 0,
+                            userId: result.userId || userInfo?.userId || userInfo?.id || null,
+                            id: result.userId || userInfo?.userId || userInfo?.id || null
+                        };
+                        // Cập nhật lại localStorage
+                        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi lấy thông tin người dùng:', error);
+                }
+            }
+
+            if (!userInfo) {
+                alert('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.');
+                return;
+            }
+
+            // Debug: log userInfo để kiểm tra
+            console.log('UserInfo:', userInfo);
+            console.log('RoleId:', userInfo.roleId, 'Type:', typeof userInfo.roleId);
+
+            // Kiểm tra roleId - có thể là number hoặc string
+            const roleId = Number(userInfo.roleId);
+            if (isNaN(roleId) || roleId !== 6) {
+                console.error('RoleId không hợp lệ hoặc không phải consulter. RoleId:', roleId);
+                alert('Chỉ tài khoản tư vấn viên mới có thể nhận đơn. Vui lòng đăng nhập lại.');
+                return;
+            }
+
+            // Lấy userId từ userInfo hoặc decode từ token
+            let consultantId = Number(userInfo.userId || userInfo.id || userInfo.UserId);
+            
+            // Nếu không có userId, decode từ JWT token
+            if (!consultantId && token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    consultantId = Number(
+                        payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
+                        payload['UserId'] ||
+                        payload['nameid'] ||
+                        payload['sub']
+                    );
+                    
+                    if (consultantId) {
+                        // Cập nhật lại userInfo với userId
+                        userInfo.userId = consultantId;
+                        userInfo.id = consultantId;
+                        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                        console.log('Đã lấy userId từ token:', consultantId);
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi decode token:', error);
+                }
+            }
+
+            if (!consultantId || isNaN(consultantId)) {
+                console.error('Không thể lấy userId. UserInfo:', userInfo);
+                alert('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+                return;
+            }
+
+            const payload = {
+                consultantId,
+                note: `${userInfo.fullName || userInfo.username || 'Tư vấn viên'} đã nhận đơn`
+            };
+
+            fetch(`${API_BASE_URL}/ServiceSchedule/${id}/accept`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async response => {
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert('Nhận đơn thành công!');
+                    loadServiceSchedules();
+                } else {
+                    const errorMessage = result.message || `Không thể nhận đơn (HTTP ${response.status})`;
+                    alert(errorMessage);
+                }
+            })
+            .catch(error => {
+                console.error('Error accepting schedule:', error);
+                alert('Lỗi khi nhận đơn. Vui lòng thử lại.');
+            });
         }
     </script>
 }
