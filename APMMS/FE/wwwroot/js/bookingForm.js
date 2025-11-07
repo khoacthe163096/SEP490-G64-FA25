@@ -87,27 +87,30 @@
 
     window.loadBranches = async function loadBranches() {
         const token = localStorage.getItem('authToken');
-        if (token) {
-            // Logged-in user không cần chọn chi nhánh thủ công
+        const apiBaseUrl = window.API_BASE_URL || 'https://localhost:7173/api';
+        const select = $('#branch');
+
+        if (!select.length) {
+            console.error('❌ Branch select element not found!');
             return;
         }
 
-        try {
-            const apiBaseUrl = window.API_BASE_URL || 'https://localhost:7173/api';
-            const select = $('#branch');
-            if (!select.length) {
-                console.error('❌ Branch select element not found!');
-                return;
-            }
+        select.prop('disabled', false);
+        select.prop('required', true);
+        select.html('<option value="">-- Đang tải danh sách chi nhánh --</option>');
 
-            select.html('<option value="">-- Đang tải danh sách chi nhánh --</option>');
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
 
             const response = await fetch(`${apiBaseUrl}/Branch`, {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
+                headers,
                 mode: 'cors'
             });
 
@@ -127,16 +130,24 @@
                 return;
             }
 
+            let hasDefaultBranch = false;
+            const defaultBranchId = token ? getDefaultBranchId() : null;
+
             branches.forEach(branch => {
-                select.append(`<option value="${branch.id}">${branch.name || 'N/A'}</option>`);
+                const optionValue = branch.id;
+                if (defaultBranchId && parseInt(defaultBranchId, 10) === parseInt(optionValue, 10)) {
+                    hasDefaultBranch = true;
+                }
+                select.append(`<option value="${optionValue}">${branch.name || 'N/A'}</option>`);
             });
+
+            if (hasDefaultBranch) {
+                select.val(String(defaultBranchId));
+            }
         } catch (error) {
             console.error('❌ Error loading branches:', error);
-            const select = $('#branch');
-            if (select.length) {
-                select.empty();
-                select.append('<option value="">-- Lỗi tải danh sách chi nhánh --</option>');
-            }
+            select.empty();
+            select.append('<option value="">-- Lỗi tải danh sách chi nhánh --</option>');
         }
     };
 
@@ -215,6 +226,7 @@
 
         if (isLoggedIn) {
             ensureLicensePlateSelect();
+            $('#branch').prop('disabled', false);
             $('#mileage').val('');
             $('#message').val('');
         } else {
@@ -288,7 +300,13 @@
             }
 
             if (!usePublicFlow) {
-                const branchId = getDefaultBranchId();
+                const branchValue = $('#branch').val();
+                if (!branchValue) {
+                    showAlert('Vui lòng chọn chi nhánh tiếp nhận yêu cầu.', 'warning');
+                    return;
+                }
+
+                const branchId = parseInt(branchValue, 10) || getDefaultBranchId();
                 bookingData = {
                     userId: parseInt(userId, 10),
                     carId: parseInt(carId, 10),
