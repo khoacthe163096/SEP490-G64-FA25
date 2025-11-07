@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using AutoMapper;
 using BE.vn.fpt.edu.DTOs.ServiceSchedule;
 using BE.vn.fpt.edu.interfaces;
@@ -9,6 +11,8 @@ namespace BE.vn.fpt.edu.services
 {
     public class ServiceScheduleService : IServiceScheduleService
     {
+        private const string AssignmentNotePrefix = "[ASSIGNMENT]";
+
         private readonly IServiceScheduleRepository _repository;
         private readonly ICarOfAutoOwnerRepository _carRepository;
         private readonly IUserRepository _userRepository;
@@ -268,8 +272,68 @@ namespace BE.vn.fpt.edu.services
             return MapToResponseDto(createdSchedule);
         }
 
+        public async Task<ResponseDto> AcceptScheduleAsync(long id, AcceptScheduleDto request)
+        {
+            var schedule = await _repository.GetByIdAsync(id);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+
+            if (schedule.StatusCode == "CANCELLED")
+                throw new ArgumentException("Cannot accept a cancelled schedule");
+
+            if (schedule.StatusCode == "COMPLETED")
+                throw new ArgumentException("Cannot accept a completed schedule");
+
+            var consultant = await _userRepository.GetByIdAsync(request.ConsultantId);
+            if (consultant == null)
+                throw new ArgumentException("Consultant not found");
+
+            if (consultant.RoleId != 6)
+                throw new ArgumentException("User is not authorized to accept schedules");
+
+            await _context.Entry(schedule)
+                .Collection(s => s.ScheduleServiceNotes)
+                .Query()
+                .Include(note => note.Consultant)
+                .LoadAsync();
+
+            var existingAssignment = GetLatestAssignmentNote(schedule);
+            if (existingAssignment != null)
+            {
+                if (existingAssignment.ConsultantId == request.ConsultantId)
+                {
+                    return MapToResponseDto(schedule);
+                }
+
+                var assignedName = BuildUserDisplayName(existingAssignment.Consultant);
+                throw new InvalidOperationException($"Schedule already accepted by {assignedName ?? "another consultant"}.");
+            }
+
+            var noteMessage = string.IsNullOrWhiteSpace(request.Note)
+                ? BuildUserDisplayName(consultant) ?? "Consulter accepted the schedule"
+                : request.Note.Trim();
+
+            var assignmentNote = new ScheduleServiceNote
+            {
+                ScheduleServiceId = schedule.Id,
+                ConsultantId = consultant.Id,
+                Note = $"{AssignmentNotePrefix}{noteMessage}",
+                CreatedAt = DateTime.UtcNow,
+                Consultant = consultant
+            };
+
+            _context.ScheduleServiceNotes.Add(assignmentNote);
+            await _context.SaveChangesAsync();
+
+            schedule.ScheduleServiceNotes.Add(assignmentNote);
+
+            return MapToResponseDto(schedule);
+        }
+
         private ResponseDto MapToResponseDto(ScheduleService schedule)
         {
+            var assignment = GetLatestAssignmentNote(schedule);
+
             return new ResponseDto
             {
                 Id = schedule.Id,
@@ -286,12 +350,18 @@ namespace BE.vn.fpt.edu.services
                 StatusName = schedule.StatusCodeNavigation?.Name,
                 BranchId = schedule.BranchId,
                 BranchName = schedule.Branch?.Name,
-                BranchPhone = schedule.Branch?.Phone
+                BranchPhone = schedule.Branch?.Phone,
+                AcceptedById = assignment?.ConsultantId,
+                AcceptedByName = BuildUserDisplayName(assignment?.Consultant),
+                AcceptedAt = assignment?.CreatedAt,
+                AcceptNote = ExtractAssignmentMessage(assignment)
             };
         }
 
         private ListResponseDto MapToListResponseDto(ScheduleService schedule)
         {
+            var assignment = GetLatestAssignmentNote(schedule);
+
             return new ListResponseDto
             {
                 Id = schedule.Id,
@@ -304,8 +374,47 @@ namespace BE.vn.fpt.edu.services
                 StatusCode = schedule.StatusCode,
                 StatusName = schedule.StatusCodeNavigation?.Name,
                 BranchId = schedule.BranchId,
-                BranchName = schedule.Branch?.Name
+                BranchName = schedule.Branch?.Name,
+                AcceptedById = assignment?.ConsultantId,
+                AcceptedByName = BuildUserDisplayName(assignment?.Consultant),
+                AcceptedAt = assignment?.CreatedAt,
+                AcceptNote = ExtractAssignmentMessage(assignment)
             };
+        }
+
+        private ScheduleServiceNote? GetLatestAssignmentNote(ScheduleService schedule)
+        {
+            if (schedule.ScheduleServiceNotes == null || schedule.ScheduleServiceNotes.Count == 0)
+                return null;
+
+            return schedule.ScheduleServiceNotes
+                .Where(note => !string.IsNullOrWhiteSpace(note.Note) &&
+                               note.Note.StartsWith(AssignmentNotePrefix, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(note => note.CreatedAt)
+                .FirstOrDefault();
+        }
+
+        private static string? BuildUserDisplayName(User? user)
+        {
+            if (user == null)
+                return null;
+
+            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+                return fullName;
+
+            return !string.IsNullOrWhiteSpace(user.Username) ? user.Username : null;
+        }
+
+        private string? ExtractAssignmentMessage(ScheduleServiceNote? note)
+        {
+            if (note == null || string.IsNullOrWhiteSpace(note.Note))
+                return null;
+
+            if (!note.Note.StartsWith(AssignmentNotePrefix, StringComparison.OrdinalIgnoreCase))
+                return note.Note;
+
+            return note.Note.Substring(AssignmentNotePrefix.Length).Trim();
         }
     }
 }
