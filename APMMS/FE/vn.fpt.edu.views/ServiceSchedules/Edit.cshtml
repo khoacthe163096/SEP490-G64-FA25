@@ -40,10 +40,9 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="branchId" required>
-                                        <option value="">Chọn chi nhánh</option>
-                                    </select>
+                                    <label class="form-label">Chi nhánh</label>
+                                    <input type="text" class="form-control" id="branchName" readonly>
+                                    <input type="hidden" id="branchId">
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -60,6 +59,7 @@
                                     <label for="statusCode" class="form-label">Trạng thái</label>
                                     <select class="form-select" id="statusCode">
                                         <option value="PENDING">Chờ xử lý</option>
+                                        <option value="IN_PROGRESS">Đang xử lý</option>
                                         <option value="CONFIRMED">Đã xác nhận</option>
                                     </select>
                                 </div>
@@ -94,7 +94,6 @@
         const scheduleId = @scheduleId;
 
         $(document).ready(function() {
-            loadBranches();
             loadScheduleDetails();
 
             $('#scheduleForm').on('submit', function(e) {
@@ -121,24 +120,42 @@
                 if (result.success && result.data) {
                     const schedule = result.data;
                     
-                    if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED') {
-                        alert('Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành');
-                        window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                    if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED' || schedule.statusCode === 'CONFIRMED') {
+                        showToast('Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                        }, 2000);
                         return;
                     }
 
                     $('#userName').val(schedule.userName || '');
                     $('#carInfo').val(`${schedule.carName || ''} - ${schedule.licensePlate || ''}`);
-                    $('#branchId').val(schedule.branchId || '');
                     
-                    const date = new Date(schedule.scheduledDate);
-                    const dateTimeLocal = date.toISOString().slice(0, 16);
+                    // Lấy chi nhánh từ consulter (nếu đã nhận đơn) hoặc từ schedule
+                    const branchId = schedule.consultantBranchId || schedule.branchId;
+                    const branchName = schedule.consultantBranchName || schedule.branchName || 'Chưa xác định';
+                    $('#branchId').val(branchId || '');
+                    $('#branchName').val(branchName);
+                    
+                    // Xử lý timezone - backend trả về UTC, cần convert sang local time cho datetime-local input
+                    let scheduleDateStr = schedule.scheduledDate;
+                    if (typeof scheduleDateStr === 'string' && !scheduleDateStr.endsWith('Z') && !scheduleDateStr.includes('+') && !scheduleDateStr.includes('-', 10)) {
+                        scheduleDateStr = scheduleDateStr + 'Z';
+                    }
+                    const date = new Date(scheduleDateStr);
+                    
+                    // Convert sang format datetime-local (YYYY-MM-DDTHH:mm)
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const dateTimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
                     $('#scheduledDate').val(dateTimeLocal);
                     
-                    // Set min date to tomorrow
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const minDate = tomorrow.toISOString().slice(0, 16);
+                    // Set min date to now (cho phép chọn từ bây giờ)
+                    const now = new Date();
+                    const minDate = now.toISOString().slice(0, 16);
                     $('#scheduledDate').attr('min', minDate);
                     
                     $('#statusCode').val(schedule.statusCode || 'PENDING');
@@ -146,7 +163,7 @@
                     $('#loadingSpinner').hide();
                     $('#scheduleForm').show();
                 } else {
-                    alert('Không tìm thấy lịch hẹn');
+                    showToast('Không tìm thấy lịch hẹn', 'error');
                 }
             })
             .catch(error => {
@@ -155,37 +172,44 @@
             });
         }
 
-        function loadBranches() {
-            const token = localStorage.getItem('authToken');
-            fetch(`${API_BASE_URL}/Branch`, {
-                headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data) {
-                    const select = $('#branchId');
-                    result.data.forEach(branch => {
-                        select.append(`<option value="${branch.id}">${branch.name || 'N/A'}</option>`);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error loading branches:', error);
-            });
-        }
 
         function updateSchedule() {
+            // Validation
+            const branchId = $('#branchId').val();
+            const scheduledDate = $('#scheduledDate').val();
+            
+            if (!branchId) {
+                showToast('Không tìm thấy chi nhánh', 'error');
+                return;
+            }
+            
+            if (!scheduledDate) {
+                showToast('Vui lòng chọn ngày và giờ hẹn', 'error');
+                return;
+            }
+            
+            // Kiểm tra ngày hẹn phải trong tương lai
+            const selectedDate = new Date(scheduledDate);
+            const now = new Date();
+            if (selectedDate <= now) {
+                showToast('Ngày và giờ hẹn phải trong tương lai', 'error');
+                return;
+            }
+
             const token = localStorage.getItem('authToken');
-            const scheduledDate = new Date($('#scheduledDate').val());
+            // datetime-local input trả về local time, cần convert sang UTC để gửi lên server
+            const scheduledDateObj = new Date(scheduledDate);
 
             const payload = {
-                branchId: parseInt($('#branchId').val()),
-                scheduledDate: scheduledDate.toISOString(),
+                branchId: parseInt(branchId),
+                scheduledDate: scheduledDateObj.toISOString(), // Convert local time sang UTC
                 statusCode: $('#statusCode').val()
             };
+
+            // Disable button và hiển thị loading
+            const submitBtn = $('#scheduleForm button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Đang lưu...');
 
             fetch(`${API_BASE_URL}/ServiceSchedule/${scheduleId}`, {
                 method: 'PUT',
@@ -198,16 +222,55 @@
             .then(async response => {
                 const result = await response.json();
                 if (result.success) {
-                    alert('Cập nhật lịch hẹn thành công!');
-                    window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                    showToast('Cập nhật lịch hẹn thành công!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                    }, 1500);
                 } else {
-                    alert('Lỗi: ' + (result.message || 'Không thể cập nhật lịch hẹn'));
+                    showToast('Lỗi: ' + (result.message || 'Không thể cập nhật lịch hẹn'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Error updating schedule:', error);
-                alert('Lỗi khi cập nhật lịch hẹn');
+                showToast('Lỗi khi cập nhật lịch hẹn. Vui lòng thử lại.', 'error');
+            })
+            .finally(() => {
+                submitBtn.prop('disabled', false).html(originalText);
             });
+        }
+
+        function showToast(message, type) {
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const toast = $(`
+                <div class="toast-notification" style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background-color: ${bgColor};
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 4px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                    z-index: 9999;
+                    min-width: 250px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                    <i class="fas ${icon}"></i>
+                    <span>${message}</span>
+                </div>
+            `);
+            
+            $('body').append(toast);
+            
+            setTimeout(() => {
+                toast.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 3000);
         }
     </script>
 }
