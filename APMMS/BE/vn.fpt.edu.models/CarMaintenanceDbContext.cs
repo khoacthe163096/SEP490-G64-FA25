@@ -37,6 +37,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<ScheduleService> ScheduleServices { get; set; }
 
+    public virtual DbSet<ScheduleServiceNote> ScheduleServiceNotes { get; set; }
+
     public virtual DbSet<ServicePackage> ServicePackages { get; set; }
 
     public virtual DbSet<ServiceTask> ServiceTasks { get; set; }
@@ -244,6 +246,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("history_log");
 
+            entity.HasIndex(e => e.MaintenanceTicketId, "IX_history_log_maintenance_ticket_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Action)
                 .HasMaxLength(100)
@@ -252,9 +256,14 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
+            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
             entity.Property(e => e.NewData).HasColumnName("new_data");
             entity.Property(e => e.OldData).HasColumnName("old_data");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.HistoryLogs)
+                .HasForeignKey(d => d.MaintenanceTicketId)
+                .HasConstraintName("FK_history_log_maintenance_ticket");
 
             entity.HasOne(d => d.User).WithMany(p => p.HistoryLogs)
                 .HasForeignKey(d => d.UserId)
@@ -475,6 +484,32 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasConstraintName("FK__schedule___user___04E4BC85");
         });
 
+        modelBuilder.Entity<ScheduleServiceNote>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__schedule__3213E83FAAD58A85");
+
+            entity.ToTable("schedule_service_note");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ConsultantId).HasColumnName("consultant_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Note).HasColumnName("note");
+            entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
+
+            entity.HasOne(d => d.Consultant).WithMany(p => p.ScheduleServiceNotes)
+                .HasForeignKey(d => d.ConsultantId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_note_user");
+
+            entity.HasOne(d => d.ScheduleService).WithMany(p => p.ScheduleServiceNotes)
+                .HasForeignKey(d => d.ScheduleServiceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_note_schedule");
+        });
+
         modelBuilder.Entity<ServicePackage>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__service___3213E83FF129E971");
@@ -605,6 +640,12 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasMaxLength(10)
                 .HasDefaultValue("VND")
                 .HasColumnName("currency_code");
+            entity.Property(e => e.DiscountAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("discount_amount");
+            entity.Property(e => e.FinalAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("final_amount");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
             entity.Property(e => e.Note)
                 .HasMaxLength(255)
@@ -612,6 +653,18 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
+            entity.Property(e => e.Subtotal)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("subtotal");
+            entity.Property(e => e.SurchargeAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("surcharge_amount");
+            entity.Property(e => e.VatAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("vat_amount");
+            entity.Property(e => e.VatPercent)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("vat_percent");
 
             entity.HasOne(d => d.Accountant).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.AccountantId)
@@ -687,9 +740,7 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_date");
-            entity.Property(e => e.Dob)
-                .HasColumnType("date")
-                .HasColumnName("dob");
+            entity.Property(e => e.Dob).HasColumnName("dob");
             entity.Property(e => e.Email)
                 .HasMaxLength(100)
                 .HasColumnName("email");

@@ -23,6 +23,8 @@ public partial class ScheduleService
 
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
+    public virtual ICollection<ScheduleServiceNote> ScheduleServiceNotes { get; set; } = new List<ScheduleServiceNote>();
+
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual User? User { get; set; }

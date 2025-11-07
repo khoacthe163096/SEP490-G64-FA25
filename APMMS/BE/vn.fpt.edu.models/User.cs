@@ -71,6 +71,8 @@ public partial class User
 
     public virtual Role? Role { get; set; }
 
+    public virtual ICollection<ScheduleServiceNote> ScheduleServiceNotes { get; set; } = new List<ScheduleServiceNote>();
+
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
