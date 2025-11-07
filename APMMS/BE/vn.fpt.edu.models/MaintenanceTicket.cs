@@ -35,6 +35,8 @@ public partial class MaintenanceTicket
 
     public DateTime? CreatedAt { get; set; }
 
+    public long? ServiceCategoryId { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
@@ -48,6 +50,8 @@ public partial class MaintenanceTicket
     public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicketTechnician>();
 
     public virtual ScheduleService? ScheduleService { get; set; }
+
+    public virtual ServiceCategory? ServiceCategory { get; set; }
 
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
 

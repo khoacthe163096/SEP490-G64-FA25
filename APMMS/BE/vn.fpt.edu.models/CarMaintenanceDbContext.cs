@@ -39,6 +39,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<ScheduleServiceNote> ScheduleServiceNotes { get; set; }
 
+    public virtual DbSet<ServiceCategory> ServiceCategories { get; set; }
+
     public virtual DbSet<ServicePackage> ServicePackages { get; set; }
 
     public virtual DbSet<ServiceTask> ServiceTasks { get; set; }
@@ -334,6 +336,7 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasMaxLength(20)
                 .HasColumnName("priority_level");
             entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
+            entity.Property(e => e.ServiceCategoryId).HasColumnName("service_category_id");
             entity.Property(e => e.StartTime)
                 .HasColumnType("datetime")
                 .HasColumnName("start_time");
@@ -361,6 +364,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.ScheduleService).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.ScheduleServiceId)
                 .HasConstraintName("FK__maintenan__sched__7B5B524B");
+
+            entity.HasOne(d => d.ServiceCategory).WithMany(p => p.MaintenanceTickets)
+                .HasForeignKey(d => d.ServiceCategoryId)
+                .HasConstraintName("FK_ticket_category");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.StatusCode)
@@ -462,6 +469,7 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.ScheduledDate)
                 .HasColumnType("datetime")
                 .HasColumnName("scheduled_date");
+            entity.Property(e => e.ServiceCategoryId).HasColumnName("service_category_id");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -474,6 +482,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.Car).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.CarId)
                 .HasConstraintName("FK__schedule___car_i__03F0984C");
+
+            entity.HasOne(d => d.ServiceCategory).WithMany(p => p.ScheduleServices)
+                .HasForeignKey(d => d.ServiceCategoryId)
+                .HasConstraintName("FK_schedule_service_category");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.StatusCode)
@@ -508,6 +520,26 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasForeignKey(d => d.ScheduleServiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_note_schedule");
+        });
+
+        modelBuilder.Entity<ServiceCategory>(entity =>
+        {
+            entity.ToTable("service_category");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
+            entity.Property(e => e.Name)
+                .HasMaxLength(200)
+                .HasColumnName("name");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasColumnName("status_code");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServiceCategories)
+                .HasForeignKey(d => d.StatusCode)
+                .HasConstraintName("FK_service_category_status");
         });
 
         modelBuilder.Entity<ServicePackage>(entity =>
