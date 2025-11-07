@@ -715,24 +715,24 @@ function displayTimeline(data) {
     let timelineHtml = '';
     events.forEach((event, index) => {
         const isLast = index === events.length - 1;
-        timelineHtml += `
-            <div class="d-flex ${!isLast ? 'mb-3' : ''}">
-                <div class="flex-shrink-0">
+                timelineHtml += `
+                    <div class="d-flex ${!isLast ? 'mb-3' : ''}">
+                        <div class="flex-shrink-0">
                     <div class="bg-${event.color} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                         <i class="${event.icon}"></i>
-                    </div>
-                </div>
-                <div class="flex-grow-1 ms-3">
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
                     <h6 class="mb-1">${event.title}</h6>
                     <p class="mb-1 text-muted">${event.description}</p>
                     <small class="text-muted">${event.date.toLocaleDateString('vi-VN')} ${event.date.toLocaleTimeString('vi-VN')}</small>
-                </div>
-            </div>
-            ${!isLast ? '<hr class="my-2">' : ''}
-        `;
-    });
-    
-    timeline.html(timelineHtml);
+                        </div>
+                    </div>
+                    ${!isLast ? '<hr class="my-2">' : ''}
+                `;
+            });
+            
+            timeline.html(timelineHtml);
 }
 
 function displayCostSummary(data) {
