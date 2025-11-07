@@ -35,6 +35,12 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<List<ResponseDto>>(cars);
         }
 
+        public async Task<List<ResponseDto>> GetServicedCarsByUserIdAsync(long userId)
+        {
+            var cars = await _repository.GetServicedCarsByUserIdAsync(userId);
+            return _mapper.Map<List<ResponseDto>>(cars);
+        }
+
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
             var car = _mapper.Map<Car>(dto);
