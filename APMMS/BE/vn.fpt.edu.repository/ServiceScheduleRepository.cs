@@ -31,6 +31,7 @@ namespace BE.vn.fpt.edu.repository
                 .Include(s => s.StatusCodeNavigation)
                 .Include(s => s.ScheduleServiceNotes)
                     .ThenInclude(n => n.Consultant)
+                        .ThenInclude(c => c.Branch)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

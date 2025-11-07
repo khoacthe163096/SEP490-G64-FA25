@@ -46,6 +46,15 @@ namespace BE.vn.fpt.edu.services
             if (car.UserId != request.UserId)
                 throw new ArgumentException("Car does not belong to this user");
 
+            // Validate ServiceCategory if provided
+            if (request.ServiceCategoryId.HasValue)
+            {
+                var serviceCategory = await _context.ServiceCategories
+                    .FirstOrDefaultAsync(sc => sc.Id == request.ServiceCategoryId.Value);
+                if (serviceCategory == null)
+                    throw new ArgumentException("Service category not found");
+            }
+
             // Validate scheduled date is in the future
             if (request.ScheduledDate <= DateTime.UtcNow)
                 throw new ArgumentException("Scheduled date must be in the future");
@@ -258,6 +267,15 @@ namespace BE.vn.fpt.edu.services
             if (conflictingSchedule != null)
                 throw new ArgumentException("Bạn đã có lịch hẹn vào ngày này rồi");
 
+            // Validate ServiceCategory if provided
+            if (request.ServiceCategoryId.HasValue)
+            {
+                var serviceCategory = await _context.ServiceCategories
+                    .FirstOrDefaultAsync(sc => sc.Id == request.ServiceCategoryId.Value);
+                if (serviceCategory == null)
+                    throw new ArgumentException("Service category not found");
+            }
+
             // Create schedule
             var scheduleService = new ScheduleService
             {
@@ -265,7 +283,8 @@ namespace BE.vn.fpt.edu.services
                 CarId = car.Id,
                 BranchId = request.BranchId,
                 ScheduledDate = request.ScheduledDate,
-                StatusCode = "PENDING"
+                StatusCode = "PENDING",
+                ServiceCategoryId = request.ServiceCategoryId
             };
 
             var createdSchedule = await _repository.CreateAsync(scheduleService);
@@ -283,6 +302,9 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule.StatusCode == "COMPLETED")
                 throw new ArgumentException("Cannot accept a completed schedule");
+
+            if (schedule.StatusCode == "CONFIRMED")
+                throw new ArgumentException("Cannot accept an already confirmed schedule");
 
             var consultant = await _userRepository.GetByIdAsync(request.ConsultantId);
             if (consultant == null)
@@ -323,6 +345,13 @@ namespace BE.vn.fpt.edu.services
             };
 
             _context.ScheduleServiceNotes.Add(assignmentNote);
+            
+            // Cập nhật status thành IN_PROGRESS khi nhận công việc (chỉ khi đang là PENDING)
+            if (schedule.StatusCode == "PENDING")
+            {
+                schedule.StatusCode = "IN_PROGRESS";
+            }
+            
             await _context.SaveChangesAsync();
 
             schedule.ScheduleServiceNotes.Add(assignmentNote);
@@ -415,6 +444,10 @@ namespace BE.vn.fpt.edu.services
                     .ToList();
             }
 
+            // Lấy branchId từ consultant nếu đã nhận đơn, nếu không thì lấy từ schedule
+            var finalBranchId = assignment?.Consultant?.BranchId ?? schedule.BranchId;
+            var finalBranchName = assignment?.Consultant?.Branch?.Name ?? schedule.Branch?.Name;
+
             return new ResponseDto
             {
                 Id = schedule.Id,
@@ -436,6 +469,8 @@ namespace BE.vn.fpt.edu.services
                 AcceptedByName = BuildUserDisplayName(assignment?.Consultant),
                 AcceptedAt = assignment?.CreatedAt,
                 AcceptNote = ExtractAssignmentMessage(assignment),
+                ConsultantBranchId = finalBranchId,
+                ConsultantBranchName = finalBranchName,
                 Notes = notes
             };
         }
