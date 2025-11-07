@@ -151,6 +151,73 @@
         }
     };
 
+    window.loadServiceCategories = async function loadServiceCategories() {
+        const token = localStorage.getItem('authToken');
+        const apiBaseUrl = window.API_BASE_URL || 'https://localhost:7173/api';
+        const select = $('#serviceType');
+
+        if (!select.length) {
+            console.error('❌ Service type select element not found!');
+            return;
+        }
+
+        console.log('🔄 Loading service categories...');
+        select.prop('disabled', false);
+        select.prop('required', true);
+        select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            console.log('📡 Fetching:', `${apiBaseUrl}/ServiceCategory`);
+            const response = await fetch(`${apiBaseUrl}/ServiceCategory`, {
+                method: 'GET',
+                headers,
+                mode: 'cors'
+            });
+
+            console.log('📥 Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ HTTP error:', response.status, errorText);
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('📦 Response data:', result);
+            
+            const categories = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+            console.log('✅ Categories found:', categories.length);
+
+            select.empty();
+            select.append('<option value="">-- Chọn dịch vụ --</option>');
+
+            if (!categories.length) {
+                console.warn('⚠️ No categories found');
+                select.append('<option value="">-- Không có dịch vụ nào --</option>');
+                return;
+            }
+
+            categories.forEach(category => {
+                // Chỉ hiển thị tên dịch vụ, không hiển thị description
+                select.append(`<option value="${category.id}">${category.name || 'N/A'}</option>`);
+            });
+            
+            console.log('✅ Service categories loaded successfully');
+        } catch (error) {
+            console.error('❌ Error loading service categories:', error);
+            select.empty();
+            select.append('<option value="">-- Lỗi tải danh sách dịch vụ --</option>');
+        }
+    };
+
     async function loadUserCars() {
         const token = localStorage.getItem('authToken');
         if (!token) {
@@ -307,6 +374,7 @@
                 }
 
                 const branchId = parseInt(branchValue, 10) || getDefaultBranchId();
+                const serviceTypeValue = $('#serviceType').val();
                 bookingData = {
                     userId: parseInt(userId, 10),
                     carId: parseInt(carId, 10),
@@ -314,6 +382,15 @@
                     branchId: branchId,
                     statusCode: 'PENDING'
                 };
+                
+                // Thêm ServiceCategoryId nếu có
+                if (serviceTypeValue) {
+                    const serviceId = parseInt(serviceTypeValue, 10);
+                    if (!isNaN(serviceId)) {
+                        bookingData.serviceCategoryId = serviceId;
+                    }
+                }
+                
                 endpoint = `${apiBaseUrl}/ServiceSchedule`;
                 headers['Authorization'] = `Bearer ${token}`;
             } else {
@@ -356,7 +433,8 @@
     }
 
     function buildPublicBookingPayload(appointmentTime) {
-        return {
+        const serviceTypeValue = $('#serviceType').val();
+        const payload = {
             fullName: $('#fullName').val(),
             email: $('#email').val() || null,
             phone: $('#phone').val(),
@@ -366,9 +444,21 @@
             mileage: $('#mileage').val() ? parseInt($('#mileage').val(), 10) : null,
             scheduledDate: appointmentTime.toISOString(),
             branchId: parseInt($('#branch').val() || getDefaultBranchId(), 10),
-            message: $('#message').val() || null,
-            serviceType: $('#serviceType').val() || null
+            message: $('#message').val() || null
         };
+        
+        // Nếu serviceType là số (ID từ database), thêm vào ServiceCategoryId
+        // Nếu là string (giá trị cũ), giữ lại serviceType
+        if (serviceTypeValue) {
+            const serviceId = parseInt(serviceTypeValue, 10);
+            if (!isNaN(serviceId)) {
+                payload.serviceCategoryId = serviceId;
+            } else {
+                payload.serviceType = serviceTypeValue;
+            }
+        }
+        
+        return payload;
     }
 
     // ----------------------------------------------------------
@@ -384,12 +474,21 @@
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             $('#appointmentTime').attr('min', tomorrow.toISOString().slice(0, 16));
+            
+            // Load service categories với delay nhỏ để đảm bảo modal đã render
+            setTimeout(function() {
+                loadServiceCategories();
+            }, 100);
         });
 
         $('#bookingModal').on('shown.bs.modal', function () {
             updateBookingFormForUser();
             if (!localStorage.getItem('authToken') && $('#branch option').length <= 1) {
                 loadBranches();
+            }
+            // Đảm bảo load service categories
+            if ($('#serviceType option').length <= 1) {
+                loadServiceCategories();
             }
         });
 
@@ -412,12 +511,17 @@
             updateBookingFormForUser();
             loadBranches();
             loadUserCars();
+            // Load service categories với delay nhỏ
+            setTimeout(function() {
+                loadServiceCategories();
+            }, 100);
         });
     });
 
     // Expose helpers for debugging if needed
     window.updateBookingFormForUser = updateBookingFormForUser;
     window.loadUserCars = loadUserCars;
+    window.loadServiceCategories = loadServiceCategories;
 
 })();
 

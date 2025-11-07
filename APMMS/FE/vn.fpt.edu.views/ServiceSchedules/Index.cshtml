@@ -207,6 +207,9 @@
                     case 'PENDING':
                         statusBadge = '<span class="badge bg-warning">Chờ xử lý</span>';
                         break;
+                    case 'IN_PROGRESS':
+                        statusBadge = '<span class="badge bg-primary">Đang xử lý</span>';
+                        break;
                     case 'CONFIRMED':
                         statusBadge = '<span class="badge bg-info">Đã xác nhận</span>';
                         break;
@@ -224,7 +227,7 @@
                     ? `<div><strong>${schedule.acceptedByName}</strong>${acceptedAt ? `<br><small class="text-muted">${acceptedAt}</small>` : ''}${schedule.acceptNote ? `<br><small class="text-muted">${schedule.acceptNote}</small>` : ''}</div>`
                     : '<span class="text-muted">Chưa nhận</span>';
 
-                const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED';
+                const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED' || schedule.statusCode === 'CONFIRMED';
                 const acceptButtonHtml = (!schedule.acceptedById && !actionsDisabled)
                     ? `<button class="btn btn-sm btn-outline-success me-1" onclick="acceptSchedule(${schedule.id})" title="Nhận đơn">
                             <i class="fas fa-handshake"></i>
