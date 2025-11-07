@@ -277,6 +277,9 @@
                 case 'PENDING':
                     statusBadge = '<span class="badge bg-warning">Chờ xử lý</span>';
                     break;
+                case 'IN_PROGRESS':
+                    statusBadge = '<span class="badge bg-primary">Đang xử lý</span>';
+                    break;
                 case 'CONFIRMED':
                     statusBadge = '<span class="badge bg-info">Đã xác nhận</span>';
                     break;
@@ -292,10 +295,12 @@
             $('#statusBadge').html(statusBadge);
 
             // Show/hide action buttons based on status
-            if (schedule.statusCode !== 'CANCELLED' && schedule.statusCode !== 'COMPLETED') {
+            // Cho phép chỉnh sửa/hủy khi status là PENDING hoặc IN_PROGRESS
+            if (schedule.statusCode === 'PENDING' || schedule.statusCode === 'IN_PROGRESS') {
                 $('#editBtn').show();
                 $('#cancelBtn').show();
             } else {
+                // Ẩn nút khi đã CONFIRMED, CANCELLED, hoặc COMPLETED
                 $('#editBtn').hide();
                 $('#cancelBtn').hide();
             }
