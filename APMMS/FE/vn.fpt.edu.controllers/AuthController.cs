@@ -43,10 +43,11 @@ namespace FE.vn.fpt.edu.controllers
                     var roleId = result.RoleId;
                     HttpContext.Session.SetString("RoleId", roleId.ToString());
                     
-                    Console.WriteLine($"Login successful for user: {request.Username}, Role: {roleId}");
+                    Console.WriteLine($"Login successful for user: {request.Username}, Role: {roleId}, UserId: {result.UserId}");
                     return Json(new { 
                         success = true, 
                         token = result.Token,
+                        userId = result.UserId,
                         roleId = roleId,
                         redirectTo = result.RedirectTo ?? GetRedirectUrl(roleId)
                     });
