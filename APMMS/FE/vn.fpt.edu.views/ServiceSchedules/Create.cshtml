@@ -40,12 +40,24 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="serviceCategoryId" class="form-label">Dịch vụ <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="serviceCategoryId" required>
+                                        <option value="">Chọn dịch vụ</option>
+                                    </select>
+                                    <small class="form-text text-muted">Chọn loại dịch vụ cần đặt lịch</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
                                     <select class="form-select" id="branchId" required>
                                         <option value="">Chọn chi nhánh</option>
                                     </select>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="scheduledDate" class="form-label">Ngày và giờ hẹn <span class="text-danger">*</span></label>
@@ -79,11 +91,119 @@
 
 @section Scripts {
     <script>
-        const API_BASE_URL = '@apiBaseUrl';
+        // Đảm bảo API_BASE_URL được định nghĩa global
+        window.API_BASE_URL = '@apiBaseUrl';
+        const API_BASE_URL = window.API_BASE_URL;
+        
+        console.log('📋 Script section loaded, API_BASE_URL:', API_BASE_URL);
 
-        $(document).ready(function() {
+        // Định nghĩa hàm loadServiceCategories trong global scope NGAY LẬP TỨC
+        window.loadServiceCategories = function loadServiceCategories() {
+            console.log('🔄 [loadServiceCategories] Function called');
+            const token = localStorage.getItem('authToken');
+            const select = $('#serviceCategoryId');
+            
+            console.log('🔍 [loadServiceCategories] Looking for #serviceCategoryId, found:', select.length);
+            
+            if (!select.length) {
+                console.error('❌ [loadServiceCategories] Service category select element not found! Retrying in 500ms...');
+                setTimeout(function() {
+                    window.loadServiceCategories();
+                }, 500);
+                return;
+            }
+            
+            console.log('🔄 [loadServiceCategories] Loading service categories...');
+            console.log('📡 [loadServiceCategories] API_BASE_URL:', API_BASE_URL);
+            console.log('📡 [loadServiceCategories] Full URL:', `${API_BASE_URL}/ServiceCategory`);
+            
+            select.prop('disabled', false);
+            select.prop('required', true);
+            select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+            
+            const url = `${API_BASE_URL}/ServiceCategory`;
+            console.log('🌐 [loadServiceCategories] Making fetch request to:', url);
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                console.log('📥 [loadServiceCategories] Response status:', response.status, response.statusText);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ [loadServiceCategories] HTTP error:', response.status, errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('📦 [loadServiceCategories] Response data:', result);
+                const categories = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                console.log('✅ [loadServiceCategories] Categories found:', categories.length);
+                console.log('📋 [loadServiceCategories] Categories array:', categories);
+                
+                // Clear và thêm option mặc định
+                select.empty();
+                select.append('<option value="">-- Chọn dịch vụ --</option>');
+                
+                if (!categories.length) {
+                    console.warn('⚠️ [loadServiceCategories] No categories found');
+                    select.append('<option value="">-- Không có dịch vụ nào --</option>');
+                    return;
+                }
+                
+                // Thêm từng option
+                categories.forEach((category, index) => {
+                    // Chỉ hiển thị tên dịch vụ, không hiển thị description
+                    const optionText = category.name || 'N/A';
+                    const optionValue = category.id;
+                    console.log(`  [${index}] Adding option: value="${optionValue}", text="${optionText}"`);
+                    const option = $('<option></option>').attr('value', optionValue).text(optionText);
+                    select.append(option);
+                });
+                
+                const totalOptions = select.find('option').length;
+                console.log('✅ [loadServiceCategories] Service categories loaded successfully!');
+                console.log('📊 [loadServiceCategories] Total options in select:', totalOptions);
+                console.log('📋 [loadServiceCategories] Select element:', select[0]);
+                console.log('📋 [loadServiceCategories] Select HTML length:', select.html().length);
+                
+                // Force trigger change event để đảm bảo UI update
+                select.trigger('change');
+            })
+            .catch(error => {
+                console.error('❌ [loadServiceCategories] Error:', error);
+                console.error('❌ [loadServiceCategories] Error stack:', error.stack);
+                select.empty();
+                select.append('<option value="">-- Lỗi tải danh sách dịch vụ --</option>');
+            });
+        };
+        
+        console.log('✅ loadServiceCategories function defined, type:', typeof window.loadServiceCategories);
+
+        // Đảm bảo hàm được gọi ngay cả khi document ready chưa chạy
+        function initializeForm() {
+            console.log('📋 Initialize form, API_BASE_URL:', API_BASE_URL);
+            console.log('🔍 Checking for #serviceCategoryId...');
+            const testSelect = $('#serviceCategoryId');
+            console.log('  Found:', testSelect.length, 'element(s)');
+            if (testSelect.length) {
+                console.log('  Element exists:', testSelect[0]);
+            }
+            
             loadUsers();
             loadBranches();
+            window.loadServiceCategories(); // Gọi ngay lập tức
+        }
+
+        $(document).ready(function() {
+            console.log('📋 Document ready, initializing form...');
+            initializeForm();
             
             // Set min date to tomorrow
             const tomorrow = new Date();
@@ -176,10 +296,97 @@
             });
         }
 
+        function loadServiceCategories() {
+            console.log('🔄 [loadServiceCategories] Function called');
+            const token = localStorage.getItem('authToken');
+            const select = $('#serviceCategoryId');
+            
+            console.log('🔍 [loadServiceCategories] Looking for #serviceCategoryId, found:', select.length);
+            
+            if (!select.length) {
+                console.error('❌ [loadServiceCategories] Service category select element not found! Retrying in 500ms...');
+                setTimeout(function() {
+                    loadServiceCategories();
+                }, 500);
+                return;
+            }
+            
+            console.log('🔄 [loadServiceCategories] Loading service categories...');
+            console.log('📡 [loadServiceCategories] API_BASE_URL:', API_BASE_URL);
+            console.log('📡 [loadServiceCategories] Full URL:', `${API_BASE_URL}/ServiceCategory`);
+            
+            select.prop('disabled', false);
+            select.prop('required', true);
+            select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+            
+            const url = `${API_BASE_URL}/ServiceCategory`;
+            console.log('🌐 [loadServiceCategories] Making fetch request to:', url);
+            
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                console.log('📥 [loadServiceCategories] Response status:', response.status, response.statusText);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ [loadServiceCategories] HTTP error:', response.status, errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                console.log('📦 [loadServiceCategories] Response data:', result);
+                const categories = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                console.log('✅ [loadServiceCategories] Categories found:', categories.length);
+                console.log('📋 [loadServiceCategories] Categories array:', categories);
+                
+                // Clear và thêm option mặc định
+                select.empty();
+                select.append('<option value="">-- Chọn dịch vụ --</option>');
+                
+                if (!categories.length) {
+                    console.warn('⚠️ [loadServiceCategories] No categories found');
+                    select.append('<option value="">-- Không có dịch vụ nào --</option>');
+                    return;
+                }
+                
+                // Thêm từng option
+                categories.forEach((category, index) => {
+                    // Chỉ hiển thị tên dịch vụ, không hiển thị description
+                    const optionText = category.name || 'N/A';
+                    const optionValue = category.id;
+                    console.log(`  [${index}] Adding option: value="${optionValue}", text="${optionText}"`);
+                    const option = $('<option></option>').attr('value', optionValue).text(optionText);
+                    select.append(option);
+                });
+                
+                const totalOptions = select.find('option').length;
+                console.log('✅ [loadServiceCategories] Service categories loaded successfully!');
+                console.log('📊 [loadServiceCategories] Total options in select:', totalOptions);
+                console.log('📋 [loadServiceCategories] Select element:', select[0]);
+                console.log('📋 [loadServiceCategories] Select HTML length:', select.html().length);
+                
+                // Force trigger change event để đảm bảo UI update
+                select.trigger('change');
+            })
+            .catch(error => {
+                console.error('❌ [loadServiceCategories] Error:', error);
+                console.error('❌ [loadServiceCategories] Error stack:', error.stack);
+                select.empty();
+                select.append('<option value="">-- Lỗi tải danh sách dịch vụ --</option>');
+            });
+        }
+
         function createSchedule() {
             const token = localStorage.getItem('authToken');
             const scheduledDate = new Date($('#scheduledDate').val());
 
+            const serviceCategoryId = $('#serviceCategoryId').val();
             const payload = {
                 userId: parseInt($('#userId').val()),
                 carId: parseInt($('#carId').val()),
@@ -187,6 +394,11 @@
                 scheduledDate: scheduledDate.toISOString(),
                 statusCode: 'PENDING'
             };
+            
+            // Thêm ServiceCategoryId nếu có
+            if (serviceCategoryId) {
+                payload.serviceCategoryId = parseInt(serviceCategoryId);
+            }
 
             fetch(`${API_BASE_URL}/ServiceSchedule`, {
                 method: 'POST',
