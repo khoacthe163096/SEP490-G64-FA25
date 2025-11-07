@@ -330,9 +330,90 @@ namespace BE.vn.fpt.edu.services
             return MapToResponseDto(schedule);
         }
 
+        public async Task<NoteResponseDto> AddNoteAsync(long scheduleId, AddNoteDto request)
+        {
+            var schedule = await _repository.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+
+            var consultant = await _userRepository.GetByIdAsync(request.ConsultantId);
+            if (consultant == null)
+                throw new ArgumentException("Consultant not found");
+
+            if (string.IsNullOrWhiteSpace(request.Note))
+                throw new ArgumentException("Note cannot be empty");
+
+            var note = new ScheduleServiceNote
+            {
+                ScheduleServiceId = scheduleId,
+                ConsultantId = consultant.Id,
+                Note = request.Note.Trim(),
+                CreatedAt = DateTime.UtcNow,
+                Consultant = consultant
+            };
+
+            _context.ScheduleServiceNotes.Add(note);
+            await _context.SaveChangesAsync();
+
+            return new NoteResponseDto
+            {
+                Id = note.Id,
+                ScheduleServiceId = note.ScheduleServiceId,
+                ConsultantId = note.ConsultantId,
+                ConsultantName = BuildUserDisplayName(consultant) ?? consultant.Username ?? "Unknown",
+                Note = note.Note,
+                CreatedAt = note.CreatedAt,
+                IsAssignmentNote = note.Note.StartsWith(AssignmentNotePrefix, StringComparison.OrdinalIgnoreCase)
+            };
+        }
+
+        public async Task<List<NoteResponseDto>> GetNotesAsync(long scheduleId)
+        {
+            var schedule = await _repository.GetByIdAsync(scheduleId);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+
+            await _context.Entry(schedule)
+                .Collection(s => s.ScheduleServiceNotes)
+                .Query()
+                .Include(note => note.Consultant)
+                .OrderByDescending(note => note.CreatedAt)
+                .LoadAsync();
+
+            return schedule.ScheduleServiceNotes.Select(note => new NoteResponseDto
+            {
+                Id = note.Id,
+                ScheduleServiceId = note.ScheduleServiceId,
+                ConsultantId = note.ConsultantId,
+                ConsultantName = BuildUserDisplayName(note.Consultant) ?? note.Consultant?.Username ?? "Unknown",
+                Note = note.Note,
+                CreatedAt = note.CreatedAt,
+                IsAssignmentNote = note.Note.StartsWith(AssignmentNotePrefix, StringComparison.OrdinalIgnoreCase)
+            }).ToList();
+        }
+
         private ResponseDto MapToResponseDto(ScheduleService schedule)
         {
             var assignment = GetLatestAssignmentNote(schedule);
+
+            // Map notes if already loaded
+            var notes = new List<NoteResponseDto>();
+            if (schedule.ScheduleServiceNotes != null && schedule.ScheduleServiceNotes.Any())
+            {
+                notes = schedule.ScheduleServiceNotes
+                    .OrderByDescending(note => note.CreatedAt)
+                    .Select(note => new NoteResponseDto
+                    {
+                        Id = note.Id,
+                        ScheduleServiceId = note.ScheduleServiceId,
+                        ConsultantId = note.ConsultantId,
+                        ConsultantName = BuildUserDisplayName(note.Consultant) ?? note.Consultant?.Username ?? "Unknown",
+                        Note = note.Note,
+                        CreatedAt = note.CreatedAt,
+                        IsAssignmentNote = note.Note.StartsWith(AssignmentNotePrefix, StringComparison.OrdinalIgnoreCase)
+                    })
+                    .ToList();
+            }
 
             return new ResponseDto
             {
@@ -354,7 +435,8 @@ namespace BE.vn.fpt.edu.services
                 AcceptedById = assignment?.ConsultantId,
                 AcceptedByName = BuildUserDisplayName(assignment?.Consultant),
                 AcceptedAt = assignment?.CreatedAt,
-                AcceptNote = ExtractAssignmentMessage(assignment)
+                AcceptNote = ExtractAssignmentMessage(assignment),
+                Notes = notes
             };
         }
 
