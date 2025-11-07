@@ -15,5 +15,6 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CancelScheduleAsync(long id, CancelScheduleDto? request = null);
         Task<bool> DeleteScheduleAsync(long id);
         Task<ResponseDto> CreatePublicBookingAsync(PublicBookingDto request);
+        Task<ResponseDto> AcceptScheduleAsync(long id, AcceptScheduleDto request);
     }
 }
