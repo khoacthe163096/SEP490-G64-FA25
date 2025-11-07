@@ -208,6 +208,36 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Consultant accepts a schedule
+        /// </summary>
+        [HttpPut("{id}/accept")]
+        public async Task<IActionResult> AcceptSchedule(long id, [FromBody] AcceptScheduleDto request)
+        {
+            if (request == null)
+            {
+                return BadRequest(new { success = false, message = "Request body is required" });
+            }
+
+            try
+            {
+                var result = await _serviceScheduleService.AcceptScheduleAsync(id, request);
+                return Ok(new { success = true, data = result, message = "Schedule accepted successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Xóa lịch hẹn
         /// </summary>
         [HttpDelete("{id}")]
