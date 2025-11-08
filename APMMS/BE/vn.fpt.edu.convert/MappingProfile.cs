@@ -30,7 +30,10 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
+
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>()
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
