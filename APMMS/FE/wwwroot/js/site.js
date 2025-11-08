@@ -130,6 +130,9 @@ function initializeAuth() {
         e.preventDefault();
         handleLogout();
     });
+
+    // Profile link should work normally - Bootstrap dropdown will handle closing
+    // No special handling needed for Profile navigation
 }
 
 async function checkLoginStatus() {

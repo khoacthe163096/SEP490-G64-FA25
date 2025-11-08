@@ -1,221 +1,269 @@
 @{
-    ViewData["Title"] = "Thông tin cá nhân";
-    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    ViewData["Title"] = "Hồ sơ của tôi";
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-user me-2"></i>
-                            Thông tin cá nhân
-                        </h4>
-                        <button class="btn btn-outline-light" onclick="toggleEditMode()" id="editToggleBtn">
-                            <i class="fas fa-edit me-1"></i> Chỉnh sửa
-                        </button>
+<!-- Profile Section with Sidebar -->
+<section class="profile-section">
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 col-md-4 mb-4">
+                <div class="profile-sidebar">
+                    <div class="sidebar-header">
+                        <h5 class="mb-0">Tài khoản của tôi</h5>
                     </div>
+                    <ul class="sidebar-menu">
+                        <li>
+                            <a href="#" class="sidebar-menu-item active" data-section="profile" onclick="showSection('profile', event)">
+                                <i class="fas fa-user"></i>
+                                <span>Hồ sơ</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-menu-item" data-section="cars" onclick="showSection('cars', event)">
+                                <i class="fas fa-car"></i>
+                                <span>Xe</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-menu-item" data-section="maintenance-history" onclick="showSection('maintenance-history', event)">
+                                <i class="fas fa-cog"></i>
+                                <span>Lịch sử bảo dưỡng</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="sidebar-menu-item" data-section="repair-history" onclick="showSection('repair-history', event)">
+                                <i class="fas fa-wrench"></i>
+                                <span>Lịch sử sửa chữa</span>
+                            </a>
+                        </li>
+                    </ul>
                 </div>
-                <div class="card-body" style="background-color: #f8f9fa;">
-                    <div class="row">
-                        <!-- Avatar Section -->
-                        <div class="col-md-4">
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-image me-2"></i>
-                                        Ảnh đại diện
-                                    </h5>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-lg-9 col-md-8">
+                <!-- Profile Section -->
+                <div class="content-section active" id="profile-section" style="display: block;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h4 class="mb-0">Thông tin cá nhân</h4>
+                        </div>
+                        <div class="profile-card-body">
+                            <!-- Avatar Section -->
+                            <div class="text-center mb-4">
+                                <div class="avatar-container position-relative d-inline-block">
+                                    <img src="https://via.placeholder.com/120/ddd/ddd?text=User" 
+                                         alt="Avatar" 
+                                         class="profile-avatar-img" 
+                                         id="userAvatar">
+                                    <button class="btn btn-sm avatar-change-btn" 
+                                            onclick="document.getElementById('avatarInput').click()" 
+                                            id="changeAvatarBtn"
+                                            style="display: none;"
+                                            title="Thay đổi ảnh đại diện">
+                                        <i class="fas fa-camera"></i>
+                                    </button>
+                                    <input type="file" 
+                                           id="avatarInput" 
+                                           accept="image/*" 
+                                           style="display: none;" 
+                                           onchange="previewAvatar(this)">
                                 </div>
-                                <div class="card-body text-center">
-                                    <div class="position-relative d-inline-block">
-                                        <img src="https://via.placeholder.com/150x150/667eea/ffffff?text=User" 
-                                             alt="Avatar" 
-                                             class="rounded-circle mb-3" 
-                                             style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #667eea;"
-                                             id="userAvatar">
-                                        <div class="position-absolute bottom-0 end-0">
-                                            <button class="btn btn-primary btn-sm rounded-circle" onclick="document.getElementById('avatarInput').click()" id="changeAvatarBtn" style="display: none;">
-                                                <i class="fas fa-camera"></i>
+                                <p class="text-muted mt-3 mb-0">
+                                    <small>Nhấn vào biểu tượng camera để thay đổi ảnh đại diện</small>
+                                </p>
+                            </div>
+
+                            <!-- Profile Form -->
+                            <form id="profileForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-4">
+                                            <label for="firstName" class="form-label">
+                                                Họ <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control form-control-lg" 
+                                                   id="firstName" 
+                                                   name="firstName" 
+                                                   placeholder="Nhập họ của bạn"
+                                                   readonly>
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label for="email" class="form-label">
+                                                Email <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="email" 
+                                                   class="form-control form-control-lg" 
+                                                   id="email" 
+                                                   name="email" 
+                                                   placeholder="email@example.com"
+                                                   readonly>
+                                            <small class="text-muted">Email không thể thay đổi</small>
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label for="birthDate" class="form-label">
+                                                Ngày sinh
+                                            </label>
+                                            <input type="date" 
+                                                   class="form-control form-control-lg" 
+                                                   id="birthDate" 
+                                                   name="birthDate" 
+                                                   readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-4">
+                                            <label for="lastName" class="form-label">
+                                                Tên <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" 
+                                                   class="form-control form-control-lg" 
+                                                   id="lastName" 
+                                                   name="lastName" 
+                                                   placeholder="Nhập tên của bạn"
+                                                   readonly>
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label for="phone" class="form-label">
+                                                Số điện thoại <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="tel" 
+                                                   class="form-control form-control-lg" 
+                                                   id="phone" 
+                                                   name="phone" 
+                                                   placeholder="0123456789"
+                                                   readonly>
+                                        </div>
+
+                                        <div class="form-group mb-4">
+                                            <label for="gender" class="form-label">
+                                                Giới tính
+                                            </label>
+                                            <select class="form-select form-select-lg" 
+                                                    id="gender" 
+                                                    name="gender" 
+                                                    disabled>
+                                                <option value="">-- Chọn giới tính --</option>
+                                                <option value="Male">Nam</option>
+                                                <option value="Female">Nữ</option>
+                                                <option value="Other">Khác</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <label for="address" class="form-label">
+                                        Địa chỉ
+                                    </label>
+                                    <textarea class="form-control form-control-lg" 
+                                              id="address" 
+                                              name="address" 
+                                              rows="2" 
+                                              placeholder="Nhập địa chỉ của bạn"
+                                              readonly></textarea>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="profile-actions mt-4 pt-4 border-top">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                        <div>
+                                            <button type="button" 
+                                                    class="btn btn-outline-primary btn-lg" 
+                                                    onclick="changePassword()"
+                                                    id="changePasswordBtn">
+                                                Đổi mật khẩu
+                                            </button>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button type="button" 
+                                                    class="btn btn-secondary btn-lg" 
+                                                    onclick="cancelEdit()" 
+                                                    id="cancelBtn" 
+                                                    style="display: none;">
+                                                Hủy
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-primary btn-lg" 
+                                                    onclick="toggleEditMode()" 
+                                                    id="editToggleBtn">
+                                                Chỉnh sửa
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn btn-primary btn-lg" 
+                                                    onclick="saveProfile()" 
+                                                    id="saveBtn" 
+                                                    style="display: none;">
+                                                Lưu thay đổi
                                             </button>
                                         </div>
                                     </div>
-                                    <input type="file" id="avatarInput" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
-                                    <p class="text-muted mb-0">Nhấn vào camera để thay đổi ảnh</p>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cars Section -->
+                <div class="content-section" id="cars-section" style="display: none;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="mb-0">Danh sách xe của tôi</h4>
+                                <button class="btn btn-primary btn-sm" onclick="showAddCarModal()">Thêm xe mới</button>
+                            </div>
+                        </div>
+                        <div class="profile-card-body">
+                            <div id="carsListContainer">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Đang tải danh sách xe...</p>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Profile Information -->
-                        <div class="col-md-8">
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50;">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        Thông tin cơ bản
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <form id="profileForm">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="firstName" class="form-label">
-                                                        <i class="fas fa-user me-1"></i>
-                                                        Họ <span class="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" class="form-control" id="firstName" name="firstName" value="Nguyễn" readonly>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="lastName" class="form-label">
-                                                        <i class="fas fa-user me-1"></i>
-                                                        Tên <span class="text-danger">*</span>
-                                                    </label>
-                                                    <input type="text" class="form-control" id="lastName" name="lastName" value="Văn A" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="email" class="form-label">
-                                                        <i class="fas fa-envelope me-1"></i>
-                                                        Email <span class="text-danger">*</span>
-                                                    </label>
-                                                    <input type="email" class="form-control" id="email" name="email" value="nguyenvana@example.com" readonly>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="phone" class="form-label">
-                                                        <i class="fas fa-phone me-1"></i>
-                                                        Số điện thoại
-                                                    </label>
-                                                    <input type="tel" class="form-control" id="phone" name="phone" value="0123456789" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="gender" class="form-label">
-                                                        <i class="fas fa-venus-mars me-1"></i>
-                                                        Giới tính
-                                                    </label>
-                                                    <select class="form-select" id="gender" name="gender" disabled>
-                                                        <option value="Male" selected>Nam</option>
-                                                        <option value="Female">Nữ</option>
-                                                        <option value="Other">Khác</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="birthDate" class="form-label">
-                                                        <i class="fas fa-calendar me-1"></i>
-                                                        Ngày sinh
-                                                    </label>
-                                                    <input type="date" class="form-control" id="birthDate" name="birthDate" value="1990-01-01" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </form>
+                <!-- Maintenance History Section -->
+                <div class="content-section" id="maintenance-history-section" style="display: none;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h4 class="mb-0">Lịch sử bảo dưỡng</h4>
+                        </div>
+                        <div class="profile-card-body">
+                            <div id="maintenanceHistoryContainer">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Đang tải lịch sử bảo dưỡng...</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <!-- Work Information -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header" style="background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); color: #2c3e50;">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-briefcase me-2"></i>
-                                        Thông tin công việc
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="employeeId" class="form-label">
-                                                    <i class="fas fa-id-badge me-1"></i>
-                                                    Mã nhân viên
-                                                </label>
-                                                <input type="text" class="form-control" id="employeeId" name="employeeId" value="EMP001" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="role" class="form-label">
-                                                    <i class="fas fa-user-tag me-1"></i>
-                                                    Vai trò
-                                                </label>
-                                                <input type="text" class="form-control" id="role" name="role" value="Consulter" readonly>
-                                            </div>
-                                        </div>
+                <!-- Repair History Section -->
+                <div class="content-section" id="repair-history-section" style="display: none;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h4 class="mb-0">Lịch sử sửa chữa</h4>
+                        </div>
+                        <div class="profile-card-body">
+                            <div id="repairHistoryContainer">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="department" class="form-label">
-                                                    <i class="fas fa-building me-1"></i>
-                                                    Phòng ban
-                                                </label>
-                                                <input type="text" class="form-control" id="department" name="department" value="Tư vấn khách hàng" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="branch" class="form-label">
-                                                    <i class="fas fa-map-marker-alt me-1"></i>
-                                                    Chi nhánh
-                                                </label>
-                                                <input type="text" class="form-control" id="branch" name="branch" value="APMMS 1" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="startDate" class="form-label">
-                                                    <i class="fas fa-calendar-check me-1"></i>
-                                                    Ngày bắt đầu
-                                                </label>
-                                                <input type="date" class="form-control" id="startDate" name="startDate" value="2024-01-01" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="status" class="form-label">
-                                                    <i class="fas fa-check-circle me-1"></i>
-                                                    Trạng thái
-                                                </label>
-                                                <input type="text" class="form-control" id="status" name="status" value="Đang hoạt động" readonly>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="text-muted">
-                                            <i class="fas fa-info-circle me-1"></i>
-                                            Cập nhật thông tin cá nhân của bạn
-                                        </div>
-                                        <div class="btn-group" id="actionButtons">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="cancelEdit()" id="cancelBtn" style="display: none;">
-                                                <i class="fas fa-times me-1"></i> Hủy
-                                            </button>
-                                            <button type="button" class="btn btn-primary" onclick="saveProfile()" id="saveBtn" style="display: none;">
-                                                <i class="fas fa-save me-1"></i> Lưu thay đổi
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <p class="mt-3 text-muted">Đang tải lịch sử sửa chữa...</p>
                                 </div>
                             </div>
                         </div>
@@ -224,80 +272,674 @@
             </div>
         </div>
     </div>
+</section>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Đổi mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group mb-3">
+                        <label for="currentPassword" class="form-label">
+                            Mật khẩu hiện tại <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="currentPassword" 
+                               name="currentPassword" 
+                               placeholder="Nhập mật khẩu hiện tại"
+                               required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="newPassword" class="form-label">
+                            Mật khẩu mới <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="newPassword" 
+                               name="newPassword" 
+                               placeholder="Nhập mật khẩu mới"
+                               required>
+                        <small class="text-muted">Mật khẩu phải có ít nhất 6 ký tự</small>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="confirmPassword" class="form-label">
+                            Xác nhận mật khẩu mới <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="confirmPassword" 
+                               name="confirmPassword" 
+                               placeholder="Nhập lại mật khẩu mới"
+                               required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="savePassword()">Đổi mật khẩu</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
-    <script>
-        let isEditMode = false;
+    <style>
+        /* Profile Section Styles */
+        .profile-section {
+            background-color: #f5f5f5;
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
 
+        .profile-background,
+        .profile-overlay {
+            display: none;
+        }
+
+        /* Sidebar Styles */
+        .profile-sidebar {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar-header {
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            color: #333;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .sidebar-menu li:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .sidebar-menu-item.active {
+            background-color: #f8f9fa;
+            color: #000;
+            border-left-color: #333;
+            font-weight: 500;
+        }
+
+        .sidebar-menu-item i {
+            width: 20px;
+            margin-right: 10px;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .sidebar-menu-item.active i {
+            color: #000;
+        }
+
+        /* Content Section Styles */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .profile-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .profile-card-header {
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+            color: #333;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .profile-card-body {
+            padding: 25px;
+        }
+
+        /* Avatar Styles */
+        .avatar-container {
+            position: relative;
+        }
+
+        .profile-avatar-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+        }
+
+        .avatar-change-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            background: #333;
+            color: #fff;
+            font-size: 0.8rem;
+        }
+
+        .avatar-change-btn:hover {
+            background: #000;
+        }
+
+        /* Form Styles */
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-control:read-only,
+        .form-select:disabled {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+            border-color: #ddd;
+        }
+
+        .form-control:not(:read-only),
+        .form-select:not(:disabled) {
+            background-color: #fff;
+            border-color: #ccc;
+        }
+
+        .form-control:not(:read-only):focus,
+        .form-select:not(:disabled):focus {
+            border-color: #666;
+            box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.1);
+        }
+
+        /* Car Card Styles */
+        .car-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+
+        .car-card:hover {
+            border-color: #999;
+        }
+
+        .car-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .car-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .car-card-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .car-info-item {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .car-info-item i {
+            color: #666;
+            margin-right: 8px;
+            width: 16px;
+        }
+
+        /* History Card Styles */
+        .history-card {
+            border: 1px solid #ddd;
+            border-left: 3px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #fff;
+        }
+
+        .history-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .history-card-title {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .history-card-date {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .history-card-body {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background-color: #333;
+            border-color: #333;
+        }
+
+        .btn-primary:hover {
+            background-color: #000;
+            border-color: #000;
+        }
+
+        .btn-outline-primary {
+            border-color: #333;
+            color: #333;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #333;
+            border-color: #333;
+            color: #fff;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .profile-section {
+                padding: 20px 0;
+            }
+
+            .profile-card-body {
+                padding: 15px;
+            }
+
+            .sidebar-menu-item {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+
+    <script>
+        const API_BASE_URL = window.API_BASE_URL || 'https://localhost:7173/api';
+        let isEditMode = false;
+        let originalData = {};
+        let currentUserId = null;
+
+        // Show Section
+        function showSection(sectionName, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+
+            // Remove active class from all menu items
+            document.querySelectorAll('.sidebar-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected section
+            const section = document.getElementById(sectionName + '-section');
+            if (section) {
+                section.classList.add('active');
+                section.style.display = 'block';
+            }
+
+            // Add active class to clicked menu item
+            const menuItem = document.querySelector(`[data-section="${sectionName}"]`);
+            if (menuItem) {
+                menuItem.classList.add('active');
+            }
+
+            // Load data for the section
+            loadSectionData(sectionName);
+        }
+
+        // Load Section Data
+        function loadSectionData(sectionName) {
+            switch(sectionName) {
+                case 'profile':
+                    loadProfileData();
+                    break;
+                case 'cars':
+                    loadCarsData();
+                    break;
+                case 'maintenance-history':
+                    loadMaintenanceHistory();
+                    break;
+                case 'repair-history':
+                    loadRepairHistory();
+                    break;
+            }
+        }
+
+        // Load Profile Data
+        async function loadProfileData() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfoStr = localStorage.getItem('userInfo');
+                
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    currentUserId = userInfo.userId || userInfo.id;
+                    
+                    // Load user profile from API
+                    const response = await fetch(`${API_BASE_URL}/Profile/${currentUserId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const profile = await response.json();
+                        populateProfileForm(profile);
+                    } else {
+                        // Use data from localStorage as fallback
+                        populateProfileFormFromUserInfo(userInfo);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function populateProfileForm(profile) {
+            if (profile.firstName) document.getElementById('firstName').value = profile.firstName;
+            if (profile.lastName) document.getElementById('lastName').value = profile.lastName;
+            if (profile.email) document.getElementById('email').value = profile.email;
+            if (profile.phone) document.getElementById('phone').value = profile.phone;
+            if (profile.dob) document.getElementById('birthDate').value = profile.dob;
+            if (profile.gender) document.getElementById('gender').value = profile.gender;
+            if (profile.address) document.getElementById('address').value = profile.address;
+        }
+
+        function populateProfileFormFromUserInfo(userInfo) {
+            if (userInfo.fullName) {
+                const nameParts = userInfo.fullName.split(' ');
+                document.getElementById('lastName').value = nameParts.pop() || '';
+                document.getElementById('firstName').value = nameParts.join(' ') || '';
+            }
+            if (userInfo.email) document.getElementById('email').value = userInfo.email;
+            if (userInfo.phone) document.getElementById('phone').value = userInfo.phone;
+        }
+
+        // Load Cars Data
+        async function loadCarsData() {
+            const container = document.getElementById('carsListContainer');
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3 text-muted">Đang tải danh sách xe...</p></div>';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfoStr = localStorage.getItem('userInfo');
+                
+                if (!userInfoStr) {
+                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem danh sách xe</div>';
+                    return;
+                }
+
+                const userInfo = JSON.parse(userInfoStr);
+                const userId = userInfo.userId || userInfo.id;
+
+                const response = await fetch(`${API_BASE_URL}/CarOfAutoOwner/user/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const cars = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+
+                    if (cars.length === 0) {
+                        container.innerHTML = '<div class="alert alert-info">Bạn chưa có xe nào. Hãy thêm xe mới!</div>';
+                    } else {
+                        renderCarsList(cars, container);
+                    }
+                } else {
+                    container.innerHTML = '<div class="alert alert-danger">Không thể tải danh sách xe. Vui lòng thử lại sau.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading cars:', error);
+                container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải danh sách xe.</div>';
+            }
+        }
+
+        function renderCarsList(cars, container) {
+            let html = '<div class="row">';
+            cars.forEach(car => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="car-card">
+                            <div class="car-card-header">
+                                <h5 class="car-card-title">${car.carName || 'N/A'}</h5>
+                                <span class="badge bg-primary">${car.licensePlate || 'N/A'}</span>
+                            </div>
+                            <div class="car-card-body">
+                                <div class="car-info-item">
+                                    <i class="fas fa-car"></i>
+                                    <span>${car.carModel || 'N/A'}</span>
+                                </div>
+                                <div class="car-info-item">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>${car.createdAt ? new Date(car.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Load Maintenance History
+        async function loadMaintenanceHistory() {
+            const container = document.getElementById('maintenanceHistoryContainer');
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3 text-muted">Đang tải lịch sử bảo dưỡng...</p></div>';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfoStr = localStorage.getItem('userInfo');
+                
+                if (!userInfoStr) {
+                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem lịch sử bảo dưỡng</div>';
+                    return;
+                }
+
+                const userInfo = JSON.parse(userInfoStr);
+                const userId = userInfo.userId || userInfo.id;
+
+                // TODO: Call API to get maintenance history
+                // For now, show placeholder
+                container.innerHTML = '<div class="alert alert-info">Chức năng đang được phát triển. Vui lòng quay lại sau.</div>';
+            } catch (error) {
+                console.error('Error loading maintenance history:', error);
+                container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử bảo dưỡng.</div>';
+            }
+        }
+
+        // Load Repair History
+        async function loadRepairHistory() {
+            const container = document.getElementById('repairHistoryContainer');
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3 text-muted">Đang tải lịch sử sửa chữa...</p></div>';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfoStr = localStorage.getItem('userInfo');
+                
+                if (!userInfoStr) {
+                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem lịch sử sửa chữa</div>';
+                    return;
+                }
+
+                // TODO: Call API to get repair history
+                // For now, show placeholder
+                container.innerHTML = '<div class="alert alert-info">Chức năng đang được phát triển. Vui lòng quay lại sau.</div>';
+            } catch (error) {
+                console.error('Error loading repair history:', error);
+                container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử sửa chữa.</div>';
+            }
+        }
+
+        // Toggle Edit Mode
         function toggleEditMode() {
             isEditMode = !isEditMode;
-            const inputs = document.querySelectorAll('#profileForm input, #profileForm select');
+            const inputs = document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea');
             const editBtn = document.getElementById('editToggleBtn');
             const cancelBtn = document.getElementById('cancelBtn');
             const saveBtn = document.getElementById('saveBtn');
             const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
 
             if (isEditMode) {
-                // Enable edit mode
                 inputs.forEach(input => {
-                    input.removeAttribute('readonly');
-                    input.removeAttribute('disabled');
+                    if (input.id === 'email') {
+                        input.setAttribute('readonly', 'readonly');
+                    } else {
+                        input.removeAttribute('readonly');
+                        input.removeAttribute('disabled');
+                    }
                 });
-                editBtn.innerHTML = '<i class="fas fa-eye me-1"></i> Xem';
-                editBtn.className = 'btn btn-outline-light';
+                editBtn.style.display = 'none';
                 cancelBtn.style.display = 'inline-block';
                 saveBtn.style.display = 'inline-block';
                 changeAvatarBtn.style.display = 'block';
+                changePasswordBtn.disabled = true;
             } else {
-                // Disable edit mode
                 inputs.forEach(input => {
                     input.setAttribute('readonly', 'readonly');
                     if (input.tagName === 'SELECT') {
                         input.setAttribute('disabled', 'disabled');
                     }
                 });
-                editBtn.innerHTML = '<i class="fas fa-edit me-1"></i> Chỉnh sửa';
-                editBtn.className = 'btn btn-outline-light';
+                editBtn.style.display = 'inline-block';
                 cancelBtn.style.display = 'none';
                 saveBtn.style.display = 'none';
                 changeAvatarBtn.style.display = 'none';
+                changePasswordBtn.disabled = false;
             }
         }
 
+        // Cancel Edit
         function cancelEdit() {
-            // Reset form to original values
-            document.getElementById('firstName').value = 'Nguyễn';
-            document.getElementById('lastName').value = 'Văn A';
-            document.getElementById('email').value = 'nguyenvana@example.com';
-            document.getElementById('phone').value = '0123456789';
-            document.getElementById('gender').value = 'Male';
-            document.getElementById('birthDate').value = '1990-01-01';
-            
+            Object.keys(originalData).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = originalData[key];
+                }
+            });
             toggleEditMode();
+            showAlert('Đã hủy các thay đổi', 'info');
         }
 
-        function saveProfile() {
-            // Show loading
+        // Save Profile
+        async function saveProfile() {
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Đang lưu...';
+            
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+
+            if (!firstName || !lastName) {
+                showAlert('Vui lòng nhập đầy đủ họ và tên', 'danger');
+                return;
+            }
+
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Đang lưu...';
             saveBtn.disabled = true;
 
-            // Simulate API call
-            setTimeout(() => {
-                // Show success message
-                showAlert('Cập nhật thông tin thành công!', 'success');
+            try {
+                const token = localStorage.getItem('authToken');
+                const formData = {
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone,
+                    gender: document.getElementById('gender').value,
+                    birthDate: document.getElementById('birthDate').value,
+                    address: document.getElementById('address').value.trim()
+                };
+
+                // TODO: Call API to save profile
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // Reset button
+                showAlert('Cập nhật thông tin thành công!', 'success');
+                Object.keys(formData).forEach(key => {
+                    const input = document.getElementById(key === 'firstName' ? 'firstName' : 
+                                                          key === 'lastName' ? 'lastName' : key);
+                    if (input) {
+                        originalData[input.id] = input.value;
+                    }
+                });
+                toggleEditMode();
+            } catch (error) {
+                showAlert('Đã xảy ra lỗi khi lưu thông tin', 'danger');
+            } finally {
                 saveBtn.innerHTML = originalText;
                 saveBtn.disabled = false;
-                
-                // Exit edit mode
-                toggleEditMode();
-            }, 1500);
+            }
         }
 
+        // Preview Avatar
         function previewAvatar(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -308,17 +950,54 @@
             }
         }
 
+        // Change Password
+        function changePassword() {
+            const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        }
+
+        // Save Password
+        async function savePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showAlert('Vui lòng nhập đầy đủ thông tin', 'danger');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showAlert('Mật khẩu mới phải có ít nhất 6 ký tự', 'danger');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showAlert('Mật khẩu xác nhận không khớp', 'danger');
+                return;
+            }
+
+            // TODO: Call API to change password
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            showAlert('Đổi mật khẩu thành công!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+            modal.hide();
+            document.getElementById('changePasswordForm').reset();
+        }
+
+        // Show Add Car Modal
+        function showAddCarModal() {
+            // TODO: Implement add car modal
+            showAlert('Chức năng thêm xe đang được phát triển', 'info');
+        }
+
+        // Show Alert
         function showAlert(message, type) {
             const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-custom`;
+            alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
             document.body.appendChild(alertDiv);
-            
-            // Auto remove after 3 seconds
             setTimeout(() => {
                 if (alertDiv.parentNode) {
                     alertDiv.parentNode.removeChild(alertDiv);
@@ -326,26 +1005,9 @@
             }, 3000);
         }
 
-        // Load user data from token
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (token) {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
-                    const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
-                    
-                    if (username) {
-                        // Update display name in top bar
-                        const userDisplayName = document.getElementById('userDisplayName');
-                        if (userDisplayName) {
-                            userDisplayName.textContent = username;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
+            loadProfileData();
         });
     </script>
 }
