@@ -38,6 +38,7 @@ namespace FE.vn.fpt.edu.controllers
                     // Store token in session or cookie
                     HttpContext.Session.SetString("AuthToken", result.Token ?? "");
                     HttpContext.Session.SetString("Username", request.Username);
+                    HttpContext.Session.SetString("UserId", result.UserId.ToString());
                     
                     // Use roleId from the response
                     var roleId = result.RoleId;
@@ -118,8 +119,58 @@ namespace FE.vn.fpt.edu.controllers
                 int.TryParse(roleIdString, out roleId);
             }
 
+            // Lấy branchId từ JWT token nếu có
+            long? branchId = null;
+            if (!string.IsNullOrEmpty(token))
+            {
+                try
+                {
+                    var parts = token.Split('.');
+                    if (parts.Length == 3)
+                    {
+                        var payload = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(
+                            System.Convert.FromBase64String(parts[1] + "=="));
+                        
+                        if (payload != null)
+                        {
+                            // Thử các key có thể có branchId
+                            if (payload.ContainsKey("BranchId"))
+                            {
+                                if (payload["BranchId"] is System.Text.Json.JsonElement branchIdElement)
+                                {
+                                    if (branchIdElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                                    {
+                                        branchId = branchIdElement.GetInt64();
+                                    }
+                                }
+                            }
+                            else if (payload.ContainsKey("branchId"))
+                            {
+                                if (payload["branchId"] is System.Text.Json.JsonElement branchIdElement)
+                                {
+                                    if (branchIdElement.ValueKind == System.Text.Json.JsonValueKind.Number)
+                                    {
+                                        branchId = branchIdElement.GetInt64();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error decoding branchId from token: {ex.Message}");
+                }
+            }
+
             var isLoggedIn = !string.IsNullOrEmpty(token);
-            return Json(new { isLoggedIn, username, roleId });
+            return Json(new { 
+                isLoggedIn, 
+                username, 
+                roleId,
+                branchId = branchId,
+                userId = HttpContext.Session.GetString("UserId")
+            });
         }
     }
 }

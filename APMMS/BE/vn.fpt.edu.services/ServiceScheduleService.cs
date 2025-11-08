@@ -102,15 +102,15 @@ namespace BE.vn.fpt.edu.services
             return schedules.Select(MapToListResponseDto).ToList();
         }
 
-        public async Task<List<ListResponseDto>> GetSchedulesByStatusAsync(string statusCode)
+        public async Task<List<ListResponseDto>> GetSchedulesByStatusAsync(string statusCode, long? branchId = null)
         {
-            var schedules = await _repository.GetByStatusAsync(statusCode);
+            var schedules = await _repository.GetByStatusAsync(statusCode, branchId);
             return schedules.Select(MapToListResponseDto).ToList();
         }
 
-        public async Task<List<ListResponseDto>> GetSchedulesByDateRangeAsync(DateTime startDate, DateTime endDate)
+        public async Task<List<ListResponseDto>> GetSchedulesByDateRangeAsync(DateTime startDate, DateTime endDate, long? branchId = null)
         {
-            var schedules = await _repository.GetByDateRangeAsync(startDate, endDate);
+            var schedules = await _repository.GetByDateRangeAsync(startDate, endDate, branchId);
             return schedules.Select(MapToListResponseDto).ToList();
         }
 
@@ -160,6 +160,25 @@ namespace BE.vn.fpt.edu.services
             return MapToResponseDto(updatedSchedule);
         }
 
+        public async Task<ResponseDto> CompleteScheduleAsync(long id)
+        {
+            // Dùng cách GIỐNG HỆT CancelScheduleAsync vì nó đã hoạt động
+            var schedule = await _repository.GetByIdAsync(id);
+            if (schedule == null)
+                throw new ArgumentException("Schedule not found");
+
+            // Cannot complete already cancelled or completed schedules
+            if (schedule.StatusCode == "CANCELLED")
+                throw new ArgumentException("Cannot complete cancelled schedule");
+
+            if (schedule.StatusCode == "COMPLETED")
+                throw new ArgumentException("Schedule is already completed");
+
+            schedule.StatusCode = "COMPLETED";
+            var updatedSchedule = await _repository.UpdateAsync(schedule);
+            return MapToResponseDto(updatedSchedule);
+        }
+
         public async Task<bool> DeleteScheduleAsync(long id)
         {
             return await _repository.DeleteAsync(id);
@@ -171,102 +190,6 @@ namespace BE.vn.fpt.edu.services
             if (request.ScheduledDate <= DateTime.UtcNow)
                 throw new ArgumentException("Scheduled date must be in the future");
 
-            // Find or create user
-            User? user = null;
-            
-            // Try to find user by email first
-            if (!string.IsNullOrWhiteSpace(request.Email))
-            {
-                user = await _autoOwnerRepository.GetByEmailAsync(request.Email);
-            }
-            
-            // If not found by email, try to find by phone
-            if (user == null && !string.IsNullOrWhiteSpace(request.Phone))
-            {
-                user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Phone == request.Phone && 
-                                              (u.IsDelete == false || u.IsDelete == null) &&
-                                              u.RoleId == 7); // Auto Owner role
-            }
-
-            // Create user if not exists
-            if (user == null)
-            {
-                // Parse full name to first name and last name
-                var nameParts = request.FullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                var firstName = nameParts.Length > 0 ? nameParts[0] : request.FullName;
-                var lastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "";
-
-                // Generate username from phone or email
-                var username = !string.IsNullOrWhiteSpace(request.Phone) 
-                    ? $"user_{request.Phone.Replace(" ", "").Replace("-", "")}"
-                    : (!string.IsNullOrWhiteSpace(request.Email) 
-                        ? request.Email.Split('@')[0] 
-                        : $"user_{DateTime.UtcNow.Ticks}");
-
-                // Ensure username is unique
-                var originalUsername = username;
-                var counter = 1;
-                while (await _userRepository.UsernameExistsAsync(username))
-                {
-                    username = $"{originalUsername}{counter}";
-                    counter++;
-                }
-
-                user = new User
-                {
-                    Username = username,
-                    Password = "N/A", // No password for public booking users
-                    Email = request.Email,
-                    Phone = request.Phone,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    RoleId = 7, // Auto Owner role
-                    StatusCode = "ACTIVE",
-                    IsDelete = false,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                await _userRepository.AddAsync(user);
-                await _userRepository.SaveChangesAsync();
-            }
-
-            // Find or create car
-            Car? car = null;
-            
-            // Try to find car by license plate and user
-            if (!string.IsNullOrWhiteSpace(request.LicensePlate))
-            {
-                car = await _context.Cars
-                    .FirstOrDefaultAsync(c => c.LicensePlate == request.LicensePlate && 
-                                              c.UserId == user.Id);
-            }
-
-            // Create car if not exists
-            if (car == null)
-            {
-                car = new Car
-                {
-                    UserId = user.Id,
-                    CarName = request.CarName,
-                    LicensePlate = request.LicensePlate,
-                    CarModel = request.CarModel,
-                    CreatedDate = DateTime.UtcNow
-                };
-
-                await _carRepository.CreateAsync(car);
-            }
-
-            // Check if user already has a schedule at the same time
-            var existingSchedules = await _repository.GetByUserIdAsync(user.Id);
-            var conflictingSchedule = existingSchedules.FirstOrDefault(s => 
-                s.ScheduledDate.Date == request.ScheduledDate.Date &&
-                s.StatusCode != "CANCELLED" &&
-                s.StatusCode != "COMPLETED");
-
-            if (conflictingSchedule != null)
-                throw new ArgumentException("Bạn đã có lịch hẹn vào ngày này rồi");
-
             // Validate ServiceCategory if provided
             if (request.ServiceCategoryId.HasValue)
             {
@@ -276,11 +199,39 @@ namespace BE.vn.fpt.edu.services
                     throw new ArgumentException("Service category not found");
             }
 
-            // Create schedule
+            // Tạo CustomerGuest để lưu thông tin khách hàng không có tài khoản
+            var customerGuest = new CustomerGuest
+            {
+                Name = request.FullName.Trim(),
+                Phone = request.Phone.Trim(),
+                Email = request.Email?.Trim(),
+                CarName = request.CarName?.Trim(),
+                CarModel = request.CarModel?.Trim(),
+                LicensePlate = request.LicensePlate?.Trim(),
+                BranchId = request.BranchId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.CustomerGuests.Add(customerGuest);
+            await _context.SaveChangesAsync();
+
+            // Kiểm tra xem guest đã có lịch hẹn vào ngày này chưa
+            var existingSchedules = await _context.ScheduleServices
+                .Where(s => s.GuestId == customerGuest.Id &&
+                           s.ScheduledDate.Date == request.ScheduledDate.Date &&
+                           s.StatusCode != "CANCELLED" &&
+                           s.StatusCode != "COMPLETED")
+                .ToListAsync();
+
+            if (existingSchedules.Any())
+                throw new ArgumentException("Bạn đã có lịch hẹn vào ngày này rồi");
+
+            // Create schedule với guest_id (không có user_id và car_id)
             var scheduleService = new ScheduleService
             {
-                UserId = user.Id,
-                CarId = car.Id,
+                GuestId = customerGuest.Id,
+                UserId = null, // Public booking không có user_id
+                CarId = null,  // Public booking không có car_id
                 BranchId = request.BranchId,
                 ScheduledDate = request.ScheduledDate,
                 StatusCode = "PENDING",
@@ -318,6 +269,42 @@ namespace BE.vn.fpt.edu.services
                 .Query()
                 .Include(note => note.Consultant)
                 .LoadAsync();
+
+            // Load User và Car để lấy thông tin nếu cần
+            await _context.Entry(schedule)
+                .Reference(s => s.User)
+                .LoadAsync();
+
+            await _context.Entry(schedule)
+                .Reference(s => s.Car)
+                .LoadAsync();
+
+            // Nếu schedule có user_id nhưng chưa có guest_id, và user là public booking (Password = "N/A")
+            // thì tạo CustomerGuest và chuyển sang guest_id
+            if (schedule.UserId.HasValue && !schedule.GuestId.HasValue && schedule.User != null && schedule.User.Password == "N/A")
+            {
+                // Tạo CustomerGuest từ thông tin user và car
+                var customerGuest = new CustomerGuest
+                {
+                    Name = $"{schedule.User.FirstName} {schedule.User.LastName}".Trim(),
+                    Phone = schedule.User.Phone ?? string.Empty,
+                    Email = schedule.User.Email,
+                    CarName = schedule.Car?.CarName,
+                    CarModel = schedule.Car?.CarModel,
+                    LicensePlate = schedule.Car?.LicensePlate,
+                    BranchId = schedule.BranchId ?? consultant.BranchId,
+                    LinkedUserId = schedule.UserId, // Liên kết với user để sau này có thể chuyển đổi
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.CustomerGuests.Add(customerGuest);
+                await _context.SaveChangesAsync(); // Save để lấy ID
+
+                // Chuyển schedule từ user_id sang guest_id
+                schedule.GuestId = customerGuest.Id;
+                schedule.UserId = null; // Set null vì CHECK constraint chỉ cho phép một trong hai
+                schedule.CarId = null;  // Set null vì car thuộc về user, không thuộc về guest
+            }
 
             var existingAssignment = GetLatestAssignmentNote(schedule);
             if (existingAssignment != null)
@@ -448,17 +435,49 @@ namespace BE.vn.fpt.edu.services
             var finalBranchId = assignment?.Consultant?.BranchId ?? schedule.BranchId;
             var finalBranchName = assignment?.Consultant?.Branch?.Name ?? schedule.Branch?.Name;
 
+            // Xác định thông tin khách hàng: ưu tiên Guest, sau đó mới đến User
+            string? userName = null;
+            string? userEmail = null;
+            string? userPhone = null;
+            string? carName = null;
+            string? licensePlate = null;
+            string? carModel = null;
+            bool isPublicBooking = false;
+
+            if (schedule.GuestId.HasValue && schedule.Guest != null)
+            {
+                // Lấy thông tin từ Guest
+                userName = schedule.Guest.Name;
+                userEmail = schedule.Guest.Email;
+                userPhone = schedule.Guest.Phone;
+                carName = schedule.Guest.CarName;
+                licensePlate = schedule.Guest.LicensePlate;
+                carModel = schedule.Guest.CarModel;
+                isPublicBooking = true;
+            }
+            else if (schedule.UserId.HasValue && schedule.User != null)
+            {
+                // Lấy thông tin từ User
+                userName = ($"{schedule.User.FirstName} {schedule.User.LastName}").Trim();
+                userEmail = schedule.User.Email;
+                userPhone = schedule.User.Phone;
+                carName = schedule.Car?.CarName;
+                licensePlate = schedule.Car?.LicensePlate;
+                carModel = schedule.Car?.CarModel;
+                isPublicBooking = schedule.User.Password == "N/A";
+            }
+
             return new ResponseDto
             {
                 Id = schedule.Id,
                 UserId = schedule.UserId,
-                UserName = schedule.User != null ? ($"{schedule.User.FirstName} {schedule.User.LastName}").Trim() : null,
-                UserEmail = schedule.User?.Email,
-                UserPhone = schedule.User?.Phone,
+                UserName = userName,
+                UserEmail = userEmail,
+                UserPhone = userPhone,
                 CarId = schedule.CarId,
-                CarName = schedule.Car?.CarName,
-                LicensePlate = schedule.Car?.LicensePlate,
-                CarModel = schedule.Car?.CarModel,
+                CarName = carName,
+                LicensePlate = licensePlate,
+                CarModel = carModel,
                 ScheduledDate = schedule.ScheduledDate,
                 StatusCode = schedule.StatusCode,
                 StatusName = schedule.StatusCodeNavigation?.Name,
@@ -471,6 +490,7 @@ namespace BE.vn.fpt.edu.services
                 AcceptNote = ExtractAssignmentMessage(assignment),
                 ConsultantBranchId = finalBranchId,
                 ConsultantBranchName = finalBranchName,
+                IsPublicBooking = isPublicBooking,
                 Notes = notes
             };
         }
@@ -479,14 +499,37 @@ namespace BE.vn.fpt.edu.services
         {
             var assignment = GetLatestAssignmentNote(schedule);
 
+            // Xác định thông tin khách hàng: ưu tiên Guest, sau đó mới đến User
+            string? userName = null;
+            string? carName = null;
+            string? licensePlate = null;
+            bool isPublicBooking = false;
+
+            if (schedule.GuestId.HasValue && schedule.Guest != null)
+            {
+                // Lấy thông tin từ Guest
+                userName = schedule.Guest.Name;
+                carName = schedule.Guest.CarName;
+                licensePlate = schedule.Guest.LicensePlate;
+                isPublicBooking = true;
+            }
+            else if (schedule.UserId.HasValue && schedule.User != null)
+            {
+                // Lấy thông tin từ User
+                userName = ($"{schedule.User.FirstName} {schedule.User.LastName}").Trim();
+                carName = schedule.Car?.CarName;
+                licensePlate = schedule.Car?.LicensePlate;
+                isPublicBooking = schedule.User.Password == "N/A";
+            }
+
             return new ListResponseDto
             {
                 Id = schedule.Id,
                 UserId = schedule.UserId,
-                UserName = schedule.User != null ? ($"{schedule.User.FirstName} {schedule.User.LastName}").Trim() : null,
+                UserName = userName,
                 CarId = schedule.CarId,
-                CarName = schedule.Car?.CarName,
-                LicensePlate = schedule.Car?.LicensePlate,
+                CarName = carName,
+                LicensePlate = licensePlate,
                 ScheduledDate = schedule.ScheduledDate,
                 StatusCode = schedule.StatusCode,
                 StatusName = schedule.StatusCodeNavigation?.Name,
@@ -495,7 +538,8 @@ namespace BE.vn.fpt.edu.services
                 AcceptedById = assignment?.ConsultantId,
                 AcceptedByName = BuildUserDisplayName(assignment?.Consultant),
                 AcceptedAt = assignment?.CreatedAt,
-                AcceptNote = ExtractAssignmentMessage(assignment)
+                AcceptNote = ExtractAssignmentMessage(assignment),
+                IsPublicBooking = isPublicBooking
             };
         }
 

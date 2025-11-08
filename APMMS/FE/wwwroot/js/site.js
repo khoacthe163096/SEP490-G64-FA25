@@ -156,7 +156,8 @@ async function checkLoginStatus() {
                 role: result.role || getRoleName(result.roleId),
                 roleId: result.roleId || 0,
                 userId: result.userId || result.id || null,
-                id: result.userId || result.id || null
+                id: result.userId || result.id || null,
+                branchId: result.branchId || result.BranchId || null
             };
             localStorage.setItem('userInfo', JSON.stringify(userInfo));
             localStorage.setItem('isLoggedIn', 'true');
@@ -205,6 +206,18 @@ async function handleLogin() {
 
             localStorage.setItem('authToken', result.token);
             localStorage.setItem('isLoggedIn', 'true');
+            
+            // Lấy branchId từ result hoặc decode từ token
+            let branchId = result.branchId || result.BranchId;
+            if (!branchId && result.token) {
+                try {
+                    const payload = JSON.parse(atob(result.token.split('.')[1]));
+                    branchId = payload['BranchId'] || payload['branchId'] || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/branchid'];
+                } catch (e) {
+                    console.warn('Could not get branchId from token:', e);
+                }
+            }
+            
             localStorage.setItem('userInfo', JSON.stringify({
                 username,
                 fullName: result.fullName || username,
@@ -213,6 +226,7 @@ async function handleLogin() {
                 roleId: result.roleId,
                 userId,
                 id: userId,
+                branchId: branchId || null,
                 token: result.token
             }));
 

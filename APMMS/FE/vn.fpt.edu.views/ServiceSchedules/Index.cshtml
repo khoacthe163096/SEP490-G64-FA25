@@ -128,15 +128,51 @@
             const date = $('#dateFilter').val();
             const search = $('#searchInput').val();
 
+            // Lấy branchId từ userInfo hoặc JWT token
+            let userBranchId = null;
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    userBranchId = userInfo.branchId || userInfo.BranchId;
+                }
+                
+                // Nếu không có trong userInfo, thử decode từ JWT token
+                if (!userBranchId && token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        userBranchId = payload['BranchId'] || payload['branchId'] || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/branchid'];
+                        if (userBranchId) {
+                            userBranchId = parseInt(userBranchId, 10);
+                        }
+                    } catch (e) {
+                        console.warn('Could not get branchId from token:', e);
+                    }
+                }
+            } catch (error) {
+                console.warn('Error getting branchId:', error);
+            }
+
             let url = `${API_BASE_URL}/ServiceSchedule?page=${currentPage}&pageSize=${pageSize}`;
+            
+            // Thêm branchId vào query nếu có
+            if (userBranchId) {
+                url += `&branchId=${userBranchId}`;
+            }
             
             if (status) {
                 url = `${API_BASE_URL}/ServiceSchedule/by-status/${status}`;
+                if (userBranchId) {
+                    url += `?branchId=${userBranchId}`;
+                }
             } else if (date) {
                 const startDate = new Date(date);
                 const endDate = new Date(startDate);
                 endDate.setDate(endDate.getDate() + 1);
                 url = `${API_BASE_URL}/ServiceSchedule/by-date-range?startDate=${startDate.toISOString().split('T')[0]}&endDate=${endDate.toISOString().split('T')[0]}`;
+                if (userBranchId) {
+                    url += `&branchId=${userBranchId}`;
+                }
             }
 
             fetch(url, {
@@ -251,10 +287,15 @@
                                 </button>
                             ` : '';
 
+                // Badge phân biệt khách đặt lịch công khai và khách có tài khoản
+                const bookingTypeBadge = schedule.isPublicBooking 
+                    ? '<span class="badge bg-info text-white me-1" title="Khách đặt lịch công khai (không có tài khoản)">Khách mới</span>'
+                    : '<span class="badge bg-secondary text-white me-1" title="Khách đã có tài khoản">Khách cũ</span>';
+
                 const row = `
                     <tr>
                         <td>${(currentPage - 1) * pageSize + index + 1}</td>
-                        <td>${schedule.userName || 'N/A'}</td>
+                        <td>${schedule.userName || 'N/A'} ${bookingTypeBadge}</td>
                         <td>${schedule.carName || 'N/A'}</td>
                         <td>${schedule.licensePlate || 'N/A'}</td>
                         <td>${schedule.branchName || 'N/A'}</td>
@@ -302,11 +343,65 @@
             }
         }
 
+        function showToast(message, type = 'success') {
+            const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#ffc107';
+            const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+            
+            const toast = $(`
+                <div class="toast-notification" style="
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background-color: ${bgColor};
+                    color: white;
+                    padding: 15px 25px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 9999;
+                    min-width: 300px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    font-size: 16px;
+                    animation: slideInRight 0.3s ease-out;
+                ">
+                    <i class="fas ${icon}" style="font-size: 20px;"></i>
+                    <span>${message}</span>
+                </div>
+            `);
+            
+            // Thêm animation CSS nếu chưa có
+            if (!$('#toast-animation-style').length) {
+                $('head').append(`
+                    <style id="toast-animation-style">
+                        @@keyframes slideInRight {
+                            from {
+                                transform: translateX(100%);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateX(0);
+                                opacity: 1;
+                            }
+                        }
+                    </style>
+                `);
+            }
+            
+            $('body').append(toast);
+            
+            setTimeout(() => {
+                toast.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
         async function acceptSchedule(id) {
             const token = localStorage.getItem('authToken');
             
             if (!token) {
-                alert('Vui lòng đăng nhập bằng tài khoản tư vấn viên để nhận đơn.');
+                showToast('Vui lòng đăng nhập bằng tài khoản tư vấn viên để nhận đơn.', 'error');
                 return;
             }
 
@@ -347,7 +442,7 @@
             }
 
             if (!userInfo) {
-                alert('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.');
+                showToast('Không thể xác định thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
                 return;
             }
 
@@ -359,7 +454,7 @@
             const roleId = Number(userInfo.roleId);
             if (isNaN(roleId) || roleId !== 6) {
                 console.error('RoleId không hợp lệ hoặc không phải consulter. RoleId:', roleId);
-                alert('Chỉ tài khoản tư vấn viên mới có thể nhận đơn. Vui lòng đăng nhập lại.');
+                showToast('Chỉ tài khoản tư vấn viên mới có thể nhận đơn. Vui lòng đăng nhập lại.', 'error');
                 return;
             }
 
@@ -391,7 +486,7 @@
 
             if (!consultantId || isNaN(consultantId)) {
                 console.error('Không thể lấy userId. UserInfo:', userInfo);
-                alert('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+                showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
                 return;
             }
 
@@ -411,16 +506,16 @@
             .then(async response => {
                 const result = await response.json();
                 if (response.ok && result.success) {
-                    alert('Nhận đơn thành công!');
+                    showToast('Nhận đơn thành công!', 'success');
                     loadServiceSchedules();
                 } else {
                     const errorMessage = result.message || `Không thể nhận đơn (HTTP ${response.status})`;
-                    alert(errorMessage);
+                    showToast(errorMessage, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error accepting schedule:', error);
-                alert('Lỗi khi nhận đơn. Vui lòng thử lại.');
+                showToast('Lỗi khi nhận đơn. Vui lòng thử lại.', 'error');
             });
         }
     </script>

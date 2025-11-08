@@ -91,13 +91,25 @@
         const select = $('#branch');
 
         if (!select.length) {
-            console.error('❌ Branch select element not found!');
+            console.warn('⚠️ Branch select element not found yet (#branch), element may not be rendered');
+            // Retry sau 500ms nếu element chưa có
+            setTimeout(function() {
+                if ($('#branch').length) {
+                    console.log('🔄 Retrying loadBranches after element found...');
+                    loadBranches();
+                }
+            }, 500);
             return;
         }
 
+        console.log('🔄 Loading branches... (token:', token ? 'present' : 'none', ')');
         select.prop('disabled', false);
         select.prop('required', true);
-        select.html('<option value="">-- Đang tải danh sách chi nhánh --</option>');
+        
+        // Chỉ update text nếu chưa có options (tránh xóa data đã load)
+        if (select.find('option').length <= 1) {
+            select.html('<option value="">-- Đang tải danh sách chi nhánh --</option>');
+        }
 
         try {
             const headers = {
@@ -157,14 +169,25 @@
         const select = $('#serviceType');
 
         if (!select.length) {
-            console.error('❌ Service type select element not found!');
+            console.warn('⚠️ Service type select element not found yet (#serviceType), element may not be rendered');
+            // Retry sau 500ms nếu element chưa có
+            setTimeout(function() {
+                if ($('#serviceType').length) {
+                    console.log('🔄 Retrying loadServiceCategories after element found...');
+                    loadServiceCategories();
+                }
+            }, 500);
             return;
         }
 
-        console.log('🔄 Loading service categories...');
+        console.log('🔄 Loading service categories... (token:', token ? 'present' : 'none', ')');
         select.prop('disabled', false);
         select.prop('required', true);
-        select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+        
+        // Chỉ update text nếu chưa có options (tránh xóa data đã load)
+        if (select.find('option').length <= 1) {
+            select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+        }
 
         try {
             const headers = {
@@ -465,29 +488,44 @@
     // Event wiring
     // ----------------------------------------------------------
 
+    // Load branches và service categories ngay khi page load (không cần đợi modal mở)
     $(document).ready(function () {
-        $('#bookingModal').on('show.bs.modal', function () {
-            updateBookingFormForUser();
+        // Pre-load branches và service categories để sẵn sàng khi modal mở
+        console.log('📋 Booking form script loaded, pre-loading data...');
+        
+        // Thử load ngay lập tức (element có thể chưa render, nhưng sẽ retry khi modal mở)
+        setTimeout(function() {
             loadBranches();
+            loadServiceCategories();
+        }, 500); // Delay nhỏ để đảm bảo DOM đã render
+        
+        $('#bookingModal').on('show.bs.modal', function () {
+            console.log('📋 Modal opening, ensuring data is loaded...');
+            updateBookingFormForUser();
+            
+            // Luôn reload để đảm bảo data mới nhất
+            loadBranches();
+            loadServiceCategories();
             loadUserCars();
 
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             $('#appointmentTime').attr('min', tomorrow.toISOString().slice(0, 16));
-            
-            // Load service categories với delay nhỏ để đảm bảo modal đã render
-            setTimeout(function() {
-                loadServiceCategories();
-            }, 100);
         });
 
         $('#bookingModal').on('shown.bs.modal', function () {
+            console.log('📋 Modal shown, ensuring data is loaded...');
             updateBookingFormForUser();
-            if (!localStorage.getItem('authToken') && $('#branch option').length <= 1) {
+            
+            // Đảm bảo load branches nếu chưa có
+            if ($('#branch option').length <= 1) {
+                console.log('🔄 Reloading branches...');
                 loadBranches();
             }
-            // Đảm bảo load service categories
+            
+            // Đảm bảo load service categories nếu chưa có
             if ($('#serviceType option').length <= 1) {
+                console.log('🔄 Reloading service categories...');
                 loadServiceCategories();
             }
         });
@@ -508,13 +546,20 @@
         });
 
         $(document).on('click', '[data-bs-target="#bookingModal"], .floating-tab-item[data-action="booking"]', function () {
+            console.log('📋 Booking button clicked, ensuring data is loaded...');
             updateBookingFormForUser();
-            loadBranches();
-            loadUserCars();
-            // Load service categories với delay nhỏ
-            setTimeout(function() {
+            
+            // Đảm bảo load branches nếu chưa có
+            if ($('#branch option').length <= 1) {
+                loadBranches();
+            }
+            
+            // Đảm bảo load service categories nếu chưa có
+            if ($('#serviceType option').length <= 1) {
                 loadServiceCategories();
-            }, 100);
+            }
+            
+            loadUserCars();
         });
     });
 

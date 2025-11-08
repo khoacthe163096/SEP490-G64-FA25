@@ -53,18 +53,6 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="statusCode" class="form-label">Trạng thái</label>
-                                    <select class="form-select" id="statusCode">
-                                        <option value="PENDING">Chờ xử lý</option>
-                                        <option value="IN_PROGRESS">Đang xử lý</option>
-                                        <option value="CONFIRMED">Đã xác nhận</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
@@ -123,7 +111,7 @@
                     if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED' || schedule.statusCode === 'CONFIRMED') {
                         showToast('Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành', 'error');
                         setTimeout(() => {
-                            window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                        window.location.href = '/ServiceSchedules/Details/' + scheduleId;
                         }, 2000);
                         return;
                     }
@@ -157,8 +145,6 @@
                     const now = new Date();
                     const minDate = now.toISOString().slice(0, 16);
                     $('#scheduledDate').attr('min', minDate);
-                    
-                    $('#statusCode').val(schedule.statusCode || 'PENDING');
 
                     $('#loadingSpinner').hide();
                     $('#scheduleForm').show();
@@ -203,7 +189,7 @@
             const payload = {
                 branchId: parseInt(branchId),
                 scheduledDate: scheduledDateObj.toISOString(), // Convert local time sang UTC
-                statusCode: $('#statusCode').val()
+                statusCode: 'IN_PROGRESS' // Tự động set status thành "Đang xử lý" khi chỉnh sửa
             };
 
             // Disable button và hiển thị loading
@@ -224,7 +210,7 @@
                 if (result.success) {
                     showToast('Cập nhật lịch hẹn thành công!', 'success');
                     setTimeout(() => {
-                        window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                    window.location.href = '/ServiceSchedules/Details/' + scheduleId;
                     }, 1500);
                 } else {
                     showToast('Lỗi: ' + (result.message || 'Không thể cập nhật lịch hẹn'), 'error');
