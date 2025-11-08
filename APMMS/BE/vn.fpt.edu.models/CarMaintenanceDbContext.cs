@@ -21,6 +21,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<Component> Components { get; set; }
 
+    public virtual DbSet<CustomerGuest> CustomerGuests { get; set; }
+
     public virtual DbSet<Feedback> Feedbacks { get; set; }
 
     public virtual DbSet<HistoryLog> HistoryLogs { get; set; }
@@ -206,6 +208,57 @@ public partial class CarMaintenanceDbContext : DbContext
                         j.IndexerProperty<long>("ComponentId").HasColumnName("component_id");
                         j.IndexerProperty<long>("ServicePackageId").HasColumnName("service_package_id");
                     });
+        });
+
+        modelBuilder.Entity<CustomerGuest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__customer__3213E83FC5888854");
+
+            entity.ToTable("customer_guest");
+
+            entity.HasIndex(e => e.BranchId, "IX_customer_guest_branch_id");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_customer_guest_created_at");
+
+            entity.HasIndex(e => e.LicensePlate, "IX_customer_guest_license_plate");
+
+            entity.HasIndex(e => e.LinkedUserId, "IX_customer_guest_linked_user_id");
+
+            entity.HasIndex(e => e.Phone, "IX_customer_guest_phone");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.CarModel)
+                .HasMaxLength(100)
+                .HasColumnName("car_model");
+            entity.Property(e => e.CarName)
+                .HasMaxLength(100)
+                .HasColumnName("car_name");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
+            entity.Property(e => e.LicensePlate)
+                .HasMaxLength(20)
+                .HasColumnName("license_plate");
+            entity.Property(e => e.LinkedUserId).HasColumnName("linked_user_id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .HasColumnName("phone");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.CustomerGuests)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_guest_branch");
+
+            entity.HasOne(d => d.LinkedUser).WithMany(p => p.CustomerGuests)
+                .HasForeignKey(d => d.LinkedUserId)
+                .HasConstraintName("FK_guest_linked_user");
         });
 
         modelBuilder.Entity<Feedback>(entity =>
@@ -463,9 +516,12 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("schedule_service");
 
+            entity.HasIndex(e => e.GuestId, "IX_schedule_service_guest_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.GuestId).HasColumnName("guest_id");
             entity.Property(e => e.ScheduledDate)
                 .HasColumnType("datetime")
                 .HasColumnName("scheduled_date");
@@ -482,6 +538,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.Car).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.CarId)
                 .HasConstraintName("FK__schedule___car_i__03F0984C");
+
+            entity.HasOne(d => d.Guest).WithMany(p => p.ScheduleServices)
+                .HasForeignKey(d => d.GuestId)
+                .HasConstraintName("FK_schedule_guest");
 
             entity.HasOne(d => d.ServiceCategory).WithMany(p => p.ScheduleServices)
                 .HasForeignKey(d => d.ServiceCategoryId)

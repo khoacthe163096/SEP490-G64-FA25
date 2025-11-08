@@ -25,6 +25,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
@@ -39,6 +40,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
@@ -55,6 +57,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
@@ -70,6 +73,7 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
@@ -81,41 +85,110 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
-        public async Task<List<ScheduleService>> GetByStatusAsync(string statusCode)
+        public async Task<List<ScheduleService>> GetByStatusAsync(string statusCode, long? branchId = null)
         {
-            return await _context.ScheduleServices
+            var query = _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
                 .Include(s => s.ScheduleServiceNotes)
                     .ThenInclude(n => n.Consultant)
-                .Where(s => s.StatusCode == statusCode)
+                .Where(s => s.StatusCode == statusCode);
+
+            // Filter theo branchId nếu có
+            if (branchId.HasValue)
+            {
+                query = query.Where(s => s.BranchId == branchId.Value);
+            }
+
+            return await query
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
         }
 
-        public async Task<List<ScheduleService>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+        public async Task<List<ScheduleService>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, long? branchId = null)
         {
-            return await _context.ScheduleServices
+            var query = _context.ScheduleServices
                 .Include(s => s.User)
+                .Include(s => s.Guest)
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
                 .Include(s => s.StatusCodeNavigation)
                 .Include(s => s.ScheduleServiceNotes)
                     .ThenInclude(n => n.Consultant)
-                .Where(s => s.ScheduledDate >= startDate && s.ScheduledDate <= endDate)
+                .Where(s => s.ScheduledDate >= startDate && s.ScheduledDate <= endDate);
+
+            // Filter theo branchId nếu có
+            if (branchId.HasValue)
+            {
+                query = query.Where(s => s.BranchId == branchId.Value);
+            }
+
+            return await query
                 .OrderByDescending(s => s.ScheduledDate)
                 .ToListAsync();
         }
 
         public async Task<ScheduleService> UpdateAsync(ScheduleService scheduleService)
         {
-            _context.ScheduleServices.Update(scheduleService);
+            // Tìm entity trong database bằng FindAsync (nhanh hơn và không load navigation properties)
+            var existing = await _context.ScheduleServices.FindAsync(scheduleService.Id);
+            
+            if (existing == null)
+            {
+                throw new InvalidOperationException($"Schedule with ID {scheduleService.Id} not found");
+            }
+
+            // Chỉ update các properties thay đổi, không động đến navigation properties
+            if (scheduleService.StatusCode != null)
+            {
+                existing.StatusCode = scheduleService.StatusCode;
+            }
+            
+            if (scheduleService.ScheduledDate != default(DateTime))
+            {
+                existing.ScheduledDate = scheduleService.ScheduledDate;
+            }
+            
+            if (scheduleService.BranchId.HasValue)
+            {
+                existing.BranchId = scheduleService.BranchId.Value;
+            }
+            
+            if (scheduleService.ServiceCategoryId.HasValue)
+            {
+                existing.ServiceCategoryId = scheduleService.ServiceCategoryId.Value;
+            }
+
+            // Update GuestId và UserId nếu có thay đổi
+            if (scheduleService.GuestId.HasValue)
+            {
+                existing.GuestId = scheduleService.GuestId.Value;
+                // Nếu set GuestId, thì UserId phải là null (theo CHECK constraint)
+                existing.UserId = null;
+            }
+            
+            if (scheduleService.UserId.HasValue)
+            {
+                existing.UserId = scheduleService.UserId.Value;
+                // Nếu set UserId, thì GuestId phải là null (theo CHECK constraint)
+                existing.GuestId = null;
+            }
+
+            // Save changes - chỉ update các properties đã thay đổi
             await _context.SaveChangesAsync();
-            return scheduleService;
+            
+            // Reload entity với đầy đủ navigation properties để trả về
+            // Detach entity hiện tại trước để tránh conflict
+            _context.Entry(existing).State = EntityState.Detached;
+            
+            // Reload với đầy đủ navigation properties
+            var updated = await GetByIdAsync(scheduleService.Id);
+            return updated!;
         }
 
         public async Task<bool> DeleteAsync(long id)

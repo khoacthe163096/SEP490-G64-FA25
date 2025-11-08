@@ -33,6 +33,8 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
 
         public string? ConsultantBranchName { get; set; }
 
+        public bool IsPublicBooking { get; set; } // true nếu là khách đặt lịch công khai (không có tài khoản)
+
         public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
     }
 
@@ -57,6 +59,8 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
         public DateTime? AcceptedAt { get; set; }
 
         public string? AcceptNote { get; set; }
+
+        public bool IsPublicBooking { get; set; } // true nếu là khách đặt lịch công khai (không có tài khoản)
 
         public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
     }
