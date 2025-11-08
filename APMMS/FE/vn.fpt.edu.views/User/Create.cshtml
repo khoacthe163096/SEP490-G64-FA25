@@ -40,6 +40,13 @@
                                     <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber">
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="citizenId" class="form-label">Căn cước công dân (CCCD)</label>
+                                    <input type="text" class="form-control" id="citizenId" name="citizenId" maxlength="12" pattern="\d{9,12}" title="Chỉ nhập số, tối đa 12 ký tự">
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="row">
@@ -124,6 +131,7 @@
                 lastName: document.getElementById('lastName').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 phone: document.getElementById('phoneNumber').value.trim(),
+                citizenId: document.getElementById('citizenId').value.trim(),
                 address: document.getElementById('address').value.trim(),
                 username: document.getElementById('username').value.trim(),
                 password: password

@@ -42,6 +42,13 @@
                                     <input type="tel" class="form-control" id="phone" name="phone">
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="citizenId" class="form-label">Căn cước công dân (CCCD)</label>
+                                    <input type="text" class="form-control" id="citizenId" name="citizenId" maxlength="12" pattern="\d{9,12}" title="Chỉ nhập số, tối đa 12 ký tự">
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="mb-3">
@@ -113,6 +120,7 @@
                     document.getElementById('lastName').value = owner.lastName || '';
                     document.getElementById('email').value = owner.email || '';
                     document.getElementById('phone').value = owner.phone || '';
+                    document.getElementById('citizenId').value = owner.citizenId || '';
                     document.getElementById('address').value = owner.address || '';
                     document.getElementById('isActive').checked = owner.statusCode === 'ACTIVE';
                 })
@@ -132,6 +140,7 @@
                 lastName: formData.get('lastName'),
                 email: formData.get('email'),
                 phone: formData.get('phone'),
+                citizenId: formData.get('citizenId'),
                 address: formData.get('address'),
                 statusCode: document.getElementById('isActive').checked ? 'ACTIVE' : 'INACTIVE'
             };

@@ -16,6 +16,7 @@ namespace BE.vn.fpt.edu.DTOs.AutoOwner
         public long? RoleId { get; set; }
         public long? BranchId { get; set; }
         public string? Address { get; set; }
+        public string? CitizenId { get; set; }
         public string? RoleName { get; set; }
         public DateTime? CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }

@@ -39,6 +39,7 @@
                                 <div class="mb-2"><strong>Email:</strong> <span id="email">-</span></div>
                                 <div class="mb-2"><strong>Số điện thoại:</strong> <span id="phoneNumber">-</span></div>
                                 <div class="mb-2"><strong>Địa chỉ:</strong> <span id="address">-</span></div>
+                                <div class="mb-2"><strong>CCCD:</strong> <span id="citizenId">-</span></div>
                             </div>
 
                             <div class="col-md-6">
@@ -104,6 +105,7 @@
             document.getElementById('email').textContent = user.email || '-';
             document.getElementById('phoneNumber').textContent = user.phone || '-';
             document.getElementById('address').textContent = user.address || '-';
+            document.getElementById('citizenId').textContent = user.citizenId || '-';
             document.getElementById('username').textContent = user.username || '-';
             document.getElementById('roleName').innerHTML = `<span class="badge bg-info">${user.roleName || 'Auto Owner'}</span>`;
             document.getElementById('status').innerHTML = user.isActive

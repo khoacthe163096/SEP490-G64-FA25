@@ -13,5 +13,6 @@
         public string? TaxCode { get; set; }
         public long? BranchId { get; set; }
         public string? Address { get; set; }
+        public string? CitizenId { get; set; }
     }
 }
