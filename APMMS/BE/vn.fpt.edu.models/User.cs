@@ -57,6 +57,8 @@ public partial class User
 
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
 
+    public virtual ICollection<CustomerGuest> CustomerGuests { get; set; } = new List<CustomerGuest>();
+
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
     public virtual ICollection<HistoryLog> HistoryLogs { get; set; } = new List<HistoryLog>();
@@ -70,6 +72,8 @@ public partial class User
     public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechniciansNavigation { get; set; } = new List<MaintenanceTicketTechnician>();
 
     public virtual Role? Role { get; set; }
+
+    public virtual ICollection<ScheduleServiceNote> ScheduleServiceNotes { get; set; } = new List<ScheduleServiceNote>();
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 

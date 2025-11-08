@@ -38,6 +38,16 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Lấy danh sách xe đã từng được bảo dưỡng của user
+        /// </summary>
+        [HttpGet("user/{userId:long}/serviced")]
+        public async Task<IActionResult> GetServicedCarsByUserId(long userId)
+        {
+            var result = await _service.GetServicedCarsByUserIdAsync(userId);
+            return Ok(new { success = true, data = result });
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {

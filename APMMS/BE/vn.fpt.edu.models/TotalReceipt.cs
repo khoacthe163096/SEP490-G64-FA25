@@ -25,6 +25,18 @@ public partial class TotalReceipt
 
     public string? Note { get; set; }
 
+    public decimal? Subtotal { get; set; }
+
+    public decimal? VatPercent { get; set; }
+
+    public decimal? VatAmount { get; set; }
+
+    public decimal? DiscountAmount { get; set; }
+
+    public decimal? SurchargeAmount { get; set; }
+
+    public decimal? FinalAmount { get; set; }
+
     public virtual User? Accountant { get; set; }
 
     public virtual Branch? Branch { get; set; }

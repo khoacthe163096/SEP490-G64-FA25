@@ -19,6 +19,10 @@ public partial class HistoryLog
 
     public DateTime? CreatedAt { get; set; }
 
+    public long? MaintenanceTicketId { get; set; }
+
+    public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
+
     public virtual User? User { get; set; }
     
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }

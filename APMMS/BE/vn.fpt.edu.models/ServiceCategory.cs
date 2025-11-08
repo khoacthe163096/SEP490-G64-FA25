@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace BE.vn.fpt.edu.models;
 
-public partial class ServicePackage
+public partial class ServiceCategory
 {
     public long Id { get; set; }
 
@@ -11,17 +11,11 @@ public partial class ServicePackage
 
     public string? Description { get; set; }
 
-    public decimal? Price { get; set; }
-
     public string? StatusCode { get; set; }
 
-    public string? Code { get; set; }
+    public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
-    public long? BranchId { get; set; }
-
-    public virtual Branch? Branch { get; set; }
+    public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
-
-    public virtual ICollection<Component> Components { get; set; } = new List<Component>();
 }
