@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Danh sách check-in xe";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -64,12 +65,16 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center" id="pagination">
-                            <!-- Pagination will be generated here -->
-                        </ul>
-                    </nav>
+                    <!-- Pagination Info and Controls -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted" id="paginationInfo">
+                            Hiển thị <span id="showingFrom">0</span> - <span id="showingTo">0</span> của <span id="totalRecords">0</span> kết quả
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination mb-0" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -78,169 +83,318 @@
 
 @section Scripts {
     <script>
+        const API_BASE_URL = '@apiBaseUrl';
         let currentPage = 1;
         const pageSize = 10;
+        let allCheckins = []; // Lưu tất cả checkins để phân trang client-side
+        let filteredCheckins = []; // Lưu checkins sau khi filter
+        let totalRecords = 0;
 
-        document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
             loadCheckins();
             
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('input', debounce(loadCheckins, 500));
-            document.getElementById('statusFilter').addEventListener('change', loadCheckins);
-            document.getElementById('fromDateFilter').addEventListener('change', loadCheckins);
-            document.getElementById('toDateFilter').addEventListener('change', loadCheckins);
+            // Search functionality với debounce
+            let searchTimeout;
+            $('#searchInput').on('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentPage = 1;
+                    applyFilters();
+                }, 500);
+            });
+
+            $('#searchInput').on('keypress', function(e) {
+                if (e.which === 13) {
+                    clearTimeout(searchTimeout);
+                    currentPage = 1;
+                    applyFilters();
+                }
+            });
+
+            // Filter events
+            $('#statusFilter, #fromDateFilter, #toDateFilter').on('change', function() {
+                currentPage = 1;
+                applyFilters();
+            });
         });
 
         function loadCheckins() {
-            const search = document.getElementById('searchInput').value;
-            const status = document.getElementById('statusFilter').value;
-            const fromDate = document.getElementById('fromDateFilter').value;
-            const toDate = document.getElementById('toDateFilter').value;
+            const token = localStorage.getItem('authToken');
+            
+            // Load tất cả checkins với pageSize lớn (client-side pagination)
+            // Tương tự như ServiceSchedules và MaintenanceTickets
+            const url = `${API_BASE_URL}/VehicleCheckin?page=1&pageSize=500`;
 
-            // Build query parameters
-            const params = new URLSearchParams({
-                page: currentPage,
-                pageSize: pageSize
+            // Show loading
+            $('#checkinsTableBody').html(`
+                <tr>
+                    <td colspan="7" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `);
+
+            fetch(url, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (result.success && result.data) {
+                    allCheckins = result.data;
+                    applyFilters();
+                } else {
+                    allCheckins = [];
+                    filteredCheckins = [];
+                    totalRecords = 0;
+                    renderCheckinsTable([]);
+                    updatePagination();
+                }
+            })
+            .catch(error => {
+                console.error('Error loading checkins:', error);
+                $('#checkinsTableBody').html('<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
+                allCheckins = [];
+                filteredCheckins = [];
+                totalRecords = 0;
+                updatePagination();
+            });
+        }
+
+        function applyFilters() {
+            const status = $('#statusFilter').val();
+            const search = $('#searchInput').val().trim().toLowerCase();
+            const fromDate = $('#fromDateFilter').val();
+            const toDate = $('#toDateFilter').val();
+
+            // Bắt đầu với tất cả checkins
+            filteredCheckins = [...allCheckins];
+
+            // Filter by status
+            if (status) {
+                filteredCheckins = filteredCheckins.filter(c => c.statusCode === status);
+            }
+
+            // Filter by date range
+            if (fromDate) {
+                const filterDateFrom = new Date(fromDate);
+                filterDateFrom.setHours(0, 0, 0, 0);
+                filteredCheckins = filteredCheckins.filter(c => {
+                    if (!c.createdAt) return false;
+                    const checkinDate = new Date(c.createdAt);
+                    checkinDate.setHours(0, 0, 0, 0);
+                    return checkinDate >= filterDateFrom;
+                });
+            }
+
+            if (toDate) {
+                const filterDateTo = new Date(toDate);
+                filterDateTo.setHours(23, 59, 59, 999);
+                filteredCheckins = filteredCheckins.filter(c => {
+                    if (!c.createdAt) return false;
+                    const checkinDate = new Date(c.createdAt);
+                    checkinDate.setHours(0, 0, 0, 0);
+                    return checkinDate <= filterDateTo;
+                });
+            }
+
+            // Filter by search
+            if (search) {
+                filteredCheckins = filteredCheckins.filter(c => 
+                    (c.code && c.code.toLowerCase().includes(search)) ||
+                    (c.licensePlate && c.licensePlate.toLowerCase().includes(search)) ||
+                    (c.customerName && c.customerName.toLowerCase().includes(search)) ||
+                    (c.carName && c.carName.toLowerCase().includes(search)) ||
+                    (c.vinNumber && c.vinNumber.toLowerCase().includes(search))
+                );
+            }
+
+            // Sort by createdAt (newest first)
+            filteredCheckins.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+                const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+                return dateB - dateA;
             });
 
-            if (search) params.append('searchTerm', search);
-            if (status) params.append('statusCode', status);
-            if (fromDate) params.append('fromDate', fromDate);
-            if (toDate) params.append('toDate', toDate);
+            totalRecords = filteredCheckins.length;
+            currentPage = Math.min(currentPage, Math.ceil(totalRecords / pageSize) || 1);
 
-            console.log('Calling API: VehicleCheckins/ListData?' + params.toString());
-            
-            fetch(`/VehicleCheckins/ListData?${params.toString()}`)
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('API Response:', data); // Debug log
-                    console.log('Data length:', data.data ? data.data.length : 'undefined');
-                    if (data.data && data.data.length > 0) {
-                        console.log('First item status:', data.data[0].statusCode);
-                        console.log('First item maintenanceRequestStatus:', data.data[0].maintenanceRequestStatus);
-                    }
-                    if (data.success) {
-                        renderCheckinsTable(data.data);
-                        renderPagination(data.totalPages, data.currentPage);
-                    } else {
-                        showAlert('Lỗi khi tải dữ liệu: ' + data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
-                });
+            // Paginate
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedCheckins = filteredCheckins.slice(startIndex, endIndex);
+
+            renderCheckinsTable(paginatedCheckins);
+            updatePagination();
         }
 
 
         function renderCheckinsTable(checkins) {
-            console.log('renderCheckinsTable called with:', checkins);
-            const tbody = document.getElementById('checkinsTableBody');
-            tbody.innerHTML = '';
+            const tbody = $('#checkinsTableBody');
+            tbody.empty();
 
             if (!checkins || checkins.length === 0) {
-                console.log('No data to render');
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Không có dữ liệu</td></tr>';
+                tbody.html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
                 return;
             }
 
-            console.log('Rendering', checkins.length, 'checkins');
             checkins.forEach((checkin, index) => {
-                console.log('Rendering checkin', index, ':', checkin);
-                console.log('StatusCode:', checkin.statusCode);
-                console.log('MaintenanceRequestStatus:', checkin.maintenanceRequestStatus);
-                const row = document.createElement('tr');
-                try {
-                    row.innerHTML = `
+                const statusBadge = getStatusBadge(checkin.statusCode);
+                const createdAt = checkin.createdAt ? new Date(checkin.createdAt).toLocaleString('vi-VN') : '-';
+                
+                const confirmButton = checkin.statusCode === 'PENDING' 
+                    ? `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
+                            <i class="fas fa-check"></i>
+                       </button>`
+                    : '';
+                
+                const createMaintenanceButton = checkin.statusCode === 'CONFIRMED'
+                    ? `<button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
+                            <i class="fas fa-wrench"></i>
+                       </button>`
+                    : '';
+
+                tbody.append(`
+                    <tr>
                         <td><strong>${checkin.code || 'VCI-' + checkin.id}</strong></td>
                         <td><strong>${checkin.licensePlate || '-'}</strong></td>
                         <td>${checkin.customerName || '-'}</td>
                         <td><span class="badge bg-info">${checkin.carName || '-'}</span></td>
-                        <td><span class="badge ${getStatusBadgeClass(checkin.statusCode)}">${getStatusText(checkin.statusCode)}</span></td>
-                        <td>${checkin.createdAt ? new Date(checkin.createdAt).toLocaleString('vi-VN') : '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>${createdAt}</td>
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                ${checkin.statusCode === 'PENDING' ? 
-                                    `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
-                                        <i class="fas fa-check"></i>
-                                    </button>` : 
-                                    ``
-                                }
-                                ${checkin.statusCode === 'CONFIRMED' ? 
-                                    `<button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
-                                        <i class="fas fa-wrench"></i>
-                                    </button>` : 
-                                    ``
-                                }
+                                ${confirmButton}
+                                ${createMaintenanceButton}
                             </div>
                         </td>
-                    `;
-                    tbody.appendChild(row);
-                    console.log('Successfully added row for checkin', checkin.id);
-                } catch (error) {
-                    console.error('Error creating row for checkin', checkin.id, ':', error);
-                }
+                    </tr>
+                `);
             });
         }
 
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case 'PENDING': return 'bg-warning';
-                case 'CONFIRMED': return 'bg-success';
-                default: return 'bg-secondary';
-            }
+        function getStatusBadge(statusCode) {
+            const statusMap = {
+                'PENDING': { class: 'bg-warning', text: 'Chờ xử lý' },
+                'CONFIRMED': { class: 'bg-success', text: 'Đã xác nhận' }
+            };
+            
+            const status = statusMap[statusCode] || { class: 'bg-secondary', text: statusCode };
+            return `<span class="badge ${status.class}">${status.text}</span>`;
         }
 
-        function getStatusText(status) {
-            switch(status) {
-                case 'PENDING': return 'Chờ xử lý';
-                case 'CONFIRMED': return 'Đã xác nhận';
-                default: return status;
+        function updatePagination() {
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            const pagination = $('#pagination');
+            pagination.empty();
+
+            if (totalPages <= 1) {
+                pagination.html('<li class="page-item disabled"><span class="page-link">Trang 1 / 1</span></li>');
+                updatePaginationInfo();
+                return;
             }
-        }
-
-        function renderPagination(totalPages, currentPage) {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
-
-            if (totalPages <= 1) return;
 
             // Previous button
-            const prevLi = document.createElement('li');
-            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Trước</a>`;
-            pagination.appendChild(prevLi);
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.append(`
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                        <i class="fas fa-chevron-left"></i> Trước
+                    </a>
+                </li>
+            `);
 
             // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                const li = document.createElement('li');
-                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
-                pagination.appendChild(li);
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            // First page
+            if (startPage > 1) {
+                pagination.append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
+                    </li>
+                `);
+                if (startPage > 2) {
+                    pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                }
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const active = i === currentPage ? 'active' : '';
+                pagination.append(`
+                    <li class="page-item ${active}">
+                        <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                    </li>
+                `);
+            }
+
+            // Last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                }
+                pagination.append(`
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
+                    </li>
+                `);
             }
 
             // Next button
-            const nextLi = document.createElement('li');
-            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Sau</a>`;
-            pagination.appendChild(nextLi);
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.append(`
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                        Sau <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `);
+
+            updatePaginationInfo();
+        }
+
+        function updatePaginationInfo() {
+            const startIndex = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const endIndex = Math.min(currentPage * pageSize, totalRecords);
+            
+            $('#showingFrom').text(startIndex);
+            $('#showingTo').text(endIndex);
+            $('#totalRecords').text(totalRecords);
         }
 
         function changePage(page) {
-            if (page < 1) return;
-            currentPage = page;
-            loadCheckins();
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                applyFilters();
+                // Scroll to top of table
+                $('html, body').animate({
+                    scrollTop: $('.card').offset().top - 20
+                }, 300);
+            }
         }
+
+        // Expose changePage to global scope for onclick handlers
+        window.changePage = changePage;
 
         function createMaintenanceTicket(checkinId) {
             // Store checkinId for later use
@@ -268,7 +422,7 @@
             }
             
             // Create maintenance ticket via API
-            fetch('https://localhost:7173/api/MaintenanceTicket/create-from-checkin', {
+            fetch(`${API_BASE_URL}/MaintenanceTicket/create-from-checkin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -327,10 +481,10 @@
         }
 
         function exportToExcel() {
-            const search = document.getElementById('searchInput').value;
-            const status = document.getElementById('statusFilter').value;
-            const fromDate = document.getElementById('fromDateFilter').value;
-            const toDate = document.getElementById('toDateFilter').value;
+            const search = $('#searchInput').val();
+            const status = $('#statusFilter').val();
+            const fromDate = $('#fromDateFilter').val();
+            const toDate = $('#toDateFilter').val();
             
             const params = new URLSearchParams({
                 searchTerm: search,
@@ -340,24 +494,23 @@
                 export: 'excel'
             });
             
-            window.open(`/api/VehicleCheckin/export?${params.toString()}`, '_blank');
+            window.open(`${API_BASE_URL}/VehicleCheckin/export?${params.toString()}`, '_blank');
         }
 
         function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('fromDateFilter').value = '';
-            document.getElementById('toDateFilter').value = '';
+            $('#searchInput').val('');
+            $('#statusFilter').val('');
+            $('#fromDateFilter').val('');
+            $('#toDateFilter').val('');
             currentPage = 1;
-            loadCheckins();
+            applyFilters();
         }
 
         function confirmCheckin(id) {
             // Lưu ID để sử dụng trong modal
             window.pendingCheckinId = id;
             // Hiển thị modal xác nhận
-            const confirmModal = new bootstrap.Modal(document.getElementById('confirmCheckinModal'));
-            confirmModal.show();
+            $('#confirmCheckinModal').modal('show');
         }
 
         function confirmCheckinAction() {
@@ -366,16 +519,17 @@
             if (id) {
                 updateCheckinStatus(id, 'CONFIRMED');
                 // Đóng modal
-                const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmCheckinModal'));
-                confirmModal.hide();
+                $('#confirmCheckinModal').modal('hide');
             }
         }
 
         async function updateCheckinStatus(id, status) {
             try {
-                const response = await fetch(`https://localhost:7173/api/VehicleCheckin/${id}/status`, {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/VehicleCheckin/${id}/status`, {
                     method: 'PUT',
                     headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ statusCode: status })
@@ -395,30 +549,20 @@
             }
         }
 
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
         function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             `;
-            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.table-responsive'));
+            
+            $('body').append(alertHtml);
             
             setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
+                $('.alert').alert('close');
+            }, 3000);
         }
     </script>
 }
