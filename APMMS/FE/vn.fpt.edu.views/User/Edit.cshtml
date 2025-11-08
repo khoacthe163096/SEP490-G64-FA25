@@ -48,6 +48,32 @@
                                     <input type="text" class="form-control" id="citizenId" name="citizenId" maxlength="12" pattern="\d{9,12}" title="Chỉ nhập số, tối đa 12 ký tự">
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="gender" class="form-label">Giới tính</label>
+                                    <select class="form-select" id="gender" name="gender">
+                                        <option value="">Chọn</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="branchName" class="form-label">Chi nhánh</label>
+                                    <input type="text" class="form-control" id="branchName" name="branchName" disabled>
+                                    <input type="hidden" id="branchId" name="branchId">
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dob" class="form-label">Ngày sinh</label>
+                                    <input type="date" class="form-control" id="dob" name="dob">
+                                </div>
+                            </div>
 
                         </div>
 
@@ -72,6 +98,7 @@
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>
@@ -113,7 +140,7 @@
                     return response.json();
                 })
                 .then(owner => {
-                    loadedOwner = owner; // ✅ Lưu lại để update
+                    loadedOwner = owner;
 
                     document.getElementById('autoOwnerId').value = owner.id || '';
                     document.getElementById('firstName').value = owner.firstName || '';
@@ -123,6 +150,12 @@
                     document.getElementById('citizenId').value = owner.citizenId || '';
                     document.getElementById('address').value = owner.address || '';
                     document.getElementById('isActive').checked = owner.statusCode === 'ACTIVE';
+                    document.getElementById('gender').value = owner.gender || '';
+                    document.getElementById('branchId').value = owner.branchId || '';
+                    document.getElementById('dob').value = owner.dob ? owner.dob : '';
+                    document.getElementById('branchName').value = owner.branchName || '-';
+
+                    // document.getElementById('taxCode').value = owner.taxCode || '';
                 })
                 .catch(error => {
                     console.error('❌ Lỗi load dữ liệu:', error);
@@ -135,15 +168,21 @@
             const id = formData.get('id');
 
             const updatedOwner = {
-                ...loadedOwner,
                 firstName: formData.get('firstName'),
                 lastName: formData.get('lastName'),
                 email: formData.get('email'),
                 phone: formData.get('phone'),
                 citizenId: formData.get('citizenId'),
                 address: formData.get('address'),
-                statusCode: document.getElementById('isActive').checked ? 'ACTIVE' : 'INACTIVE'
+                statusCode: document.getElementById('isActive').checked ? 'ACTIVE' : 'INACTIVE',
+                gender: formData.get('gender'),
+                branchId: formData.get('branchId'),
+                // taxCode: formData.get('taxCode'),
+                dob: formData.get('dob') ? formData.get('dob') : null
+
             };
+
+            const payload = { ...loadedOwner, ...updatedOwner };
 
             fetch(`https://localhost:7173/api/autoowner/${id}`, {
                 method: 'PUT',
@@ -151,7 +190,7 @@
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(updatedOwner)
+                body: JSON.stringify(payload)
             })
                 .then(response => {
                     if (!response.ok) throw new Error(`Cập nhật thất bại (${response.status})`);
@@ -166,6 +205,7 @@
                     showAlert('Lỗi khi cập nhật Auto Owner', 'danger');
                 });
         }
+
 
 
 

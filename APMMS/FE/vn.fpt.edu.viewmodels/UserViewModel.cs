@@ -33,13 +33,13 @@ namespace FE.vn.fpt.edu.viewmodels
         public string? Address { get; set; }
 
         [Display(Name = "Chi nhánh")]
-        public string? Branch { get; set; }
+        public string? BranchName { get; set; }
         [Display(Name = "Căn cước công dân")]
         public string? CitizenId { get; set; }
 
         [Display(Name = "Trạng thái")]
         public string Status { get; set; } = "Active";
-        
+        public DateOnly? Dob { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? LastModifiedDate { get; set; }
     }
