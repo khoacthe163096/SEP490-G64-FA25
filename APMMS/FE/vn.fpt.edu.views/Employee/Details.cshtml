@@ -62,9 +62,12 @@
     }
     
     .info-field {
-        margin-bottom: 20px;
-        padding-bottom: 20px;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
         border-bottom: 1px solid #f1f3f5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
     .info-field:last-child {
@@ -77,13 +80,15 @@
         font-size: 0.875rem;
         color: #6c757d;
         font-weight: 500;
-        margin-bottom: 5px;
+        flex: 0 0 200px;
     }
     
     .info-value {
         font-size: 1rem;
         color: #212529;
         font-weight: 400;
+        flex: 1;
+        text-align: left;
     }
     
     .form-section {
@@ -240,8 +245,9 @@
                             <div class="tab-content">
                                 <!-- Personal Information Tab -->
                                 <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                                    <h5 class="mb-4" style="color: #212529; font-weight: 600;">Thông tin chi tiết</h5>
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <div class="col-md-12">
                                             <div class="info-field">
                                                 <div class="info-label">Mã nhân viên</div>
                                                 <div class="info-value" id="employeeCode">-</div>
@@ -266,9 +272,7 @@
                                                 <div class="info-label">Số điện thoại</div>
                                                 <div class="info-value" id="employeePhone">-</div>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="col-md-6">
+                                            
                                             <div class="info-field">
                                                 <div class="info-label">Email</div>
                                                 <div class="info-value" id="employeeEmail">-</div>
@@ -291,7 +295,7 @@
                                             
                                             <div class="info-field">
                                                 <div class="info-label">Tình trạng</div>
-                                                <div id="employeeStatus">-</div>
+                                                <div class="info-value" id="employeeStatus">-</div>
                                             </div>
                                         </div>
                                     </div>
@@ -582,8 +586,8 @@
             const isActive = !employee.isDelete;
             const statusDiv = document.getElementById('employeeStatus');
             statusDiv.innerHTML = isActive 
-                ? '<span class="status-badge active"><i class="fas fa-check-circle me-1"></i>Có hiệu lực</span>'
-                : '<span class="status-badge inactive"><i class="fas fa-times-circle me-1"></i>Không hiệu lực</span>';
+                ? '<span class="status-badge active">Có hiệu lực</span>'
+                : '<span class="status-badge inactive">Không hiệu lực</span>';
             
             // Load data into edit form
             loadEditForm(employee);
