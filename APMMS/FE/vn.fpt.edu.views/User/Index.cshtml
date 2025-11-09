@@ -16,26 +16,19 @@
                 </div>
                 <div class="card-body">
                     <!-- Search and Filter -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm người dùng...">
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="statusFilter">
-                                <option value="">Tất cả trạng thái</option>
+                    <div class="row mb-3 align-items-center">
+                        <div class="col-md-6 d-flex gap-2 align-items-center">
+                            <button class="btn btn-secondary btn-sm" onclick="editSelectedStatus()">
+                                <i class="fas fa-edit"></i> Sửa trạng thái
+                            </button>
+                            <select class="form-select" id="statusFilter" style="width: 180px;">
+                                <option value="">Chọn trạng thái</option>
                                 <option value="ACTIVE">Hoạt động</option>
                                 <option value="INACTIVE">Không hoạt động</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="roleFilter" style="display: none;">
-                                <option value="7" selected>Auto Owner</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                                <i class="fas fa-refresh"></i> Reset
-                            </button>
+                        <div class="col-md-6 d-flex justify-content-end align-items-center">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm người dùng" style="max-width: 300px;">
                         </div>
                     </div>
 
@@ -44,14 +37,15 @@
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Họ tên</th>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th style="width: 60px;">STT</th>
+                                    <th>Tên khách hàng</th>
+                                    <th>Mã khách hàng</th>
                                     <th>Email</th>
                                     <th>Số điện thoại</th>
-                                    <th>Vai trò</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày tạo</th>
-                                    <th>Thao tác</th>
+                                    <th>Tình trạng</th>
                                 </tr>
                             </thead>
                             <tbody id="usersTableBody">
@@ -81,6 +75,7 @@
         let currentPage = 1;
         const pageSize = 10;
         let totalRecords = 0;
+        const selectedUsers = new Set();
 
         document.addEventListener('DOMContentLoaded', function() {
             loadUsers();
@@ -94,10 +89,6 @@
                 currentPage = 1;
                 loadUsers();
             });
-            document.getElementById('roleFilter').addEventListener('change', function() {
-                currentPage = 1;
-                loadUsers();
-            });
         });
 
         const API_BASE_URL = '@apiBaseUrl';
@@ -105,12 +96,11 @@
         function loadUsers() {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('statusFilter').value;
-            const role = document.getElementById('roleFilter').value;
 
             // Show loading
             document.getElementById('usersTableBody').innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center">
+                    <td colspan="7" class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -118,7 +108,7 @@
                 </tr>
             `;
 
-            fetch(`${API_BASE_URL}/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`)
+            fetch(`${API_BASE_URL}/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=7`)
                 .then(async response => {
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}: ${response.statusText}` }));
@@ -142,7 +132,7 @@
                     console.error('Error:', error);
                     showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
                     // Hiển thị empty table
-                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu</td></tr>';
+                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Không thể tải dữ liệu</td></tr>';
                     totalRecords = 0;
                     updatePaginationInfo();
                 });
@@ -153,7 +143,7 @@
             tbody.innerHTML = '';
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>';
                 return;
             }
 
@@ -161,30 +151,26 @@
                 const row = document.createElement('tr');
                 const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || '-';
                 const isActive = user.statusCode === 'ACTIVE' || (user.statusCode == null && !user.isDelete);
+                const stt = (currentPage - 1) * pageSize + index + 1;
                 row.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${fullName}</td>
+                    <td>
+                        <input type="checkbox" class="user-checkbox" value="${user.id}" onchange="toggleUserSelection(${user.id})">
+                    </td>
+                    <td>${stt}</td>
+                    <td>
+                        <a href="/Users/Details/${user.id}" style="text-decoration: none; color: inherit;">
+                            ${fullName}
+                        </a>
+                    </td>
+                    <td>${user.code || '-'}</td>
                     <td>${user.email || '-'}</td>
                     <td>${user.phone || '-'}</td>
-                    <td><span class="badge bg-info">${user.roleName || 'Auto Owner'}</span></td>
                     <td><span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">${isActive ? 'Hoạt động' : 'Không hoạt động'}</span></td>
-                    <td>${user.createdDate ? new Date(user.createdDate).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="/Users/Details/${user.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="/Users/Edit/${user.id}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${user.id})" title="Xóa">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
                 `;
                 tbody.appendChild(row);
             });
+            
+            updateSelectAllCheckbox();
         }
 
         function renderPagination(totalPages, currentPageParam) {
@@ -289,34 +275,113 @@
         // Expose changePage to global scope for onclick handlers
         window.changePage = changePage;
 
-        function deleteUser(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-                fetch(`${API_BASE_URL}/AutoOwner/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(response => {
-                    if (response.ok || response.status === 204) {
-                        showAlert('Xóa người dùng thành công', 'success');
-                        loadUsers();
-                    } else {
-                        return response.json().then(data => {
-                            showAlert('Lỗi khi xóa: ' + (data.message || 'Unknown error'), 'danger');
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi xóa', 'danger');
-                });
-            }
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const userId = parseInt(checkbox.value);
+                if (selectAll.checked) {
+                    selectedUsers.add(userId);
+                } else {
+                    selectedUsers.delete(userId);
+                }
+            });
         }
 
-        function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('roleFilter').value = '';
-            currentPage = 1;
+        function toggleUserSelection(userId) {
+            const checkbox = document.querySelector(`.user-checkbox[value="${userId}"]`);
+            if (checkbox.checked) {
+                selectedUsers.add(userId);
+            } else {
+                selectedUsers.delete(userId);
+            }
+            updateSelectAllCheckbox();
+        }
+
+        function updateSelectAllCheckbox() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            const selectAll = document.getElementById('selectAll');
+            if (checkboxes.length === 0) {
+                selectAll.checked = false;
+                return;
+            }
+            selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
+        }
+
+        function editSelectedStatus() {
+            if (selectedUsers.size === 0) {
+                showAlert('Vui lòng chọn ít nhất một người dùng', 'warning');
+                return;
+            }
+            
+            // Update selected count in modal
+            document.getElementById('selectedCount').textContent = selectedUsers.size;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('statusUpdateModal'));
+            modal.show();
+        }
+        
+        function confirmUpdateStatus() {
+            // Get selected status
+            const newStatus = document.getElementById('newStatusSelect').value;
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('statusUpdateModal'));
+            modal.hide();
+            
+            // Update all selected users
+            updateMultipleUserStatuses(Array.from(selectedUsers), newStatus);
+        }
+        
+        async function updateMultipleUserStatuses(userIds, newStatus) {
+            const token = localStorage.getItem('authToken');
+            let successCount = 0;
+            let failCount = 0;
+            
+            showAlert(`Đang cập nhật ${userIds.length} người dùng...`, 'info');
+            
+            // Update all users sequentially
+            for (const userId of userIds) {
+                try {
+                    const response = await fetch(`https://localhost:7173/api/AutoOwner/${userId}/status`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({ statusCode: newStatus })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                        console.error(`Failed to update user ${userId}:`, data.message);
+                    }
+                } catch (error) {
+                    failCount++;
+                    console.error(`Error updating user ${userId}:`, error);
+                }
+            }
+            
+            // Clear selection
+            selectedUsers.clear();
+            document.getElementById('selectAll').checked = false;
+            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            
+            // Reload data
             loadUsers();
+            
+            // Show result
+            if (failCount === 0) {
+                showAlert(`Đã cập nhật thành công ${successCount} người dùng sang trạng thái "${newStatus === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động'}"`, 'success');
+            } else {
+                showAlert(`Đã cập nhật ${successCount} người dùng thành công, ${failCount} người dùng thất bại`, 'warning');
+            }
         }
 
 
@@ -346,4 +411,30 @@
             }, 5000);
         }
     </script>
+
+<!-- ✅ Modal chọn trạng thái -->
+<div class="modal fade" id="statusUpdateModal" tabindex="-1" aria-labelledby="statusUpdateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statusUpdateModalLabel">Cập nhật trạng thái</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn đã chọn <strong id="selectedCount">0</strong> người dùng.</p>
+                <div class="mb-3">
+                    <label for="newStatusSelect" class="form-label">Chọn trạng thái mới:</label>
+                    <select class="form-select" id="newStatusSelect">
+                        <option value="ACTIVE">Hoạt động</option>
+                        <option value="INACTIVE">Không hoạt động</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="confirmUpdateStatus()">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
 }
