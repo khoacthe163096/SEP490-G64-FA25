@@ -51,8 +51,68 @@ namespace BE.vn.fpt.edu.controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {
-            var result = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            try
+            {
+                if (dto == null)
+                {
+                    return BadRequest(new { message = "Request data is required." });
+                }
+
+                if (!dto.UserId.HasValue || dto.UserId.Value <= 0)
+                {
+                    return BadRequest(new { message = "UserId is required." });
+                }
+
+                var result = await _service.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            {
+                // Handle database constraint violations
+                var errorMessage = "An error occurred while saving to the database.";
+                
+                if (ex.InnerException != null)
+                {
+                    var innerMessage = ex.InnerException.Message;
+                    if (innerMessage.Contains("UNIQUE KEY constraint") || innerMessage.Contains("duplicate key"))
+                    {
+                        errorMessage = "Biển số xe đã tồn tại trong hệ thống. Vui lòng sử dụng biển số khác.";
+                    }
+                    else if (innerMessage.Contains("FOREIGN KEY constraint"))
+                    {
+                        if (innerMessage.Contains("user_id"))
+                        {
+                            errorMessage = "Người dùng không tồn tại trong hệ thống.";
+                        }
+                        else if (innerMessage.Contains("vehicle_type_id"))
+                        {
+                            errorMessage = "Loại phương tiện không tồn tại trong hệ thống.";
+                        }
+                        else if (innerMessage.Contains("branch_id"))
+                        {
+                            errorMessage = "Chi nhánh không tồn tại trong hệ thống.";
+                        }
+                        else
+                        {
+                            errorMessage = "Dữ liệu tham chiếu không hợp lệ.";
+                        }
+                    }
+                    else
+                    {
+                        errorMessage = innerMessage;
+                    }
+                }
+                
+                return StatusCode(500, new { message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating the car.", error = ex.Message });
+            }
         }
 
         [HttpPut("{id:long}")]
