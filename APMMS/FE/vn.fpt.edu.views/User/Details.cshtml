@@ -1159,7 +1159,7 @@
             console.log('User ID being updated:', currentUser.id);
 
             const token = localStorage.getItem('authToken');
-            
+
             // Handle image upload if file is selected
             const imageFile = document.getElementById('userImageInput').files[0];
             
@@ -1171,12 +1171,12 @@
                 }
                 
                 return fetch(`${API_BASE_URL}/AutoOwner/${currentUser.id}`, {
-                    method: 'PUT',
-                    headers: {
+                method: 'PUT',
+                headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(formData)
+                },
+                body: JSON.stringify(formData)
                 });
             };
 
@@ -1198,9 +1198,9 @@
                         'Authorization': `Bearer ${token}`
                     },
                     body: uploadFormData
-                })
-                .then(async response => {
-                    if (!response.ok) {
+            })
+            .then(async response => {
+                if (!response.ok) {
                         let errorMessage = `Upload ảnh thất bại. Status: ${response.status}`;
                         try {
                             const errorData = await response.json();
@@ -1249,57 +1249,57 @@
                     submitButton.innerHTML = originalButtonText;
 
                     if (!response.ok) {
-                        let errorMessage = `HTTP error! status: ${response.status}`;
-                        try {
-                            const errorData = await response.json();
-                            errorMessage = errorData.message || errorData.error || errorMessage;
-                        } catch (e) {
-                            if (response.status === 404) {
-                                errorMessage = 'Không tìm thấy người dùng với ID này. Vui lòng làm mới trang và thử lại.';
-                            } else if (response.status === 401) {
-                                errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-                            } else if (response.status === 403) {
-                                errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
-                            }
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                    } catch (e) {
+                        if (response.status === 404) {
+                            errorMessage = 'Không tìm thấy người dùng với ID này. Vui lòng làm mới trang và thử lại.';
+                        } else if (response.status === 401) {
+                            errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                        } else if (response.status === 403) {
+                            errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
                         }
-                        throw new Error(errorMessage);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    // Reload user details
-                    loadUserDetails(currentUser.id);
-                    
-                    // Show success message
-                    const alertDiv = document.createElement('div');
-                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
-                    alertDiv.style.borderRadius = '10px';
-                    alertDiv.innerHTML = `
+                    throw new Error(errorMessage);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Reload user details
+                loadUserDetails(currentUser.id);
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                alertDiv.style.borderRadius = '10px';
+                alertDiv.innerHTML = `
                         <i class="fas fa-check-circle me-2"></i> Cập nhật thông tin và ảnh đại diện thành công!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    const detailsSection = document.querySelector('.user-details-section');
-                    if (detailsSection) {
-                        detailsSection.insertBefore(alertDiv, detailsSection.querySelector('.info-tabs'));
-                    }
-                    
-                    // Switch to personal info tab
-                    const personalTab = document.getElementById('personal-tab');
-                    if (personalTab) {
-                        personalTab.click();
-                    }
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                const detailsSection = document.querySelector('.user-details-section');
+                if (detailsSection) {
+                    detailsSection.insertBefore(alertDiv, detailsSection.querySelector('.info-tabs'));
+                }
+                
+                // Switch to personal info tab
+                const personalTab = document.getElementById('personal-tab');
+                if (personalTab) {
+                    personalTab.click();
+                }
 
                     // Reset image input
                     document.getElementById('userImageInput').value = '';
 
-                    setTimeout(() => {
-                        alertDiv.remove();
-                    }, 3000);
-                })
-                .catch(error => {
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            })
+            .catch(error => {
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalButtonText;
-                    console.error('Error:', error);
+                console.error('Error:', error);
                     showError('Có lỗi xảy ra: ' + error.message);
                 });
             } else {
@@ -1562,8 +1562,8 @@
             })
             .finally(() => {
                 if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
                 }
             });
         }
