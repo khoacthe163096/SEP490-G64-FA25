@@ -1,5 +1,5 @@
 using BE.vn.fpt.edu.DTOs.AutoOwner;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BE.vn.fpt.edu.interfaces;
 namespace BE.vn.fpt.edu.Controllers
@@ -94,13 +94,31 @@ namespace BE.vn.fpt.edu.Controllers
             }
         }
 
-        [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id)
+        /// <summary>
+        /// ✅ Cập nhật Status của AutoOwner (ACTIVE hoặc INACTIVE)
+        /// </summary>
+        [HttpPut("{id}/status")]
+        [Authorize(Roles = "Branch Manager,Admin")]
+        public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusRequest request)
         {
-            var success = await _service.DeleteAsync(id);
-            if (!success)
-                return NotFound("Auto Owner not found or already deleted.");
-            return NoContent();
+            try
+            {
+                var result = await _service.UpdateStatusAsync(id, request.StatusCode);
+                return Ok(new { success = true, data = result, message = "Status updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
         }
+    }
+
+    public class UpdateStatusRequest
+    {
+        public string StatusCode { get; set; } = null!;
     }
 }
