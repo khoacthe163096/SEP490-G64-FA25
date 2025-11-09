@@ -1,11 +1,13 @@
 using BE.vn.fpt.edu.DTOs.Employee;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
+using BE.vn.fpt.edu.services;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.IO;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -15,11 +17,13 @@ namespace BE.vn.fpt.edu.controllers
     {
         private readonly CarMaintenanceDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly CloudinaryService _cloudinaryService;
 
-        public EmployeeProfileController(CarMaintenanceDbContext dbContext, IMapper mapper)
+        public EmployeeProfileController(CarMaintenanceDbContext dbContext, IMapper mapper, CloudinaryService cloudinaryService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _cloudinaryService = cloudinaryService;
         }
 
         /// <summary>
@@ -129,6 +133,79 @@ namespace BE.vn.fpt.edu.controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Upload avatar image to Cloudinary for current user (dựa trên userId từ token)
+        /// </summary>
+        [HttpPost("upload-avatar")]
+        [Authorize]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { success = false, message = "Không có file được chọn" });
+                }
+
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return BadRequest(new { success = false, message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)" });
+                }
+
+                // Validate file size (max 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    return BadRequest(new { success = false, message = "Kích thước file không được vượt quá 5MB" });
+                }
+
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+                {
+                    return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
+                }
+
+                // Upload to Cloudinary (isAvatar = true để crop thành hình vuông)
+                var imageUrl = await _cloudinaryService.UploadImageAsync(file, "user-avatars", isAvatar: true);
+
+                // Cập nhật image URL vào database
+                var user = await _dbContext.Users.FindAsync(userId);
+                if (user == null)
+                {
+                    return NotFound(new { success = false, message = "User not found" });
+                }
+
+                // Xóa ảnh cũ từ Cloudinary nếu có (optional - có thể bỏ qua để tiết kiệm)
+                // if (!string.IsNullOrEmpty(user.Image))
+                // {
+                //     try
+                //     {
+                //         await _cloudinaryService.DeleteImageAsync(user.Image);
+                //     }
+                //     catch
+                //     {
+                //         // Ignore delete errors
+                //     }
+                // }
+
+                user.Image = imageUrl;
+                user.LastModifiedDate = DateTime.Now;
+                
+                _dbContext.Users.Update(user);
+                await _dbContext.SaveChangesAsync();
+
+                return Ok(new { success = true, data = new { imageUrl = imageUrl }, message = "Upload avatar thành công" });
             }
             catch (Exception ex)
             {
