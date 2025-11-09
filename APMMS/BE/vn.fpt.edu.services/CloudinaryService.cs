@@ -26,8 +26,9 @@ namespace BE.vn.fpt.edu.services
         /// </summary>
         /// <param name="file">The image file to upload</param>
         /// <param name="folder">Folder path in Cloudinary (e.g., "vehicle-checkins", "user-avatars", "component-images")</param>
+        /// <param name="isAvatar">If true, will crop image to square format (suitable for avatars)</param>
         /// <returns>Public URL of the uploaded image</returns>
-        public async Task<string> UploadImageAsync(IFormFile file, string folder = "vehicle-checkins")
+        public async Task<string> UploadImageAsync(IFormFile file, string folder = "vehicle-checkins", bool isAvatar = false)
         {
             try
             {
@@ -45,14 +46,31 @@ namespace BE.vn.fpt.edu.services
                     File = new FileDescription(file.FileName, file.OpenReadStream()),
                     PublicId = publicId,
                     Folder = folder,
-                    Overwrite = false,
-                    Transformation = new Transformation()
+                    Overwrite = false
+                };
+
+                // Apply transformation based on type
+                if (isAvatar)
+                {
+                    // For avatars: crop to square, max 400x400
+                    uploadParams.Transformation = new Transformation()
+                        .Quality("auto")
+                        .FetchFormat("auto")
+                        .Width(400)
+                        .Height(400)
+                        .Crop("fill")
+                        .Gravity("face"); // Focus on faces if detected
+                }
+                else
+                {
+                    // For other images: limit size to 800x600
+                    uploadParams.Transformation = new Transformation()
                         .Quality("auto")
                         .FetchFormat("auto")
                         .Width(800)
                         .Height(600)
-                        .Crop("limit")
-                };
+                        .Crop("limit");
+                }
 
                 // Upload to Cloudinary
                 var uploadResult = await _cloudinary.UploadAsync(uploadParams);
