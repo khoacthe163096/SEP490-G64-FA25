@@ -82,7 +82,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasIndex(e => e.Name, "UQ__branch__72E12F1BE49CD06A").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.AddressId).HasColumnName("address_id");
+            entity.Property(e => e.Address)
+                .HasMaxLength(500)
+                .HasColumnName("address");
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
                 .HasColumnName("name");

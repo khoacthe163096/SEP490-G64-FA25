@@ -9,7 +9,7 @@ public partial class Branch
 
     public string Name { get; set; } = null!;
 
-    public long? AddressId { get; set; }
+    public string? Address { get; set; }
 
     public string? Phone { get; set; }
 
