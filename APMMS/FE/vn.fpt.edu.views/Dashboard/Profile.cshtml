@@ -196,15 +196,6 @@
                                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'180\'%3E%3Crect width=\'180\' height=\'180\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'80\'%3E👤%3C/text%3E%3C/svg%3E';">
                             </div>
                             <h4 id="employeeFullName" class="employee-name">-</h4>
-                            <div id="employeeRole" class="mt-2" style="font-size: 0.9rem; color: #6c757d;"></div>
-                            
-                            <!-- Upload Image Section -->
-                            <div class="mt-4">
-                                <label for="editImage" class="form-label" style="font-size: 0.875rem; font-weight: 500; color: #212529;">
-                                    <i class="fas fa-image me-1"></i> Cập nhật ảnh đại diện
-                                </label>
-                                <input type="file" class="form-control form-control-sm" id="editImage" accept="image/*" style="max-width: 200px;">
-                            </div>
                         </div>
 
                         <!-- Right Section: Tabs and Details -->
@@ -351,6 +342,13 @@
                                             <input type="text" class="form-control" id="editTaxCode">
                                         </div>
                                         
+                                        <div class="form-field">
+                                            <label for="employeeImageInput" class="form-label">
+                                                <i class="fas fa-image"></i> Ảnh đại diện
+                                            </label>
+                                            <input type="file" class="form-control" id="employeeImageInput" accept="image/*" style="max-width: 350px;">
+                                        </div>
+                                        
                                         <div class="d-flex justify-content-end mt-4">
                                             <button type="submit" class="btn btn-save text-white">
                                                 <i class="fas fa-save me-1"></i> Lưu thông tin
@@ -387,9 +385,10 @@
         });
         
         function initializeImagePreview() {
-            const editImageInput = document.getElementById('editImage');
-            if (editImageInput) {
-                editImageInput.addEventListener('change', function(e) {
+            // Handle employee image input (info section)
+            const employeeImageInput = document.getElementById('employeeImageInput');
+            if (employeeImageInput) {
+                employeeImageInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
                     
                     if (file) {
@@ -412,7 +411,7 @@
                         reader.onload = function(event) {
                             const imageDataUrl = event.target.result;
                             
-                            // Update avatar immediately for preview
+                            // Update avatar (left sidebar) - preview only
                             const employeeAvatar = document.getElementById('employeeAvatar');
                             if (employeeAvatar) {
                                 employeeAvatar.src = imageDataUrl;
@@ -479,20 +478,14 @@
             
             const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim() || '-';
             
-            // Avatar
+            // Avatar (left sidebar)
             const avatar = document.getElementById('employeeAvatar');
             if (employee.image) {
                 avatar.src = employee.image;
             }
             
-            // Left section
+            // Left section - only name
             document.getElementById('employeeFullName').textContent = fullName;
-            
-            // Role
-            const roleDiv = document.getElementById('employeeRole');
-            if (employee.roleName) {
-                roleDiv.innerHTML = `<i class="fas fa-user-tag me-1"></i>${employee.roleName}`;
-            }
             
             // Details
             document.getElementById('employeeCode').textContent = employee.code || '-';
@@ -679,7 +672,7 @@
             console.log('Sending update request with data:', formData);
 
             // Handle image upload if file is selected
-            const imageFile = document.getElementById('editImage').files[0];
+            const imageFile = document.getElementById('employeeImageInput').files[0];
             if (imageFile) {
                 // TODO: Upload image to server first, then get URL
                 alert('Tính năng upload ảnh đang được phát triển. Vui lòng sử dụng API riêng để upload ảnh.');
