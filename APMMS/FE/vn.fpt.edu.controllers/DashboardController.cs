@@ -8,5 +8,11 @@ namespace FE.vn.fpt.edu.controllers
         {
             return View();
         }
+
+        public IActionResult Profile()
+        {
+            ViewBag.ApiBaseUrl = "https://localhost:7173/api";
+            return View();
+        }
     }
 }
