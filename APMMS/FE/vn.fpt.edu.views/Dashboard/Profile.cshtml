@@ -19,11 +19,11 @@
     }
     
     .employee-avatar {
-        width: 150px;
-        height: 150px;
+        width: 250px;
+        height: 250px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #dee2e6;
+        border: 4px solid #dee2e6;
         background: #e9ecef;
     }
     
@@ -154,23 +154,6 @@
         color: white;
     }
     
-    .status-badge {
-        display: inline-block;
-        padding: 5px 12px;
-        border-radius: 4px;
-        font-weight: 500;
-        font-size: 0.875rem;
-    }
-    
-    .status-badge.active {
-        background: #28a745;
-        color: white;
-    }
-    
-    .status-badge.inactive {
-        background: #6c757d;
-        color: white;
-    }
 </style>
 
 <div class="container-fluid">
@@ -193,7 +176,7 @@
                             <div class="mb-4">
                                 <img id="employeeAvatar" src="" alt="Avatar" 
                                      class="employee-avatar"
-                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'180\'%3E%3Crect width=\'180\' height=\'180\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'80\'%3E👤%3C/text%3E%3C/svg%3E';">
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'250\' height=\'250\'%3E%3Crect width=\'250\' height=\'250\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'120\'%3E👤%3C/text%3E%3C/svg%3E';">
                             </div>
                             <h4 id="employeeFullName" class="employee-name">-</h4>
                         </div>
@@ -268,11 +251,6 @@
                                             <div class="info-field">
                                                 <div class="info-label">Mã số thuế</div>
                                                 <div class="info-value" id="employeeTaxCode">-</div>
-                                            </div>
-                                            
-                                            <div class="info-field">
-                                                <div class="info-label">Tình trạng</div>
-                                                <div class="info-value" id="employeeStatus">-</div>
                                             </div>
                                         </div>
                                     </div>
@@ -430,7 +408,7 @@
                                 employeeAvatar.src = currentEmployee.image;
                             } else {
                                 // Reset to default placeholder
-                                employeeAvatar.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'180\' height=\'180\'%3E%3Crect width=\'180\' height=\'180\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'80\'%3E👤%3C/text%3E%3C/svg%3E';
+                                employeeAvatar.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'250\' height=\'250\'%3E%3Crect width=\'250\' height=\'250\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'120\'%3E👤%3C/text%3E%3C/svg%3E';
                             }
                         }
                     }
@@ -527,13 +505,6 @@
             document.getElementById('employeeAddress').textContent = employee.fullAddress || employee.address || '-';
             document.getElementById('employeeCitizenId').textContent = employee.citizenId || '-';
             document.getElementById('employeeTaxCode').textContent = employee.taxCode || '-';
-            
-            // Status
-            const isActive = !employee.isDelete;
-            const statusDiv = document.getElementById('employeeStatus');
-            statusDiv.innerHTML = isActive 
-                ? '<span class="status-badge active">Có hiệu lực</span>'
-                : '<span class="status-badge inactive">Không hiệu lực</span>';
             
             // Load data into edit form
             loadEditForm(employee);
