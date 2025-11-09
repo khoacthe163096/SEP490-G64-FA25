@@ -52,5 +52,14 @@ namespace FE.vn.fpt.edu.controllers
             return View();
         }
 
+        [HttpGet]
+        [Route("CarDetail/{carId}")]
+        public IActionResult CarDetail(long carId)
+        {
+            ViewBag.CarId = carId;
+            ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+            return View();
+        }
+
     }
 }
