@@ -61,12 +61,16 @@
                         </table>
                     </div>
 
-                    <!-- Pagination -->
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination justify-content-center" id="pagination">
-                            <!-- Pagination will be generated here -->
-                        </ul>
-                    </nav>
+                    <!-- Pagination Info and Controls -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted" id="paginationInfo">
+                            Hiển thị <span id="showingFrom">0</span> - <span id="showingTo">0</span> của <span id="totalRecords">0</span> kết quả
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination mb-0" id="pagination">
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -119,14 +123,24 @@
     <script>
         let currentPage = 1;
         const pageSize = 10;
+        let totalRecords = 0;
 
         document.addEventListener('DOMContentLoaded', function() {
             loadEmployees();
             
             // Search functionality
-            document.getElementById('searchInput').addEventListener('input', debounce(loadEmployees, 500));
-            document.getElementById('statusFilter').addEventListener('change', loadEmployees);
-            document.getElementById('roleFilter').addEventListener('change', loadEmployees);
+            document.getElementById('searchInput').addEventListener('input', debounce(function() {
+                currentPage = 1;
+                loadEmployees();
+            }, 500));
+            document.getElementById('statusFilter').addEventListener('change', function() {
+                currentPage = 1;
+                loadEmployees();
+            });
+            document.getElementById('roleFilter').addEventListener('change', function() {
+                currentPage = 1;
+                loadEmployees();
+            });
         });
 
         function loadEmployees() {
@@ -136,6 +150,17 @@
 
             // ✅ Get JWT token from localStorage
             const token = localStorage.getItem('authToken');
+
+            // Show loading
+            document.getElementById('employeesTableBody').innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
 
             fetch(`https://localhost:7173/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`, {
                 headers: {
@@ -151,15 +176,22 @@
                 })
                 .then(data => {
                     if (data.success) {
+                        totalRecords = data.totalCount || 0;
                         renderEmployeesTable(data.data);
-                        renderPagination(data.totalPages, data.currentPage);
+                        renderPagination(data.totalPages || 1, data.currentPage || currentPage);
+                        updatePaginationInfo();
                     } else {
                         showAlert('Lỗi khi tải dữ liệu: ' + (data.message || 'Unknown error'), 'danger');
+                        totalRecords = 0;
+                        updatePaginationInfo();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     showAlert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message, 'danger');
+                    document.getElementById('employeesTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-danger">Không thể tải dữ liệu</td></tr>';
+                    totalRecords = 0;
+                    updatePaginationInfo();
                 });
         }
 
@@ -170,17 +202,16 @@
             tbody.innerHTML = '';
 
             if (employees.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">Không có dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>';
                 return;
             }
 
-            const startIndex = (currentPage - 1) * pageSize;
             employees.forEach((employee, index) => {
                 const row = document.createElement('tr');
                 // ✅ Hiển thị status từ StatusCode (ACTIVE/INACTIVE)
                 const statusCode = employee.statusCode || 'ACTIVE';
                 const isActive = statusCode === 'ACTIVE';
-                const stt = startIndex + index + 1;
+                const stt = (currentPage - 1) * pageSize + index + 1;
                 const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
                 
                 row.innerHTML = `
@@ -316,79 +347,107 @@
             }
         }
 
-        function renderPagination(totalPages, currentPage) {
+        function renderPagination(totalPages, currentPageParam) {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
-            if (totalPages <= 1) return;
+            // Update currentPage if provided
+            if (currentPageParam) {
+                currentPage = currentPageParam;
+            }
 
-            // First page button
-            const firstLi = document.createElement('li');
-            firstLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            firstLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(1); return false;">&laquo;&laquo;</a>`;
-            pagination.appendChild(firstLi);
+            if (totalPages <= 1) {
+                pagination.innerHTML = '<li class="page-item disabled"><span class="page-link">Trang 1 / 1</span></li>';
+                updatePaginationInfo();
+                return;
+            }
 
             // Previous button
-            const prevLi = document.createElement('li');
-            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
-            prevLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">&laquo;</a>`;
-            pagination.appendChild(prevLi);
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            pagination.innerHTML = `
+                <li class="page-item ${prevDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                        <i class="fas fa-chevron-left"></i> Trước
+                    </a>
+                </li>
+            `;
 
             // Page numbers (show max 5 pages around current)
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, currentPage + 2);
-            
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            // First page
             if (startPage > 1) {
-                const li = document.createElement('li');
-                li.className = 'page-item';
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(1); return false;">1</a>`;
-                pagination.appendChild(li);
+                pagination.innerHTML += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(1); return false;">1</a>
+                    </li>
+                `;
                 if (startPage > 2) {
-                    const dots = document.createElement('li');
-                    dots.className = 'page-item disabled';
-                    dots.innerHTML = `<span class="page-link">...</span>`;
-                    pagination.appendChild(dots);
+                    pagination.innerHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
                 }
             }
 
+            // Page numbers
             for (let i = startPage; i <= endPage; i++) {
-                const li = document.createElement('li');
-                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>`;
-                pagination.appendChild(li);
+                const active = i === currentPage ? 'active' : '';
+                pagination.innerHTML += `
+                    <li class="page-item ${active}">
+                        <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                    </li>
+                `;
             }
 
+            // Last page
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
-                    const dots = document.createElement('li');
-                    dots.className = 'page-item disabled';
-                    dots.innerHTML = `<span class="page-link">...</span>`;
-                    pagination.appendChild(dots);
+                    pagination.innerHTML += '<li class="page-item disabled"><span class="page-link">...</span></li>';
                 }
-                const li = document.createElement('li');
-                li.className = 'page-item';
-                li.innerHTML = `<a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>`;
-                pagination.appendChild(li);
+                pagination.innerHTML += `
+                    <li class="page-item">
+                        <a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a>
+                    </li>
+                `;
             }
 
             // Next button
-            const nextLi = document.createElement('li');
-            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            nextLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">&raquo;</a>`;
-            pagination.appendChild(nextLi);
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            pagination.innerHTML += `
+                <li class="page-item ${nextDisabled}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                        Sau <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
 
-            // Last page button
-            const lastLi = document.createElement('li');
-            lastLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-            lastLi.innerHTML = `<a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">&raquo;&raquo;</a>`;
-            pagination.appendChild(lastLi);
+            updatePaginationInfo();
+        }
+
+        function updatePaginationInfo() {
+            const startIndex = totalRecords === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const endIndex = Math.min(currentPage * pageSize, totalRecords);
+            
+            document.getElementById('showingFrom').textContent = startIndex;
+            document.getElementById('showingTo').textContent = endIndex;
+            document.getElementById('totalRecords').textContent = totalRecords;
         }
 
         function changePage(page) {
-            if (page < 1) return;
+            const totalPages = Math.ceil(totalRecords / pageSize) || 1;
+            if (page < 1 || page > totalPages) return;
             currentPage = page;
             loadEmployees();
+            // Scroll to top of table
+            document.querySelector('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+        
+        // Expose changePage to global scope for onclick handlers
+        window.changePage = changePage;
 
         function deleteEmployee(id) {
             if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
