@@ -98,26 +98,53 @@
         margin-bottom: 20px;
     }
     
+    .form-field {
+        margin-bottom: 0;
+        padding-bottom: 8px;
+        padding-top: 8px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        min-height: 40px;
+    }
+    
+    .form-field:first-child {
+        padding-top: 0;
+    }
+    
+    .form-field:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    
     .form-label {
         font-weight: 500;
-        color: #212529;
-        margin-bottom: 8px;
+        color: #6c757d;
+        flex: 0 0 140px;
+        margin-bottom: 0;
+        font-size: 0.875rem;
+        margin-right: 15px;
     }
     
     .form-label i {
-        margin-right: 8px;
+        margin-right: 6px;
         color: #6c757d;
     }
     
     .form-control, .form-select {
         border: 1px solid #ced4da;
         border-radius: 4px;
-        padding: 10px 12px;
+        padding: 6px 12px;
+        flex: 1;
+        max-width: 350px;
+        background-color: #f8f9fa;
+        font-size: 0.9rem;
     }
     
     .form-control:focus, .form-select:focus {
         border-color: #80bdff;
         box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        background-color: #fff;
     }
     
     .btn-save {
@@ -304,83 +331,68 @@
                                 <!-- Edit Tab -->
                                 <div class="tab-pane fade" id="edit" role="tabpanel" aria-labelledby="edit-tab">
                                     <form id="editEmployeeForm">
-                                        <div class="form-section">
-                                            <h5 class="mb-4" style="color: #212529; font-weight: 500;">
-                                                Cập nhật thông tin
-                                            </h5>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <div class="mb-4">
-                                                        <label for="editFirstName" class="form-label">
-                                                            <i class="fas fa-user"></i> Họ và tên
-                                                        </label>
-                                                        <input type="text" class="form-control" id="editFirstName" required>
-                                                        <small class="text-muted">Nhập đầy đủ họ và tên</small>
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editPhone" class="form-label">
-                                                            <i class="fas fa-phone"></i> Số điện thoại
-                                                        </label>
-                                                        <input type="tel" class="form-control" id="editPhone">
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editGender" class="form-label">
-                                                            <i class="fas fa-venus-mars"></i> Giới tính
-                                                        </label>
-                                                        <select class="form-select" id="editGender">
-                                                            <option value="">-- Chọn giới tính --</option>
-                                                            <option value="Nam">Nam</option>
-                                                            <option value="Nữ">Nữ</option>
-                                                            <option value="Khác">Khác</option>
-                                                        </select>
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editDob" class="form-label">
-                                                            <i class="fas fa-calendar-alt"></i> Ngày sinh
-                                                        </label>
-                                                        <input type="date" class="form-control" id="editDob">
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="col-md-6">
-                                                    <div class="mb-4">
-                                                        <label for="editEmail" class="form-label">
-                                                            <i class="fas fa-envelope"></i> Email
-                                                        </label>
-                                                        <input type="email" class="form-control" id="editEmail">
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editAddress" class="form-label">
-                                                            <i class="fas fa-map-marker-alt"></i> Địa chỉ
-                                                        </label>
-                                                        <input type="text" class="form-control" id="editAddress">
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editTaxCode" class="form-label">
-                                                            <i class="fas fa-receipt"></i> Mã số thuế
-                                                        </label>
-                                                        <input type="text" class="form-control" id="editTaxCode">
-                                                    </div>
-                                                    
-                                                    <div class="mb-4">
-                                                        <label for="editCitizenId" class="form-label">
-                                                            <i class="fas fa-id-badge"></i> CMT/CCCD
-                                                        </label>
-                                                        <input type="text" class="form-control" id="editCitizenId">
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        <div class="form-field">
+                                            <label for="editFullName" class="form-label">
+                                                <i class="fas fa-user"></i> Họ và tên
+                                            </label>
+                                            <input type="text" class="form-control" id="editFullName">
                                         </div>
                                         
-                                        <div class="d-flex justify-content-end gap-3">
-                                            <button type="button" class="btn btn-cancel" onclick="resetEditForm()">
-                                                <i class="fas fa-times me-1"></i>Hủy
-                                            </button>
+                                        <div class="form-field">
+                                            <label for="editPhone" class="form-label">
+                                                <i class="fas fa-phone"></i> Số điện thoại
+                                            </label>
+                                            <input type="tel" class="form-control" id="editPhone">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editGender" class="form-label">
+                                                <i class="fas fa-venus-mars"></i> Giới tính
+                                            </label>
+                                            <select class="form-select" id="editGender">
+                                                <option value="">-- Chọn giới tính --</option>
+                                                <option value="Nam">Nam</option>
+                                                <option value="Nữ">Nữ</option>
+                                                <option value="Khác">Khác</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editDob" class="form-label">
+                                                <i class="fas fa-calendar-alt"></i> Ngày sinh
+                                            </label>
+                                            <input type="date" class="form-control" id="editDob">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editEmail" class="form-label">
+                                                <i class="fas fa-envelope"></i> Email
+                                            </label>
+                                            <input type="email" class="form-control" id="editEmail">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editAddress" class="form-label">
+                                                <i class="fas fa-map-marker-alt"></i> Địa chỉ
+                                            </label>
+                                            <input type="text" class="form-control" id="editAddress">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editCitizenId" class="form-label">
+                                                <i class="fas fa-id-badge"></i> CMT/CCCD
+                                            </label>
+                                            <input type="text" class="form-control" id="editCitizenId">
+                                        </div>
+                                        
+                                        <div class="form-field">
+                                            <label for="editTaxCode" class="form-label">
+                                                <i class="fas fa-receipt"></i> Mã số thuế
+                                            </label>
+                                            <input type="text" class="form-control" id="editTaxCode">
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-end mt-4">
                                             <button type="submit" class="btn btn-save text-white">
                                                 <i class="fas fa-save me-1"></i> Lưu thông tin
                                             </button>
@@ -599,7 +611,7 @@
             // Combine first and last name for display
             const fullName = `${(employee.firstName || '')} ${(employee.lastName || '')}`.trim();
 
-            document.getElementById('editFirstName').value = fullName;
+            document.getElementById('editFullName').value = fullName;
             document.getElementById('editPhone').value = employee.phone || '';
             document.getElementById('editGender').value = 
                 employee.gender === 'Male' || employee.gender === 'Nam' ? 'Nam' :
@@ -638,7 +650,7 @@
 
             // Store original data
             originalFormData = {
-                firstName: fullName,
+                fullName: fullName,
                 phone: employee.phone || '',
                 gender: document.getElementById('editGender').value,
                 dob: dobInput ? dobInput.value : '',
@@ -651,7 +663,7 @@
 
         function resetEditForm() {
             if (originalFormData) {
-                document.getElementById('editFirstName').value = originalFormData.firstName;
+                document.getElementById('editFullName').value = originalFormData.fullName || '';
                 document.getElementById('editPhone').value = originalFormData.phone;
                 document.getElementById('editGender').value = originalFormData.gender;
                 const dobInput = document.getElementById('editDob');
@@ -690,7 +702,7 @@
             }
 
             // Split full name into first and last name
-            const fullNameInput = document.getElementById('editFirstName').value.trim();
+            const fullNameInput = document.getElementById('editFullName').value.trim();
             const nameParts = fullNameInput.split(' ');
             const firstName = nameParts[0] || '';
             const lastName = nameParts.slice(1).join(' ') || '';
