@@ -57,9 +57,17 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<Car> CreateAsync(Car car)
         {
-            _context.Cars.Add(car);
-            await _context.SaveChangesAsync();
-            return car;
+            try
+            {
+                _context.Cars.Add(car);
+                await _context.SaveChangesAsync();
+                return car;
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+                // Re-throw to be handled by service/controller
+                throw;
+            }
         }
 
         public async Task<Car> UpdateAsync(Car car)
