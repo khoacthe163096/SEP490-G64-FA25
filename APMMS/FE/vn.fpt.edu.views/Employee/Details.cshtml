@@ -91,6 +91,132 @@
         text-align: left;
     }
     
+    /* Custom Notification Popup */
+    .custom-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        min-width: 350px;
+        max-width: 500px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        border-left: 4px solid #28a745;
+    }
+    
+    .custom-notification.error {
+        border-left-color: #dc3545;
+    }
+    
+    .custom-notification.warning {
+        border-left-color: #ffc107;
+    }
+    
+    .custom-notification.info {
+        border-left-color: #17a2b8;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .custom-notification.hide {
+        animation: slideOutRight 0.3s ease-out forwards;
+    }
+    
+    .notification-header {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .notification-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .notification-icon.success {
+        background: #d4edda;
+        color: #28a745;
+    }
+    
+    .notification-icon.error {
+        background: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .notification-icon.warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .notification-icon.info {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+    
+    .notification-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #212529;
+        margin: 0;
+        flex: 1;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+    
+    .notification-close:hover {
+        color: #212529;
+    }
+    
+    .notification-body {
+        padding: 16px 20px;
+        color: #495057;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+    }
+    
     .form-section {
         background: #f8f9fa;
         border-radius: 4px;
@@ -435,14 +561,14 @@
                     if (file) {
                         // Validate file type
                         if (!file.type.startsWith('image/')) {
-                            alert('Vui lòng chọn file hình ảnh hợp lệ');
+                            showNotification('Vui lòng chọn file hình ảnh hợp lệ', 'warning');
                             e.target.value = '';
                             return;
                         }
                         
                         // Validate file size (max 5MB)
                         if (file.size > 5 * 1024 * 1024) {
-                            alert('Kích thước file không được vượt quá 5MB');
+                            showNotification('Kích thước file không được vượt quá 5MB', 'warning');
                             e.target.value = '';
                             return;
                         }
@@ -459,7 +585,7 @@
                             }
                         };
                         reader.onerror = function() {
-                            alert('Có lỗi xảy ra khi đọc file');
+                            showNotification('Có lỗi xảy ra khi đọc file', 'error');
                             e.target.value = '';
                         };
                         reader.readAsDataURL(file);
@@ -677,9 +803,58 @@
             }
         }
 
+        // Custom Notification Function
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.custom-notification');
+            existingNotifications.forEach(notif => {
+                notif.classList.add('hide');
+                setTimeout(() => notif.remove(), 300);
+            });
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `custom-notification ${type}`;
+            
+            const icons = {
+                success: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>',
+                error: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>',
+                warning: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>',
+                info: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451.081.082.381 1.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>'
+            };
+            
+            const titles = {
+                success: 'Thành công',
+                error: 'Lỗi',
+                warning: 'Cảnh báo',
+                info: 'Thông tin'
+            };
+            
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-icon ${type}">
+                        ${icons[type] || icons.info}
+                    </div>
+                    <h6 class="notification-title">${titles[type] || titles.info}</h6>
+                    <button type="button" class="notification-close" onclick="this.closest('.custom-notification').classList.add('hide'); setTimeout(() => this.closest('.custom-notification').remove(), 300);">&times;</button>
+                </div>
+                <div class="notification-body">
+                    ${message}
+                </div>
+            `;
+            
+            // Append to body
+            document.body.appendChild(notification);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                notification.classList.add('hide');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
         function showError(message) {
-            document.getElementById('errorText').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
+            showNotification(message, 'error');
         }
 
         // Handle edit form submission
@@ -688,10 +863,126 @@
             saveEmployeeChanges();
         });
 
+        // Validation functions
+        function validateUsername(username) {
+            if (!username) return { valid: false, message: 'Tên đăng nhập là bắt buộc.' };
+            if (username.length < 6) {
+                return { valid: false, message: 'Tên đăng nhập phải có ít nhất 6 ký tự.' };
+            }
+            if (username.length > 12) {
+                return { valid: false, message: 'Tên đăng nhập không được vượt quá 12 ký tự.' };
+            }
+            const usernameRegex = /^[a-zA-Z0-9_]+$/;
+            if (!usernameRegex.test(username)) {
+                return { valid: false, message: 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới.' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validatePhone(phone) {
+            if (!phone) return { valid: true, message: '' };
+            const phoneClean = phone.replace(/\s+/g, '').replace(/-/g, '');
+            const phoneRegex = /^0[3|5|7|8|9][0-9]{8}$/;
+            if (!phoneRegex.test(phoneClean)) {
+                return { valid: false, message: 'Số điện thoại không hợp lệ. Phải bắt đầu bằng 0 và có 10 chữ số.' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validateCitizenId(citizenId) {
+            if (!citizenId) return { valid: true, message: '' };
+            const citizenIdClean = citizenId.replace(/\s+/g, '').replace(/-/g, '');
+            const citizenIdRegex = /^[0-9]{12}$/;
+            if (!citizenIdRegex.test(citizenIdClean)) {
+                return { valid: false, message: 'CMT/CCCD phải có đúng 12 chữ số.' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validateTaxCode(taxCode) {
+            if (!taxCode) return { valid: true, message: '' };
+            const taxCodeClean = taxCode.replace(/\s+/g, '').replace(/-/g, '');
+            const taxCodeRegex = /^[0-9]{10}$/;
+            if (!taxCodeRegex.test(taxCodeClean)) {
+                return { valid: false, message: 'Mã số thuế phải có đúng 10 chữ số.' };
+            }
+            return { valid: true, message: '' };
+        }
+
+        function validateDOB(dobInput) {
+            if (!dobInput) return { valid: true, message: '' };
+            try {
+                const dobDate = new Date(dobInput + 'T00:00:00');
+                if (isNaN(dobDate.getTime())) {
+                    return { valid: false, message: 'Ngày sinh không hợp lệ.' };
+                }
+                const today = new Date();
+                const age = today.getFullYear() - dobDate.getFullYear();
+                const monthDiff = today.getMonth() - dobDate.getMonth();
+                const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate()) ? age - 1 : age;
+                
+                if (actualAge < 18) {
+                    return { valid: false, message: 'Nhân viên phải đủ 18 tuổi trở lên.' };
+                }
+                if (dobDate > today) {
+                    return { valid: false, message: 'Ngày sinh không được ở tương lai.' };
+                }
+                return { valid: true, message: '' };
+            } catch (e) {
+                return { valid: false, message: 'Ngày sinh không hợp lệ.' };
+            }
+        }
+
         function saveEmployeeChanges() {
             if (!currentEmployee) {
                 showError('Không tìm thấy thông tin nhân viên');
                 return;
+            }
+
+            // Validate required fields
+            if (!currentEmployee.username && !currentEmployee.userName) {
+                showError('Không tìm thấy thông tin username của nhân viên');
+                return;
+            }
+            
+            if (!currentEmployee.id) {
+                showError('Không tìm thấy ID nhân viên. Vui lòng làm mới trang và thử lại.');
+                return;
+            }
+
+            // Validate individual fields
+            const phone = document.getElementById('editPhone').value;
+            const phoneValidation = validatePhone(phone);
+            if (!phoneValidation.valid) {
+                showError(phoneValidation.message);
+                document.getElementById('editPhone').focus();
+                return;
+            }
+
+            const citizenId = document.getElementById('editCitizenId').value;
+            const citizenIdValidation = validateCitizenId(citizenId);
+            if (!citizenIdValidation.valid) {
+                showError(citizenIdValidation.message);
+                document.getElementById('editCitizenId').focus();
+                return;
+            }
+
+            const taxCode = document.getElementById('editTaxCode').value;
+            const taxCodeValidation = validateTaxCode(taxCode);
+            if (!taxCodeValidation.valid) {
+                showError(taxCodeValidation.message);
+                document.getElementById('editTaxCode').focus();
+                return;
+            }
+
+            const dobInput = document.getElementById('editDob');
+            if (dobInput && dobInput.value) {
+                const dobValidation = validateDOB(dobInput.value);
+                if (!dobValidation.valid) {
+                    showError(dobValidation.message);
+                    dobInput.focus();
+                    return;
+                }
             }
 
             // Split full name into first and last name
@@ -702,7 +993,6 @@
 
             // Format date of birth from input (format: dd-MM-yyyy for backend)
             let dobFormatted = null;
-            const dobInput = document.getElementById('editDob');
             if (dobInput && dobInput.value) {
                 try {
                     const dobDate = new Date(dobInput.value);
@@ -717,24 +1007,13 @@
                 }
             }
 
-            // Validate required fields
-            if (!currentEmployee.username && !currentEmployee.userName) {
-                showError('Không tìm thấy thông tin username của nhân viên');
-                return;
-            }
-            
-            if (!currentEmployee.id) {
-                showError('Không tìm thấy ID nhân viên. Vui lòng làm mới trang và thử lại.');
-                return;
-            }
-
             const formData = {
                 username: currentEmployee.username || currentEmployee.userName,
                 password: '', // Empty password - backend should preserve existing password
                 firstName: firstName || null,
                 lastName: lastName || null,
                 email: document.getElementById('editEmail').value || null,
-                phone: document.getElementById('editPhone').value || null,
+                phone: phone.replace(/\s+/g, '').replace(/-/g, ''),
                 gender: document.getElementById('editGender').value || null,
                 image: currentEmployee.image || null,
                 dob: dobFormatted,
@@ -742,9 +1021,9 @@
                 // For now, try to get from response or leave null (backend might preserve existing values)
                 roleId: currentEmployee.roleId || currentEmployee.RoleId || null,
                 branchId: currentEmployee.branchId || currentEmployee.BranchId || null,
-                taxCode: document.getElementById('editTaxCode').value || null,
+                taxCode: taxCode.replace(/\s+/g, '').replace(/-/g, ''),
                 address: document.getElementById('editAddress').value || null,
-                citizenId: document.getElementById('editCitizenId').value || null,
+                citizenId: citizenId.replace(/\s+/g, '').replace(/-/g, ''),
                 statusCode: currentEmployee.statusCode || 'ACTIVE'
             };
             
