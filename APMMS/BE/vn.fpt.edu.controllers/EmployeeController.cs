@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.IO;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Hosting;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -17,12 +19,14 @@ namespace BE.vn.fpt.edu.controllers
         private readonly IEmployeeService _employeeService;
         private readonly CloudinaryService _cloudinaryService;
         private readonly CarMaintenanceDbContext _dbContext;
+        private readonly IWebHostEnvironment _environment;
 
-        public EmployeeController(IEmployeeService employeeService, CloudinaryService cloudinaryService, CarMaintenanceDbContext dbContext)
+        public EmployeeController(IEmployeeService employeeService, CloudinaryService cloudinaryService, CarMaintenanceDbContext dbContext, IWebHostEnvironment environment)
         {
             _employeeService = employeeService;
             _cloudinaryService = cloudinaryService;
             _dbContext = dbContext;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -54,12 +58,22 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
+                // Validate model
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
+                }
+
                 // Get RoleId from JWT claims
                 var roleIdClaim = User.FindFirst("RoleId")?.Value;
                 var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
                 
                 // If logged in as Branch Manager (roleId = 2), auto-set branchId from JWT
-                if (roleId == 2 && dto.BranchId == null || dto.BranchId == 0)
+                if (roleId == 2 && (dto.BranchId == null || dto.BranchId == 0))
                 {
                     var branchIdClaim = User.FindFirst("BranchId")?.Value;
                     if (long.TryParse(branchIdClaim, out var branchId))
@@ -68,7 +82,11 @@ namespace BE.vn.fpt.edu.controllers
                     }
                 }
                 
-                var result = await _employeeService.CreateAsync(dto);
+                // Get current user ID from JWT claims for audit log
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? createdByUserId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+
+                var result = await _employeeService.CreateAsync(dto, createdByUserId);
                 return Ok(new { success = true, data = result, message = "Employee created successfully" });
             }
             catch (ArgumentException ex)
@@ -77,7 +95,15 @@ namespace BE.vn.fpt.edu.controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message, stackTrace = ex.StackTrace, innerException = ex.InnerException?.Message });
+                var isDevelopment = _environment.IsDevelopment();
+                return StatusCode(500, new 
+                { 
+                    success = false, 
+                    message = "Internal server error", 
+                    error = ex.Message,
+                    stackTrace = isDevelopment ? ex.StackTrace : null,
+                    innerException = isDevelopment ? ex.InnerException?.Message : null
+                });
             }
         }
 
@@ -87,7 +113,21 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _employeeService.UpdateAsync(id, dto);
+                // Validate model (chỉ validate các field được gửi lên)
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
+                }
+
+                // Get current user ID from JWT claims for audit log
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? modifiedByUserId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+
+                var result = await _employeeService.UpdateAsync(id, dto, modifiedByUserId);
                 if (result == null) return NotFound(new { success = false, message = "Employee not found" });
                 return Ok(new { success = true, data = result, message = "Employee updated successfully" });
             }
@@ -97,7 +137,14 @@ namespace BE.vn.fpt.edu.controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                var isDevelopment = _environment.IsDevelopment();
+                return StatusCode(500, new 
+                { 
+                    success = false, 
+                    message = "Internal server error", 
+                    error = ex.Message,
+                    stackTrace = isDevelopment ? ex.StackTrace : null
+                });
             }
         }
 
@@ -136,7 +183,14 @@ namespace BE.vn.fpt.edu.controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                var isDevelopment = _environment.IsDevelopment();
+                return StatusCode(500, new 
+                { 
+                    success = false, 
+                    message = "Internal server error", 
+                    error = ex.Message,
+                    stackTrace = isDevelopment ? ex.StackTrace : null
+                });
             }
         }
 
@@ -189,7 +243,14 @@ namespace BE.vn.fpt.edu.controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                var isDevelopment = _environment.IsDevelopment();
+                return StatusCode(500, new 
+                { 
+                    success = false, 
+                    message = "Internal server error", 
+                    error = ex.Message,
+                    stackTrace = isDevelopment ? ex.StackTrace : null
+                });
             }
         }
 
