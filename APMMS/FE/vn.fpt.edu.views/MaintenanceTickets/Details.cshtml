@@ -85,7 +85,7 @@
                                 <i class="fas fa-cogs me-2"></i>
                                 Phụ tùng sử dụng
                             </h5>
-                            <button class="btn btn-sm btn-primary" id="addComponentBtn">
+                            <button class="btn btn-sm btn-primary" id="addComponentBtn" style="display: none;">
                                 <i class="fas fa-plus me-1"></i>
                                 Thêm phụ tùng
                             </button>
@@ -215,12 +215,50 @@
                     <div class="mb-3">
                         <label for="componentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
                         <input type="number" class="form-control" id="componentUnitPrice" min="0" step="1000">
+                        <small class="text-muted">Đơn giá sẽ tự động điền từ thông tin phụ tùng, bạn có thể chỉnh sửa nếu cần</small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
                 <button type="button" class="btn btn-primary" id="saveComponentBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Component Modal -->
+<div class="modal fade" id="editComponentModal" tabindex="-1" aria-labelledby="editComponentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editComponentModalLabel">Chỉnh sửa phụ tùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editComponentForm">
+                    <input type="hidden" id="editComponentId">
+                    <div class="mb-3">
+                        <label for="editComponentSelect" class="form-label">Phụ tùng <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editComponentSelect" required>
+                            <option value="">Chọn phụ tùng</option>
+                            <!-- Will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editComponentQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="editComponentQuantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editComponentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
+                        <input type="number" class="form-control" id="editComponentUnitPrice" min="0" step="1000">
+                        <small class="text-muted">Đơn giá sẽ tự động điền từ thông tin phụ tùng, bạn có thể chỉnh sửa nếu cần</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="updateComponentBtn">Cập nhật</button>
             </div>
         </div>
     </div>
@@ -259,8 +297,21 @@ $(document).ready(function() {
     });
     
     $('#addComponentBtn').on('click', function() {
-        loadComponents();
+        loadComponentsForAdd();
         $('#addComponentModal').modal('show');
+    });
+    
+    // Auto-fill unit price when component is selected
+    $(document).on('change', '#componentSelect', function() {
+        const selectedOption = $(this).find('option:selected');
+        const price = selectedOption.data('price') || 0;
+        $('#componentUnitPrice').val(price);
+    });
+    
+    $(document).on('change', '#editComponentSelect', function() {
+        const selectedOption = $(this).find('option:selected');
+        const price = selectedOption.data('price') || 0;
+        $('#editComponentUnitPrice').val(price);
     });
     
     $('#saveServiceTaskBtn').on('click', function() {
@@ -269,6 +320,10 @@ $(document).ready(function() {
     
     $('#saveComponentBtn').on('click', function() {
         saveComponent();
+    });
+    
+    $('#updateComponentBtn').on('click', function() {
+        updateComponent();
     });
     
     $('#editTicketBtn').on('click', function() {
@@ -310,10 +365,13 @@ function loadMaintenanceTicketDetails() {
                 displayCheckinInfo(data.data);
                 displayStatusAndActions(data.data);
                 displayTimeline(data.data);
-                displayCostSummary(data.data);
+                
+                // Show/hide add component button based on status
+                const canEditComponents = data.data.statusCode === 'PENDING' || data.data.statusCode === 'ASSIGNED' || data.data.statusCode === 'IN_PROGRESS';
+                $('#addComponentBtn').toggle(canEditComponents);
+                
                 loadServiceTasks();
-                // loadComponents(); // Tạm thời comment vì chức năng phụ tùng chưa làm
-                $('#componentsList').html('<p class="text-muted text-center py-3"><i class="fas fa-info-circle me-2"></i>Chức năng phụ tùng đang được phát triển</p>');
+                loadComponents(); // This will also update cost summary
             } else {
                 showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
             }
@@ -755,25 +813,30 @@ function displayTimeline(data) {
             timeline.html(timelineHtml);
 }
 
-function displayCostSummary(data) {
+function displayCostSummary(data, componentTotal = 0) {
     const costSummary = $('#costSummary');
-    const estimatedCost = data.totalEstimatedCost || 0;
+    const estimatedCost = data?.totalEstimatedCost || 0;
+    const laborCost = estimatedCost - componentTotal; // Giả sử estimatedCost bao gồm cả nhân công
     
     costSummary.html(`
-        <div class="text-center">
-            <h4 class="text-primary">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(estimatedCost)}</h4>
-            <p class="text-muted mb-0">Chi phí ước tính</p>
+        <div class="text-center mb-3">
+            <h4 class="text-primary">${formatCurrency(estimatedCost)}</h4>
+            <p class="text-muted mb-0">Tổng chi phí ước tính</p>
         </div>
         <hr>
-        <div class="row text-center">
+        <div class="row mb-2">
             <div class="col-6">
-                <h6 class="text-muted">Phụ tùng</h6>
-                <p class="mb-0">0 VNĐ</p>
+                <h6 class="text-muted small">Phụ tùng</h6>
+                <p class="mb-0 fw-bold">${formatCurrency(componentTotal)}</p>
             </div>
             <div class="col-6">
-                <h6 class="text-muted">Nhân công</h6>
-                <p class="mb-0">0 VNĐ</p>
+                <h6 class="text-muted small">Nhân công</h6>
+                <p class="mb-0 fw-bold">${formatCurrency(Math.max(0, laborCost))}</p>
             </div>
+        </div>
+        <hr>
+        <div class="text-center">
+            <small class="text-muted">Chi phí sẽ được cập nhật tự động khi thêm/sửa phụ tùng</small>
         </div>
     `);
 }
@@ -888,14 +951,10 @@ function getTaskBorderColor(statusCode) {
 }
 
 function loadComponents() {
-    // Tạm thời comment vì chức năng phụ tùng chưa làm
-    $('#componentsList').html('<p class="text-muted text-center py-3"><i class="fas fa-info-circle me-2"></i>Chức năng phụ tùng đang được phát triển</p>');
-    
-    /* 
     const token = localStorage.getItem('authToken');
     fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}`, {
         headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json'
         }
     })
@@ -907,39 +966,61 @@ function loadComponents() {
         })
         .then(data => {
             if (data.success) {
-                displayComponents(data.data);
+                displayComponents(data.data || []);
+                updateCostSummary();
             }
         })
         .catch(error => {
             console.error('Error loading components:', error);
-            $('#componentsList').html('<p class="text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
+            $('#componentsList').html('<p class="text-muted text-center py-3 text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
         });
-    */
 }
 
 function displayComponents(components) {
     const container = $('#componentsList');
     
-    if (components.length === 0) {
-        container.html('<p class="text-muted">Chưa sử dụng phụ tùng nào</p>');
+    if (!components || components.length === 0) {
+        container.html('<p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa sử dụng phụ tùng nào</p>');
         return;
     }
     
-    let html = '<div class="table-responsive"><table class="table table-sm"><thead><tr><th>Phụ tùng</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>';
+    let html = '<div class="table-responsive"><table class="table table-hover table-sm"><thead class="table-light"><tr><th>Phụ tùng</th><th>Loại</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody>';
     
+    let totalCost = 0;
     components.forEach(component => {
-        const total = component.quantity * (component.unitPrice || 0);
+        const total = component.totalPrice || (component.quantity * (component.unitPrice || 0));
+        totalCost += total;
+        const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
         html += `
             <tr>
-                <td>${component.componentName || 'N/A'}</td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${component.componentImageUrl ? `<img src="${component.componentImageUrl}" alt="${component.componentName || ''}" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` : ''}
+                        <div>
+                            <strong>${escapeHtml(component.componentName || 'N/A')}</strong>
+                            ${component.componentCode ? `<br><small class="text-muted">Mã: ${escapeHtml(component.componentCode)}</small>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td>${escapeHtml(component.typeComponentName || '-')}</td>
                 <td>${component.quantity}</td>
-                <td>${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice || 0)}</td>
-                <td>${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total)}</td>
+                <td>${formatCurrency(component.unitPrice || 0)}</td>
+                <td><strong>${formatCurrency(total)}</strong></td>
+                <td>
+                    ${canEdit ? `
+                        <button class="btn btn-sm btn-warning me-1" onclick="editComponent(${component.id})" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteComponent(${component.id})" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : '<span class="text-muted">-</span>'}
+                </td>
             </tr>
         `;
     });
     
-    html += '</tbody></table></div>';
+    html += `</tbody><tfoot class="table-light"><tr><th colspan="4" class="text-end">Tổng tiền phụ tùng:</th><th colspan="2">${formatCurrency(totalCost)}</th></tr></tfoot></table></div>`;
     container.html(html);
 }
 
@@ -1258,8 +1339,248 @@ function saveServiceTask() {
 }
 
 function saveComponent() {
-    // Implementation for saving component
-    showAlert('Chức năng thêm phụ tùng đang được phát triển', 'info');
+    const componentId = $('#componentSelect').val();
+    const quantity = parseInt($('#componentQuantity').val());
+    const unitPrice = parseFloat($('#componentUnitPrice').val()) || null;
+    
+    if (!componentId || !quantity || quantity <= 0) {
+        showAlert('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        return;
+    }
+    
+    const formData = {
+        maintenanceTicketId: maintenanceTicketId,
+        componentId: parseInt(componentId),
+        quantity: quantity,
+        unitPrice: unitPrice
+    };
+    
+    const token = localStorage.getItem('authToken');
+    const btn = $('#saveComponentBtn');
+    const originalText = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
+    btn.prop('disabled', true);
+    
+    fetch(`${API_BASE_URL}/TicketComponent`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        
+        if (data.success) {
+            showAlert('Thêm phụ tùng thành công!', 'success');
+            $('#addComponentModal').modal('hide');
+            $('#componentForm')[0].reset();
+            loadComponents();
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể thêm phụ tùng'), 'danger');
+        }
+    })
+    .catch(error => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi thêm phụ tùng', 'danger');
+    });
+}
+
+function editComponent(componentId) {
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/TicketComponent/${componentId}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const component = data.data;
+            $('#editComponentId').val(component.id);
+            $('#editComponentSelect').val(component.componentId);
+            $('#editComponentQuantity').val(component.quantity);
+            $('#editComponentUnitPrice').val(component.unitPrice || '');
+            loadComponentsForEdit();
+            $('#editComponentModal').modal('show');
+        } else {
+            showAlert('Lỗi tải thông tin phụ tùng: ' + data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi tải thông tin phụ tùng', 'danger');
+    });
+}
+
+function updateComponent() {
+    const id = $('#editComponentId').val();
+    const componentId = $('#editComponentSelect').val();
+    const quantity = parseInt($('#editComponentQuantity').val());
+    const unitPrice = parseFloat($('#editComponentUnitPrice').val()) || null;
+    
+    if (!id || !componentId || !quantity || quantity <= 0) {
+        showAlert('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+        return;
+    }
+    
+    const formData = {
+        maintenanceTicketId: maintenanceTicketId,
+        componentId: parseInt(componentId),
+        quantity: quantity,
+        unitPrice: unitPrice
+    };
+    
+    const token = localStorage.getItem('authToken');
+    const btn = $('#updateComponentBtn');
+    const originalText = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang cập nhật...');
+    btn.prop('disabled', true);
+    
+    fetch(`${API_BASE_URL}/TicketComponent/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        
+        if (data.success) {
+            showAlert('Cập nhật phụ tùng thành công!', 'success');
+            $('#editComponentModal').modal('hide');
+            loadComponents();
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật phụ tùng'), 'danger');
+        }
+    })
+    .catch(error => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi cập nhật phụ tùng', 'danger');
+    });
+}
+
+function deleteComponent(componentId) {
+    showConfirmModal(
+        '<p>Bạn có chắc chắn muốn xóa phụ tùng này khỏi phiếu bảo dưỡng?</p>',
+        function() {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/TicketComponent/${componentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Xóa phụ tùng thành công!', 'success');
+                    loadComponents();
+                } else {
+                    showAlert('Lỗi: ' + (data.message || 'Không thể xóa phụ tùng'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi xóa phụ tùng', 'danger');
+            });
+        }
+    );
+}
+
+function loadComponentsForAdd() {
+    const token = localStorage.getItem('authToken');
+    const branchId = maintenanceTicketData?.branchId;
+    if (!branchId) {
+        showAlert('Không tìm thấy thông tin chi nhánh', 'warning');
+        return;
+    }
+    
+    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(response => response.json())
+    .then(components => {
+        const select = $('#componentSelect');
+        select.empty();
+        select.append('<option value="">-- Chọn phụ tùng --</option>');
+        if (components && Array.isArray(components)) {
+            components.forEach(comp => {
+                select.append(`<option value="${comp.id}" data-price="${comp.unitPrice || 0}">${comp.name} - ${formatCurrency(comp.unitPrice || 0)}</option>`);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading components:', error);
+        showAlert('Lỗi tải danh sách phụ tùng', 'danger');
+    });
+}
+
+function loadComponentsForEdit() {
+    const token = localStorage.getItem('authToken');
+    const branchId = maintenanceTicketData?.branchId;
+    if (!branchId) {
+        showAlert('Không tìm thấy thông tin chi nhánh', 'warning');
+        return;
+    }
+    
+    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(response => response.json())
+    .then(components => {
+        const select = $('#editComponentSelect');
+        select.empty();
+        select.append('<option value="">-- Chọn phụ tùng --</option>');
+        if (components && Array.isArray(components)) {
+            components.forEach(comp => {
+                select.append(`<option value="${comp.id}" data-price="${comp.unitPrice || 0}">${comp.name} - ${formatCurrency(comp.unitPrice || 0)}</option>`);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error loading components:', error);
+        showAlert('Lỗi tải danh sách phụ tùng', 'danger');
+    });
+}
+
+function updateCostSummary() {
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}/total-cost`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const componentTotal = data.data.totalCost || 0;
+            const estimatedCost = maintenanceTicketData?.totalEstimatedCost || 0;
+            displayCostSummary(maintenanceTicketData, componentTotal);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading total cost:', error);
+    });
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 }
 
 function showAlert(message, type) {
