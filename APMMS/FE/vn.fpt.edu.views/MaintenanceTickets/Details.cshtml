@@ -165,7 +165,7 @@
     </div>
 </div>
 
-<!-- Add Service Task Modal -->
+<!-- Add/Edit Service Task Modal -->
 <div class="modal fade" id="addServiceTaskModal" tabindex="-1" aria-labelledby="addServiceTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -175,6 +175,7 @@
             </div>
             <div class="modal-body">
                 <form id="serviceTaskForm">
+                    <input type="hidden" id="taskId">
                     <div class="mb-3">
                         <label for="taskName" class="form-label">Tên công việc <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="taskName" required>
@@ -184,8 +185,22 @@
                         <textarea class="form-control" id="taskDescription" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="taskStandardLaborTime" class="form-label">Thời gian chuẩn (giờ)</label>
+                        <input type="number" class="form-control" id="taskStandardLaborTime" min="0" max="999.99" step="0.01" placeholder="VD: 0.5">
+                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (giờ)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskActualLaborTime" class="form-label">Thời gian thực tế (giờ)</label>
+                        <input type="number" class="form-control" id="taskActualLaborTime" min="0" max="999.99" step="0.01" placeholder="VD: 0.5">
+                        <small class="text-muted">Thời gian thực tế thực hiện công việc. Nếu để trống, sẽ lấy bằng thời gian chuẩn. <strong>Lưu ý:</strong> Phí nhân công được tính dựa trên thời gian chuẩn, không phải thời gian thực tế.</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="taskNote" class="form-label">Ghi chú</label>
                         <textarea class="form-control" id="taskNote" rows="2"></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Phí nhân công sẽ được tính tự động = Thời gian chuẩn × Giá giờ công của chi nhánh
                     </div>
                 </form>
             </div>
@@ -252,8 +267,14 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="editComponentQuantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                        <label for="editComponentQuantity" class="form-label">Số lượng ban đầu <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="editComponentQuantity" min="1" required>
+                        <small class="text-muted">Số lượng phụ tùng đã lấy từ kho</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editComponentActualQuantity" class="form-label">Số lượng thực tế sử dụng</label>
+                        <input type="number" class="form-control" id="editComponentActualQuantity" min="0" step="0.01">
+                        <small class="text-muted">Số lượng thực tế đã sử dụng (có thể nhập số thập phân, ví dụ: 0.8). Nếu để trống, sẽ lấy bằng số lượng ban đầu. Chi phí sẽ được tính dựa trên số lượng thực tế.</small>
                     </div>
                     <div class="mb-3">
                         <label for="editComponentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
@@ -320,6 +341,41 @@
     </div>
 </div>
 
+<!-- Edit Labor Time Modal -->
+<div class="modal fade" id="editLaborTimeModal" tabindex="-1" aria-labelledby="editLaborTimeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editLaborTimeModalLabel">Chỉnh sửa thời gian lao động</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editLaborTimeForm">
+                    <input type="hidden" id="editLaborTimeTaskId">
+                    <div class="mb-3">
+                        <label for="editStandardLaborTime" class="form-label">Thời gian chuẩn (giờ)</label>
+                        <input type="number" class="form-control" id="editStandardLaborTime" min="0" max="999.99" step="0.01">
+                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (từ 0 đến 999.99 giờ)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editActualLaborTime" class="form-label">Thời gian thực tế (giờ) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="editActualLaborTime" min="0.01" max="999.99" step="0.01" required>
+                        <small class="text-muted">Nhập thời gian thực tế thực hiện công việc (từ 0.01 đến 999.99 giờ)</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Phí nhân công sẽ được tính tự động = Thời gian chuẩn × Giá giờ công của chi nhánh
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="saveLaborTimeBtn">Lưu</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -349,7 +405,20 @@ $(document).ready(function() {
     
     // Modal events
     $('#addServiceTaskBtn').on('click', function() {
+        // Reset form và set mode là "Thêm"
+        $('#serviceTaskForm')[0].reset();
+        $('#taskId').val('');
+        $('#addServiceTaskModalLabel').text('Thêm công việc');
+        $('#saveServiceTaskBtn').html('Lưu');
         $('#addServiceTaskModal').modal('show');
+    });
+    
+    // Reset form khi đóng modal
+    $('#addServiceTaskModal').on('hidden.bs.modal', function() {
+        $('#serviceTaskForm')[0].reset();
+        $('#taskId').val('');
+        $('#addServiceTaskModalLabel').text('Thêm công việc');
+        $('#saveServiceTaskBtn').html('Lưu');
     });
     
     $('#addComponentBtn').on('click', function() {
@@ -443,6 +512,19 @@ $(document).ready(function() {
     $(document).on('click', '#assignTechnicianBtn', function() {
         openAssignTechniciansModal();
     });
+    
+    // Save labor time
+    $('#saveLaborTimeBtn').on('click', function() {
+        saveLaborTime();
+    });
+    
+    // Reset labor time modal when closed
+    $('#editLaborTimeModal').on('hidden.bs.modal', function() {
+        $('#editLaborTimeForm')[0].reset();
+        $('#editLaborTimeTaskId').val('');
+        $('#editStandardLaborTime').val('');
+        $('#editActualLaborTime').val('');
+    });
 });
 
 function loadMaintenanceTicketDetails() {
@@ -482,6 +564,7 @@ function loadMaintenanceTicketDetails() {
                 
                 loadServiceTasks();
                 loadComponents(); // This will also update cost summary
+                // Cost summary will be updated after components and tasks are loaded
             } else {
                 showAlert('Lỗi tải dữ liệu: ' + data.message, 'danger');
             }
@@ -657,12 +740,14 @@ function displayStatusAndActions(data) {
             `;
             break;
         case 'IN_PROGRESS':
+            // Kiểm tra xem có công việc nào chưa hoàn thành không
+            // Sẽ được cập nhật sau khi loadServiceTasks()
             buttons = `
                 <button class="btn btn-info mb-2" onclick="openAssignTechniciansModal()">
                     <i class="fas fa-user-plus me-1"></i>
                     Thêm kỹ thuật viên
                 </button>
-                <button class="btn btn-success mb-2" onclick="completeMaintenance(${data.id})">
+                <button class="btn btn-success mb-2" id="completeMaintenanceBtn" onclick="completeMaintenance(${data.id})">
                     <i class="fas fa-check me-1"></i>
                     Hoàn thành
                 </button>
@@ -923,10 +1008,9 @@ function displayTimeline(data) {
             timeline.html(timelineHtml);
 }
 
-function displayCostSummary(data, componentTotal = 0) {
+function displayCostSummary(data, componentTotal = 0, laborCostTotal = 0) {
     const costSummary = $('#costSummary');
-    const estimatedCost = data?.totalEstimatedCost || 0;
-    const laborCost = estimatedCost - componentTotal; // Giả sử estimatedCost bao gồm cả nhân công
+    const estimatedCost = data?.totalEstimatedCost || (componentTotal + laborCostTotal);
     
     costSummary.html(`
         <div class="text-center mb-3">
@@ -934,19 +1018,19 @@ function displayCostSummary(data, componentTotal = 0) {
             <p class="text-muted mb-0">Tổng chi phí ước tính</p>
         </div>
         <hr>
-        <div class="row mb-2">
-            <div class="col-6">
-                <h6 class="text-muted small">Phụ tùng</h6>
-                <p class="mb-0 fw-bold">${formatCurrency(componentTotal)}</p>
+        <div class="mb-2">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted small">Tổng phụ tùng:</span>
+                <strong>${formatCurrency(componentTotal)}</strong>
             </div>
-            <div class="col-6">
-                <h6 class="text-muted small">Nhân công</h6>
-                <p class="mb-0 fw-bold">${formatCurrency(Math.max(0, laborCost))}</p>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted small">Tổng phí nhân công:</span>
+                <strong class="text-success">${formatCurrency(laborCostTotal)}</strong>
             </div>
         </div>
         <hr>
         <div class="text-center">
-            <small class="text-muted">Chi phí sẽ được cập nhật tự động khi thêm/sửa phụ tùng</small>
+            <small class="text-muted">Chi phí sẽ được cập nhật tự động khi thêm/sửa phụ tùng hoặc công việc</small>
         </div>
     `);
 }
@@ -968,10 +1052,15 @@ function loadServiceTasks() {
                 console.error('Error loading service tasks:', data.message);
                 $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
             }
+            // Update cost summary after loading service tasks
+            // This ensures labor cost is included in the summary
+            updateCostSummary();
         })
         .catch(error => {
             console.error('Error loading service tasks:', error);
             $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
+            // Still try to update cost summary even if service tasks fail
+            updateCostSummary();
         });
 }
 
@@ -980,12 +1069,28 @@ function displayServiceTasks(tasks) {
     
     if (!tasks || tasks.length === 0) {
         container.html('<p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa có công việc nào</p>');
+        // Nếu không có công việc nào, vẫn cho phép hoàn thành phiếu
+        updateCompleteButtonState([]);
         return;
     }
+    
+    const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
+    
+    // Kiểm tra công việc chưa hoàn thành
+    const incompleteTasks = tasks.filter(t => t.statusCode !== 'DONE' && t.statusCode !== 'COMPLETED');
+    
+    // Cập nhật trạng thái nút "Hoàn thành"
+    updateCompleteButtonState(incompleteTasks);
     
     let html = '';
     tasks.forEach(task => {
         const statusBadge = getTaskStatusBadge(task.statusCode);
+        const standardLaborTime = task.standardLaborTime ?? null;
+        const actualLaborTime = task.actualLaborTime ?? 0;
+        const laborCost = task.laborCost || 0;
+        const standardLaborTimeDisplay = standardLaborTime !== null ? standardLaborTime.toFixed(2) : '0.00';
+        const standardLaborTimeForModal = standardLaborTime !== null ? standardLaborTime : 'null';
+        
         html += `
             <div class="card mb-2 border-start border-3 ${getTaskBorderColor(task.statusCode)}">
                 <div class="card-body">
@@ -994,9 +1099,43 @@ function displayServiceTasks(tasks) {
                             <h6 class="mb-1 fw-bold">${escapeHtml(task.taskName || 'N/A')}</h6>
                             ${task.description ? `<p class="mb-1 text-muted small">${escapeHtml(task.description)}</p>` : ''}
                             ${task.note ? `<div class="mt-2"><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${escapeHtml(task.note)}</small></div>` : ''}
+                            
+                            <!-- Labor Cost Information -->
+                            <div class="mt-2 row g-2">
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Thời gian chuẩn:</small>
+                                    <strong>${standardLaborTimeDisplay} giờ</strong>
+                                    ${canEdit ? `
+                                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian chuẩn">
+                                            <i class="fas fa-edit text-primary"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Thời gian thực tế:</small>
+                                    <strong class="${actualLaborTime !== (standardLaborTime ?? 0) ? 'text-warning' : ''}">${actualLaborTime.toFixed(2)} giờ</strong>
+                                    ${canEdit ? `
+                                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian thực tế">
+                                            <i class="fas fa-edit text-primary"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted d-block">Phí nhân công:</small>
+                                    <strong class="text-success">${formatCurrency(laborCost)}</strong>
+                                </div>
+                            </div>
                         </div>
                         <div class="ms-3 text-end">
                             ${statusBadge}
+                            ${canEdit ? `
+                                <button class="btn btn-sm btn-warning mt-2 me-1" onclick="editServiceTask(${task.id})" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger mt-2 me-1" onclick="deleteServiceTask(${task.id})" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : ''}
                             ${task.statusCode === 'PENDING' ? `
                                 <button class="btn btn-sm btn-primary mt-2" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')" title="Bắt đầu">
                                     <i class="fas fa-play"></i>
@@ -1032,7 +1171,8 @@ function updateTaskStatus(taskId, newStatus) {
     .then(data => {
         if (data.success) {
             showAlert('Cập nhật trạng thái công việc thành công!', 'success');
-            loadServiceTasks(); // Reload danh sách
+            loadServiceTasks(); // Reload danh sách (sẽ tự động cập nhật trạng thái nút "Hoàn thành")
+            updateCostSummary(); // Update cost summary
         } else {
             showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái'), 'danger');
         }
@@ -1040,6 +1180,144 @@ function updateTaskStatus(taskId, newStatus) {
     .catch(error => {
         console.error('Error:', error);
         showAlert('Có lỗi xảy ra khi cập nhật trạng thái', 'danger');
+    });
+}
+
+function openEditLaborTimeModal(taskId) {
+    const token = localStorage.getItem('authToken');
+    
+    // Show loading
+    $('#editLaborTimeTaskId').val(taskId);
+    $('#editStandardLaborTime').val('');
+    $('#editActualLaborTime').val('');
+    $('#editLaborTimeModal').modal('show');
+    
+    // Load task để lấy thông tin hiện tại
+    fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const task = data.data;
+            // Set giá trị vào form
+            if (task.standardLaborTime !== null && task.standardLaborTime !== undefined) {
+                $('#editStandardLaborTime').val(task.standardLaborTime);
+            } else {
+                $('#editStandardLaborTime').val('');
+            }
+            if (task.actualLaborTime !== null && task.actualLaborTime !== undefined) {
+                $('#editActualLaborTime').val(task.actualLaborTime);
+            } else {
+                $('#editActualLaborTime').val('');
+            }
+        } else {
+            showAlert('Không thể tải thông tin công việc', 'danger');
+            $('#editLaborTimeModal').modal('hide');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading task:', error);
+        showAlert('Có lỗi xảy ra khi tải thông tin công việc', 'danger');
+        $('#editLaborTimeModal').modal('hide');
+    });
+}
+
+function saveLaborTime() {
+    const taskId = $('#editLaborTimeTaskId').val();
+    const standardLaborTimeInput = $('#editStandardLaborTime').val();
+    const actualLaborTimeInput = $('#editActualLaborTime').val();
+    
+    if (!taskId) {
+        showAlert('Không tìm thấy ID công việc', 'warning');
+        return;
+    }
+    
+    if (!actualLaborTimeInput || actualLaborTimeInput === '') {
+        showAlert('Vui lòng nhập thời gian thực tế', 'warning');
+        return;
+    }
+    
+    const actualLaborTime = parseFloat(actualLaborTimeInput);
+    if (actualLaborTime < 0.01 || actualLaborTime > 999.99) {
+        showAlert('Thời gian thực tế phải từ 0.01 đến 999.99 giờ', 'warning');
+        return;
+    }
+    
+    const standardLaborTime = standardLaborTimeInput && standardLaborTimeInput !== '' 
+        ? parseFloat(standardLaborTimeInput) 
+        : null;
+    if (standardLaborTime !== null && (standardLaborTime < 0 || standardLaborTime > 999.99)) {
+        showAlert('Thời gian chuẩn phải từ 0 đến 999.99 giờ', 'warning');
+        return;
+    }
+    
+    const token = localStorage.getItem('authToken');
+    const btn = $('#saveLaborTimeBtn');
+    const originalText = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
+    btn.prop('disabled', true);
+    
+    // Load task hiện tại để lấy đầy đủ thông tin
+    fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(taskData => {
+        if (!taskData.success) {
+            throw new Error(taskData.message || 'Không thể tải thông tin công việc');
+        }
+        
+        const task = taskData.data;
+        
+        // Update task với thông tin mới
+        const updateData = {
+            id: parseInt(taskId),
+            maintenanceTicketId: task.maintenanceTicketId,
+            taskName: task.taskName,
+            description: task.description || null,
+            statusCode: task.statusCode,
+            note: task.note || null,
+            serviceCategoryId: task.serviceCategoryId || null,
+            standardLaborTime: standardLaborTime,
+            actualLaborTime: actualLaborTime
+        };
+        
+        // Gọi API update
+        return fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+            body: JSON.stringify(updateData)
+        });
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        
+        if (data.success) {
+            showAlert('Cập nhật thời gian lao động thành công!', 'success');
+            $('#editLaborTimeModal').modal('hide');
+            loadServiceTasks(); // Reload danh sách
+            updateCostSummary(); // Update cost summary
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật thời gian lao động'), 'danger');
+        }
+    })
+    .catch(error => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi cập nhật thời gian lao động: ' + error.message, 'danger');
     });
 }
 
@@ -1077,12 +1355,16 @@ function loadComponents() {
         .then(data => {
             if (data.success) {
                 displayComponents(data.data || []);
+                // Update cost summary after displaying components
+                // This will also load service tasks to calculate labor cost
                 updateCostSummary();
             }
         })
         .catch(error => {
             console.error('Error loading components:', error);
             $('#componentsList').html('<p class="text-muted text-center py-3 text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
+            // Still try to update cost summary even if components fail
+            updateCostSummary();
         });
 }
 
@@ -1094,13 +1376,17 @@ function displayComponents(components) {
         return;
     }
     
-    let html = '<div class="table-responsive"><table class="table table-hover table-sm"><thead class="table-light"><tr><th>Phụ tùng</th><th>Loại</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody>';
+    let html = '<div class="table-responsive"><table class="table table-hover table-sm"><thead class="table-light"><tr><th>Phụ tùng</th><th>Loại</th><th>Số lượng ban đầu</th><th>Số lượng thực tế</th><th>Đơn giá</th><th>Thành tiền</th><th>Thao tác</th></tr></thead><tbody>';
     
     let totalCost = 0;
     components.forEach(component => {
-        const total = component.totalPrice || (component.quantity * (component.unitPrice || 0));
+        const actualQuantity = component.actualQuantity ?? component.quantity;
+        const total = component.totalPrice || (actualQuantity * (component.unitPrice || 0));
         totalCost += total;
         const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
+        const quantityDisplay = component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity
+            ? `<span>${component.quantity}</span> <small class="text-muted">→</small> <strong class="text-warning">${actualQuantity}</strong>`
+            : `<span>${component.quantity}</span>`;
         html += `
             <tr>
                 <td>
@@ -1114,6 +1400,7 @@ function displayComponents(components) {
                 </td>
                 <td>${escapeHtml(component.typeComponentName || '-')}</td>
                 <td>${component.quantity}</td>
+                <td>${actualQuantity.toFixed(2)}${component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity ? ' <span class="badge bg-warning">Đã điều chỉnh</span>' : ''}</td>
                 <td>${formatCurrency(component.unitPrice || 0)}</td>
                 <td><strong>${formatCurrency(total)}</strong></td>
                 <td>
@@ -1130,7 +1417,7 @@ function displayComponents(components) {
         `;
     });
     
-    html += `</tbody><tfoot class="table-light"><tr><th colspan="4" class="text-end">Tổng tiền phụ tùng:</th><th colspan="2">${formatCurrency(totalCost)}</th></tr></tfoot></table></div>`;
+    html += `</tbody><tfoot class="table-light"><tr><th colspan="5" class="text-end">Tổng tiền phụ tùng:</th><th colspan="2">${formatCurrency(totalCost)}</th></tr></tfoot></table></div>`;
     container.html(html);
 }
 
@@ -1238,12 +1525,89 @@ function executeStartMaintenance(ticketId) {
 }
 
 function completeMaintenance(ticketId) {
-    showConfirmModal(
-        '<p>Bạn có chắc chắn muốn hoàn thành phiếu bảo dưỡng này không?</p>',
-        function() {
-            executeCompleteMaintenance(ticketId);
+    // Kiểm tra lại công việc chưa hoàn thành trước khi hiển thị confirm
+    const token = localStorage.getItem('authToken');
+    fetch(`${API_BASE_URL}/ServiceTask/by-ticket/${maintenanceTicketId}`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
         }
-    );
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const tasks = data.data || [];
+            const incompleteTasks = tasks.filter(t => t.statusCode !== 'DONE' && t.statusCode !== 'COMPLETED');
+            
+            if (incompleteTasks.length > 0) {
+                const taskNames = incompleteTasks.slice(0, 5).map(t => t.taskName || `Task ${t.id}`).join(', ');
+                const message = incompleteTasks.length > 5
+                    ? `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>Cảnh báo!</strong></div><p>Không thể hoàn thành phiếu. Còn <strong>${incompleteTasks.length} công việc</strong> chưa hoàn thành:</p><ul><li>${taskNames}</li><li>... và ${incompleteTasks.length - 5} công việc khác</li></ul><p class="mb-0">Vui lòng hoàn thành tất cả công việc trước khi hoàn thành phiếu.</p>`
+                    : `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i><strong>Cảnh báo!</strong></div><p>Không thể hoàn thành phiếu. Còn <strong>${incompleteTasks.length} công việc</strong> chưa hoàn thành:</p><ul>${incompleteTasks.map(t => `<li>${escapeHtml(t.taskName || `Task ${t.id}`)}</li>`).join('')}</ul><p class="mb-0">Vui lòng hoàn thành tất cả công việc trước khi hoàn thành phiếu.</p>`;
+                
+                showAlert(message, 'warning');
+                return;
+            }
+            
+            // Tất cả công việc đã hoàn thành, hiển thị confirm
+            showConfirmModal(
+                '<p>Bạn có chắc chắn muốn hoàn thành phiếu bảo dưỡng này không?</p>',
+                function() {
+                    executeCompleteMaintenance(ticketId);
+                }
+            );
+        } else {
+            // Nếu không load được danh sách công việc, vẫn cho phép thử hoàn thành (backend sẽ validate)
+            showConfirmModal(
+                '<p>Bạn có chắc chắn muốn hoàn thành phiếu bảo dưỡng này không?</p>',
+                function() {
+                    executeCompleteMaintenance(ticketId);
+                }
+            );
+        }
+    })
+    .catch(error => {
+        console.error('Error checking tasks:', error);
+        // Nếu có lỗi, vẫn cho phép thử hoàn thành (backend sẽ validate)
+        showConfirmModal(
+            '<p>Bạn có chắc chắn muốn hoàn thành phiếu bảo dưỡng này không?</p>',
+            function() {
+                executeCompleteMaintenance(ticketId);
+            }
+        );
+    });
+}
+
+function updateCompleteButtonState(incompleteTasks) {
+    const completeBtn = $('#completeMaintenanceBtn');
+    if (completeBtn.length === 0) return; // Nút chưa được render
+    
+    if (incompleteTasks.length > 0) {
+        // Disable nút và thêm tooltip
+        completeBtn.prop('disabled', true);
+        completeBtn.attr('title', `Còn ${incompleteTasks.length} công việc chưa hoàn thành`);
+        completeBtn.css('opacity', '0.6');
+        
+        // Thêm thông báo bên dưới nút
+        if ($('#completeWarningMessage').length === 0) {
+            completeBtn.after(`
+                <div id="completeWarningMessage" class="alert alert-warning mt-2 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <small>Còn <strong>${incompleteTasks.length}</strong> công việc chưa hoàn thành. Vui lòng hoàn thành tất cả công việc trước khi hoàn thành phiếu.</small>
+                </div>
+            `);
+        } else {
+            $('#completeWarningMessage').html(`
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <small>Còn <strong>${incompleteTasks.length}</strong> công việc chưa hoàn thành. Vui lòng hoàn thành tất cả công việc trước khi hoàn thành phiếu.</small>
+            `);
+        }
+    } else {
+        // Enable nút
+        completeBtn.prop('disabled', false);
+        completeBtn.removeAttr('title');
+        completeBtn.css('opacity', '1');
+        $('#completeWarningMessage').remove();
+    }
 }
 
 function removeSingleTechnician(ticketId, technicianId) {
@@ -1393,19 +1757,30 @@ function saveServiceTask() {
     const taskName = $('#taskName').val().trim();
     const taskDescription = $('#taskDescription').val().trim();
     const taskNote = $('#taskNote').val().trim();
+    const taskStandardLaborTime = $('#taskStandardLaborTime').val() ? parseFloat($('#taskStandardLaborTime').val()) : null;
+    const taskActualLaborTime = $('#taskActualLaborTime').val() ? parseFloat($('#taskActualLaborTime').val()) : null;
     
     if (!taskName) {
         showAlert('Vui lòng nhập tên công việc', 'warning');
         return;
     }
     
-    const taskData = {
-        maintenanceTicketId: maintenanceTicketId,
-        taskName: taskName,
-        description: taskDescription || null,
-        note: taskNote || null,
-        statusCode: 'PENDING' // Mặc định là PENDING
-    };
+    // Validate labor time
+    if (taskStandardLaborTime !== null && (taskStandardLaborTime < 0 || taskStandardLaborTime > 999.99)) {
+        showAlert('Thời gian chuẩn phải từ 0 đến 999.99 giờ', 'warning');
+        return;
+    }
+    
+    if (taskActualLaborTime !== null && (taskActualLaborTime < 0 || taskActualLaborTime > 999.99)) {
+        showAlert('Thời gian thực tế phải từ 0 đến 999.99 giờ', 'warning');
+        return;
+    }
+    
+    // Nếu có StandardLaborTime nhưng không có ActualLaborTime, set ActualLaborTime = StandardLaborTime
+    const actualLaborTime = taskActualLaborTime ?? taskStandardLaborTime;
+    
+    const taskId = $('#taskId').val();
+    const isEdit = taskId && taskId !== '';
     
     // Lấy token để authenticate
     const token = localStorage.getItem('authToken');
@@ -1416,36 +1791,173 @@ function saveServiceTask() {
     btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
     btn.prop('disabled', true);
     
-    fetch(`${API_BASE_URL}/ServiceTask`, {
-        method: 'POST',
+    if (isEdit) {
+        // Update mode: Load task hiện tại để lấy đầy đủ thông tin
+        fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(taskData => {
+            if (!taskData.success) {
+                throw new Error(taskData.message || 'Không thể tải thông tin công việc');
+            }
+            
+            const task = taskData.data;
+            const updateData = {
+                id: parseInt(taskId),
+                maintenanceTicketId: task.maintenanceTicketId,
+                taskName: taskName,
+                description: taskDescription || null,
+                statusCode: task.statusCode, // Giữ nguyên status hiện tại
+                note: taskNote || null,
+                serviceCategoryId: task.serviceCategoryId || null,
+                standardLaborTime: taskStandardLaborTime,
+                actualLaborTime: actualLaborTime
+            };
+            
+            // Gọi API update
+            return fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
+                },
+                body: JSON.stringify(updateData)
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            
+            if (data.success) {
+                showAlert('Cập nhật công việc thành công!', 'success');
+                $('#addServiceTaskModal').modal('hide');
+                loadServiceTasks();
+                updateCostSummary();
+            } else {
+                showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật công việc'), 'danger');
+            }
+        })
+        .catch(error => {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            console.error('Error:', error);
+            showAlert('Có lỗi xảy ra khi cập nhật công việc: ' + error.message, 'danger');
+        });
+    } else {
+        // Create mode
+        const taskData = {
+            maintenanceTicketId: maintenanceTicketId,
+            taskName: taskName,
+            description: taskDescription || null,
+            note: taskNote || null,
+            statusCode: 'PENDING', // Mặc định là PENDING
+            standardLaborTime: taskStandardLaborTime,
+            actualLaborTime: actualLaborTime
+        };
+        
+        fetch(`${API_BASE_URL}/ServiceTask`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            body: JSON.stringify(taskData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            
+            if (data.success) {
+                showAlert('Thêm công việc thành công!', 'success');
+                $('#addServiceTaskModal').modal('hide');
+                loadServiceTasks();
+                updateCostSummary();
+            } else {
+                showAlert('Lỗi: ' + (data.message || 'Không thể thêm công việc'), 'danger');
+            }
+        })
+        .catch(error => {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            console.error('Error:', error);
+            showAlert('Có lỗi xảy ra khi thêm công việc', 'danger');
+        });
+    }
+}
+
+function editServiceTask(taskId) {
+    const token = localStorage.getItem('authToken');
+    
+    fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : ''
-        },
-        body: JSON.stringify(taskData)
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
     })
     .then(response => response.json())
     .then(data => {
-        btn.html(originalText);
-        btn.prop('disabled', false);
-        
-        if (data.success) {
-            showAlert('Thêm công việc thành công!', 'success');
-            $('#addServiceTaskModal').modal('hide');
-            // Reset form
-            $('#serviceTaskForm')[0].reset();
-            // Reload danh sách công việc
-            loadServiceTasks();
+        if (data.success && data.data) {
+            const task = data.data;
+            
+            // Điền dữ liệu vào form
+            $('#taskId').val(task.id);
+            $('#taskName').val(task.taskName || '');
+            $('#taskDescription').val(task.description || '');
+            $('#taskNote').val(task.note || '');
+            $('#taskStandardLaborTime').val(task.standardLaborTime || '');
+            $('#taskActualLaborTime').val(task.actualLaborTime || '');
+            
+            // Đổi title và button text
+            $('#addServiceTaskModalLabel').text('Chỉnh sửa công việc');
+            $('#saveServiceTaskBtn').html('Cập nhật');
+            
+            // Mở modal
+            $('#addServiceTaskModal').modal('show');
         } else {
-            showAlert('Lỗi: ' + (data.message || 'Không thể thêm công việc'), 'danger');
+            showAlert('Lỗi tải thông tin công việc: ' + (data.message || 'Không tìm thấy công việc'), 'danger');
         }
     })
     .catch(error => {
-        btn.html(originalText);
-        btn.prop('disabled', false);
         console.error('Error:', error);
-        showAlert('Có lỗi xảy ra khi thêm công việc', 'danger');
+        showAlert('Có lỗi xảy ra khi tải thông tin công việc', 'danger');
     });
+}
+
+function deleteServiceTask(taskId) {
+    showConfirmModal(
+        '<p>Bạn có chắc chắn muốn xóa công việc này không?</p>',
+        function() {
+            const token = localStorage.getItem('authToken');
+            
+            fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Xóa công việc thành công!', 'success');
+                    loadServiceTasks();
+                    updateCostSummary();
+                } else {
+                    showAlert('Lỗi: ' + (data.message || 'Không thể xóa công việc'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi xóa công việc', 'danger');
+            });
+        }
+    );
 }
 
 function saveComponent() {
@@ -1489,6 +2001,7 @@ function saveComponent() {
             $('#addComponentModal').modal('hide');
             $('#componentForm')[0].reset();
             loadComponents();
+            updateCostSummary(); // Update cost summary
         } else {
             showAlert('Lỗi: ' + (data.message || 'Không thể thêm phụ tùng'), 'danger');
         }
@@ -1513,11 +2026,15 @@ function editComponent(componentId) {
         if (data.success) {
             const component = data.data;
             $('#editComponentId').val(component.id);
-            $('#editComponentSelect').val(component.componentId);
             $('#editComponentQuantity').val(component.quantity);
+            $('#editComponentActualQuantity').val(component.actualQuantity || '');
             $('#editComponentUnitPrice').val(component.unitPrice || '');
-            loadComponentsForEdit();
+            
+            // Load components và set giá trị sau khi load xong
+            loadComponentsForEdit().then(() => {
+                $('#editComponentSelect').val(component.componentId);
             $('#editComponentModal').modal('show');
+            });
         } else {
             showAlert('Lỗi tải thông tin phụ tùng: ' + data.message, 'danger');
         }
@@ -1532,6 +2049,8 @@ function updateComponent() {
     const id = $('#editComponentId').val();
     const componentId = $('#editComponentSelect').val();
     const quantity = parseInt($('#editComponentQuantity').val());
+    const actualQuantityInput = $('#editComponentActualQuantity').val();
+    const actualQuantity = actualQuantityInput && actualQuantityInput !== '' ? parseFloat(actualQuantityInput) : null;
     const unitPrice = parseFloat($('#editComponentUnitPrice').val()) || null;
     
     if (!id || !componentId || !quantity || quantity <= 0) {
@@ -1539,10 +2058,21 @@ function updateComponent() {
         return;
     }
     
+    if (actualQuantity !== null && actualQuantity < 0) {
+        showAlert('Số lượng thực tế phải lớn hơn hoặc bằng 0', 'warning');
+        return;
+    }
+    
+    if (actualQuantity !== null && actualQuantity > quantity) {
+        showAlert('Số lượng thực tế không thể lớn hơn số lượng ban đầu', 'warning');
+        return;
+    }
+    
     const formData = {
         maintenanceTicketId: maintenanceTicketId,
         componentId: parseInt(componentId),
         quantity: quantity,
+        actualQuantity: actualQuantity, // Gửi cả null nếu để trống
         unitPrice: unitPrice
     };
     
@@ -1569,6 +2099,7 @@ function updateComponent() {
             showAlert('Cập nhật phụ tùng thành công!', 'success');
             $('#editComponentModal').modal('hide');
             loadComponents();
+            updateCostSummary(); // Update cost summary
         } else {
             showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật phụ tùng'), 'danger');
         }
@@ -1597,6 +2128,7 @@ function deleteComponent(componentId) {
                 if (data.success) {
                     showAlert('Xóa phụ tùng thành công!', 'success');
                     loadComponents();
+                    updateCostSummary(); // Update cost summary
                 } else {
                     showAlert('Lỗi: ' + (data.message || 'Không thể xóa phụ tùng'), 'danger');
                 }
@@ -1640,10 +2172,12 @@ function loadComponentsForAdd() {
 }
 
 function loadComponentsForEdit() {
+    return new Promise((resolve, reject) => {
     const token = localStorage.getItem('authToken');
     const branchId = maintenanceTicketData?.branchId;
     if (!branchId) {
         showAlert('Không tìm thấy thông tin chi nhánh', 'warning');
+            reject(new Error('Branch ID not found'));
         return;
     }
     
@@ -1662,30 +2196,48 @@ function loadComponentsForEdit() {
                 select.append(`<option value="${comp.id}" data-price="${comp.unitPrice || 0}">${comp.name} - ${formatCurrency(comp.unitPrice || 0)}</option>`);
             });
         }
+            resolve();
     })
     .catch(error => {
         console.error('Error loading components:', error);
         showAlert('Lỗi tải danh sách phụ tùng', 'danger');
+            reject(error);
+        });
     });
 }
 
 function updateCostSummary() {
     const token = localStorage.getItem('authToken');
-    fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}/total-cost`, {
-        headers: {
-            'Authorization': token ? `Bearer ${token}` : ''
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const componentTotal = data.data.totalCost || 0;
-            const estimatedCost = maintenanceTicketData?.totalEstimatedCost || 0;
-            displayCostSummary(maintenanceTicketData, componentTotal);
-        }
+    
+    // Load component total and labor cost total
+    Promise.all([
+        fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${maintenanceTicketId}/total-cost`, {
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+            }
+        }).then(r => r.json()),
+        fetch(`${API_BASE_URL}/ServiceTask/by-ticket/${maintenanceTicketId}`, {
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+            }
+        }).then(r => r.json())
+    ])
+    .then(([componentData, taskData]) => {
+        const componentTotal = componentData.success ? (componentData.data?.totalCost || 0) : 0;
+        const laborCostTotal = taskData.success ? (taskData.data || []).reduce((sum, task) => sum + (task.laborCost || 0), 0) : 0;
+        
+        // Use existing maintenanceTicketData or calculate from totals
+        const estimatedCost = maintenanceTicketData?.totalEstimatedCost || (componentTotal + laborCostTotal);
+        const dataToDisplay = maintenanceTicketData || { totalEstimatedCost: estimatedCost };
+        
+        displayCostSummary(dataToDisplay, componentTotal, laborCostTotal);
     })
     .catch(error => {
-        console.error('Error loading total cost:', error);
+        console.error('Error loading cost summary:', error);
+        // Fallback: try to display with current data
+        if (maintenanceTicketData) {
+            displayCostSummary(maintenanceTicketData, 0, 0);
+        }
     });
 }
 
@@ -1778,16 +2330,32 @@ function displaySelectedServicePackage(packageData) {
         ? packageData.components.map(c => `- ${c.name} (${formatCurrency(c.unitPrice || 0)})`).join('<br>')
         : '<p class="text-muted mb-0">Không có phụ tùng</p>';
     
+    // Calculate component total
+    const componentTotal = packageData.components && Array.isArray(packageData.components)
+        ? packageData.components.reduce((sum, c) => sum + (c.unitPrice || 0), 0)
+        : 0;
+    
+    // ❌ ĐÃ LOẠI BỎ: Hiển thị ServiceCategories
+    // Lý do: ServiceCategory chỉ dùng cho ScheduleService (đặt lịch), không phải để tạo công việc thực tế
+    // ServicePackage chỉ chứa Components (phụ tùng)
+    // ServiceTasks nên được tạo thủ công bởi người dùng
+    
     detailsDiv.html(`
         <p><strong>Tên gói:</strong> ${escapeHtml(packageData.name || '-')}</p>
         <p><strong>Mã gói:</strong> ${escapeHtml(packageData.code || '-')}</p>
         <p><strong>Giá:</strong> ${formatCurrency(packageData.price || 0)}</p>
         <p><strong>Mô tả:</strong> ${escapeHtml(packageData.description || '-')}</p>
-        <p><strong>Danh sách phụ tùng:</strong></p>
-        <div class="ms-3">${componentList}</div>
+        <hr>
+        <p><strong>Danh sách phụ tùng (${packageData.components?.length || 0}):</strong></p>
+        <div class="ms-3 mb-2">${componentList}</div>
+        <p class="mb-1"><strong>Tổng phụ tùng:</strong> ${formatCurrency(componentTotal)}</p>
+        <div class="alert alert-info mt-2 mb-0">
+            <i class="fas fa-info-circle me-2"></i>
+            <small>Các phụ tùng trong gói sẽ được thêm vào phiếu bảo dưỡng. Phụ tùng đã tồn tại sẽ được bỏ qua.</small>
+        </div>
         <div class="alert alert-warning mt-2 mb-0">
             <i class="fas fa-exclamation-triangle me-2"></i>
-            <small>Các phụ tùng trong gói sẽ được thêm vào phiếu bảo dưỡng. Phụ tùng đã tồn tại sẽ được bỏ qua.</small>
+            <small><strong>Lưu ý:</strong> Công việc (ServiceTasks) cần được tạo thủ công bằng nút "Thêm công việc". Gói dịch vụ chỉ tự động thêm phụ tùng.</small>
         </div>
     `);
     
@@ -1821,9 +2389,11 @@ function applyServicePackage(servicePackageId) {
             $('#selectedServicePackageInfo').hide();
             $('.service-package-radio').prop('checked', false);
             
-            // Reload components and cost summary
+            // Reload components, service tasks and cost summary
             loadComponents();
+            loadServiceTasks();
             loadMaintenanceTicketDetails();
+            updateCostSummary(); // Update cost summary
         } else {
             showAlert('Lỗi: ' + (data.message || 'Không thể áp dụng gói dịch vụ'), 'danger');
         }

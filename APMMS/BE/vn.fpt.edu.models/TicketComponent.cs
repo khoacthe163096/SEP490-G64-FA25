@@ -13,6 +13,8 @@ public partial class TicketComponent
 
     public int Quantity { get; set; }
 
+    public decimal? ActualQuantity { get; set; }
+
     public decimal? UnitPrice { get; set; }
 
     public virtual Component? Component { get; set; }

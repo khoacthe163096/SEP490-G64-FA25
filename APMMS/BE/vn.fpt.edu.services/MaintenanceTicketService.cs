@@ -538,6 +538,32 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket.StatusCode != "IN_PROGRESS")
                 throw new ArgumentException($"Không thể hoàn thành phiếu ở trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể hoàn thành khi phiếu ở trạng thái IN_PROGRESS.");
 
+            // ✅ VALIDATION: Kiểm tra tất cả ServiceTasks phải hoàn thành (DONE hoặc COMPLETED)
+            var serviceTasks = await _context.ServiceTasks
+                .Where(st => st.MaintenanceTicketId == id)
+                .ToListAsync();
+            
+            if (serviceTasks.Any())
+            {
+                var incompleteTasks = serviceTasks
+                    .Where(st => st.StatusCode != "DONE" && st.StatusCode != "COMPLETED")
+                    .ToList();
+                
+                if (incompleteTasks.Any())
+                {
+                    var incompleteTaskNames = incompleteTasks
+                        .Select(t => t.TaskName ?? $"Task ID: {t.Id}")
+                        .Take(5)
+                        .ToList();
+                    
+                    var message = $"Không thể hoàn thành phiếu. Còn {incompleteTasks.Count} công việc chưa hoàn thành: {string.Join(", ", incompleteTaskNames)}";
+                    if (incompleteTasks.Count > 5)
+                        message += $" và {incompleteTasks.Count - 5} công việc khác.";
+                    
+                    throw new ArgumentException(message);
+                }
+            }
+
             // Lưu trạng thái cũ để ghi log
             var oldStatus = maintenanceTicket.StatusCode;
 
@@ -728,87 +754,9 @@ namespace BE.vn.fpt.edu.services
             if (skippedComponents.Any())
                 logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại): {string.Join(", ", skippedComponents)}.";
 
-            // ✅ Tạo ServiceTasks từ ServiceCategories trong ServicePackage
-            var addedTasks = new List<string>();
-            var skippedTasks = new List<string>();
-            
-            if (servicePackage.ServiceCategories != null && servicePackage.ServiceCategories.Any())
-            {
-                // Lấy danh sách ServiceTasks hiện có để kiểm tra trùng lặp
-                var existingTasks = await _context.ServiceTasks
-                    .Where(st => st.MaintenanceTicketId == id)
-                    .ToListAsync();
-                var existingServiceCategoryIds = existingTasks
-                    .Where(st => st.ServiceCategoryId.HasValue)
-                    .Select(st => st.ServiceCategoryId!.Value)
-                    .ToHashSet();
-                
-                // Lấy Branch để lấy LaborRate
-                var branch = await _context.Branches
-                    .FirstOrDefaultAsync(b => b.Id == maintenanceTicket.BranchId);
-                
-                foreach (var serviceCategorySummary in servicePackage.ServiceCategories)
-                {
-                    // Skip nếu ServiceCategory đã tồn tại trong ticket
-                    if (existingServiceCategoryIds.Contains(serviceCategorySummary.Id))
-                    {
-                        skippedTasks.Add(serviceCategorySummary.Name ?? $"ServiceCategory ID: {serviceCategorySummary.Id}");
-                        continue;
-                    }
-                    
-                    try
-                    {
-                        // Lấy ServiceCategory đầy đủ từ database
-                        var serviceCategory = await _context.ServiceCategories
-                            .FirstOrDefaultAsync(sc => sc.Id == serviceCategorySummary.Id);
-                        
-                        if (serviceCategory == null)
-                            continue;
-                        
-                        // Xác định StandardLaborTime
-                        // Ưu tiên: ServicePackageCategory.StandardLaborTime > ServiceCategory.StandardLaborTime
-                        var standardLaborTime = serviceCategorySummary.StandardLaborTime 
-                            ?? serviceCategory.StandardLaborTime 
-                            ?? 0;
-                        
-                        // Set ActualLaborTime = StandardLaborTime (mặc định)
-                        var actualLaborTime = standardLaborTime;
-                        
-                        // Tính LaborCost = ActualLaborTime × Branch.LaborRate
-                        decimal? laborCost = null;
-                        if (actualLaborTime > 0 && branch?.LaborRate.HasValue == true && branch.LaborRate.Value > 0)
-                        {
-                            laborCost = actualLaborTime * branch.LaborRate.Value;
-                        }
-                        
-                        // Tạo ServiceTask
-                        var serviceTaskDto = new BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskRequestDto
-                        {
-                            MaintenanceTicketId = id,
-                            ServiceCategoryId = serviceCategory.Id,
-                            TaskName = serviceCategory.Name,
-                            Description = serviceCategory.Description,
-                            StandardLaborTime = standardLaborTime > 0 ? standardLaborTime : null,
-                            ActualLaborTime = actualLaborTime > 0 ? actualLaborTime : null,
-                            StatusCode = "PENDING"
-                        };
-                        
-                        var createdTask = await _serviceTaskService.CreateServiceTaskAsync(serviceTaskDto);
-                        addedTasks.Add(serviceCategory.Name ?? $"ServiceCategory ID: {serviceCategory.Id}");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log error but continue with other tasks
-                        Console.WriteLine($"Error creating service task for ServiceCategory {serviceCategorySummary.Id}: {ex.Message}");
-                    }
-                }
-            }
-            
-            // Cập nhật log message
-            if (addedTasks.Any())
-                logMessage += $"Đã tạo {addedTasks.Count} công việc: {string.Join(", ", addedTasks)}. ";
-            if (skippedTasks.Any())
-                logMessage += $"Đã bỏ qua {skippedTasks.Count} công việc (đã tồn tại): {string.Join(", ", skippedTasks)}. ";
+            // ❌ ĐÃ LOẠI BỎ: Logic tự động tạo ServiceTasks từ ServiceCategories
+            // Lý do: ServiceCategory chỉ dùng cho ScheduleService (đặt lịch), không phải để tạo công việc thực tế
+            // ServiceTasks nên được tạo thủ công bởi người dùng
 
             await CreateHistoryLogAsync(
                 userId: maintenanceTicket.ConsulterId,

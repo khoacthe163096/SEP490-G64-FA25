@@ -6,6 +6,7 @@ namespace BE.vn.fpt.edu.DTOs.TicketComponent
         public long MaintenanceTicketId { get; set; }
         public long ComponentId { get; set; }
         public int Quantity { get; set; }
+        public decimal? ActualQuantity { get; set; }
         public decimal? UnitPrice { get; set; }
         public decimal? TotalPrice { get; set; }
 

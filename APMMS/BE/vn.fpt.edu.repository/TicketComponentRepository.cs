@@ -48,6 +48,7 @@ namespace BE.vn.fpt.edu.repository
 
             existing.ComponentId = entity.ComponentId;
             existing.Quantity = entity.Quantity;
+            existing.ActualQuantity = entity.ActualQuantity;
             existing.UnitPrice = entity.UnitPrice;
 
             _context.TicketComponents.Update(existing);

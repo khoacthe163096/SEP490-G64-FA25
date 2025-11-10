@@ -50,6 +50,7 @@ namespace BE.vn.fpt.edu.services
                 MaintenanceTicketId = dto.MaintenanceTicketId,
                 ComponentId = dto.ComponentId,
                 Quantity = dto.Quantity,
+                ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity, // Nếu không có ActualQuantity thì lấy bằng Quantity
                 UnitPrice = unitPrice
             };
 
@@ -98,6 +99,8 @@ namespace BE.vn.fpt.edu.services
 
             existing.ComponentId = dto.ComponentId;
             existing.Quantity = dto.Quantity;
+            // Cập nhật ActualQuantity: nếu có giá trị thì dùng, nếu null thì set bằng Quantity
+            existing.ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity;
             existing.UnitPrice = dto.UnitPrice;
 
             var updated = await _repository.UpdateAsync(existing);
@@ -129,7 +132,12 @@ namespace BE.vn.fpt.edu.services
         public async Task<decimal> CalculateTotalCostAsync(long maintenanceTicketId)
         {
             var ticketComponents = await _repository.GetByMaintenanceTicketIdAsync(maintenanceTicketId);
-            return ticketComponents.Sum(tc => (tc.Quantity * (tc.UnitPrice ?? 0)));
+            // Tính chi phí dựa trên ActualQuantity (nếu có) hoặc Quantity
+            return ticketComponents.Sum(tc => 
+            {
+                var quantity = tc.ActualQuantity ?? tc.Quantity;
+                return quantity * (tc.UnitPrice ?? 0);
+            });
         }
 
         /// <summary>
@@ -145,9 +153,13 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket == null)
                 return;
             
-            // Tính tổng phụ tùng
+            // Tính tổng phụ tùng dựa trên ActualQuantity (nếu có) hoặc Quantity
             var componentTotal = maintenanceTicket.TicketComponents
-                .Sum(tc => tc.Quantity * (tc.UnitPrice ?? 0));
+                .Sum(tc => 
+                {
+                    var quantity = tc.ActualQuantity ?? tc.Quantity;
+                    return quantity * (tc.UnitPrice ?? 0);
+                });
             
             // Tính tổng phí nhân công
             var laborCostTotal = maintenanceTicket.ServiceTasks
@@ -160,7 +172,9 @@ namespace BE.vn.fpt.edu.services
 
         private ResponseDto MapToResponse(TicketComponent entity)
         {
-            var totalPrice = entity.Quantity * (entity.UnitPrice ?? 0);
+            // Tính TotalPrice dựa trên ActualQuantity (nếu có) hoặc Quantity
+            var quantity = entity.ActualQuantity ?? entity.Quantity;
+            var totalPrice = quantity * (entity.UnitPrice ?? 0);
             
             return new ResponseDto
             {
@@ -168,6 +182,7 @@ namespace BE.vn.fpt.edu.services
                 MaintenanceTicketId = entity.MaintenanceTicketId ?? 0,
                 ComponentId = entity.ComponentId ?? 0,
                 Quantity = entity.Quantity,
+                ActualQuantity = entity.ActualQuantity,
                 UnitPrice = entity.UnitPrice,
                 TotalPrice = totalPrice,
                 ComponentName = entity.Component?.Name,

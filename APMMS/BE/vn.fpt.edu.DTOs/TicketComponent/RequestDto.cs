@@ -16,6 +16,9 @@ namespace BE.vn.fpt.edu.DTOs.TicketComponent
         [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0")]
         public int Quantity { get; set; }
 
+        [Range(0, double.MaxValue, ErrorMessage = "Actual quantity must be greater than or equal to 0")]
+        public decimal? ActualQuantity { get; set; }
+
         [Range(0, double.MaxValue, ErrorMessage = "Unit price must be greater than or equal to 0")]
         public decimal? UnitPrice { get; set; }
     }

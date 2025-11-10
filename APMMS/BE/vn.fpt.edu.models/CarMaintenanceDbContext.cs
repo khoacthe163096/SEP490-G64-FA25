@@ -744,6 +744,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.ComponentId).HasColumnName("component_id");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.ActualQuantity)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("actual_quantity");
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");

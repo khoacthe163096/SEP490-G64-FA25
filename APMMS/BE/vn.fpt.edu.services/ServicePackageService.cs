@@ -100,15 +100,11 @@ namespace BE.vn.fpt.edu.services
                 UnitPrice = c.UnitPrice
             }).ToList();
             
-            // Map ServiceCategories
-            dto.ServiceCategories = sp.ServicePackageCategories?.Select(spc => new ResponseDto.ServiceCategorySummary
-            {
-                Id = spc.ServiceCategory.Id,
-                Name = spc.ServiceCategory.Name,
-                Description = spc.ServiceCategory.Description,
-                // Sử dụng StandardLaborTime từ ServicePackageCategory nếu có, nếu không thì từ ServiceCategory
-                StandardLaborTime = spc.StandardLaborTime ?? spc.ServiceCategory.StandardLaborTime
-            }).ToList();
+            // ❌ ĐÃ LOẠI BỎ: Map ServiceCategories
+            // Lý do: ServiceCategory chỉ dùng cho ScheduleService (đặt lịch), không phải để tạo công việc thực tế
+            // ServicePackage chỉ nên chứa Components (phụ tùng)
+            // ServiceTasks nên được tạo thủ công bởi người dùng
+            dto.ServiceCategories = null; // Không load ServiceCategories
             
             return dto;
         }

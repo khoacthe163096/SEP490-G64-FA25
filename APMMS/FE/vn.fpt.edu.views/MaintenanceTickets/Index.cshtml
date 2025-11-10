@@ -57,7 +57,6 @@
                                     <th>Khách hàng</th>
                                     <th>Ngày tạo</th>
                                     <th>Trạng thái</th>
-                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="maintenanceTicketsTableBody">
@@ -211,7 +210,7 @@
             // Show loading
             $('#maintenanceTicketsTableBody').html(`
                 <tr>
-                    <td colspan="5" class="text-center">
+                    <td colspan="4" class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -245,7 +244,7 @@
             })
             .catch(error => {
                 console.error('Error loading maintenance tickets:', error);
-                $('#maintenanceTicketsTableBody').html('<tr><td colspan="5" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
+                $('#maintenanceTicketsTableBody').html('<tr><td colspan="4" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
                 allTickets = [];
                 filteredTickets = [];
                 totalRecords = 0;
@@ -325,7 +324,7 @@
             tbody.empty();
 
             if (tickets.length === 0) {
-                tbody.html('<tr><td colspan="5" class="text-center text-muted">Không có phiếu bảo dưỡng nào</td></tr>');
+                tbody.html('<tr><td colspan="4" class="text-center text-muted">Không có phiếu bảo dưỡng nào</td></tr>');
                 return;
             }
 
@@ -337,24 +336,19 @@
                 
                 const rowIndex = (currentPage - 1) * pageSize + index + 1;
                 
+                // Hiển thị tên khách hàng với link đến trang details của phiếu bảo dưỡng
+                const customerNameDisplay = ticket.customerName 
+                    ? `<a href="/MaintenanceTickets/Details/${ticket.id}" style="text-decoration: none; color: inherit; cursor: pointer;" onmouseover="this.style.color='#007bff'; this.style.textDecoration='underline';" onmouseout="this.style.color='inherit'; this.style.textDecoration='none';" title="Xem chi tiết phiếu bảo dưỡng">${ticket.customerName}</a>`
+                    : 'N/A';
+                
                 tbody.append(`
                     <tr>
                         <td>
                             <strong>${ticket.code || 'BD-' + ticket.id}</strong>
                         </td>
-                        <td>${ticket.customerName || 'N/A'}</td>
+                        <td>${customerNameDisplay}</td>
                         <td>${createdAt}</td>
                         <td>${statusBadge}</td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="/MaintenanceTickets/Details/${ticket.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="/MaintenanceTickets/Edit/${ticket.id}" class="btn btn-sm btn-outline-warning" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </div>
-                        </td>
                     </tr>
                 `);
             });

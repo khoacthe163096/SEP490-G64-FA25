@@ -24,8 +24,8 @@ namespace BE.vn.fpt.edu.services
         {
             var serviceTask = _mapper.Map<ServiceTask>(request);
             
-            // Tính LaborCost nếu có ActualLaborTime và Branch.LaborRate
-            if (serviceTask.ActualLaborTime.HasValue && serviceTask.ActualLaborTime.Value > 0)
+            // Tính LaborCost nếu có StandardLaborTime và Branch.LaborRate
+            if (serviceTask.StandardLaborTime.HasValue && serviceTask.StandardLaborTime.Value > 0)
             {
                 // Lấy MaintenanceTicket để lấy Branch
                 var maintenanceTicket = await _context.MaintenanceTickets
@@ -34,7 +34,7 @@ namespace BE.vn.fpt.edu.services
                 
                 if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
                 {
-                    serviceTask.LaborCost = serviceTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+                    serviceTask.LaborCost = serviceTask.StandardLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
                 }
             }
             
@@ -52,16 +52,16 @@ namespace BE.vn.fpt.edu.services
                     if (!serviceTask.ActualLaborTime.HasValue)
                     {
                         serviceTask.ActualLaborTime = serviceCategory.StandardLaborTime;
-                        
-                        // Tính LaborCost
-                        var maintenanceTicket = await _context.MaintenanceTickets
-                            .Include(mt => mt.Branch)
-                            .FirstOrDefaultAsync(mt => mt.Id == request.MaintenanceTicketId);
-                        
-                        if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
-                        {
-                            serviceTask.LaborCost = serviceTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
-                        }
+                    }
+                    
+                    // Tính LaborCost dựa trên StandardLaborTime
+                    var maintenanceTicket = await _context.MaintenanceTickets
+                        .Include(mt => mt.Branch)
+                        .FirstOrDefaultAsync(mt => mt.Id == request.MaintenanceTicketId);
+                    
+                    if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+                    {
+                        serviceTask.LaborCost = serviceTask.StandardLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
                     }
                 }
             }
@@ -82,8 +82,8 @@ namespace BE.vn.fpt.edu.services
 
             _mapper.Map(request, existingTask);
             
-            // Tính lại LaborCost nếu ActualLaborTime thay đổi
-            if (existingTask.ActualLaborTime.HasValue && existingTask.ActualLaborTime.Value > 0)
+            // Tính lại LaborCost dựa trên StandardLaborTime
+            if (existingTask.StandardLaborTime.HasValue && existingTask.StandardLaborTime.Value > 0)
             {
                 var maintenanceTicket = await _context.MaintenanceTickets
                     .Include(mt => mt.Branch)
@@ -91,8 +91,13 @@ namespace BE.vn.fpt.edu.services
                 
                 if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
                 {
-                    existingTask.LaborCost = existingTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+                    existingTask.LaborCost = existingTask.StandardLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
                 }
+            }
+            else
+            {
+                // Nếu không có StandardLaborTime, set LaborCost = null
+                existingTask.LaborCost = null;
             }
             
             var updatedTask = await _serviceTaskRepository.UpdateAsync(existingTask);
@@ -173,14 +178,20 @@ namespace BE.vn.fpt.edu.services
 
             serviceTask.ActualLaborTime = actualLaborTime;
             
-            // Tính lại LaborCost
+            // Tính lại LaborCost dựa trên StandardLaborTime (không phải ActualLaborTime)
             var maintenanceTicket = await _context.MaintenanceTickets
                 .Include(mt => mt.Branch)
                 .FirstOrDefaultAsync(mt => mt.Id == serviceTask.MaintenanceTicketId);
             
-            if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+            if (serviceTask.StandardLaborTime.HasValue && serviceTask.StandardLaborTime.Value > 0 
+                && maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
             {
-                serviceTask.LaborCost = actualLaborTime * maintenanceTicket.Branch.LaborRate.Value;
+                serviceTask.LaborCost = serviceTask.StandardLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+            }
+            else
+            {
+                // Nếu không có StandardLaborTime, set LaborCost = null
+                serviceTask.LaborCost = null;
             }
             
             var updatedTask = await _serviceTaskRepository.UpdateAsync(serviceTask);
