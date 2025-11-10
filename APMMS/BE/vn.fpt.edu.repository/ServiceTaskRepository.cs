@@ -30,6 +30,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<ServiceTask?> GetByIdWithDetailsAsync(long id)
         {
             return await _context.ServiceTasks
+                .Include(st => st.ServiceCategory)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
@@ -67,6 +68,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<List<ServiceTask>> GetByMaintenanceTicketIdAsync(long maintenanceTicketId)
         {
             return await _context.ServiceTasks
+                .Include(st => st.ServiceCategory)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
