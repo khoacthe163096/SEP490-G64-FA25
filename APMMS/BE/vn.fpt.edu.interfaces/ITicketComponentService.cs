@@ -1,0 +1,17 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using BE.vn.fpt.edu.DTOs.TicketComponent;
+
+namespace BE.vn.fpt.edu.interfaces
+{
+    public interface ITicketComponentService
+    {
+        Task<ResponseDto> CreateAsync(RequestDto dto);
+        Task<ResponseDto?> GetByIdAsync(long id);
+        Task<IEnumerable<ResponseDto>> GetByMaintenanceTicketIdAsync(long maintenanceTicketId);
+        Task<ResponseDto?> UpdateAsync(long id, RequestDto dto);
+        Task<bool> DeleteAsync(long id);
+        Task<decimal> CalculateTotalCostAsync(long maintenanceTicketId);
+    }
+}
+
