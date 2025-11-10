@@ -385,9 +385,9 @@
                                 <img id="userAvatar" src="" alt="Avatar" 
                                      class="user-avatar"
                                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'250\' height=\'250\'%3E%3Crect width=\'250\' height=\'250\' fill=\'%23f093fb\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'white\' font-size=\'120\'%3E👤%3C/text%3E%3C/svg%3E';">
-                            </div>
-                            <h4 id="userFullName" class="user-name">-</h4>
                         </div>
+                            <h4 id="userFullName" class="user-name">-</h4>
+                    </div>
 
                         <!-- Right Section: Tabs and Details -->
                         <div class="col-md-9 user-details-section">
@@ -421,7 +421,7 @@
                                 <!-- Personal Information Tab -->
                                 <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
                                     <h5 class="mb-4" style="color: #212529; font-weight: 600;">Thông tin chi tiết</h5>
-                                    <div class="row">
+                        <div class="row">
                                         <div class="col-md-12">
                                             <div class="info-field">
                                                 <div class="info-label">Mã người dùng</div>
@@ -431,13 +431,13 @@
                                             <div class="info-field">
                                                 <div class="info-label">Họ và tên</div>
                                                 <div class="info-value" id="userName">-</div>
-                                            </div>
-                                            
+                                </div>
+
                                             <div class="info-field">
                                                 <div class="info-label">Giới tính</div>
                                                 <div class="info-value" id="userGender">-</div>
-                                            </div>
-                                            
+                            </div>
+
                                             <div class="info-field">
                                                 <div class="info-label">Ngày sinh</div>
                                                 <div class="info-value" id="userDob">-</div>
@@ -446,18 +446,18 @@
                                             <div class="info-field">
                                                 <div class="info-label">Địa chỉ</div>
                                                 <div class="info-value" id="userAddress">-</div>
-                                            </div>
+                            </div>
                                             
                                             <div class="info-field">
                                                 <div class="info-label">CMT/CCCD</div>
                                                 <div class="info-value" id="userCitizenId">-</div>
-                                            </div>
+                        </div>
                                             
                                             <div class="info-field">
                                                 <div class="info-label">Số điện thoại</div>
                                                 <div class="info-value" id="userPhone">-</div>
-                                            </div>
-                                            
+                    </div>
+
                                             <div class="info-field">
                                                 <div class="info-label">Email</div>
                                                 <div class="info-value" id="userEmail">-</div>
@@ -615,11 +615,11 @@
                 <div id="errorMessage" class="alert alert-danger m-3" style="display: none; border-radius: 10px;">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span id="errorText">Có lỗi xảy ra khi tải thông tin người dùng</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 <!-- Modal Thêm xe cho khách hàng -->
 <div class="modal fade" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
@@ -931,7 +931,7 @@
                         let dob;
                         if (typeof dobValue === 'string') {
                             dob = new Date(dobValue);
-                        } else {
+            } else {
                             dob = new Date(dobValue);
                         }
                         if (!isNaN(dob.getTime())) {
