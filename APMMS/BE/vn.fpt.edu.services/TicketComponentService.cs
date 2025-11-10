@@ -54,6 +54,10 @@ namespace BE.vn.fpt.edu.services
             };
 
             var created = await _repository.AddAsync(entity);
+            
+            // Cập nhật TotalEstimatedCost của MaintenanceTicket
+            await UpdateMaintenanceTicketTotalCost(dto.MaintenanceTicketId);
+            
             return MapToResponse(created);
         }
 
@@ -97,18 +101,61 @@ namespace BE.vn.fpt.edu.services
             existing.UnitPrice = dto.UnitPrice;
 
             var updated = await _repository.UpdateAsync(existing);
+            
+            // Cập nhật TotalEstimatedCost của MaintenanceTicket
+            await UpdateMaintenanceTicketTotalCost(existing.MaintenanceTicketId ?? 0);
+            
             return updated != null ? MapToResponse(updated) : null;
         }
 
         public async Task<bool> DeleteAsync(long id)
         {
-            return await _repository.DeleteAsync(id);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity == null)
+                return false;
+            
+            var maintenanceTicketId = entity.MaintenanceTicketId ?? 0;
+            var result = await _repository.DeleteAsync(id);
+            
+            if (result)
+            {
+                // Cập nhật TotalEstimatedCost của MaintenanceTicket
+                await UpdateMaintenanceTicketTotalCost(maintenanceTicketId);
+            }
+            
+            return result;
         }
 
         public async Task<decimal> CalculateTotalCostAsync(long maintenanceTicketId)
         {
             var ticketComponents = await _repository.GetByMaintenanceTicketIdAsync(maintenanceTicketId);
             return ticketComponents.Sum(tc => (tc.Quantity * (tc.UnitPrice ?? 0)));
+        }
+
+        /// <summary>
+        /// Cập nhật TotalEstimatedCost của MaintenanceTicket = ComponentTotal + LaborCostTotal
+        /// </summary>
+        private async Task UpdateMaintenanceTicketTotalCost(long maintenanceTicketId)
+        {
+            var maintenanceTicket = await _context.MaintenanceTickets
+                .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServiceTasks)
+                .FirstOrDefaultAsync(mt => mt.Id == maintenanceTicketId);
+            
+            if (maintenanceTicket == null)
+                return;
+            
+            // Tính tổng phụ tùng
+            var componentTotal = maintenanceTicket.TicketComponents
+                .Sum(tc => tc.Quantity * (tc.UnitPrice ?? 0));
+            
+            // Tính tổng phí nhân công
+            var laborCostTotal = maintenanceTicket.ServiceTasks
+                .Sum(st => st.LaborCost ?? 0);
+            
+            // Cập nhật TotalEstimatedCost
+            maintenanceTicket.TotalEstimatedCost = componentTotal + laborCostTotal;
+            await _context.SaveChangesAsync();
         }
 
         private ResponseDto MapToResponse(TicketComponent entity)

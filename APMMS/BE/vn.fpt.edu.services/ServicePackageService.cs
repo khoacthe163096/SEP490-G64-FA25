@@ -99,6 +99,17 @@ namespace BE.vn.fpt.edu.services
                 Name = c.Name,
                 UnitPrice = c.UnitPrice
             }).ToList();
+            
+            // Map ServiceCategories
+            dto.ServiceCategories = sp.ServicePackageCategories?.Select(spc => new ResponseDto.ServiceCategorySummary
+            {
+                Id = spc.ServiceCategory.Id,
+                Name = spc.ServiceCategory.Name,
+                Description = spc.ServiceCategory.Description,
+                // Sử dụng StandardLaborTime từ ServicePackageCategory nếu có, nếu không thì từ ServiceCategory
+                StandardLaborTime = spc.StandardLaborTime ?? spc.ServiceCategory.StandardLaborTime
+            }).ToList();
+            
             return dto;
         }
     }

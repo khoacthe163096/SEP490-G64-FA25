@@ -3,6 +3,7 @@ using BE.vn.fpt.edu.DTOs.ServiceTask;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.repository.IRepository;
 using BE.vn.fpt.edu.models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -10,17 +11,66 @@ namespace BE.vn.fpt.edu.services
     {
         private readonly IServiceTaskRepository _serviceTaskRepository;
         private readonly IMapper _mapper;
+        private readonly CarMaintenanceDbContext _context;
 
-        public ServiceTaskService(IServiceTaskRepository serviceTaskRepository, IMapper mapper)
+        public ServiceTaskService(IServiceTaskRepository serviceTaskRepository, IMapper mapper, CarMaintenanceDbContext context)
         {
             _serviceTaskRepository = serviceTaskRepository;
             _mapper = mapper;
+            _context = context;
         }
 
         public async Task<ServiceTaskResponseDto> CreateServiceTaskAsync(ServiceTaskRequestDto request)
         {
             var serviceTask = _mapper.Map<ServiceTask>(request);
+            
+            // Tính LaborCost nếu có ActualLaborTime và Branch.LaborRate
+            if (serviceTask.ActualLaborTime.HasValue && serviceTask.ActualLaborTime.Value > 0)
+            {
+                // Lấy MaintenanceTicket để lấy Branch
+                var maintenanceTicket = await _context.MaintenanceTickets
+                    .Include(mt => mt.Branch)
+                    .FirstOrDefaultAsync(mt => mt.Id == request.MaintenanceTicketId);
+                
+                if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+                {
+                    serviceTask.LaborCost = serviceTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+                }
+            }
+            
+            // Nếu có ServiceCategoryId nhưng chưa có StandardLaborTime, lấy từ ServiceCategory
+            if (serviceTask.ServiceCategoryId.HasValue && !serviceTask.StandardLaborTime.HasValue)
+            {
+                var serviceCategory = await _context.ServiceCategories
+                    .FirstOrDefaultAsync(sc => sc.Id == serviceTask.ServiceCategoryId.Value);
+                
+                if (serviceCategory?.StandardLaborTime.HasValue == true)
+                {
+                    serviceTask.StandardLaborTime = serviceCategory.StandardLaborTime;
+                    
+                    // Nếu chưa có ActualLaborTime, set bằng StandardLaborTime
+                    if (!serviceTask.ActualLaborTime.HasValue)
+                    {
+                        serviceTask.ActualLaborTime = serviceCategory.StandardLaborTime;
+                        
+                        // Tính LaborCost
+                        var maintenanceTicket = await _context.MaintenanceTickets
+                            .Include(mt => mt.Branch)
+                            .FirstOrDefaultAsync(mt => mt.Id == request.MaintenanceTicketId);
+                        
+                        if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+                        {
+                            serviceTask.LaborCost = serviceTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+                        }
+                    }
+                }
+            }
+            
             var createdTask = await _serviceTaskRepository.CreateAsync(serviceTask);
+            
+            // Cập nhật TotalEstimatedCost của MaintenanceTicket
+            await UpdateMaintenanceTicketTotalCost(serviceTask.MaintenanceTicketId ?? 0);
+            
             return await GetServiceTaskByIdAsync(createdTask.Id);
         }
 
@@ -31,7 +81,25 @@ namespace BE.vn.fpt.edu.services
                 throw new ArgumentException("Service task not found");
 
             _mapper.Map(request, existingTask);
+            
+            // Tính lại LaborCost nếu ActualLaborTime thay đổi
+            if (existingTask.ActualLaborTime.HasValue && existingTask.ActualLaborTime.Value > 0)
+            {
+                var maintenanceTicket = await _context.MaintenanceTickets
+                    .Include(mt => mt.Branch)
+                    .FirstOrDefaultAsync(mt => mt.Id == existingTask.MaintenanceTicketId);
+                
+                if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+                {
+                    existingTask.LaborCost = existingTask.ActualLaborTime.Value * maintenanceTicket.Branch.LaborRate.Value;
+                }
+            }
+            
             var updatedTask = await _serviceTaskRepository.UpdateAsync(existingTask);
+            
+            // Cập nhật TotalEstimatedCost của MaintenanceTicket
+            await UpdateMaintenanceTicketTotalCost(existingTask.MaintenanceTicketId ?? 0);
+            
             return await GetServiceTaskByIdAsync(updatedTask.Id);
         }
 
@@ -70,7 +138,20 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<bool> DeleteServiceTaskAsync(long id)
         {
-            return await _serviceTaskRepository.DeleteAsync(id);
+            var serviceTask = await _serviceTaskRepository.GetByIdAsync(id);
+            if (serviceTask == null)
+                return false;
+            
+            var maintenanceTicketId = serviceTask.MaintenanceTicketId ?? 0;
+            var result = await _serviceTaskRepository.DeleteAsync(id);
+            
+            if (result)
+            {
+                // Cập nhật TotalEstimatedCost của MaintenanceTicket
+                await UpdateMaintenanceTicketTotalCost(maintenanceTicketId);
+            }
+            
+            return result;
         }
 
         public async Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode)
@@ -84,6 +165,58 @@ namespace BE.vn.fpt.edu.services
             return await GetServiceTaskByIdAsync(updatedTask.Id);
         }
 
+        public async Task<ServiceTaskResponseDto> UpdateLaborTimeAsync(long id, decimal actualLaborTime)
+        {
+            var serviceTask = await _serviceTaskRepository.GetByIdAsync(id);
+            if (serviceTask == null)
+                throw new ArgumentException("Service task not found");
+
+            serviceTask.ActualLaborTime = actualLaborTime;
+            
+            // Tính lại LaborCost
+            var maintenanceTicket = await _context.MaintenanceTickets
+                .Include(mt => mt.Branch)
+                .FirstOrDefaultAsync(mt => mt.Id == serviceTask.MaintenanceTicketId);
+            
+            if (maintenanceTicket?.Branch?.LaborRate.HasValue == true && maintenanceTicket.Branch.LaborRate.Value > 0)
+            {
+                serviceTask.LaborCost = actualLaborTime * maintenanceTicket.Branch.LaborRate.Value;
+            }
+            
+            var updatedTask = await _serviceTaskRepository.UpdateAsync(serviceTask);
+            
+            // Cập nhật TotalEstimatedCost của MaintenanceTicket
+            await UpdateMaintenanceTicketTotalCost(serviceTask.MaintenanceTicketId ?? 0);
+            
+            return await GetServiceTaskByIdAsync(updatedTask.Id);
+        }
+
+        /// <summary>
+        /// Cập nhật TotalEstimatedCost của MaintenanceTicket = ComponentTotal + LaborCostTotal
+        /// </summary>
+        private async Task UpdateMaintenanceTicketTotalCost(long maintenanceTicketId)
+        {
+            var maintenanceTicket = await _context.MaintenanceTickets
+                .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServiceTasks)
+                .FirstOrDefaultAsync(mt => mt.Id == maintenanceTicketId);
+            
+            if (maintenanceTicket == null)
+                return;
+            
+            // Tính tổng phụ tùng
+            var componentTotal = maintenanceTicket.TicketComponents
+                .Sum(tc => tc.Quantity * (tc.UnitPrice ?? 0));
+            
+            // Tính tổng phí nhân công
+            var laborCostTotal = maintenanceTicket.ServiceTasks
+                .Sum(st => st.LaborCost ?? 0);
+            
+            // Cập nhật TotalEstimatedCost
+            maintenanceTicket.TotalEstimatedCost = componentTotal + laborCostTotal;
+            await _context.SaveChangesAsync();
+        }
+
         private ServiceTaskResponseDto MapToResponseDTO(ServiceTask serviceTask)
         {
             return new ServiceTaskResponseDto
@@ -95,6 +228,12 @@ namespace BE.vn.fpt.edu.services
                 StatusCode = serviceTask.StatusCode,
                 Note = serviceTask.Note,
 
+                // Labor cost fields
+                ServiceCategoryId = serviceTask.ServiceCategoryId,
+                StandardLaborTime = serviceTask.StandardLaborTime,
+                ActualLaborTime = serviceTask.ActualLaborTime,
+                LaborCost = serviceTask.LaborCost,
+
                 // Navigation properties
                 MaintenanceTicketDescription = serviceTask.MaintenanceTicket?.Description,
                 CarName = serviceTask.MaintenanceTicket?.Car?.CarName,
@@ -104,7 +243,8 @@ namespace BE.vn.fpt.edu.services
                 TechnicianName = serviceTask.MaintenanceTicket?.Technician != null
                     ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
                     : null,
-                BranchName = serviceTask.MaintenanceTicket?.Branch?.Name
+                BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,
+                ServiceCategoryName = serviceTask.ServiceCategory?.Name
             };
         }
 
@@ -119,6 +259,12 @@ namespace BE.vn.fpt.edu.services
                 StatusCode = serviceTask.StatusCode,
                 Note = serviceTask.Note,
 
+                // Labor cost fields
+                ServiceCategoryId = serviceTask.ServiceCategoryId,
+                StandardLaborTime = serviceTask.StandardLaborTime,
+                ActualLaborTime = serviceTask.ActualLaborTime,
+                LaborCost = serviceTask.LaborCost,
+
                 // Basic info
                 CarName = serviceTask.MaintenanceTicket?.Car?.CarName,
                 CustomerName = serviceTask.MaintenanceTicket?.Car?.User != null 
@@ -127,7 +273,8 @@ namespace BE.vn.fpt.edu.services
                 TechnicianName = serviceTask.MaintenanceTicket?.Technician != null
                     ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
                     : null,
-                BranchName = serviceTask.MaintenanceTicket?.Branch?.Name
+                BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,
+                ServiceCategoryName = serviceTask.ServiceCategory?.Name
             };
         }
     }
