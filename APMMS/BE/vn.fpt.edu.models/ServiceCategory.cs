@@ -13,7 +13,13 @@ public partial class ServiceCategory
 
     public string? StatusCode { get; set; }
 
+    public decimal? StandardLaborTime { get; set; } // Thời gian chuẩn (giờ)
+
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
+
+    public virtual ICollection<ServicePackageCategory> ServicePackageCategories { get; set; } = new List<ServicePackageCategory>();
+
+    public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 

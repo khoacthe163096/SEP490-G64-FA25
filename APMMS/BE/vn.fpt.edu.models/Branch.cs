@@ -13,6 +13,8 @@ public partial class Branch
 
     public string? Address { get; set; }
 
+    public decimal? LaborRate { get; set; } // Giá giờ công (VNĐ/giờ)
+
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
 
     public virtual ICollection<Component> Components { get; set; } = new List<Component>();

@@ -13,6 +13,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<List<ServiceTaskListResponseDto>> GetServiceTasksByTechnicianIdAsync(long technicianId);
         Task<bool> DeleteServiceTaskAsync(long id);
         Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode);
+        Task<ServiceTaskResponseDto> UpdateLaborTimeAsync(long id, decimal actualLaborTime);
     }
 }
 

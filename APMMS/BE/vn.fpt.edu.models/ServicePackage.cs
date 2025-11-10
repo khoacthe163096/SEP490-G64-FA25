@@ -21,6 +21,8 @@ public partial class ServicePackage
 
     public virtual Branch? Branch { get; set; }
 
+    public virtual ICollection<ServicePackageCategory> ServicePackageCategories { get; set; } = new List<ServicePackageCategory>();
+
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<Component> Components { get; set; } = new List<Component>();

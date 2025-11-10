@@ -45,6 +45,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<ServicePackage> ServicePackages { get; set; }
 
+    public virtual DbSet<ServicePackageCategory> ServicePackageCategories { get; set; }
+
     public virtual DbSet<ServiceTask> ServiceTasks { get; set; }
 
     public virtual DbSet<StatusLookup> StatusLookups { get; set; }
@@ -81,6 +83,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Address)
                 .HasMaxLength(500)
                 .HasColumnName("address");
+            entity.Property(e => e.LaborRate)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("labor_rate");
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
                 .HasColumnName("name");
@@ -591,6 +596,9 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(200)
                 .HasColumnName("name");
+            entity.Property(e => e.StandardLaborTime)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("standard_labor_time");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -633,6 +641,34 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasConstraintName("FK_service_package_status");
         });
 
+        modelBuilder.Entity<ServicePackageCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__service___3213E83F076EF3A5");
+
+            entity.ToTable("service_package_category");
+
+            entity.HasIndex(e => e.ServiceCategoryId, "IX_service_package_category_category");
+
+            entity.HasIndex(e => e.ServicePackageId, "IX_service_package_category_package");
+
+            entity.HasIndex(e => new { e.ServicePackageId, e.ServiceCategoryId }, "UQ_service_package_category").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ServiceCategoryId).HasColumnName("service_category_id");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
+            entity.Property(e => e.StandardLaborTime)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("standard_labor_time");
+
+            entity.HasOne(d => d.ServiceCategory).WithMany(p => p.ServicePackageCategories)
+                .HasForeignKey(d => d.ServiceCategoryId)
+                .HasConstraintName("FK_service_package_category_category");
+
+            entity.HasOne(d => d.ServicePackage).WithMany(p => p.ServicePackageCategories)
+                .HasForeignKey(d => d.ServicePackageId)
+                .HasConstraintName("FK_service_package_category_package");
+        });
+
         modelBuilder.Entity<ServiceTask>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__service___3213E83F93ED7CE8");
@@ -642,13 +678,23 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasIndex(e => e.MaintenanceTicketId, "IX_service_task_ticket_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ActualLaborTime)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("actual_labor_time");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+            entity.Property(e => e.LaborCost)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("labor_cost");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
             entity.Property(e => e.Note)
                 .HasMaxLength(255)
                 .HasColumnName("note");
+            entity.Property(e => e.ServiceCategoryId).HasColumnName("service_category_id");
+            entity.Property(e => e.StandardLaborTime)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("standard_labor_time");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -659,6 +705,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .HasConstraintName("FK__service_t__maint__07C12930");
+
+            entity.HasOne(d => d.ServiceCategory).WithMany(p => p.ServiceTasks)
+                .HasForeignKey(d => d.ServiceCategoryId)
+                .HasConstraintName("FK_service_task_service_category");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.StatusCode)
