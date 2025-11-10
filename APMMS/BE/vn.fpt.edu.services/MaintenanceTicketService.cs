@@ -5,6 +5,7 @@ using BE.vn.fpt.edu.repository.IRepository;
 using BE.vn.fpt.edu.models;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using BE.vn.fpt.edu.DTOs.ServiceTask;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -15,6 +16,7 @@ namespace BE.vn.fpt.edu.services
         private readonly IHistoryLogRepository _historyLogRepository;
         private readonly IServicePackageService _servicePackageService;
         private readonly ITicketComponentService _ticketComponentService;
+        private readonly IServiceTaskService _serviceTaskService;
         private readonly IMapper _mapper;
         private readonly CarMaintenanceDbContext _context;
 
@@ -24,6 +26,7 @@ namespace BE.vn.fpt.edu.services
             IHistoryLogRepository historyLogRepository,
             IServicePackageService servicePackageService,
             ITicketComponentService ticketComponentService,
+            IServiceTaskService serviceTaskService,
             IMapper mapper,
             CarMaintenanceDbContext context)
         {
@@ -32,6 +35,7 @@ namespace BE.vn.fpt.edu.services
             _historyLogRepository = historyLogRepository;
             _servicePackageService = servicePackageService;
             _ticketComponentService = ticketComponentService;
+            _serviceTaskService = serviceTaskService;
             _mapper = mapper;
             _context = context;
         }
@@ -724,6 +728,88 @@ namespace BE.vn.fpt.edu.services
             if (skippedComponents.Any())
                 logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại): {string.Join(", ", skippedComponents)}.";
 
+            // ✅ Tạo ServiceTasks từ ServiceCategories trong ServicePackage
+            var addedTasks = new List<string>();
+            var skippedTasks = new List<string>();
+            
+            if (servicePackage.ServiceCategories != null && servicePackage.ServiceCategories.Any())
+            {
+                // Lấy danh sách ServiceTasks hiện có để kiểm tra trùng lặp
+                var existingTasks = await _context.ServiceTasks
+                    .Where(st => st.MaintenanceTicketId == id)
+                    .ToListAsync();
+                var existingServiceCategoryIds = existingTasks
+                    .Where(st => st.ServiceCategoryId.HasValue)
+                    .Select(st => st.ServiceCategoryId!.Value)
+                    .ToHashSet();
+                
+                // Lấy Branch để lấy LaborRate
+                var branch = await _context.Branches
+                    .FirstOrDefaultAsync(b => b.Id == maintenanceTicket.BranchId);
+                
+                foreach (var serviceCategorySummary in servicePackage.ServiceCategories)
+                {
+                    // Skip nếu ServiceCategory đã tồn tại trong ticket
+                    if (existingServiceCategoryIds.Contains(serviceCategorySummary.Id))
+                    {
+                        skippedTasks.Add(serviceCategorySummary.Name ?? $"ServiceCategory ID: {serviceCategorySummary.Id}");
+                        continue;
+                    }
+                    
+                    try
+                    {
+                        // Lấy ServiceCategory đầy đủ từ database
+                        var serviceCategory = await _context.ServiceCategories
+                            .FirstOrDefaultAsync(sc => sc.Id == serviceCategorySummary.Id);
+                        
+                        if (serviceCategory == null)
+                            continue;
+                        
+                        // Xác định StandardLaborTime
+                        // Ưu tiên: ServicePackageCategory.StandardLaborTime > ServiceCategory.StandardLaborTime
+                        var standardLaborTime = serviceCategorySummary.StandardLaborTime 
+                            ?? serviceCategory.StandardLaborTime 
+                            ?? 0;
+                        
+                        // Set ActualLaborTime = StandardLaborTime (mặc định)
+                        var actualLaborTime = standardLaborTime;
+                        
+                        // Tính LaborCost = ActualLaborTime × Branch.LaborRate
+                        decimal? laborCost = null;
+                        if (actualLaborTime > 0 && branch?.LaborRate.HasValue == true && branch.LaborRate.Value > 0)
+                        {
+                            laborCost = actualLaborTime * branch.LaborRate.Value;
+                        }
+                        
+                        // Tạo ServiceTask
+                        var serviceTaskDto = new BE.vn.fpt.edu.DTOs.ServiceTask.ServiceTaskRequestDto
+                        {
+                            MaintenanceTicketId = id,
+                            ServiceCategoryId = serviceCategory.Id,
+                            TaskName = serviceCategory.Name,
+                            Description = serviceCategory.Description,
+                            StandardLaborTime = standardLaborTime > 0 ? standardLaborTime : null,
+                            ActualLaborTime = actualLaborTime > 0 ? actualLaborTime : null,
+                            StatusCode = "PENDING"
+                        };
+                        
+                        var createdTask = await _serviceTaskService.CreateServiceTaskAsync(serviceTaskDto);
+                        addedTasks.Add(serviceCategory.Name ?? $"ServiceCategory ID: {serviceCategory.Id}");
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue with other tasks
+                        Console.WriteLine($"Error creating service task for ServiceCategory {serviceCategorySummary.Id}: {ex.Message}");
+                    }
+                }
+            }
+            
+            // Cập nhật log message
+            if (addedTasks.Any())
+                logMessage += $"Đã tạo {addedTasks.Count} công việc: {string.Join(", ", addedTasks)}. ";
+            if (skippedTasks.Any())
+                logMessage += $"Đã bỏ qua {skippedTasks.Count} công việc (đã tồn tại): {string.Join(", ", skippedTasks)}. ";
+
             await CreateHistoryLogAsync(
                 userId: maintenanceTicket.ConsulterId,
                 action: "APPLY_SERVICE_PACKAGE",
@@ -732,18 +818,38 @@ namespace BE.vn.fpt.edu.services
                 newData: logMessage
             );
 
-            // Update TotalEstimatedCost if ServicePackage has price
-            if (servicePackage.Price.HasValue && servicePackage.Price.Value > 0)
-            {
-                var componentTotal = await _ticketComponentService.CalculateTotalCostAsync(id);
-                // Update TotalEstimatedCost = component total + service package price (labor cost)
-                maintenanceTicket.TotalEstimatedCost = componentTotal + servicePackage.Price.Value;
-                await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
-            }
+            // ✅ Cập nhật TotalEstimatedCost = ComponentTotal + LaborCostTotal
+            await UpdateMaintenanceTicketTotalCost(id);
 
             // Return updated ticket
             var updatedTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
             return _mapper.Map<ResponseDto>(updatedTicket);
+        }
+
+        /// <summary>
+        /// Cập nhật TotalEstimatedCost của MaintenanceTicket = ComponentTotal + LaborCostTotal
+        /// </summary>
+        private async Task UpdateMaintenanceTicketTotalCost(long maintenanceTicketId)
+        {
+            var maintenanceTicket = await _context.MaintenanceTickets
+                .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServiceTasks)
+                .FirstOrDefaultAsync(mt => mt.Id == maintenanceTicketId);
+            
+            if (maintenanceTicket == null)
+                return;
+            
+            // Tính tổng phụ tùng
+            var componentTotal = maintenanceTicket.TicketComponents
+                .Sum(tc => tc.Quantity * (tc.UnitPrice ?? 0));
+            
+            // Tính tổng phí nhân công
+            var laborCostTotal = maintenanceTicket.ServiceTasks
+                .Sum(st => st.LaborCost ?? 0);
+            
+            // Cập nhật TotalEstimatedCost
+            maintenanceTicket.TotalEstimatedCost = componentTotal + laborCostTotal;
+            await _context.SaveChangesAsync();
         }
     }
 }
