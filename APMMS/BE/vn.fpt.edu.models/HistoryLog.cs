@@ -9,8 +9,6 @@ public partial class HistoryLog
 
     public long? UserId { get; set; }
 
-    public long? MaintenanceTicketId { get; set; }
-
     public string? Action { get; set; }
 
     public string? OldData { get; set; }
@@ -19,9 +17,9 @@ public partial class HistoryLog
 
     public DateTime? CreatedAt { get; set; }
 
+    public long? MaintenanceTicketId { get; set; }
+
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
 
     public virtual User? User { get; set; }
-    
-   
 }

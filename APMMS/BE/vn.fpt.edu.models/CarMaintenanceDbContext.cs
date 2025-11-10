@@ -64,12 +64,8 @@ public partial class CarMaintenanceDbContext : DbContext
     public virtual DbSet<VehicleType> VehicleTypes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
-        }
-    }
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("server=DESKTOP-ITTJS91;database=CarMaintenanceDB;uid=sa;pwd=123;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -153,7 +149,7 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("component");
 
-            entity.HasIndex(e => e.Code, "UQ__componen__357D4CF9B713CF39").IsUnique();
+            entity.HasIndex(e => new { e.Code, e.BranchId }, "UQ_component_code_branch").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
@@ -317,7 +313,6 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.NewData).HasColumnName("new_data");
             entity.Property(e => e.OldData).HasColumnName("old_data");
             entity.Property(e => e.UserId).HasColumnName("user_id");
-            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.HistoryLogs)
                 .HasForeignKey(d => d.MaintenanceTicketId)
@@ -326,11 +321,6 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.HistoryLogs)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK__history_l__user___73BA3083");
-            
-            entity.HasOne(d => d.MaintenanceTicket).WithMany()
-                .HasForeignKey(d => d.MaintenanceTicketId)
-                .HasConstraintName("FK_history_log_maintenance_ticket")
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MaintenanceRequest>(entity =>
@@ -792,6 +782,8 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__type_com__3213E83FE8D2B9FE");
 
             entity.ToTable("type_component");
+
+            entity.HasIndex(e => new { e.Name, e.BranchId }, "UQ_type_component_name_branch").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");

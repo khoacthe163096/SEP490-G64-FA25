@@ -36,6 +36,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IServiceTaskRepository, ServiceTaskRepository>();
             services.AddScoped<ITotalReceiptRepository, TotalReceiptRepository>();
             services.AddScoped<ITypeComponentRepository, TypeComponentRepository>();
+            services.AddScoped<ITicketComponentRepository, TicketComponentRepository>();
 
             // Add Services
             services.AddScoped<IAuthService, AuthService>();
@@ -55,6 +56,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IServiceTaskService, ServiceTaskService>();
             services.AddScoped<ITotalReceiptService, TotalReceiptService>();
             services.AddScoped<ITypeComponentService, TypeComponentService>();
+            services.AddScoped<ITicketComponentService, TicketComponentService>();
             services.AddScoped<JwtService>();
 
             return services;
