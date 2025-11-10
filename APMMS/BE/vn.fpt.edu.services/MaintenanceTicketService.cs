@@ -4,6 +4,7 @@ using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.repository.IRepository;
 using BE.vn.fpt.edu.models;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -12,6 +13,8 @@ namespace BE.vn.fpt.edu.services
         private readonly IMaintenanceTicketRepository _maintenanceTicketRepository;
         private readonly IVehicleCheckinRepository _vehicleCheckinRepository;
         private readonly IHistoryLogRepository _historyLogRepository;
+        private readonly IServicePackageService _servicePackageService;
+        private readonly ITicketComponentService _ticketComponentService;
         private readonly IMapper _mapper;
         private readonly CarMaintenanceDbContext _context;
 
@@ -19,12 +22,16 @@ namespace BE.vn.fpt.edu.services
             IMaintenanceTicketRepository maintenanceTicketRepository,
             IVehicleCheckinRepository vehicleCheckinRepository,
             IHistoryLogRepository historyLogRepository,
+            IServicePackageService servicePackageService,
+            ITicketComponentService ticketComponentService,
             IMapper mapper,
             CarMaintenanceDbContext context)
         {
             _maintenanceTicketRepository = maintenanceTicketRepository;
             _vehicleCheckinRepository = vehicleCheckinRepository;
             _historyLogRepository = historyLogRepository;
+            _servicePackageService = servicePackageService;
+            _ticketComponentService = ticketComponentService;
             _mapper = mapper;
             _context = context;
         }
@@ -639,6 +646,104 @@ namespace BE.vn.fpt.edu.services
                 NewData = h.NewData,
                 CreatedAt = h.CreatedAt
             }).ToList();
+        }
+
+        /// <summary>
+        /// Áp dụng Service Package vào Maintenance Ticket - tự động thêm các Components từ package
+        /// </summary>
+        public async Task<ResponseDto> ApplyServicePackageAsync(long id, long servicePackageId)
+        {
+            // Validate MaintenanceTicket exists
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            // ✅ VALIDATION: Chỉ cho phép áp dụng Service Package khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS
+            if (maintenanceTicket.StatusCode != "PENDING" && maintenanceTicket.StatusCode != "ASSIGNED" && maintenanceTicket.StatusCode != "IN_PROGRESS")
+                throw new ArgumentException($"Không thể áp dụng gói dịch vụ cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể áp dụng khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS.");
+
+            // Validate ServicePackage exists
+            var servicePackage = await _servicePackageService.GetByIdAsync(servicePackageId);
+            if (servicePackage == null)
+                throw new ArgumentException("Service package not found");
+
+            // Validate branch match
+            if (servicePackage.BranchId != maintenanceTicket.BranchId)
+                throw new ArgumentException("Service package không thuộc chi nhánh của phiếu bảo dưỡng");
+
+            // Get existing components in ticket
+            var existingComponents = await _ticketComponentService.GetByMaintenanceTicketIdAsync(id);
+            var existingComponentIds = existingComponents.Select(c => c.ComponentId).ToHashSet();
+
+            // Get components from ServicePackage
+            if (servicePackage.Components == null || !servicePackage.Components.Any())
+                throw new ArgumentException("Service package không có phụ tùng nào");
+
+            // Add components from package to ticket
+            var addedComponents = new List<string>();
+            var skippedComponents = new List<string>();
+            
+            foreach (var packageComponent in servicePackage.Components)
+            {
+                // Skip if component already exists in ticket
+                if (existingComponentIds.Contains(packageComponent.Id))
+                {
+                    skippedComponents.Add(packageComponent.Name ?? $"Component ID: {packageComponent.Id}");
+                    continue;
+                }
+
+                try
+                {
+                    // Add component to ticket (quantity = 1, use component's unit price)
+                    var ticketComponentDto = new BE.vn.fpt.edu.DTOs.TicketComponent.RequestDto
+                    {
+                        MaintenanceTicketId = id,
+                        ComponentId = packageComponent.Id,
+                        Quantity = 1, // Default quantity = 1
+                        UnitPrice = packageComponent.UnitPrice
+                    };
+
+                    await _ticketComponentService.CreateAsync(ticketComponentDto);
+                    addedComponents.Add(packageComponent.Name ?? $"Component ID: {packageComponent.Id}");
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue with other components
+                    Console.WriteLine($"Error adding component {packageComponent.Id}: {ex.Message}");
+                }
+            }
+
+            // Create history log
+            var consulterName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+            
+            var logMessage = $"Áp dụng gói dịch vụ '{servicePackage.Name}' bởi {consulterName}. ";
+            if (addedComponents.Any())
+                logMessage += $"Đã thêm {addedComponents.Count} phụ tùng: {string.Join(", ", addedComponents)}. ";
+            if (skippedComponents.Any())
+                logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại): {string.Join(", ", skippedComponents)}.";
+
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId,
+                action: "APPLY_SERVICE_PACKAGE",
+                maintenanceTicketId: id,
+                oldData: null,
+                newData: logMessage
+            );
+
+            // Update TotalEstimatedCost if ServicePackage has price
+            if (servicePackage.Price.HasValue && servicePackage.Price.Value > 0)
+            {
+                var componentTotal = await _ticketComponentService.CalculateTotalCostAsync(id);
+                // Update TotalEstimatedCost = component total + service package price (labor cost)
+                maintenanceTicket.TotalEstimatedCost = componentTotal + servicePackage.Price.Value;
+                await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+            }
+
+            // Return updated ticket
+            var updatedTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            return _mapper.Map<ResponseDto>(updatedTicket);
         }
     }
 }

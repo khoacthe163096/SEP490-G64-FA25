@@ -342,5 +342,26 @@ namespace BE.vn.fpt.edu.controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Áp dụng Service Package vào Maintenance Ticket - tự động thêm các Components từ package
+        /// </summary>
+        [HttpPut("{id}/apply-service-package/{servicePackageId}")]
+        public async Task<IActionResult> ApplyServicePackage(long id, long servicePackageId)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.ApplyServicePackageAsync(id, servicePackageId);
+                return Ok(new { success = true, data = result, message = "Áp dụng gói dịch vụ thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
     }
 }

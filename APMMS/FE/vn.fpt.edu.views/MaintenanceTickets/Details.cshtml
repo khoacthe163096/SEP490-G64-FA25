@@ -85,10 +85,16 @@
                                 <i class="fas fa-cogs me-2"></i>
                                 Phụ tùng sử dụng
                             </h5>
-                            <button class="btn btn-sm btn-primary" id="addComponentBtn" style="display: none;">
-                                <i class="fas fa-plus me-1"></i>
-                                Thêm phụ tùng
-                            </button>
+                            <div>
+                                <button class="btn btn-sm btn-info me-2" id="applyServicePackageBtn" style="display: none;" title="Áp dụng gói dịch vụ">
+                                    <i class="fas fa-box me-1"></i>
+                                    Áp dụng gói dịch vụ
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="addComponentBtn" style="display: none;">
+                                    <i class="fas fa-plus me-1"></i>
+                                    Thêm phụ tùng
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div id="componentsList">
@@ -264,6 +270,56 @@
     </div>
 </div>
 
+<!-- Apply Service Package Modal -->
+<div class="modal fade" id="applyServicePackageModal" tabindex="-1" aria-labelledby="applyServicePackageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="applyServicePackageModalLabel">Chọn gói dịch vụ</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="servicePackageSearch" class="form-label">Tìm kiếm gói dịch vụ</label>
+                    <input type="text" class="form-control" id="servicePackageSearch" placeholder="Tìm theo tên, mã gói dịch vụ...">
+                </div>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Chọn</th>
+                                <th>Mã gói</th>
+                                <th>Tên gói</th>
+                                <th>Giá</th>
+                                <th>Số phụ tùng</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody id="servicePackageTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                    Đang tải danh sách gói dịch vụ...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="selectedServicePackageInfo" class="alert alert-info mt-3" style="display: none;">
+                    <h6><i class="fas fa-info-circle me-2"></i>Thông tin gói dịch vụ đã chọn:</h6>
+                    <div id="selectedServicePackageDetails"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirmApplyServicePackageBtn" disabled>Áp dụng gói dịch vụ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Confirm Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -301,6 +357,26 @@ $(document).ready(function() {
         $('#addComponentModal').modal('show');
     });
     
+    $('#applyServicePackageBtn').on('click', function() {
+        selectedServicePackageId = null;
+        selectedServicePackageData = null;
+        $('#servicePackageSearch').val('');
+        $('#confirmApplyServicePackageBtn').prop('disabled', true);
+        $('#selectedServicePackageInfo').hide();
+        loadServicePackages();
+        $('#applyServicePackageModal').modal('show');
+    });
+    
+    // Reset modal when closed
+    $('#applyServicePackageModal').on('hidden.bs.modal', function() {
+        selectedServicePackageId = null;
+        selectedServicePackageData = null;
+        $('#servicePackageSearch').val('');
+        $('#confirmApplyServicePackageBtn').prop('disabled', true);
+        $('#selectedServicePackageInfo').hide();
+        $('.service-package-radio').prop('checked', false);
+    });
+    
     // Auto-fill unit price when component is selected
     $(document).on('change', '#componentSelect', function() {
         const selectedOption = $(this).find('option:selected');
@@ -312,6 +388,39 @@ $(document).ready(function() {
         const selectedOption = $(this).find('option:selected');
         const price = selectedOption.data('price') || 0;
         $('#editComponentUnitPrice').val(price);
+    });
+    
+    // Service Package selection
+    let selectedServicePackageId = null;
+    let selectedServicePackageData = null;
+    $(document).on('change', '.service-package-radio', function() {
+        selectedServicePackageId = $(this).val();
+        selectedServicePackageData = $(this).closest('tr').data('package-data');
+        $('#confirmApplyServicePackageBtn').prop('disabled', !selectedServicePackageId);
+        
+        if (selectedServicePackageId && selectedServicePackageData) {
+            displaySelectedServicePackage(selectedServicePackageData);
+        } else {
+            $('#selectedServicePackageInfo').hide();
+        }
+    });
+    
+    $('#confirmApplyServicePackageBtn').on('click', function() {
+        if (!selectedServicePackageId) {
+            showAlert('Vui lòng chọn gói dịch vụ', 'warning');
+            return;
+        }
+        applyServicePackage(selectedServicePackageId);
+    });
+    
+    // Search service packages
+    let servicePackageSearchTimeout;
+    $('#servicePackageSearch').on('input', function() {
+        clearTimeout(servicePackageSearchTimeout);
+        const searchTerm = $(this).val().toLowerCase();
+        servicePackageSearchTimeout = setTimeout(() => {
+            filterServicePackages(searchTerm);
+        }, 300);
     });
     
     $('#saveServiceTaskBtn').on('click', function() {
@@ -366,9 +475,10 @@ function loadMaintenanceTicketDetails() {
                 displayStatusAndActions(data.data);
                 displayTimeline(data.data);
                 
-                // Show/hide add component button based on status
+                // Show/hide add component and apply service package buttons based on status
                 const canEditComponents = data.data.statusCode === 'PENDING' || data.data.statusCode === 'ASSIGNED' || data.data.statusCode === 'IN_PROGRESS';
                 $('#addComponentBtn').toggle(canEditComponents);
+                $('#applyServicePackageBtn').toggle(canEditComponents);
                 
                 loadServiceTasks();
                 loadComponents(); // This will also update cost summary
@@ -1581,6 +1691,149 @@ function updateCostSummary() {
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+}
+
+let allServicePackages = [];
+
+function loadServicePackages() {
+    const token = localStorage.getItem('authToken');
+    const branchId = maintenanceTicketData?.branchId;
+    if (!branchId) {
+        showAlert('Không tìm thấy thông tin chi nhánh', 'warning');
+        return;
+    }
+    
+    fetch(`${API_BASE_URL}/ServicePackage?branchId=${branchId}&statusCode=ACTIVE`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+        }
+    })
+    .then(response => response.json())
+    .then(packages => {
+        allServicePackages = packages && Array.isArray(packages) ? packages : [];
+        displayServicePackages(allServicePackages);
+    })
+    .catch(error => {
+        console.error('Error loading service packages:', error);
+        $('#servicePackageTableBody').html('<tr><td colspan="6" class="text-center text-danger">Lỗi tải danh sách gói dịch vụ</td></tr>');
+        showAlert('Lỗi tải danh sách gói dịch vụ', 'danger');
+    });
+}
+
+function displayServicePackages(packages) {
+    const tbody = $('#servicePackageTableBody');
+    
+    if (!packages || packages.length === 0) {
+        tbody.html('<tr><td colspan="6" class="text-center text-muted">Không có gói dịch vụ nào</td></tr>');
+        return;
+    }
+    
+    tbody.empty();
+    packages.forEach(pkg => {
+        const componentCount = pkg.components && Array.isArray(pkg.components) ? pkg.components.length : 0;
+        const price = pkg.price ? formatCurrency(pkg.price) : 'Chưa có giá';
+        
+        // Store package data in a way that can be retrieved
+        const row = $(`
+            <tr>
+                <td>
+                    <input type="radio" name="servicePackageSelect" class="service-package-radio" 
+                           value="${pkg.id}">
+                </td>
+                <td><strong>${escapeHtml(pkg.code || '-')}</strong></td>
+                <td>${escapeHtml(pkg.name || '-')}</td>
+                <td>${price}</td>
+                <td>${componentCount} phụ tùng</td>
+                <td><small class="text-muted">${escapeHtml((pkg.description || '-').substring(0, 50))}${pkg.description && pkg.description.length > 50 ? '...' : ''}</small></td>
+            </tr>
+        `);
+        
+        // Store full package data in a data attribute
+        row.data('package-data', pkg);
+        tbody.append(row);
+    });
+}
+
+function filterServicePackages(searchTerm) {
+    if (!searchTerm) {
+        displayServicePackages(allServicePackages);
+        return;
+    }
+    
+    const filtered = allServicePackages.filter(pkg => {
+        const name = (pkg.name || '').toLowerCase();
+        const code = (pkg.code || '').toLowerCase();
+        const description = (pkg.description || '').toLowerCase();
+        return name.includes(searchTerm) || code.includes(searchTerm) || description.includes(searchTerm);
+    });
+    
+    displayServicePackages(filtered);
+}
+
+function displaySelectedServicePackage(packageData) {
+    const infoDiv = $('#selectedServicePackageInfo');
+    const detailsDiv = $('#selectedServicePackageDetails');
+    
+    const componentList = packageData.components && Array.isArray(packageData.components) 
+        ? packageData.components.map(c => `- ${c.name} (${formatCurrency(c.unitPrice || 0)})`).join('<br>')
+        : '<p class="text-muted mb-0">Không có phụ tùng</p>';
+    
+    detailsDiv.html(`
+        <p><strong>Tên gói:</strong> ${escapeHtml(packageData.name || '-')}</p>
+        <p><strong>Mã gói:</strong> ${escapeHtml(packageData.code || '-')}</p>
+        <p><strong>Giá:</strong> ${formatCurrency(packageData.price || 0)}</p>
+        <p><strong>Mô tả:</strong> ${escapeHtml(packageData.description || '-')}</p>
+        <p><strong>Danh sách phụ tùng:</strong></p>
+        <div class="ms-3">${componentList}</div>
+        <div class="alert alert-warning mt-2 mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <small>Các phụ tùng trong gói sẽ được thêm vào phiếu bảo dưỡng. Phụ tùng đã tồn tại sẽ được bỏ qua.</small>
+        </div>
+    `);
+    
+    infoDiv.show();
+}
+
+function applyServicePackage(servicePackageId) {
+    const token = localStorage.getItem('authToken');
+    const btn = $('#confirmApplyServicePackageBtn');
+    const originalText = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang áp dụng...');
+    btn.prop('disabled', true);
+    
+    fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}/apply-service-package/${servicePackageId}`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        
+        if (data.success) {
+            showAlert('Áp dụng gói dịch vụ thành công!', 'success');
+            $('#applyServicePackageModal').modal('hide');
+            selectedServicePackageId = null;
+            $('#confirmApplyServicePackageBtn').prop('disabled', true);
+            $('#selectedServicePackageInfo').hide();
+            $('.service-package-radio').prop('checked', false);
+            
+            // Reload components and cost summary
+            loadComponents();
+            loadMaintenanceTicketDetails();
+        } else {
+            showAlert('Lỗi: ' + (data.message || 'Không thể áp dụng gói dịch vụ'), 'danger');
+        }
+    })
+    .catch(error => {
+        btn.html(originalText);
+        btn.prop('disabled', false);
+        console.error('Error:', error);
+        showAlert('Có lỗi xảy ra khi áp dụng gói dịch vụ: ' + error.message, 'danger');
+    });
 }
 
 function showAlert(message, type) {
