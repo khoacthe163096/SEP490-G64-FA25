@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Tạo Phiếu Bảo Dưỡng";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -405,7 +406,7 @@ function loadBranchesAndSelectUserBranch() {
     } catch {}
 
     // Tải danh sách chi nhánh
-    fetch('https://localhost:7173/api/Branch')
+    fetch('@apiBaseUrl/Branch')
         .then(response => response.json())
         .then(branchRes => {
             const select = $('#branchId');
@@ -418,7 +419,7 @@ function loadBranchesAndSelectUserBranch() {
 
             if (!userId) return;
             // Lấy thông tin nhân viên để biết chi nhánh
-            fetch(`https://localhost:7173/api/Employee/me`, {
+            fetch(`@apiBaseUrl/Employee/me`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -479,7 +480,7 @@ function loadScheduleServices() {
 }
 
 function loadServiceCategories() {
-    fetch('https://localhost:7173/api/ServiceCategory')
+    fetch('@apiBaseUrl/ServiceCategory')
         .then(r => r.json())
         .then(res => {
             const select = $('#serviceCategoryId');

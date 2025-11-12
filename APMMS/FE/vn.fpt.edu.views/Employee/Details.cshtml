@@ -539,6 +539,7 @@
 
 @section Scripts {
     <script>
+        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize image preview handler
             initializeImagePreview();
@@ -613,7 +614,7 @@
 
         function loadEmployeeDetails(id) {
             const token = localStorage.getItem('authToken');
-            fetch(`https://localhost:7173/api/Employee/${id}`, {
+            fetch(`${API_BASE_URL}/Employee/${id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -1039,7 +1040,7 @@
             console.log('Employee ID being updated:', currentEmployee.id);
 
             const token = localStorage.getItem('authToken');
-            const API_BASE_URL = 'https://localhost:7173/api';
+            const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
             
             // Handle image upload if file is selected
             const imageFile = document.getElementById('employeeImageInput').files[0];

@@ -167,9 +167,9 @@
             };
 
 
-            const API_BASE_URL = "https://localhost:7173";
+            const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
 
-            fetch(`${API_BASE_URL}/api/autoowner`, {
+            fetch(`${API_BASE_URL}/autoowner`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -193,9 +193,9 @@
                 });
         }
         function loadBranches() {
-            const API_BASE_URL = "https://localhost:7173";
+            const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
 
-            fetch(`${API_BASE_URL}/api/Branch`, {
+            fetch(`${API_BASE_URL}/Branch`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 }

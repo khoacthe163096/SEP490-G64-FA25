@@ -272,6 +272,23 @@
 
 @section Scripts {
     <script>
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
+
         $(document).ready(function() {
             console.log('Home page loaded, jQuery version:', $.fn.jquery);
             
@@ -292,7 +309,7 @@
                 console.log('Manual handler - Password length:', password ? password.length : 0);
                 
                 if (!username || !password) {
-                    alert('Vui lòng nhập đầy đủ thông tin đăng nhập');
+                    showAlert('Vui lòng nhập đầy đủ thông tin đăng nhập', 'warning');
                     return false;
                 }
                 

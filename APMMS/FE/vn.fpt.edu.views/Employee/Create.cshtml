@@ -556,7 +556,8 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo...';
 
-            fetch('https://localhost:7173/api/Employee', {
+            const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
+            fetch(`${API_BASE_URL}/Employee`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

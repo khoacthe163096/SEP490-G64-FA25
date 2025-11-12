@@ -57,6 +57,7 @@
 
 @section Scripts {
     <script>
+        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         let currentTechnicianId = null;
         
         $(document).ready(function() {
@@ -91,8 +92,8 @@
             // ✅ QUAN TRỌNG: Luôn load theo technician ID nếu có
             // Status filter sẽ được áp dụng ở client-side
             let url = currentTechnicianId 
-                ? `https://localhost:7173/api/ServiceTask/by-technician/${currentTechnicianId}`
-                : 'https://localhost:7173/api/ServiceTask';
+                ? `${API_BASE_URL}/ServiceTask/by-technician/${currentTechnicianId}`
+                : `${API_BASE_URL}/ServiceTask`;
             
             fetch(url, {
                 headers: {
@@ -193,7 +194,7 @@
         function updateTaskStatusFromList(taskId, newStatus) {
             const token = localStorage.getItem('authToken');
             
-            fetch(`https://localhost:7173/api/ServiceTask/${taskId}/status`, {
+            fetch(`${API_BASE_URL}/ServiceTask/${taskId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

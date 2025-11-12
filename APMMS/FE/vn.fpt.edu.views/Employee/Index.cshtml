@@ -121,6 +121,7 @@
 
 @section Scripts {
     <script>
+        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         let currentPage = 1;
         const pageSize = 10;
         let totalRecords = 0;
@@ -162,7 +163,7 @@
                 </tr>
             `;
 
-            fetch(`https://localhost:7173/api/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`, {
+            fetch(`${API_BASE_URL}/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -308,7 +309,7 @@
             // Update all employees sequentially
             for (const empId of employeeIds) {
                 try {
-                    const response = await fetch(`https://localhost:7173/api/Employee/${empId}/status`, {
+                    const response = await fetch(`${API_BASE_URL}/Employee/${empId}/status`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -452,7 +453,7 @@
         function deleteEmployee(id) {
             if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
                 const token = localStorage.getItem('authToken');
-                fetch(`https://localhost:7173/api/Employee/${id}`, {
+                fetch(`${API_BASE_URL}/Employee/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`,

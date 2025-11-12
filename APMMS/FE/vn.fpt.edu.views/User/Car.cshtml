@@ -33,7 +33,7 @@
 
 @section Scripts {
     <script>
-        const API_BASE = "https://localhost:7173/api";
+        const API_BASE = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         const ownerId = window.location.pathname.split("/").pop();
 
         document.addEventListener("DOMContentLoaded", loadCars);
@@ -84,11 +84,28 @@
                     if (!res.ok) throw new Error("Xóa thất bại");
                     loadCars();
                 })
-                .catch(err => alert(err.message));
+                .catch(err => showAlert(err.message, 'danger'));
         }
 
         function editCar(id) {
             window.location.href = `/Users/EditCar/${id}`;
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
         }
     </script>
 }

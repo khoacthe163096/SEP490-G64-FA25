@@ -70,17 +70,34 @@
                     data: payload,
                     success: function(res) {
                         if (res && res.success) {
-                            alert('Tạo loại linh kiện thành công!');
-                            window.location.href = '@Url.Action("Index", "TypeComponent")';
+                            showAlert('Tạo loại linh kiện thành công!', 'success');
+                            setTimeout(() => window.location.href = '@Url.Action("Index", "TypeComponent")', 1000);
                         } else {
-                            alert(res.message || 'Không thể tạo loại linh kiện!');
+                            showAlert(res.message || 'Không thể tạo loại linh kiện!', 'danger');
                         }
                     },
                     error: function() {
-                        alert('Lỗi khi gọi API!');
+                        showAlert('Lỗi khi gọi API!', 'danger');
                     }
                 });
             });
         });
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
     </script>
 }

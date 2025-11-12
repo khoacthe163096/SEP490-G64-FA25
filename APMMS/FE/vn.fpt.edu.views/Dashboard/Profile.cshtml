@@ -350,7 +350,7 @@
 
 @section Scripts {
     <script>
-        const API_BASE_URL = '@ViewBag.ApiBaseUrl' || 'https://localhost:7173/api';
+        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         let currentEmployee = null;
         let originalFormData = null;
 
@@ -372,14 +372,14 @@
                     if (file) {
                         // Validate file type
                         if (!file.type.startsWith('image/')) {
-                            alert('Vui lòng chọn file hình ảnh hợp lệ');
+                            showAlert('Vui lòng chọn file hình ảnh hợp lệ', 'warning');
                             e.target.value = '';
                             return;
                         }
                         
                         // Validate file size (max 5MB)
                         if (file.size > 5 * 1024 * 1024) {
-                            alert('Kích thước file không được vượt quá 5MB');
+                            showAlert('Kích thước file không được vượt quá 5MB', 'warning');
                             e.target.value = '';
                             return;
                         }
@@ -396,7 +396,7 @@
                             }
                         };
                         reader.onerror = function() {
-                            alert('Có lỗi xảy ra khi đọc file');
+                            showAlert('Có lỗi xảy ra khi đọc file', 'danger');
                             e.target.value = '';
                         };
                         reader.readAsDataURL(file);
@@ -839,6 +839,23 @@
                     showError('Có lỗi xảy ra khi cập nhật thông tin: ' + error.message);
                 });
             }
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
         }
     </script>
 }
