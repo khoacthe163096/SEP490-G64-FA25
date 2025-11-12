@@ -16,6 +16,8 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public DateTime? EndTime { get; set; }
         public string? PriorityLevel { get; set; }
         public string? Description { get; set; }
+        public long? ServiceCategoryId { get; set; }
+        public string? ServiceCategoryName { get; set; }
         
         // Navigation properties
         public string? CarName { get; set; }

@@ -28,11 +28,27 @@ namespace BE.vn.fpt.edu.repository
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
+                .Include(mt => mt.ServiceCategory)
                 .Include(mt => mt.ScheduleService)
                 .Include(mt => mt.VehicleCheckin)
                     .ThenInclude(vc => vc.VehicleCheckinImages)
                 .Include(mt => mt.MaintenanceTicketTechnicians)
                     .ThenInclude(mtt => mtt.Technician)
+                .FirstOrDefaultAsync(mt => mt.Id == id);
+        }
+
+        public async Task<MaintenanceTicket?> GetByIdWithBranchAsync(long id)
+        {
+            return await _context.MaintenanceTickets
+                .Include(mt => mt.Branch)
+                .FirstOrDefaultAsync(mt => mt.Id == id);
+        }
+
+        public async Task<MaintenanceTicket?> GetByIdWithCostDetailsAsync(long id)
+        {
+            return await _context.MaintenanceTickets
+                .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServiceTasks)
                 .FirstOrDefaultAsync(mt => mt.Id == id);
         }
 
@@ -44,6 +60,7 @@ namespace BE.vn.fpt.edu.repository
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
+                .OrderByDescending(mt => mt.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -57,6 +74,7 @@ namespace BE.vn.fpt.edu.repository
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
                 .Where(mt => mt.CarId == carId)
+                .OrderByDescending(mt => mt.CreatedAt)
                 .ToListAsync();
         }
 
@@ -68,6 +86,7 @@ namespace BE.vn.fpt.edu.repository
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
                 .Where(mt => mt.StatusCode == statusCode)
+                .OrderByDescending(mt => mt.CreatedAt)
                 .ToListAsync();
         }
 

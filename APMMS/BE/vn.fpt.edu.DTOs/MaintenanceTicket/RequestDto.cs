@@ -17,8 +17,13 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
 
         public long? ScheduleServiceId { get; set; }
 
+        public long? ServiceCategoryId { get; set; }
+
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string? StatusCode { get; set; } = "PENDING"; // Default status
+
+        [StringLength(20)]
+        public string? PriorityLevel { get; set; } // LOW | NORMAL | HIGH | URGENT
     }
 
     /// <summary>
@@ -41,11 +46,16 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
 
         public long? ScheduleServiceId { get; set; }
 
+        public long? ServiceCategoryId { get; set; }
+
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string? StatusCode { get; set; } = "PENDING";
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         public string? Description { get; set; }
+
+        [StringLength(20)]
+        public string? PriorityLevel { get; set; } // LOW | NORMAL | HIGH | URGENT
     }
 
     /// <summary>

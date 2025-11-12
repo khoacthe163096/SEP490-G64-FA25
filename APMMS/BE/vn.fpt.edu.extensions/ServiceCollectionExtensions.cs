@@ -34,6 +34,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IServiceScheduleRepository, ServiceScheduleRepository>();
             services.AddScoped<IServiceTaskRepository, ServiceTaskRepository>();
+            services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();
             services.AddScoped<ITotalReceiptRepository, TotalReceiptRepository>();
             services.AddScoped<ITypeComponentRepository, TypeComponentRepository>();
             services.AddScoped<ITicketComponentRepository, TicketComponentRepository>();

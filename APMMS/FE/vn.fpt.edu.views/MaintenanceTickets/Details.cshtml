@@ -4,6 +4,99 @@
     var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
+<style>
+    .basic-info-grid .info-section-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--bs-secondary);
+        margin-bottom: 0.75rem;
+    }
+
+    .basic-info-grid .info-section + .info-section {
+        border-top: 1px solid var(--bs-border-color);
+        padding-top: 1.5rem;
+    }
+
+    .basic-info-grid .info-row {
+        padding: 0.35rem 0;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+    }
+
+    .basic-info-grid .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .basic-info-grid .info-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .basic-info-grid .info-value {
+        font-size: 0.95rem;
+    }
+
+    .basic-info-grid .info-text-wrap {
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .basic-info-grid .info-description {
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        font-size: 0.95rem;
+        min-height: 3rem;
+    }
+
+    .basic-info-grid .info-description p {
+        margin-bottom: 0.5rem;
+    }
+
+    .basic-info-grid .info-description p:last-child {
+        margin-bottom: 0;
+    }
+
+    .basic-info-grid .tech-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .basic-info-grid .tech-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid var(--bs-border-color);
+        background-color: var(--bs-light);
+        font-size: 0.85rem;
+    }
+
+    .basic-info-grid .tech-pill .btn-link {
+        font-size: 0.75rem;
+    }
+
+    @@media (min-width: 576px) {
+        .basic-info-grid .info-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            align-items: start;
+            gap: 0.25rem 0.75rem;
+        }
+        .basic-info-grid .info-label {
+            min-width: 160px;
+            text-align: right;
+        }
+        .basic-info-grid .info-value {
+            padding-left: 0;
+        }
+    }
+</style>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -580,89 +673,96 @@ function displayBasicInfo(data) {
     const createdAt = new Date(data.createdDate).toLocaleDateString('vi-VN');
     const startTime = data.startTime ? new Date(data.startTime).toLocaleDateString('vi-VN') : 'Chưa bắt đầu';
     const endTime = data.endTime ? new Date(data.endTime).toLocaleDateString('vi-VN') : 'Chưa hoàn thành';
-    
+    const manufactureYear = data.manufacturingYear ?? data.manufactureYear ?? data.carManufactureYear ?? data.carYear ?? null;
+
+    const renderRow = (label, value, options = {}) => {
+        const { raw = false, valueClass = 'fw-semibold text-body' } = options;
+        const hasValue = value !== undefined && value !== null && value !== '';
+        const displayValue = hasValue ? value : 'N/A';
+        const formattedValue = raw ? displayValue : escapeHtml(String(displayValue));
+        return `
+            <div class="info-row d-flex flex-column flex-sm-row align-items-sm-start mb-2">
+                <span class="info-label text-muted text-sm-end me-sm-3">${escapeHtml(label)}</span>
+                <span class="info-value flex-grow-1 text-start ${valueClass}">${formattedValue}</span>
+            </div>
+        `;
+    };
+
+    let techniciansHtml = '<div class="text-muted">Chưa gán</div>';
+    if (data.technicians && data.technicians.length > 0) {
+        const techItems = data.technicians.map(t => {
+            const roleBadge = t.roleInTicket === 'PRIMARY'
+                ? '<span class="badge bg-success ms-1">Chính</span>'
+                : '<span class="badge bg-info ms-1">Phụ</span>';
+            const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
+            const removeBtn = canRemove
+                ? `<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
+                        <i class="fas fa-times"></i>
+                   </button>`
+                : '';
+            return `
+                <div class="tech-pill">
+                    <span>${escapeHtml(t.technicianName || 'N/A')} ${roleBadge}</span>
+                    ${removeBtn}
+                </div>
+            `;
+        }).join('\n');
+        techniciansHtml = `<div class="tech-list">${techItems}</div>`;
+    } else if (data.technicianName) {
+        techniciansHtml = `
+            <div class="tech-list">
+                <div class="tech-pill">
+                    <span>${escapeHtml(data.technicianName)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    const descriptionHtml = data.description
+        ? escapeHtml(data.description).replace(/\n/g, '<br>')
+        : '<span class="text-muted">Không có mô tả</span>';
+
+    const codeValue = data.code || `MTK-${data.id}`;
+
     basicInfo.html(`
-        <div class="col-md-6">
-            <strong>Mã phiếu:</strong><br>
-            ${data.code || 'MTK-' + data.id}
-        </div>
-        <div class="col-md-6">
-            <strong>Xe:</strong><br>
-            ${data.carName || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Biển số:</strong><br>
-            ${data.licensePlate || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Mẫu xe:</strong><br>
-            ${data.carModel || 'N/A'}
-        </div>
-        <div class="col-12"><hr class="my-2"></div>
-        <div class="col-md-6">
-            <strong>Khách hàng:</strong><br>
-            ${data.customerName || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Điện thoại:</strong><br>
-            ${data.customerPhone || 'N/A'}
-        </div>
-        <div class="col-12">
-            <strong>Địa chỉ:</strong><br>
-            ${data.customerAddress || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Tư vấn viên:</strong><br>
-            ${data.consulterName || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Kỹ thuật viên:</strong><br>
-            ${data.technicians && data.technicians.length > 0 
-                ? data.technicians.map(t => {
-                    const roleBadge = t.roleInTicket === 'PRIMARY' 
-                        ? '<span class="badge bg-success ms-1">Chính</span>' 
-                        : '<span class="badge bg-info ms-1">Phụ</span>';
-                    const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
-                    const removeBtn = canRemove 
-                        ? `<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
-                            <i class="fas fa-times"></i>
-                           </button>`
-                        : '';
-                    return `<div class="mb-1 d-flex align-items-center">
-                        <span>${t.technicianName || 'N/A'} ${roleBadge}</span>
-                        ${removeBtn}
-                    </div>`;
-                }).join('')
-                : (data.technicianName ? `<div>${data.technicianName}</div>` : '<div>Chưa gán</div>')
-            }
-        </div>
-        <div class="col-md-6">
-            <strong>Chi nhánh:</strong><br>
-            ${data.branchName || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Dịch vụ:</strong><br>
-            ${data.scheduleServiceName || 'N/A'}
-        </div>
-        <div class="col-md-6">
-            <strong>Ngày tạo:</strong><br>
-            ${createdAt}
-        </div>
-        <div class="col-md-6">
-            <strong>Mức độ ưu tiên:</strong><br>
-            ${getPriorityBadge(data.priorityLevel)}
-        </div>
-        <div class="col-md-6">
-            <strong>Bắt đầu:</strong><br>
-            ${startTime}
-        </div>
-        <div class="col-md-6">
-            <strong>Hoàn thành:</strong><br>
-            ${endTime}
-        </div>
-        <div class="col-12">
-            <strong>Mô tả:</strong><br>
-            ${data.description || 'Không có mô tả'}
+        <div class="row basic-info-grid">
+            <div class="col-lg-6">
+                <div class="info-section mb-4">
+                    <h6 class="info-section-title">Thông tin khách hàng</h6>
+                    ${renderRow('Khách hàng', data.customerName)}
+                    ${renderRow('Điện thoại', data.customerPhone)}
+                    ${renderRow('Địa chỉ', data.customerAddress, { valueClass: 'fw-semibold text-body info-text-wrap' })}
+                </div>
+                <div class="info-section mb-4">
+                    <h6 class="info-section-title">Thông tin xe</h6>
+                    ${renderRow('Xe', data.carName)}
+                    ${renderRow('Biển số', data.licensePlate)}
+                    ${renderRow('Mẫu xe', data.carModel)}
+                    ${renderRow('Năm sản xuất', manufactureYear)}
+                </div>
+                <div class="info-section mb-0">
+                    <h6 class="info-section-title mb-2">Mô tả</h6>
+                    <div class="info-description info-text-wrap">${descriptionHtml}</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="info-section mb-4">
+                    <h6 class="info-section-title">Thông tin phiếu</h6>
+                    ${renderRow('Mã phiếu', codeValue)}
+                    ${renderRow('Chi nhánh', data.branchName)}
+                    ${renderRow('Dịch vụ', data.serviceCategoryName || data.scheduleServiceName)}
+                    ${renderRow('Mức ưu tiên', getPriorityBadge(data.priorityLevel), { raw: true, valueClass: 'd-inline-flex align-items-center gap-2' })}
+                    ${renderRow('Trạng thái', getStatusBadge(data.statusCode), { raw: true, valueClass: 'd-inline-flex align-items-center gap-2' })}
+                    ${renderRow('Ngày tạo', createdAt)}
+                    ${renderRow('Bắt đầu', startTime)}
+                    ${renderRow('Hoàn thành', endTime)}
+                    ${renderRow('Tư vấn viên', data.consulterName)}
+                </div>
+                <div class="info-section mb-4">
+                    <h6 class="info-section-title mb-2">Kỹ thuật viên</h6>
+                    ${techniciansHtml}
+                </div>
+            </div>
         </div>
     `);
 }

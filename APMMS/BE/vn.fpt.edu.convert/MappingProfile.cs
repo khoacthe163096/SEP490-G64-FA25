@@ -51,6 +51,7 @@ namespace BE.vn.fpt.edu.convert
             // Employee mappings
             CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.BranchId, opt => opt.MapFrom(src => src.BranchId))
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
                 .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => src.Address))
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
@@ -70,6 +71,8 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>()
                 // Basic fields
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.ServiceCategoryId, opt => opt.MapFrom(src => src.ServiceCategoryId))
+                .ForMember(dest => dest.ServiceCategoryName, opt => opt.MapFrom(src => src.ServiceCategory != null ? src.ServiceCategory.Name : null))
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
                 .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? ($"{src.Consulter.FirstName} {src.Consulter.LastName}").Trim() : null))
                 .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? ($"{src.Technician.FirstName} {src.Technician.LastName}").Trim() : null))

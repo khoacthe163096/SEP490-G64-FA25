@@ -139,9 +139,19 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="branchId" required>
+                                    <input type="hidden" id="branchIdHidden" />
+                                    <select class="form-select" id="branchId" required disabled>
                                         <option value="">Chọn chi nhánh</option>
                                         <!-- Will be loaded dynamically -->
+                                    </select>
+                                    <div class="form-text"><span>Chi nhánh được tự động lấy theo tư vấn viên:</span> <strong id="branchNameDisplay">(đang tải...)</strong></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="serviceCategoryId" class="form-label">Nhóm dịch vụ</label>
+                                    <select class="form-select" id="serviceCategoryId">
+                                        <option value="">Chọn nhóm dịch vụ (tuỳ chọn)</option>
                                     </select>
                                 </div>
                             </div>
@@ -156,15 +166,6 @@
                                         <option value="NORMAL">Bình thường</option>
                                         <option value="HIGH">Cao</option>
                                         <option value="URGENT">Khẩn cấp</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="statusCode" class="form-label">Trạng thái ban đầu</label>
-                                    <select class="form-select" id="statusCode">
-                                        <option value="PENDING">Chờ xử lý</option>
-                                        <option value="ASSIGNED">Đã gán kỹ thuật viên</option>
                                     </select>
                                 </div>
                             </div>
@@ -208,6 +209,7 @@ $(document).ready(function() {
     loadConsulterFromToken();
     // loadTechniciansByRole(); // ✅ Đã comment - không cho phép chọn kỹ thuật viên khi tạo
     loadBranchesAndSelectUserBranch();
+    loadServiceCategories();
     
     // Filter events
     $('#checkinStatusFilter, #checkinSearchInput, #checkinDateFilter').on('change keyup', function() {
@@ -416,20 +418,46 @@ function loadBranchesAndSelectUserBranch() {
 
             if (!userId) return;
             // Lấy thông tin nhân viên để biết chi nhánh
-            fetch(`https://localhost:7173/api/Employee/${userId}`)
-                .then(r => r.json())
-                .then(emp => {
-                    if (!emp || !emp.branchName) return;
+            fetch(`https://localhost:7173/api/Employee/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(async r => {
+                    if (!r.ok) throw new Error(`Employee fetch failed: ${r.status}`);
+                    return r.json();
+                })
+                .then(empRes => {
+                    if (!empRes || empRes.success !== true || !empRes.data) throw new Error('Empty employee');
+                    const emp = empRes.data;
+                    // Prefer branchId if available
+                    if (emp.branchId) {
+                        $('#branchId').val(String(emp.branchId));
+                        $('#branchIdHidden').val(String(emp.branchId));
+                        $('#branchNameDisplay').text(emp.branchName || $('#branchId option:selected').text());
+                    } else if (emp.branchName) {
                     $('#branchId option').each(function() {
                         if ($(this).text() === emp.branchName) {
                             $('#branchId').val($(this).val());
                         }
                     });
+                        $('#branchIdHidden').val($('#branchId').val());
+                        $('#branchNameDisplay').text(emp.branchName);
+                    }
+                    // Disable to enforce consulter's branch
+                    $('#branchId').prop('disabled', true);
                 })
-                .catch(() => {});
+                .catch(err => {
+                    console.warn('Employee fetch error, blocking submit:', err);
+                    $('#branchNameDisplay').text('Không lấy được chi nhánh');
+                    // Block submit if cannot resolve branch
+                    $('#createTicketBtn').prop('disabled', true).text('Không thể tạo - thiếu chi nhánh');
+                });
         })
         .catch(error => {
             console.error('Error loading branches:', error);
+            $('#branchNameDisplay').text('Không lấy được danh sách chi nhánh');
+            $('#createTicketBtn').prop('disabled', true).text('Không thể tạo - lỗi chi nhánh');
         });
 }
 
@@ -450,6 +478,21 @@ function loadScheduleServices() {
         });
 }
 
+function loadServiceCategories() {
+    fetch('https://localhost:7173/api/ServiceCategory')
+        .then(r => r.json())
+        .then(res => {
+            const select = $('#serviceCategoryId');
+            select.find('option:not(:first)').remove();
+            if (res && res.success && Array.isArray(res.data)) {
+                res.data.forEach(item => {
+                    select.append(`<option value="${item.id}">${item.name}</option>`);
+                });
+            }
+        })
+        .catch(err => console.error('Error loading service categories:', err));
+}
+
 function createMaintenanceTicket() {
     if (!selectedCheckinId) {
         showAlert('Vui lòng chọn vehicle check-in', 'warning');
@@ -464,12 +507,17 @@ function createMaintenanceTicket() {
         consulterId: $('#consulterId').val(),
         technicianId: null, // ✅ Luôn null khi tạo phiếu
         technicianIds: null, // ✅ Luôn null khi tạo phiếu
-        branchId: $('#branchId').val(),
-        scheduleServiceId: $('#scheduleServiceId').val() || null,
-        statusCode: 'PENDING', // ✅ Luôn PENDING khi tạo từ check-in
+        branchId: $('#branchIdHidden').val(),
+        scheduleServiceId: $('#scheduleServiceId')?.val?.() || null,
+        serviceCategoryId: $('#serviceCategoryId').val() || null,
         priorityLevel: $('#priorityLevel').val(),
         description: $('#description').val()
     };
+
+    if (!formData.branchId) {
+        showAlert('Không lấy được chi nhánh của tư vấn viên. Vui lòng đăng nhập lại hoặc thử lại.', 'danger');
+        return;
+    }
     
     // Validation
     if (!formData.consulterId || !formData.branchId) {

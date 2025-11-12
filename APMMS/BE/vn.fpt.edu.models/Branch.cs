@@ -36,4 +36,6 @@ public partial class Branch
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 
     public virtual ICollection<VehicleCheckin> VehicleCheckins { get; set; } = new List<VehicleCheckin>();
+
+    public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 }

@@ -23,10 +23,16 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            // Validate MaintenanceTicket exists
-            var ticket = await _context.MaintenanceTickets.FindAsync(dto.MaintenanceTicketId);
+            // Validate MaintenanceTicket exists and get BranchId
+            var ticket = await _context.MaintenanceTickets
+                .Include(mt => mt.Branch)
+                .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId);
             if (ticket == null)
                 throw new ArgumentException("Maintenance ticket not found");
+
+            // ✅ VALIDATION: Không cho phép thêm component vào phiếu đã hoàn thành hoặc đã hủy
+            if (ticket.StatusCode == "COMPLETED" || ticket.StatusCode == "CANCELLED")
+                throw new ArgumentException("Không thể thêm component vào phiếu đã hoàn thành hoặc đã hủy");
 
             // Validate Component exists
             var component = await _context.Components
@@ -34,6 +40,18 @@ namespace BE.vn.fpt.edu.services
                 .FirstOrDefaultAsync(c => c.Id == dto.ComponentId);
             if (component == null)
                 throw new ArgumentException("Component not found");
+
+            // ✅ VALIDATION: Component phải thuộc cùng Branch với MaintenanceTicket
+            if (component.BranchId != ticket.BranchId)
+                throw new ArgumentException("Component không thuộc chi nhánh của phiếu bảo dưỡng");
+
+            // ✅ VALIDATION: Component phải ở trạng thái ACTIVE
+            if (component.StatusCode != "ACTIVE")
+                throw new ArgumentException("Component không khả dụng (trạng thái không phải ACTIVE)");
+
+            // ✅ VALIDATION: Kiểm tra số lượng tồn kho
+            if (component.QuantityStock.HasValue && dto.Quantity > component.QuantityStock.Value)
+                throw new ArgumentException($"Không đủ số lượng tồn kho. Hiện có: {component.QuantityStock.Value}, yêu cầu: {dto.Quantity}");
 
             // Check if already exists
             var existing = await _context.TicketComponents
@@ -45,10 +63,20 @@ namespace BE.vn.fpt.edu.services
             // Use component's unit price if not provided
             var unitPrice = dto.UnitPrice ?? component.UnitPrice ?? 0;
 
+            // ✅ Trừ số lượng tồn kho
+            if (component.QuantityStock.HasValue)
+            {
+                component.QuantityStock -= dto.Quantity;
+                if (component.QuantityStock < 0)
+                    component.QuantityStock = 0;
+                _context.Components.Update(component);
+            }
+
             var entity = new TicketComponent
             {
                 MaintenanceTicketId = dto.MaintenanceTicketId,
                 ComponentId = dto.ComponentId,
+                BranchId = ticket.BranchId, // ✅ Tự động set BranchId từ MaintenanceTicket
                 Quantity = dto.Quantity,
                 ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity, // Nếu không có ActualQuantity thì lấy bằng Quantity
                 UnitPrice = unitPrice
@@ -80,21 +108,89 @@ namespace BE.vn.fpt.edu.services
             var existing = await _repository.GetByIdAsync(id);
             if (existing == null) return null;
 
+            // Validate MaintenanceTicket exists and get status
+            var ticket = await _context.MaintenanceTickets
+                .FirstOrDefaultAsync(mt => mt.Id == existing.MaintenanceTicketId);
+            if (ticket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            // ✅ VALIDATION: Không cho phép cập nhật component trong phiếu đã hoàn thành hoặc đã hủy
+            if (ticket.StatusCode == "COMPLETED" || ticket.StatusCode == "CANCELLED")
+                throw new ArgumentException("Không thể cập nhật component trong phiếu đã hoàn thành hoặc đã hủy");
+
             // Validate Component exists if changed
+            Component? component = null;
             if (existing.ComponentId != dto.ComponentId)
             {
-                var component = await _context.Components
+                component = await _context.Components
                     .Include(c => c.TypeComponent)
                     .FirstOrDefaultAsync(c => c.Id == dto.ComponentId);
                 if (component == null)
                     throw new ArgumentException("Component not found");
+
+                // ✅ VALIDATION: Component mới phải thuộc cùng Branch với MaintenanceTicket
+                if (component.BranchId != ticket.BranchId)
+                    throw new ArgumentException("Component không thuộc chi nhánh của phiếu bảo dưỡng");
+
+                // ✅ VALIDATION: Component phải ở trạng thái ACTIVE
+                if (component.StatusCode != "ACTIVE")
+                    throw new ArgumentException("Component không khả dụng (trạng thái không phải ACTIVE)");
+            }
+
+            // Get component for price validation
+            if (component == null)
+            {
+                component = await _context.Components.FindAsync(dto.ComponentId);
             }
 
             // Use component's unit price if not provided
             if (!dto.UnitPrice.HasValue)
             {
-                var component = await _context.Components.FindAsync(dto.ComponentId);
                 dto.UnitPrice = component?.UnitPrice ?? 0;
+            }
+
+            // ✅ VALIDATION: Kiểm tra số lượng tồn kho (nếu thay đổi component hoặc quantity)
+            if (component != null && (existing.ComponentId != dto.ComponentId || existing.Quantity != dto.Quantity))
+            {
+                // Tính số lượng cần thêm/bớt
+                var quantityDiff = dto.Quantity - existing.Quantity;
+                
+                if (existing.ComponentId != dto.ComponentId)
+                {
+                    // Đổi component: hoàn trả component cũ, trừ component mới
+                    var oldComponent = await _context.Components.FindAsync(existing.ComponentId);
+                    if (oldComponent != null && oldComponent.QuantityStock.HasValue)
+                    {
+                        oldComponent.QuantityStock += existing.Quantity;
+                        _context.Components.Update(oldComponent);
+                    }
+
+                    // Kiểm tra component mới có đủ tồn kho
+                    if (component.QuantityStock.HasValue && dto.Quantity > component.QuantityStock.Value)
+                        throw new ArgumentException($"Không đủ số lượng tồn kho. Hiện có: {component.QuantityStock.Value}, yêu cầu: {dto.Quantity}");
+
+                    // Trừ component mới
+                    if (component.QuantityStock.HasValue)
+                    {
+                        component.QuantityStock -= dto.Quantity;
+                        if (component.QuantityStock < 0)
+                            component.QuantityStock = 0;
+                        _context.Components.Update(component);
+                    }
+                }
+                else if (quantityDiff != 0)
+                {
+                    // Chỉ thay đổi số lượng: điều chỉnh tồn kho
+                    if (component.QuantityStock.HasValue)
+                    {
+                        var newStock = component.QuantityStock.Value - quantityDiff;
+                        if (newStock < 0)
+                            throw new ArgumentException($"Không đủ số lượng tồn kho. Hiện có: {component.QuantityStock.Value}, yêu cầu thêm: {quantityDiff}");
+
+                        component.QuantityStock = newStock;
+                        _context.Components.Update(component);
+                    }
+                }
             }
 
             existing.ComponentId = dto.ComponentId;
@@ -102,6 +198,12 @@ namespace BE.vn.fpt.edu.services
             // Cập nhật ActualQuantity: nếu có giá trị thì dùng, nếu null thì set bằng Quantity
             existing.ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity;
             existing.UnitPrice = dto.UnitPrice;
+            // ✅ BranchId không thay đổi khi update (luôn theo MaintenanceTicket)
+            // Đảm bảo BranchId luôn được set từ MaintenanceTicket (trường hợp data cũ có thể chưa có)
+            if (existing.BranchId != ticket.BranchId)
+            {
+                existing.BranchId = ticket.BranchId;
+            }
 
             var updated = await _repository.UpdateAsync(existing);
             
@@ -116,6 +218,27 @@ namespace BE.vn.fpt.edu.services
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
                 return false;
+
+            // Validate MaintenanceTicket exists and get status
+            var ticket = await _context.MaintenanceTickets
+                .FirstOrDefaultAsync(mt => mt.Id == entity.MaintenanceTicketId);
+            if (ticket != null)
+            {
+                // ✅ VALIDATION: Không cho phép xóa component trong phiếu đã hoàn thành hoặc đã hủy
+                if (ticket.StatusCode == "COMPLETED" || ticket.StatusCode == "CANCELLED")
+                    throw new ArgumentException("Không thể xóa component trong phiếu đã hoàn thành hoặc đã hủy");
+            }
+
+            // ✅ Hoàn trả component về tồn kho
+            var component = await _context.Components.FindAsync(entity.ComponentId);
+            if (component != null && component.QuantityStock.HasValue)
+            {
+                // Hoàn trả số lượng đã lấy (dùng Quantity, không phải ActualQuantity vì có thể đã dùng rồi)
+                // Hoặc có thể hoàn trả ActualQuantity nếu chưa dùng hết
+                // Ở đây hoàn trả Quantity để đơn giản
+                component.QuantityStock += entity.Quantity;
+                _context.Components.Update(component);
+            }
             
             var maintenanceTicketId = entity.MaintenanceTicketId ?? 0;
             var result = await _repository.DeleteAsync(id);

@@ -47,6 +47,7 @@ namespace BE.vn.fpt.edu.repository
             if (existing == null) return null;
 
             existing.ComponentId = entity.ComponentId;
+            existing.BranchId = entity.BranchId; // ✅ Thêm lại BranchId
             existing.Quantity = entity.Quantity;
             existing.ActualQuantity = entity.ActualQuantity;
             existing.UnitPrice = entity.UnitPrice;

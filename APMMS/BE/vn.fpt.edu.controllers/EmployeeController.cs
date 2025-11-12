@@ -164,6 +164,29 @@ namespace BE.vn.fpt.edu.controllers
             var employees = await _employeeService.FilterAsync(isDelete, roleId);
             return Ok(employees);
         }
+
+        /// <summary>
+        /// Trả về thông tin cơ bản của employee hiện tại (dùng để lấy Branch cho UI). Accessible cho mọi user đã đăng nhập.
+        /// </summary>
+        [HttpGet("me")]
+        [Authorize]
+        public async Task<IActionResult> GetMe()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!long.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new { success = false, message = "Invalid user" });
+            }
+
+            // Dùng service để lấy thông tin employee theo id, hoặc truy vấn tối thiểu từ DbContext
+            var emp = await _employeeService.GetByIdAsync(userId);
+            if (emp == null)
+            {
+                return NotFound(new { success = false, message = "Employee not found" });
+            }
+
+            return Ok(new { success = true, data = new { id = userId, branchId = emp.BranchId, branchName = emp.BranchName } });
+        }
         
         /// <summary>
         /// ✅ Cập nhật Status của Employee (ACTIVE hoặc INACTIVE)

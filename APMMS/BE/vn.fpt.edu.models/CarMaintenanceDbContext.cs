@@ -66,8 +66,13 @@ public partial class CarMaintenanceDbContext : DbContext
     public virtual DbSet<VehicleType> VehicleTypes { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("server=DESKTOP-ITTJS91;database=CarMaintenanceDB;uid=sa;pwd=123;TrustServerCertificate=True;");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
+        }
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -740,9 +745,12 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.HasIndex(e => e.MaintenanceTicketId, "IX_ticket_component_ticket_id");
 
+            entity.HasIndex(e => e.BranchId, "IX_ticket_component_branch_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ComponentId).HasColumnName("component_id");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.ActualQuantity)
                 .HasColumnType("decimal(18, 2)")
@@ -750,6 +758,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.TicketComponents)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_ticket_component_branch");
 
             entity.HasOne(d => d.Component).WithMany(p => p.TicketComponents)
                 .HasForeignKey(d => d.ComponentId)
