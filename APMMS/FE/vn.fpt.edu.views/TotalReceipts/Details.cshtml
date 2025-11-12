@@ -1,0 +1,598 @@
+@{
+    ViewData["Title"] = "Chi tiết hóa đơn";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
+    var totalReceiptId = ViewBag.TotalReceiptId ?? 0;
+}
+
+<style>
+    .invoice-header-card {
+        border-radius: 1rem;
+        box-shadow: var(--bs-box-shadow-sm);
+    }
+
+    .invoice-status-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .invoice-status-badge.pending {
+        background: rgba(255, 193, 7, 0.15);
+        color: #b78000;
+    }
+
+    .invoice-status-badge.paid {
+        background: rgba(25, 135, 84, 0.15);
+        color: #157347;
+    }
+
+    .summary-tile {
+        border: 1px solid rgba(13, 110, 253, 0.12);
+        border-radius: 0.85rem;
+        padding: 1rem 1.2rem;
+        background: rgba(13, 110, 253, 0.03);
+    }
+
+    .summary-tile .label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--bs-secondary);
+        margin-bottom: 0.35rem;
+    }
+
+    .summary-tile .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .table thead th {
+        background-color: rgba(13, 110, 253, 0.05);
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+    }
+
+    .table tbody td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .cost-summary-card {
+        border-radius: 0.85rem;
+        border: 1px solid var(--bs-border-color);
+        box-shadow: var(--bs-box-shadow-sm);
+    }
+
+    .cost-summary-card .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.35rem;
+        font-size: 0.95rem;
+    }
+
+    .cost-summary-card .summary-row.total {
+        font-weight: 700;
+        font-size: 1.05rem;
+        border-top: 1px dashed rgba(0, 0, 0, 0.1);
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .note-box {
+        border-radius: 0.75rem;
+        border: 1px dashed rgba(13, 110, 253, 0.35);
+        padding: 0.85rem 1rem;
+        background: rgba(13, 110, 253, 0.03);
+    }
+
+    .loading-placeholder {
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bs-secondary);
+    }
+
+    @@media (max-width: 767.98px) {
+        .summary-tile {
+            padding: 0.85rem;
+        }
+
+        .summary-tile .value {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card invoice-header-card mb-4">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="mb-1" id="invoiceCode">Chi tiết hóa đơn</h4>
+                        <div class="text-muted" id="invoiceCreated">-</div>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span id="invoiceStatus" class="invoice-status-badge pending">Đang tải...</span>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.print()">
+                            <i class="fas fa-print me-1"></i>In hóa đơn
+                        </button>
+                        <a href="/TotalReceipts" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Quay lại
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="invoiceSummary">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="summary-tile">
+                                <div class="label">Khách hàng</div>
+                                <div class="value" id="summaryCustomer">-</div>
+                                <div class="text-muted small" id="summaryCustomerPhone"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="summary-tile">
+                                <div class="label">Xe</div>
+                                <div class="value" id="summaryCar">-</div>
+                                <div class="text-muted small" id="summaryLicense"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="summary-tile">
+                                <div class="label">Chi nhánh</div>
+                                <div class="value" id="summaryBranch">-</div>
+                                <div class="text-muted small" id="summaryTicketCode"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="summary-tile">
+                                <div class="label">Tổng thanh toán</div>
+                                <div class="value text-primary" id="summaryTotal">0 ₫</div>
+                                <div class="text-muted small" id="summaryCurrency">VND</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-info-circle text-primary"></i>Thông tin hóa đơn
+                    </div>
+                    <div class="row g-3" id="invoiceDetailInfo">
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Mã hóa đơn</div>
+                            <div id="detailCode">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Ngày tạo</div>
+                            <div id="detailCreated">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Trạng thái</div>
+                            <div id="detailStatus">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Phiếu bảo dưỡng</div>
+                            <div id="detailTicketLink">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Kế toán xử lý</div>
+                            <div id="detailAccountant">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Ghi chú</div>
+                            <div id="detailNote" class="text-muted fst-italic">Không có ghi chú</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-tasks text-primary"></i>Danh sách công việc
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-2">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;" class="text-center">#</th>
+                                    <th>Tên công việc</th>
+                                    <th style="width: 120px;" class="text-end">Thời gian chuẩn</th>
+                                    <th style="width: 130px;" class="text-end">Thời gian thực tế</th>
+                                    <th style="width: 140px;" class="text-end">Phí nhân công</th>
+                                    <th style="width: 120px;">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tasksTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Đang tải danh sách công việc...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="tasksEmptyState" class="text-muted fst-italic" style="display:none;">
+                        Không có công việc nào.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-cogs text-primary"></i>Phụ tùng sử dụng
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-2">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;" class="text-center">#</th>
+                                    <th>Phụ tùng</th>
+                                    <th style="width: 120px;" class="text-end">Số lượng</th>
+                                    <th style="width: 140px;" class="text-end">Đơn giá</th>
+                                    <th style="width: 150px;" class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="componentsTableBody">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Đang tải danh sách phụ tùng...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="componentsEmptyState" class="text-muted fst-italic" style="display:none;">
+                        Chưa có phụ tùng nào được ghi nhận.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card cost-summary-card mb-4">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-calculator text-primary"></i>Tổng hợp chi phí
+                    </div>
+                    <div class="summary-row">
+                        <span>Phí nhân công</span>
+                        <span id="summaryLaborCost">0 ₫</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Chi phí phụ tùng</span>
+                        <span id="summaryComponentCost">0 ₫</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Thuế (VAT)</span>
+                        <span id="summaryVat">0 ₫</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Phụ thu</span>
+                        <span id="summarySurcharge">0 ₫</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Giảm giá</span>
+                        <span id="summaryDiscount">0 ₫</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Tổng thanh toán</span>
+                        <span id="summaryGrandTotal">0 ₫</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-sticky-note text-primary"></i>Ghi chú hóa đơn
+                    </div>
+                    <div class="note-box" id="noteBox">
+                        Không có ghi chú.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const API_BASE_URL = '@apiBaseUrl';
+        const RECEIPT_ID = Number('@totalReceiptId');
+
+        let receiptData = null;
+        let maintenanceTicketId = null;
+        let tasksData = [];
+        let componentsData = [];
+
+        $(document).ready(function () {
+            if (!RECEIPT_ID || Number.isNaN(RECEIPT_ID)) {
+                showAlert('Không tìm thấy mã hóa đơn hợp lệ.', 'danger');
+                return;
+            }
+            loadReceiptDetails();
+        });
+
+        function loadReceiptDetails() {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(async response => {
+                    if (!response.ok) {
+                        const message = await response.text();
+                        throw new Error(message || `HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (!result.success || !result.data) {
+                        throw new Error(result.message || 'Không thể tải thông tin hóa đơn.');
+                    }
+                    receiptData = result.data;
+                    maintenanceTicketId = receiptData.maintenanceTicketId;
+                    renderInvoiceSummary(receiptData);
+                    updateCostSummary();
+
+                    if (maintenanceTicketId) {
+                        loadServiceTasks(maintenanceTicketId);
+                        loadComponents(maintenanceTicketId);
+                    } else {
+                        renderTasks([]);
+                        renderComponents([]);
+                    }
+                })
+                .catch(error => {
+                    console.error('loadReceiptDetails error:', error);
+                    showAlert('Không thể tải thông tin chi tiết hóa đơn.', 'danger');
+                });
+        }
+
+        function renderInvoiceSummary(data) {
+            $('#invoiceCode').text(data.code || 'Hoá đơn');
+            $('#invoiceCreated').text(formatDateTime(data.createdAt));
+            $('#invoiceStatus').removeClass('pending paid').addClass(getStatusClass(data.statusCode)).text(getStatusText(data.statusCode));
+
+            $('#summaryCustomer').text(data.customerName || 'Không rõ');
+            $('#summaryCustomerPhone').text(data.customerPhone || '');
+            $('#summaryCar').text(data.carName || 'Không rõ');
+            $('#summaryLicense').text(data.licensePlate || '');
+            $('#summaryBranch').text(data.branchName || 'Không rõ');
+            $('#summaryTicketCode').text(data.maintenanceTicketCode ? `Phiếu: ${data.maintenanceTicketCode}` : '');
+
+            const finalAmount = data.finalAmount ?? data.amount ?? data.subtotal ?? 0;
+            $('#summaryTotal').text(formatCurrency(finalAmount));
+            $('#summaryCurrency').text(data.currencyCode || 'VND');
+
+            $('#detailCode').text(data.code || '-');
+            $('#detailCreated').text(formatDateTime(data.createdAt));
+            $('#detailStatus').html(`<span class="invoice-status-badge ${getStatusClass(data.statusCode)}">${getStatusText(data.statusCode)}</span>`);
+
+            if (data.maintenanceTicketId) {
+                $('#detailTicketLink').html(`<a href="/MaintenanceTickets/Details/${data.maintenanceTicketId}" class="text-decoration-none">${data.maintenanceTicketCode || 'Xem phiếu'}</a>`);
+            } else {
+                $('#detailTicketLink').text('Không xác định');
+            }
+
+            $('#detailAccountant').text(data.accountantName || 'Chưa xác định');
+
+            if (data.note) {
+                $('#detailNote').text(data.note);
+                $('#noteBox').text(data.note);
+            } else {
+                $('#detailNote').text('Không có ghi chú');
+                $('#noteBox').text('Không có ghi chú.');
+            }
+        }
+
+        function loadServiceTasks(ticketId) {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/ServiceTask/by-ticket/${ticketId}`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && Array.isArray(result.data)) {
+                        tasksData = result.data;
+                    } else {
+                        tasksData = [];
+                    }
+                    renderTasks(tasksData);
+                    updateCostSummary();
+                })
+                .catch(error => {
+                    console.error('loadServiceTasks error:', error);
+                    tasksData = [];
+                    renderTasks(tasksData);
+                    updateCostSummary();
+                });
+        }
+
+        function renderTasks(tasks) {
+            const tbody = $('#tasksTableBody');
+            tbody.empty();
+
+            if (!tasks.length) {
+                $('#tasksEmptyState').show();
+                return;
+            }
+
+            $('#tasksEmptyState').hide();
+            tasks.forEach((task, index) => {
+                const standardTime = task.standardLaborTime ?? 0;
+                const actualTime = task.actualLaborTime ?? 0;
+                tbody.append(`
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>
+                            <div class="fw-semibold">${escapeHtml(task.taskName || 'Công việc')}</div>
+                            ${task.description ? `<div class="text-muted small">${escapeHtml(task.description)}</div>` : ''}
+                        </td>
+                        <td class="text-end">${standardTime.toFixed(2)} h</td>
+                        <td class="text-end">${actualTime.toFixed(2)} h</td>
+                        <td class="text-end">${formatCurrency(task.laborCost || 0)}</td>
+                        <td>${renderTaskStatus(task.statusCode)}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function loadComponents(ticketId) {
+            const token = localStorage.getItem('authToken');
+            fetch(`${API_BASE_URL}/TicketComponent/by-maintenance-ticket/${ticketId}`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : ''
+                }
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && Array.isArray(result.data)) {
+                        componentsData = result.data;
+                    } else {
+                        componentsData = [];
+                    }
+                    renderComponents(componentsData);
+                    updateCostSummary();
+                })
+                .catch(error => {
+                    console.error('loadComponents error:', error);
+                    componentsData = [];
+                    renderComponents(componentsData);
+                    updateCostSummary();
+                });
+        }
+
+        function renderComponents(components) {
+            const tbody = $('#componentsTableBody');
+            tbody.empty();
+
+            if (!components.length) {
+                $('#componentsEmptyState').show();
+                return;
+            }
+
+            $('#componentsEmptyState').hide();
+            components.forEach((component, index) => {
+                const quantity = component.actualQuantity ?? component.quantity ?? 0;
+                const unitPrice = component.unitPrice ?? 0;
+                const total = component.totalPrice ?? (quantity * unitPrice);
+                tbody.append(`
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>
+                            <div class="fw-semibold">${escapeHtml(component.componentName || 'Phụ tùng')}</div>
+                            ${component.componentCode ? `<div class="text-muted small">Mã: ${escapeHtml(component.componentCode)}</div>` : ''}
+                        </td>
+                        <td class="text-end">${quantity.toFixed(2)}</td>
+                        <td class="text-end">${formatCurrency(unitPrice)}</td>
+                        <td class="text-end">${formatCurrency(total)}</td>
+                    </tr>
+                `);
+            });
+        }
+
+        function updateCostSummary() {
+            const laborTotal = tasksData.reduce((sum, task) => sum + (task.laborCost || 0), 0);
+            const componentTotal = componentsData.reduce((sum, component) => {
+                const qty = component.actualQuantity ?? component.quantity ?? 0;
+                const price = component.unitPrice ?? 0;
+                const total = component.totalPrice ?? (qty * price);
+                return sum + total;
+            }, 0);
+
+            $('#summaryLaborCost').text(formatCurrency(laborTotal));
+            $('#summaryComponentCost').text(formatCurrency(componentTotal));
+
+            const vatAmount = receiptData?.vatAmount ?? 0;
+            const surcharge = receiptData?.surchargeAmount ?? 0;
+            const discount = receiptData?.discountAmount ?? 0;
+            const grandTotal = receiptData?.finalAmount ?? receiptData?.amount ?? (laborTotal + componentTotal + vatAmount + surcharge - discount);
+
+            $('#summaryVat').text(formatCurrency(vatAmount));
+            $('#summarySurcharge').text(formatCurrency(surcharge));
+            $('#summaryDiscount').text(formatCurrency(discount));
+            $('#summaryGrandTotal').text(formatCurrency(grandTotal));
+        }
+
+        function getStatusClass(statusCode) {
+            const code = (statusCode || '').toUpperCase();
+            if (code === 'PAID') return 'paid';
+            return 'pending';
+        }
+
+        function getStatusText(statusCode) {
+            const code = (statusCode || '').toUpperCase();
+            switch (code) {
+                case 'PAID':
+                    return 'Đã thanh toán';
+                case 'CANCELLED':
+                    return 'Đã hủy';
+                case 'PENDING':
+                default:
+                    return 'Chưa thanh toán';
+            }
+        }
+
+        function renderTaskStatus(statusCode) {
+            const map = {
+                'PENDING': { text: 'Chờ xử lý', class: 'badge bg-warning text-dark' },
+                'IN_PROGRESS': { text: 'Đang làm', class: 'badge bg-primary' },
+                'DONE': { text: 'Hoàn thành', class: 'badge bg-success' },
+                'COMPLETED': { text: 'Hoàn thành', class: 'badge bg-success' }
+            };
+            const status = map[(statusCode || '').toUpperCase()] || { text: statusCode || 'Không rõ', class: 'badge bg-secondary' };
+            return `<span class="${status.class}">${status.text}</span>`;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            if (Number.isNaN(date)) return '-';
+            return `${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        }
+
+        function escapeHtml(str) {
+            return $('<div>').text(str || '').html();
+        }
+
+        function showAlert(message, type = 'info') {
+            const id = `alert-${Date.now()}`;
+            const html = `
+                <div id="${id}" class="alert alert-${type} alert-dismissible fade show position-fixed" role="alert"
+                    style="top: 20px; right: 20px; z-index: 9999; min-width: 280px;">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            $('body').append(html);
+            setTimeout(() => $(`#${id}`).alert('close'), 3000);
+        }
+    </script>
+}
