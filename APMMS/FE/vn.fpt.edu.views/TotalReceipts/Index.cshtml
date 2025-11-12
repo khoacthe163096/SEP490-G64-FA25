@@ -259,7 +259,7 @@
                 tbody.append(`
                     <tr>
                         <td class="text-center">${displayIndex}</td>
-                        <td class="fw-semibold">${escapeHtml(receipt.code)}</td>
+                        <td class="fw-semibold"><a href="/TotalReceipts/Details/${receipt.id}" class="text-decoration-none">${escapeHtml(receipt.code)}</a></td>
                         <td>${escapeHtml(receipt.customerName || 'N/A')}</td>
                         <td class="text-end">${formatCurrency(amount)}</td>
                         <td>${formatDate(receipt.createdAt)}</td>
