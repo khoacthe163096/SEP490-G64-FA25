@@ -240,7 +240,9 @@
                     <i class="fas fa-arrow-left me-1"></i>Quay lại
                 </a>
                 <div class="d-flex gap-2">
-                    <span id="invoiceStatus" class="invoice-status-badge pending align-self-center">Đang tải...</span>
+                    <button class="btn btn-success btn-sm d-none" type="button" id="payInvoiceBtn" title="Thanh toán hóa đơn">
+                        <i class="fas fa-money-bill-wave me-1"></i>Thanh toán
+                    </button>
                     <button class="btn btn-outline-primary btn-sm" type="button" onclick="window.print()">
                         <i class="fas fa-print me-1"></i>In hóa đơn
                     </button>
@@ -429,13 +431,71 @@
                 </div>
             </div>
 
+            <div class="card mb-4" id="discountCard">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-tag text-primary"></i>Áp dụng giảm giá
+                    </div>
+                    <div class="discount-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="discountCodeInput" placeholder="Nhập mã giảm giá hoặc số tiền">
+                            <button class="btn btn-primary" type="button" id="applyDiscountBtn">
+                                <i class="fas fa-check"></i> Áp dụng
+                            </button>
+                            <button class="btn btn-outline-danger d-none" type="button" id="removeDiscountBtn" title="Xóa giảm giá">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <i class="fas fa-info-circle"></i> Nhập mã giảm giá hoặc số tiền (VD: 50000 hoặc 10%)
+                        </div>
+                        <div id="discountInfo" class="alert alert-info d-none" role="alert">
+                            <i class="fas fa-check-circle"></i> <span id="discountInfoText"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4" id="surchargeCard">
+                <div class="card-body">
+                    <div class="section-title">
+                        <i class="fas fa-plus-circle text-primary"></i>Áp dụng phụ thu
+                    </div>
+                    <div class="discount-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="surchargeCodeInput" placeholder="Nhập số tiền phụ thu">
+                            <button class="btn btn-primary" type="button" id="applySurchargeBtn">
+                                <i class="fas fa-check"></i> Áp dụng
+                            </button>
+                            <button class="btn btn-outline-danger d-none" type="button" id="removeSurchargeBtn" title="Xóa phụ thu">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            <i class="fas fa-info-circle"></i> Nhập số tiền phụ thu (VD: 50000)
+                        </div>
+                        <div id="surchargeInfo" class="alert alert-info d-none" role="alert">
+                            <i class="fas fa-check-circle"></i> <span id="surchargeInfoText"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="section-title">
                         <i class="fas fa-sticky-note text-primary"></i>Ghi chú hóa đơn
                     </div>
-                    <div class="note-box" id="noteBox">
-                        Không có ghi chú.
+                    <div class="mb-2">
+                        <textarea class="form-control" id="noteInput" rows="4" placeholder="Nhập ghi chú cho hóa đơn..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-primary" type="button" id="saveNoteBtn">
+                            <i class="fas fa-save"></i> Lưu ghi chú
+                        </button>
+                    </div>
+                    <div id="noteInfo" class="alert alert-info d-none mt-2" role="alert">
+                        <i class="fas fa-check-circle"></i> <span id="noteInfoText"></span>
                     </div>
                 </div>
             </div>
@@ -478,6 +538,31 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>Xác nhận
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmModalMessage">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmModalOkBtn">
+                    <i class="fas fa-check me-1"></i>Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const API_BASE_URL = '@apiBaseUrl';
@@ -494,6 +579,24 @@
                 return;
             }
             loadReceiptDetails();
+            
+            // Event handlers cho discount
+            $('#applyDiscountBtn').on('click', applyDiscount);
+            $('#removeDiscountBtn').on('click', removeDiscount);
+            $('#applySurchargeBtn').on('click', applySurcharge);
+            $('#removeSurchargeBtn').on('click', removeSurcharge);
+            $('#saveNoteBtn').on('click', saveNote);
+            $('#payInvoiceBtn').on('click', payInvoice);
+            $('#discountCodeInput').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    applyDiscount();
+                }
+            });
+            $('#surchargeCodeInput').on('keypress', function(e) {
+                if (e.which === 13) { // Enter key
+                    applySurcharge();
+                }
+            });
         });
 
         function loadReceiptDetails() {
@@ -516,9 +619,19 @@
                         throw new Error(result.message || 'Không thể tải thông tin hóa đơn.');
                     }
                     receiptData = result.data;
-                    maintenanceTicketId = receiptData.maintenanceTicketId;
+                    maintenanceTicketId = receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId;
+                    
+                    // Debug: Log VAT data
+                    console.log('Receipt Data:', receiptData);
+                    console.log('VatPercent (PascalCase):', receiptData?.VatPercent);
+                    console.log('VatPercent (camelCase):', receiptData?.vatPercent);
+                    console.log('VatAmount (PascalCase):', receiptData?.VatAmount);
+                    console.log('VatAmount (camelCase):', receiptData?.vatAmount);
+                    
                     renderInvoiceSummary(receiptData);
                     updateCostSummary();
+                    updateDiscountDisplay();
+                    updateSurchargeDisplay();
 
                     if (maintenanceTicketId) {
                         loadServiceTasks(maintenanceTicketId);
@@ -535,55 +648,75 @@
         }
 
         function renderInvoiceSummary(data) {
+            // Helper để lấy giá trị hỗ trợ cả PascalCase và camelCase
+            const getValue = (pascal, camel, defaultValue = '') => data?.[pascal] ?? data?.[camel] ?? defaultValue;
+            
             // Header
-            $('#invoiceCodeValue').text(data.code || '-');
-            $('#invoiceDate').text(formatDateOnly(data.createdAt));
-            const statusClass = getStatusClass(data.statusCode);
-            const statusText = getStatusText(data.statusCode);
-            $('#invoiceStatus').removeClass('pending paid').addClass(statusClass).text(statusText);
+            $('#invoiceCodeValue').text(getValue('Code', 'code', '-'));
+            $('#invoiceDate').text(formatDateOnly(getValue('CreatedAt', 'createdAt')));
+            const statusCode = getValue('StatusCode', 'statusCode', '');
+            const statusClass = getStatusClass(statusCode);
+            const statusText = getStatusText(statusCode);
             $('#invoiceStatusHeader').removeClass('pending paid').addClass(statusClass).text(statusText);
+            
+            // Hiển thị/ẩn các nút và card dựa trên trạng thái thanh toán
+            if (statusCode && statusCode.toUpperCase() === 'PAID') {
+                // Đã thanh toán: ẩn nút thanh toán và các card chỉnh sửa
+                $('#payInvoiceBtn').addClass('d-none');
+                $('#discountCard').addClass('d-none');
+                $('#surchargeCard').addClass('d-none');
+            } else {
+                // Chưa thanh toán: hiển thị tất cả
+                $('#payInvoiceBtn').removeClass('d-none');
+                $('#discountCard').removeClass('d-none');
+                $('#surchargeCard').removeClass('d-none');
+            }
 
             // Company Info (Branch)
-            $('#companyName').text(data.branchName || 'CÔNG TY BẢO DƯỠNG XE');
+            $('#companyName').text(getValue('BranchName', 'branchName', 'CÔNG TY BẢO DƯỠNG XE'));
             // Note: Branch address and phone would need to be added to ResponseDto
             $('#companyAddress').text('Địa chỉ chi nhánh sẽ được cập nhật');
             $('#companyPhone').text('Điện thoại: Sẽ được cập nhật');
 
             // Billing Information - Customer
-            $('#billingCustomerName').text(data.customerName || 'Không rõ');
-            $('#billingCustomerPhone').text(data.customerPhone ? `Điện thoại: ${data.customerPhone}` : '');
-            $('#billingCustomerEmail').text(data.customerEmail ? `Email: ${data.customerEmail}` : '');
+            $('#billingCustomerName').text(getValue('CustomerName', 'customerName', 'Không rõ'));
+            const customerPhone = getValue('CustomerPhone', 'customerPhone');
+            $('#billingCustomerPhone').text(customerPhone ? `Điện thoại: ${customerPhone}` : '');
+            const customerEmail = getValue('CustomerEmail', 'customerEmail');
+            $('#billingCustomerEmail').text(customerEmail ? `Email: ${customerEmail}` : '');
             $('#billingCustomerAddress').text('Địa chỉ: Sẽ được cập nhật');
 
             // Billing Information - Vehicle
-            $('#billingCarName').text(data.carName || 'Không rõ');
-            $('#billingLicensePlate').text(data.licensePlate || '-');
-            if (data.maintenanceTicketId) {
-                $('#billingTicketLink').attr('href', `/MaintenanceTickets/Details/${data.maintenanceTicketId}`)
-                    .text(data.maintenanceTicketCode || `#${data.maintenanceTicketId}`);
+            $('#billingCarName').text(getValue('CarName', 'carName', 'Không rõ'));
+            $('#billingLicensePlate').text(getValue('LicensePlate', 'licensePlate', '-'));
+            const maintenanceTicketId = getValue('MaintenanceTicketId', 'maintenanceTicketId');
+            if (maintenanceTicketId) {
+                $('#billingTicketLink').attr('href', `/MaintenanceTickets/Details/${maintenanceTicketId}`)
+                    .text(getValue('MaintenanceTicketCode', 'maintenanceTicketCode') || `#${maintenanceTicketId}`);
             } else {
                 $('#billingTicketLink').text('Không xác định').removeAttr('href');
             }
 
             // Detail Info (old section - keeping for compatibility)
-            $('#detailCode').text(data.code || '-');
-            $('#detailCreated').text(formatDateTime(data.createdAt));
+            $('#detailCode').text(getValue('Code', 'code', '-'));
+            $('#detailCreated').text(formatDateTime(getValue('CreatedAt', 'createdAt')));
             $('#detailStatus').html(`<span class="invoice-status-badge ${statusClass}">${statusText}</span>`);
 
-            if (data.maintenanceTicketId) {
-                $('#detailTicketLink').html(`<a href="/MaintenanceTickets/Details/${data.maintenanceTicketId}" class="text-decoration-none">${data.maintenanceTicketCode || 'Xem phiếu'}</a>`);
+            if (maintenanceTicketId) {
+                $('#detailTicketLink').html(`<a href="/MaintenanceTickets/Details/${maintenanceTicketId}" class="text-decoration-none">${getValue('MaintenanceTicketCode', 'maintenanceTicketCode') || 'Xem phiếu'}</a>`);
             } else {
                 $('#detailTicketLink').text('Không xác định');
             }
 
-            $('#detailAccountant').text(data.accountantName || 'Chưa xác định');
+            $('#detailAccountant').text(getValue('AccountantName', 'accountantName', 'Chưa xác định'));
 
-            if (data.note) {
-                $('#detailNote').text(data.note);
-                $('#noteBox').text(data.note);
+            const note = getValue('Note', 'note');
+            if (note) {
+                $('#detailNote').text(note);
+                $('#noteInput').val(note);
             } else {
                 $('#detailNote').text('Không có ghi chú');
-                $('#noteBox').text('Không có ghi chú.');
+                $('#noteInput').val('');
             }
         }
 
@@ -626,10 +759,7 @@
                 tbody.append(`
                     <tr>
                         <td class="text-center">${index + 1}</td>
-                        <td>
-                            <div class="fw-semibold">${escapeHtml(task.taskName || 'Công việc')}</div>
-                            ${task.description ? `<div class="text-muted small">${escapeHtml(task.description)}</div>` : ''}
-                        </td>
+                        <td>${escapeHtml(task.taskName || 'Công việc')}</td>
                         <td class="text-end">${formatCurrency(task.laborCost || 0)}</td>
                     </tr>
                 `);
@@ -702,24 +832,30 @@
             $('#summaryLaborCost').text(formatCurrency(laborTotal));
             $('#summaryComponentCost').text(formatCurrency(componentTotal));
 
-            // Calculate subtotal (before tax)
-            const subtotal = receiptData?.subtotal ?? (laborTotal + componentTotal);
+            // Calculate subtotal (before tax) - Hỗ trợ cả PascalCase và camelCase
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? (laborTotal + componentTotal);
             $('#summarySubtotal').text(formatCurrency(subtotal));
 
-            // VAT
-            const vatPercent = receiptData?.vatPercent ?? 0;
-            const vatAmount = receiptData?.vatAmount ?? (vatPercent * subtotal / 100);
-            $('#vatPercent').text(vatPercent.toFixed(1));
-            $('#summaryVat').text(formatCurrency(vatAmount));
-
-            // Other charges
-            const surcharge = receiptData?.surchargeAmount ?? 0;
-            const discount = receiptData?.discountAmount ?? 0;
+            // Other charges - Hỗ trợ cả PascalCase và camelCase
+            const surcharge = receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0;
+            const discount = receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0;
             $('#summarySurcharge').text(formatCurrency(surcharge));
             $('#summaryDiscount').text(formatCurrency(discount));
 
-            // Grand total
-            const grandTotal = receiptData?.finalAmount ?? receiptData?.amount ?? (subtotal + vatAmount + surcharge - discount);
+            // VAT - Tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
+            const vatPercent = receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10; // Mặc định 10% nếu không có
+            const subtotalAfterDiscount = Math.max(0, subtotal - discount);
+            const subtotalForVat = subtotalAfterDiscount + surcharge; // VAT tính trên cả phụ thu
+            const vatAmount = receiptData?.VatAmount ?? receiptData?.vatAmount ?? (vatPercent * subtotalForVat / 100);
+            
+            // Debug
+            console.log('updateCostSummary - vatPercent:', vatPercent, 'vatAmount:', vatAmount, 'subtotal:', subtotal, 'discount:', discount, 'surcharge:', surcharge, 'subtotalForVat:', subtotalForVat);
+            
+            $('#vatPercent').text(vatPercent.toFixed(1));
+            $('#summaryVat').text(formatCurrency(vatAmount));
+
+            // Grand total - Subtotal - Discount + VAT + Surcharge
+            const grandTotal = receiptData?.FinalAmount ?? receiptData?.finalAmount ?? receiptData?.Amount ?? receiptData?.amount ?? (subtotal - discount + vatAmount + surcharge);
             $('#summaryGrandTotal').text(formatCurrency(grandTotal));
         }
 
@@ -785,6 +921,544 @@
                 </div>`;
             $('body').append(html);
             setTimeout(() => $(`#${id}`).alert('close'), 3000);
+        }
+
+        function parseDiscountInput(input) {
+            if (!input || !input.trim()) {
+                return { type: 'invalid', value: 0 };
+            }
+            
+            const trimmed = input.trim();
+            
+            // Kiểm tra nếu là phần trăm (có dấu %)
+            if (trimmed.endsWith('%')) {
+                const percent = parseFloat(trimmed.replace('%', '').replace(/,/g, ''));
+                if (isNaN(percent) || percent < 0 || percent > 100) {
+                    return { type: 'invalid', value: 0 };
+                }
+                return { type: 'percent', value: percent };
+            }
+            
+            // Kiểm tra nếu là số tiền
+            const amount = parseFloat(trimmed.replace(/,/g, ''));
+            if (isNaN(amount) || amount < 0) {
+                return { type: 'invalid', value: 0 };
+            }
+            return { type: 'amount', value: amount };
+        }
+
+        function applyDiscount() {
+            const input = $('#discountCodeInput').val();
+            const parsed = parseDiscountInput(input);
+            
+            if (parsed.type === 'invalid') {
+                showAlert('Vui lòng nhập mã giảm giá hợp lệ hoặc số tiền (VD: 50000 hoặc 10%)', 'warning');
+                $('#discountInfo').addClass('d-none');
+                return;
+            }
+            
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            let discountAmount = 0;
+            if (parsed.type === 'percent') {
+                discountAmount = subtotal * parsed.value / 100;
+            } else {
+                discountAmount = parsed.value;
+            }
+            
+            // Đảm bảo không giảm quá subtotal
+            if (discountAmount > subtotal) {
+                discountAmount = subtotal;
+                showAlert('Số tiền giảm giá không được vượt quá tổng phụ. Đã tự động điều chỉnh.', 'warning');
+            }
+            
+            // Gọi API để update discount
+            const updateData = {
+                discountAmount: discountAmount,
+                // Giữ nguyên các trường khác
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                surchargeAmount: receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0
+            };
+            
+            $('#applyDiscountBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang áp dụng...');
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể cập nhật giảm giá.');
+                }
+                
+                // Cập nhật lại dữ liệu và UI
+                receiptData = result.data;
+                updateCostSummary();
+                
+                // Hiển thị thông báo thành công
+                const discountText = parsed.type === 'percent' 
+                    ? `${parsed.value}% (${formatCurrency(discountAmount)})`
+                    : formatCurrency(discountAmount);
+                $('#discountInfoText').text(`Đã áp dụng giảm giá: ${discountText}`);
+                $('#discountInfo').removeClass('d-none').addClass('alert-success').removeClass('alert-info');
+                
+                // Hiển thị nút Xóa
+                $('#removeDiscountBtn').removeClass('d-none');
+                
+                showAlert('Áp dụng giảm giá thành công!', 'success');
+            })
+            .catch(error => {
+                console.error('applyDiscount error:', error);
+                showAlert('Không thể áp dụng giảm giá. Vui lòng thử lại.', 'danger');
+                $('#discountInfo').addClass('d-none');
+            })
+            .finally(() => {
+                $('#applyDiscountBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Áp dụng');
+            });
+        }
+
+        function updateDiscountDisplay() {
+            if (!receiptData) return;
+            
+            const discount = receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0;
+            if (discount > 0) {
+                const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+                const percent = subtotal > 0 ? (discount / subtotal * 100).toFixed(1) : 0;
+                $('#discountCodeInput').val(`${discount.toLocaleString('vi-VN')} (${percent}%)`);
+                $('#discountInfoText').text(`Giảm giá hiện tại: ${formatCurrency(discount)} (${percent}%)`);
+                $('#discountInfo').removeClass('d-none').addClass('alert-success').removeClass('alert-info');
+                
+                // Hiển thị nút Xóa
+                $('#removeDiscountBtn').removeClass('d-none');
+            } else {
+                $('#discountCodeInput').val('');
+                $('#discountInfo').addClass('d-none');
+                
+                // Ẩn nút Xóa
+                $('#removeDiscountBtn').addClass('d-none');
+            }
+        }
+
+        function showConfirmModal(message, onConfirm) {
+            $('#confirmModalMessage').html(message); // Dùng html() thay vì text() để hỗ trợ HTML
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            
+            // Remove previous handlers
+            $('#confirmModalOkBtn').off('click');
+            
+            // Add new handler
+            $('#confirmModalOkBtn').on('click', function() {
+                modal.hide();
+                if (onConfirm) onConfirm();
+            });
+            
+            modal.show();
+        }
+
+        function removeDiscount() {
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            showConfirmModal('Bạn có chắc chắn muốn xóa giảm giá?', function() {
+                performRemoveDiscount();
+            });
+        }
+
+        function performRemoveDiscount() {
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            const updateData = {
+                discountAmount: 0,
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                surchargeAmount: receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0
+            };
+            
+            $('#removeDiscountBtn').prop('disabled', true);
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể xóa giảm giá.');
+                }
+                
+                receiptData = result.data;
+                updateCostSummary();
+                updateDiscountDisplay();
+                showAlert('Đã xóa giảm giá thành công!', 'success');
+            })
+            .catch(error => {
+                console.error('removeDiscount error:', error);
+                showAlert('Không thể xóa giảm giá. Vui lòng thử lại.', 'danger');
+            })
+            .finally(() => {
+                $('#removeDiscountBtn').prop('disabled', false);
+            });
+        }
+
+        function applySurcharge() {
+            const input = $('#surchargeCodeInput').val();
+            if (!input || !input.trim()) {
+                showAlert('Vui lòng nhập số tiền phụ thu hợp lệ (VD: 50000)', 'warning');
+                $('#surchargeInfo').addClass('d-none');
+                return;
+            }
+            
+            const surchargeAmount = parseFloat(input.trim().replace(/,/g, ''));
+            if (isNaN(surchargeAmount) || surchargeAmount < 0) {
+                showAlert('Vui lòng nhập số tiền phụ thu hợp lệ (VD: 50000)', 'warning');
+                $('#surchargeInfo').addClass('d-none');
+                return;
+            }
+            
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            // Gọi API để update surcharge
+            const updateData = {
+                surchargeAmount: surchargeAmount,
+                // Giữ nguyên các trường khác
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                discountAmount: receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0
+            };
+            
+            $('#applySurchargeBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang áp dụng...');
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể cập nhật phụ thu.');
+                }
+                
+                // Cập nhật lại dữ liệu và UI
+                receiptData = result.data;
+                updateCostSummary();
+                
+                // Hiển thị thông báo thành công
+                $('#surchargeInfoText').text(`Đã áp dụng phụ thu: ${formatCurrency(surchargeAmount)}`);
+                $('#surchargeInfo').removeClass('d-none').addClass('alert-success').removeClass('alert-info');
+                
+                // Hiển thị nút Xóa
+                $('#removeSurchargeBtn').removeClass('d-none');
+                
+                showAlert('Áp dụng phụ thu thành công!', 'success');
+            })
+            .catch(error => {
+                console.error('applySurcharge error:', error);
+                showAlert('Không thể áp dụng phụ thu. Vui lòng thử lại.', 'danger');
+                $('#surchargeInfo').addClass('d-none');
+            })
+            .finally(() => {
+                $('#applySurchargeBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Áp dụng');
+            });
+        }
+
+        function updateSurchargeDisplay() {
+            if (!receiptData) return;
+            
+            const surcharge = receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0;
+            if (surcharge > 0) {
+                $('#surchargeCodeInput').val(surcharge.toLocaleString('vi-VN'));
+                $('#surchargeInfoText').text(`Phụ thu hiện tại: ${formatCurrency(surcharge)}`);
+                $('#surchargeInfo').removeClass('d-none').addClass('alert-success').removeClass('alert-info');
+                
+                // Hiển thị nút Xóa
+                $('#removeSurchargeBtn').removeClass('d-none');
+            } else {
+                $('#surchargeCodeInput').val('');
+                $('#surchargeInfo').addClass('d-none');
+                
+                // Ẩn nút Xóa
+                $('#removeSurchargeBtn').addClass('d-none');
+            }
+        }
+
+        function removeSurcharge() {
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            showConfirmModal('Bạn có chắc chắn muốn xóa phụ thu?', function() {
+                performRemoveSurcharge();
+            });
+        }
+
+        function performRemoveSurcharge() {
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            const updateData = {
+                surchargeAmount: 0,
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                discountAmount: receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0
+            };
+            
+            $('#removeSurchargeBtn').prop('disabled', true);
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể xóa phụ thu.');
+                }
+                
+                receiptData = result.data;
+                updateCostSummary();
+                updateSurchargeDisplay();
+                showAlert('Đã xóa phụ thu thành công!', 'success');
+            })
+            .catch(error => {
+                console.error('removeSurcharge error:', error);
+                showAlert('Không thể xóa phụ thu. Vui lòng thử lại.', 'danger');
+            })
+            .finally(() => {
+                $('#removeSurchargeBtn').prop('disabled', false);
+            });
+        }
+
+        function saveNote() {
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            const note = $('#noteInput').val().trim();
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            // Gọi API để update note
+            const updateData = {
+                note: note,
+                // Giữ nguyên các trường khác
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                discountAmount: receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0,
+                surchargeAmount: receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0
+            };
+            
+            $('#saveNoteBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang lưu...');
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể lưu ghi chú.');
+                }
+                
+                // Cập nhật lại dữ liệu và UI
+                receiptData = result.data;
+                
+                // Cập nhật hiển thị ghi chú ở phần header
+                if (note) {
+                    $('#detailNote').text(note);
+                } else {
+                    $('#detailNote').text('Không có ghi chú');
+                }
+                
+                // Hiển thị thông báo thành công
+                $('#noteInfoText').text('Đã lưu ghi chú thành công!');
+                $('#noteInfo').removeClass('d-none').addClass('alert-success').removeClass('alert-info');
+                
+                showAlert('Đã lưu ghi chú thành công!', 'success');
+                
+                // Ẩn thông báo sau 3 giây
+                setTimeout(() => {
+                    $('#noteInfo').addClass('d-none');
+                }, 3000);
+            })
+            .catch(error => {
+                console.error('saveNote error:', error);
+                showAlert('Không thể lưu ghi chú. Vui lòng thử lại.', 'danger');
+                $('#noteInfo').addClass('d-none');
+            })
+            .finally(() => {
+                $('#saveNoteBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Lưu ghi chú');
+            });
+        }
+
+        function payInvoice() {
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            const statusCode = receiptData?.StatusCode ?? receiptData?.statusCode ?? '';
+            if (statusCode && statusCode.toUpperCase() === 'PAID') {
+                showAlert('Hóa đơn đã được thanh toán rồi.', 'info');
+                return;
+            }
+            
+            const finalAmount = receiptData?.FinalAmount ?? receiptData?.finalAmount ?? receiptData?.Amount ?? receiptData?.amount ?? 0;
+            const formattedAmount = formatCurrency(finalAmount);
+            
+            showConfirmModal(`Bạn có chắc chắn muốn thanh toán hóa đơn này?<br><strong>Tổng tiền: ${formattedAmount}</strong>`, function() {
+                performPayInvoice();
+            });
+        }
+
+        function performPayInvoice() {
+            if (!receiptData) {
+                showAlert('Chưa tải được thông tin hóa đơn.', 'danger');
+                return;
+            }
+            
+            const token = localStorage.getItem('authToken');
+            const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
+            
+            // Gọi API để cập nhật trạng thái thanh toán
+            const updateData = {
+                statusCode: 'PAID',
+                // Giữ nguyên các trường khác
+                maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
+                carId: receiptData?.CarId ?? receiptData?.carId,
+                branchId: receiptData?.BranchId ?? receiptData?.branchId,
+                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                subtotal: subtotal,
+                vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
+                discountAmount: receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0,
+                surchargeAmount: receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0,
+                note: receiptData?.Note ?? receiptData?.note ?? ''
+            };
+            
+            $('#payInvoiceBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+            
+            fetch(`${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                if (!result.success || !result.data) {
+                    throw new Error(result.message || 'Không thể thanh toán hóa đơn.');
+                }
+                
+                // Cập nhật lại dữ liệu và UI
+                receiptData = result.data;
+                renderInvoiceSummary(receiptData);
+                updateCostSummary();
+                
+                showAlert('Thanh toán hóa đơn thành công!', 'success');
+            })
+            .catch(error => {
+                console.error('payInvoice error:', error);
+                showAlert('Không thể thanh toán hóa đơn. Vui lòng thử lại.', 'danger');
+            })
+            .finally(() => {
+                $('#payInvoiceBtn').prop('disabled', false).html('<i class="fas fa-money-bill-wave"></i> Thanh toán');
+            });
         }
     </script>
 }

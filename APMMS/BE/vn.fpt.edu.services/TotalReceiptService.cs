@@ -213,11 +213,17 @@ namespace BE.vn.fpt.edu.services
                 subtotal = entity.Amount;
             }
 
-            var vatPercent = dto.VatPercent ?? entity.VatPercent ?? 0m;
-            var vatAmount = dto.VatAmount ?? entity.VatAmount ?? (vatPercent * subtotal / 100m);
+            var vatPercent = dto.VatPercent ?? entity.VatPercent ?? 10m; // Mặc định 10% VAT
             var surcharge = dto.SurchargeAmount ?? entity.SurchargeAmount ?? 0m;
             var discount = dto.DiscountAmount ?? entity.DiscountAmount ?? 0m;
-            var final = dto.FinalAmount ?? entity.FinalAmount ?? (subtotal + vatAmount + surcharge - discount);
+            
+            // VAT được tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
+            var subtotalAfterDiscount = subtotal - discount;
+            if (subtotalAfterDiscount < 0) subtotalAfterDiscount = 0m; // Đảm bảo không âm
+            var subtotalForVat = subtotalAfterDiscount + surcharge; // VAT tính trên cả phụ thu
+            
+            var vatAmount = dto.VatAmount ?? entity.VatAmount ?? (vatPercent * subtotalForVat / 100m);
+            var final = dto.FinalAmount ?? entity.FinalAmount ?? (subtotal - discount + vatAmount + surcharge);
 
             entity.Subtotal = subtotal;
             entity.VatPercent = vatPercent;
@@ -259,11 +265,43 @@ namespace BE.vn.fpt.edu.services
             dto.FinalAmount ??= entity.FinalAmount ?? entity.Amount;
             dto.Amount ??= entity.Amount;
             dto.Subtotal ??= entity.Subtotal;
-            dto.VatAmount ??= entity.VatAmount;
-            dto.VatPercent ??= entity.VatPercent;
-            dto.SurchargeAmount ??= entity.SurchargeAmount;
-            dto.DiscountAmount ??= entity.DiscountAmount;
+            
+            // Đảm bảo VAT luôn có giá trị mặc định 10% nếu chưa có
+            // Luôn set giá trị, không dùng ??= để đảm bảo override giá trị từ AutoMapper
+            var vatPercent = entity.VatPercent ?? 10m;
+            dto.VatPercent = vatPercent; // Luôn set, không dùng ??=
+                      
+            dto.SurchargeAmount ??= entity.SurchargeAmount ?? 0m;
+            dto.DiscountAmount ??= entity.DiscountAmount ?? 0m;
             dto.CreatedAt ??= entity.CreatedAt;
+            
+            // VAT được tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
+            var subtotalForVat = dto.Subtotal ?? entity.Subtotal ?? entity.Amount;
+            var discountForVat = dto.DiscountAmount ?? entity.DiscountAmount ?? 0m;
+            var surchargeForVat = dto.SurchargeAmount ?? entity.SurchargeAmount ?? 0m;
+            var subtotalAfterDiscount = subtotalForVat - discountForVat;
+            if (subtotalAfterDiscount < 0) subtotalAfterDiscount = 0m; // Đảm bảo không âm
+            var subtotalForVatCalculation = subtotalAfterDiscount + surchargeForVat; // VAT tính trên cả phụ thu
+            
+            // Tính VAT amount nếu chưa có hoặc cần tính lại
+            if (!entity.VatAmount.HasValue || entity.VatAmount.Value == 0m)
+            {
+                dto.VatAmount = vatPercent * subtotalForVatCalculation / 100m;
+            }
+            else
+            {
+                dto.VatAmount = entity.VatAmount;
+            }
+            
+            // Cập nhật FinalAmount: Subtotal - Discount + VAT + Surcharge
+            if (!entity.FinalAmount.HasValue || entity.VatAmount != dto.VatAmount)
+            {
+                var newSubtotal = dto.Subtotal ?? entity.Subtotal ?? 0m;
+                var newVat = dto.VatAmount ?? 0m;
+                var newSurcharge = dto.SurchargeAmount ?? 0m;
+                var newDiscount = dto.DiscountAmount ?? 0m;
+                dto.FinalAmount = newSubtotal - newDiscount + newVat + newSurcharge;
+            }
 
             if (dto.Amount.GetValueOrDefault() == 0m || dto.FinalAmount.GetValueOrDefault() == 0m)
             {

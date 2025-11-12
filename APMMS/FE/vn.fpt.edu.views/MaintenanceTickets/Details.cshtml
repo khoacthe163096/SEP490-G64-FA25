@@ -691,20 +691,20 @@ function displayBasicInfo(data) {
     let techniciansHtml = '<div class="text-muted">Chưa gán</div>';
     if (data.technicians && data.technicians.length > 0) {
         const techItems = data.technicians.map(t => {
-            const roleBadge = t.roleInTicket === 'PRIMARY'
-                ? '<span class="badge bg-success ms-1">Chính</span>'
-                : '<span class="badge bg-info ms-1">Phụ</span>';
-            const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
-            const removeBtn = canRemove
+                    const roleBadge = t.roleInTicket === 'PRIMARY' 
+                        ? '<span class="badge bg-success ms-1">Chính</span>' 
+                        : '<span class="badge bg-info ms-1">Phụ</span>';
+                    const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
+                    const removeBtn = canRemove 
                 ? `<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
-                        <i class="fas fa-times"></i>
-                   </button>`
-                : '';
+                            <i class="fas fa-times"></i>
+                           </button>`
+                        : '';
             return `
                 <div class="tech-pill">
                     <span>${escapeHtml(t.technicianName || 'N/A')} ${roleBadge}</span>
-                    ${removeBtn}
-                </div>
+                        ${removeBtn}
+        </div>
             `;
         }).join('\n');
         techniciansHtml = `<div class="tech-list">${techItems}</div>`;
@@ -713,8 +713,8 @@ function displayBasicInfo(data) {
             <div class="tech-list">
                 <div class="tech-pill">
                     <span>${escapeHtml(data.technicianName)}</span>
-                </div>
             </div>
+        </div>
         `;
     }
 
@@ -732,19 +732,19 @@ function displayBasicInfo(data) {
                     ${renderRow('Khách hàng', data.customerName)}
                     ${renderRow('Điện thoại', data.customerPhone)}
                     ${renderRow('Địa chỉ', data.customerAddress, { valueClass: 'fw-semibold text-body info-text-wrap' })}
-                </div>
+            </div>
                 <div class="info-section mb-4">
                     <h6 class="info-section-title">Thông tin xe</h6>
                     ${renderRow('Xe', data.carName)}
                     ${renderRow('Biển số', data.licensePlate)}
                     ${renderRow('Mẫu xe', data.carModel)}
                     ${renderRow('Năm sản xuất', manufactureYear)}
-                </div>
+        </div>
                 <div class="info-section mb-0">
                     <h6 class="info-section-title mb-2">Mô tả</h6>
                     <div class="info-description info-text-wrap">${descriptionHtml}</div>
-                </div>
             </div>
+        </div>
             <div class="col-lg-6">
                 <div class="info-section mb-4">
                     <h6 class="info-section-title">Thông tin phiếu</h6>
@@ -757,11 +757,11 @@ function displayBasicInfo(data) {
                     ${renderRow('Bắt đầu', startTime)}
                     ${renderRow('Hoàn thành', endTime)}
                     ${renderRow('Tư vấn viên', data.consulterName)}
-                </div>
+            </div>
                 <div class="info-section mb-4">
                     <h6 class="info-section-title mb-2">Kỹ thuật viên</h6>
                     ${techniciansHtml}
-                </div>
+        </div>
             </div>
         </div>
     `);
