@@ -646,6 +646,7 @@ function loadMaintenanceTicketDetails() {
                 const canEditComponents = data.data.statusCode === 'PENDING' || data.data.statusCode === 'ASSIGNED' || data.data.statusCode === 'IN_PROGRESS';
                 $('#addComponentBtn').toggle(canEditComponents);
                 $('#applyServicePackageBtn').toggle(canEditComponents);
+                $('#addServiceTaskBtn').toggle(canEditComponents);
                 
                 loadServiceTasks();
                 loadComponents(); // This will also update cost summary
