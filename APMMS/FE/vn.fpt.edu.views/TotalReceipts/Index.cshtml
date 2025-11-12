@@ -102,10 +102,6 @@
                             <option value="PENDING">Chưa thanh toán</option>
                             <option value="PAID">Đã thanh toán</option>
                         </select>
-                        <a href="/TotalReceipts/Create" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus me-1"></i>
-                            Tạo hóa đơn
-                        </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -158,37 +154,12 @@
 @section Scripts {
     <script>
         const API_BASE_URL = '@apiBaseUrl';
-        let allReceipts = [];
-        let filteredReceipts = [];
+        let receipts = [];
+        let totalRecords = 0;
         let currentPage = 1;
         let pageSize = 10;
-
-        const fallbackData = [
-            {
-                id: 1,
-                code: 'INV7B90F1',
-                customerName: 'Quách Thành Trung',
-                totalAmount: 12650000,
-                createdDate: '2024-08-19T03:16:41Z',
-                statusCode: 'PENDING'
-            },
-            {
-                id: 2,
-                code: 'INV51C4Z2',
-                customerName: 'Đỗ Trung Lâm',
-                totalAmount: 5403000,
-                createdDate: '2024-08-19T00:28:25Z',
-                statusCode: 'PENDING'
-            },
-            {
-                id: 3,
-                code: 'INV90A3K8',
-                customerName: 'Trần Trung Đức',
-                totalAmount: 12574300,
-                createdDate: '2024-08-18T23:11:34Z',
-                statusCode: 'PAID'
-            }
-        ];
+        let currentSearch = '';
+        let currentStatus = '';
 
         $(document).ready(function () {
             attachEvents();
@@ -200,28 +171,39 @@
             $('#searchInput').on('input', function () {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
+                    currentSearch = $('#searchInput').val().trim();
                     currentPage = 1;
-                    applyFilters();
+                    loadReceipts();
                 }, 300);
             });
 
             $('#statusFilter').on('change', function () {
+                currentStatus = $('#statusFilter').val();
                 currentPage = 1;
-                applyFilters();
+                loadReceipts();
             });
 
             $('#pageSizeSelect').on('change', function () {
                 pageSize = parseInt($(this).val(), 10) || 10;
                 currentPage = 1;
-                renderTable();
+                loadReceipts();
             });
+        }
+
+        function buildQueryParams() {
+            const params = new URLSearchParams();
+            params.append('page', currentPage);
+            params.append('pageSize', pageSize);
+            if (currentSearch) params.append('search', currentSearch);
+            if (currentStatus) params.append('statusCode', currentStatus);
+            return params.toString();
         }
 
         function loadReceipts() {
             const token = localStorage.getItem('authToken');
             toggleLoading(true);
 
-            fetch(`${API_BASE_URL}/MaintenanceTicket?page=1&pageSize=500`, {
+            fetch(`${API_BASE_URL}/TotalReceipt?${buildQueryParams()}`, {
                 headers: {
                     'Authorization': token ? `Bearer ${token}` : '',
                     'Content-Type': 'application/json'
@@ -229,74 +211,39 @@
             })
                 .then(async response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
+                        const message = await response.text();
+                        throw new Error(message || `HTTP ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(result => {
-                    if (result.success && Array.isArray(result.data)) {
-                        allReceipts = result.data
-                            .filter(ticket => ticket.statusCode === 'COMPLETED')
-                            .map(mapTicketToReceipt);
+                    if (result.success && result.data) {
+                        receipts = result.data.items || [];
+                        totalRecords = result.data.totalItems ?? receipts.length;
+                        currentPage = result.data.page ?? currentPage;
+                        pageSize = result.data.pageSize ?? pageSize;
                     } else {
-                        allReceipts = fallbackData;
-                        showAlert('Tạm thời hiển thị dữ liệu mẫu.', 'warning');
+                        receipts = [];
+                        totalRecords = 0;
+                        showAlert(result.message || 'Không có dữ liệu hóa đơn.', 'warning');
                     }
-                    applyFilters();
+                    renderTable();
                 })
                 .catch(error => {
                     console.error('loadReceipts error:', error);
-                    allReceipts = fallbackData;
-                    showAlert('Không thể tải dữ liệu hóa đơn. Đang dùng dữ liệu mẫu.', 'danger');
-                    applyFilters();
+                    receipts = [];
+                    totalRecords = 0;
+                    showAlert('Không thể tải dữ liệu hóa đơn từ máy chủ.', 'danger');
+                    renderTable();
                 })
                 .finally(() => toggleLoading(false));
         }
 
-        function mapTicketToReceipt(ticket) {
-            const fallbackCode = generateInvoiceCode(ticket.id);
-            const candidateCode = ticket.totalReceiptCode || ticket.code;
-            const code = ensureInvoiceFormat(candidateCode, fallbackCode);
-
-            return {
-                id: ticket.id,
-                code: code,
-                customerName: ticket.customerName || 'N/A',
-                totalAmount: ticket.totalEstimatedCost ?? ticket.totalCost ?? ticket.grandTotal ?? 0,
-                createdDate: ticket.createdDate,
-                statusCode: ticket.invoiceStatus || (ticket.isPaid ? 'PAID' : 'PENDING')
-            };
-        }
-
-        function applyFilters() {
-            const search = $('#searchInput').val().trim().toLowerCase();
-            const status = $('#statusFilter').val();
-
-            filteredReceipts = allReceipts.filter(receipt => {
-                const matchSearch = !search ||
-                    (receipt.code && receipt.code.toLowerCase().includes(search)) ||
-                    (receipt.customerName && receipt.customerName.toLowerCase().includes(search));
-
-                const matchStatus = !status || receipt.statusCode === status;
-
-                return matchSearch && matchStatus;
-            });
-
-            filteredReceipts.sort((a, b) => {
-                const dateA = a.createdDate ? new Date(a.createdDate) : new Date(0);
-                const dateB = b.createdDate ? new Date(b.createdDate) : new Date(0);
-                return dateB - dateA;
-            });
-
-            renderTable();
-        }
-
         function renderTable() {
-            const total = filteredReceipts.length;
             const tbody = $('#receiptTableBody');
             tbody.empty();
 
-            if (total === 0) {
+            if (!receipts.length) {
                 $('#emptyState').show();
                 updatePaginationInfo(0, 0, 0);
                 renderPagination(0);
@@ -304,28 +251,27 @@
             }
 
             $('#emptyState').hide();
-            const start = (currentPage - 1) * pageSize;
-            const paginated = filteredReceipts.slice(start, start + pageSize);
-
-            paginated.forEach((receipt, index) => {
-                const displayIndex = start + index + 1;
-                const amountText = formatCurrency(receipt.totalAmount);
+            receipts.forEach((receipt, index) => {
+                const displayIndex = (currentPage - 1) * pageSize + index + 1;
+                const amount = receipt.amount ?? receipt.finalAmount ?? receipt.subtotal ?? 0;
                 const statusHtml = renderStatusBadge(receipt.statusCode);
 
                 tbody.append(`
                     <tr>
                         <td class="text-center">${displayIndex}</td>
                         <td class="fw-semibold">${escapeHtml(receipt.code)}</td>
-                        <td>${escapeHtml(receipt.customerName)}</td>
-                        <td class="text-end">${amountText}</td>
-                        <td>${formatDate(receipt.createdDate)}</td>
+                        <td>${escapeHtml(receipt.customerName || 'N/A')}</td>
+                        <td class="text-end">${formatCurrency(amount)}</td>
+                        <td>${formatDate(receipt.createdAt)}</td>
                         <td>${statusHtml}</td>
                     </tr>
                 `);
             });
 
-            updatePaginationInfo(start + 1, Math.min(start + pageSize, total), total);
-            renderPagination(total);
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalRecords);
+            updatePaginationInfo(start, end, totalRecords);
+            renderPagination(totalRecords);
         }
 
         function renderPagination(totalItems) {
@@ -361,36 +307,15 @@
                 const page = parseInt($(this).data('page'), 10);
                 if (!Number.isNaN(page) && page >= 1 && page <= totalPages && page !== currentPage) {
                     currentPage = page;
-                    renderTable();
+                    loadReceipts();
                 }
             });
         }
 
         function updatePaginationInfo(start, end, total) {
-            $('#paginationInfo').text(`Hiển thị ${total === 0 ? 0 : start} - ${total === 0 ? 0 : end} / ${total} hóa đơn`);
-        }
-
-        function ensureInvoiceFormat(code, fallback) {
-            if (!code) return fallback;
-            const normalized = code.toString().trim().toUpperCase();
-            if (/^INV[0-9A-Z]{6}$/.test(normalized)) {
-                return normalized;
-            }
-            return fallback;
-        }
-
-        function generateInvoiceCode(seed) {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let value = Number.isFinite(seed) ? seed : Date.now();
-            if (!(value > 0)) {
-                value = Math.floor(Math.random() * 1_000_000) + 1;
-            }
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                value = (value * 9301 + 49297) % 233280;
-                result += chars[value % chars.length];
-            }
-            return `INV${result}`;
+            const safeStart = total === 0 ? 0 : start;
+            const safeEnd = total === 0 ? 0 : end;
+            $('#paginationInfo').text(`Hiển thị ${safeStart} - ${safeEnd} / ${total} hóa đơn`);
         }
 
         function renderStatusBadge(statusCode) {
@@ -419,7 +344,7 @@
         function toggleLoading(isLoading) {
             if (isLoading) {
                 $('#receiptTableBody').html(`
-                    <tr>
+                    <tr id="loadingRow">
                         <td colspan="6" class="text-center py-4">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Đang tải...</span>
@@ -427,6 +352,8 @@
                         </td>
                     </tr>`);
                 $('#emptyState').hide();
+            } else {
+                $('#loadingRow').remove();
             }
         }
 

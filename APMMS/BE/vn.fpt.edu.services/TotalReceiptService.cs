@@ -36,6 +36,8 @@ namespace BE.vn.fpt.edu.services
                 .Include(mt => mt.Car)
                     .ThenInclude(c => c.User)
                 .Include(mt => mt.Branch)
+                .Include(mt => mt.ServiceTasks)
+                .Include(mt => mt.TicketComponents)
                 .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
             if (maintenanceTicket == null)
@@ -62,6 +64,14 @@ namespace BE.vn.fpt.edu.services
             entity.StatusCode = string.IsNullOrWhiteSpace(dto.StatusCode) ? "PENDING" : dto.StatusCode;
 
             ApplyFinancials(entity, dto);
+
+            var fallbackAmount = CalculateMaintenanceTicketTotal(maintenanceTicket);
+            if (fallbackAmount > 0m)
+            {
+                if (entity.Subtotal == 0m) entity.Subtotal = fallbackAmount;
+                if (!entity.FinalAmount.HasValue || entity.FinalAmount.Value == 0m) entity.FinalAmount = fallbackAmount;
+                if (entity.Amount == 0m) entity.Amount = fallbackAmount;
+            }
 
             var created = await _repository.AddAsync(entity);
             return MapToResponse(created);
@@ -126,30 +136,30 @@ namespace BE.vn.fpt.edu.services
 
             if (dto.MaintenanceTicketId.HasValue && dto.MaintenanceTicketId.Value != existing.MaintenanceTicketId)
             {
-                var maintenanceTicket = await _context.MaintenanceTickets
+                var newMaintenanceTicket = await _context.MaintenanceTickets
                     .Include(mt => mt.Car)
                         .ThenInclude(c => c.User)
                     .Include(mt => mt.Branch)
                     .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
-                if (maintenanceTicket == null)
+                if (newMaintenanceTicket == null)
                 {
                     throw new ArgumentException($"Maintenance ticket #{dto.MaintenanceTicketId.Value} not found");
                 }
 
-                if (!string.Equals(maintenanceTicket.StatusCode, "COMPLETED", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(newMaintenanceTicket.StatusCode, "COMPLETED", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException("Chỉ gán hóa đơn cho phiếu bảo dưỡng đã hoàn thành");
                 }
 
-                if (await _repository.ExistsByMaintenanceTicketIdAsync(maintenanceTicket.Id, id))
+                if (await _repository.ExistsByMaintenanceTicketIdAsync(newMaintenanceTicket.Id, id))
                 {
                     throw new InvalidOperationException("Phiếu bảo dưỡng này đã có hóa đơn");
                 }
 
-                existing.MaintenanceTicketId = maintenanceTicket.Id;
-                existing.CarId = maintenanceTicket.CarId;
-                existing.BranchId = maintenanceTicket.BranchId;
+                existing.MaintenanceTicketId = newMaintenanceTicket.Id;
+                existing.CarId = newMaintenanceTicket.CarId;
+                existing.BranchId = newMaintenanceTicket.BranchId;
             }
 
             existing.CarId = dto.CarId ?? existing.CarId;
@@ -162,16 +172,46 @@ namespace BE.vn.fpt.edu.services
 
             ApplyFinancials(existing, dto);
 
+            var maintenanceTicketEntity = existing.MaintenanceTicket;
+            if (maintenanceTicketEntity == null && existing.MaintenanceTicketId.HasValue)
+            {
+                maintenanceTicketEntity = await _context.MaintenanceTickets
+                    .Include(mt => mt.ServiceTasks)
+                    .Include(mt => mt.TicketComponents)
+                    .FirstOrDefaultAsync(mt => mt.Id == existing.MaintenanceTicketId.Value);
+            }
+
+            var fallbackAmount = CalculateMaintenanceTicketTotal(maintenanceTicketEntity);
+            if (fallbackAmount > 0m)
+            {
+                if (existing.Subtotal.GetValueOrDefault() == 0m) existing.Subtotal = fallbackAmount;
+                if (!existing.FinalAmount.HasValue || existing.FinalAmount.Value == 0m) existing.FinalAmount = fallbackAmount;
+                if (existing.Amount == 0m) existing.Amount = fallbackAmount;
+            }
+
             var updated = await _repository.UpdateAsync(existing);
             return MapToResponse(updated);
         }
 
         private void ApplyFinancials(TotalReceipt entity, RequestDto dto)
         {
-            decimal subtotal = dto.Subtotal
-                ?? entity.Subtotal
-                ?? dto.Amount
-                ?? entity.Amount;
+            decimal subtotal;
+            if (dto.Subtotal.HasValue)
+            {
+                subtotal = dto.Subtotal.Value;
+            }
+            else if (entity.Subtotal.HasValue)
+            {
+                subtotal = entity.Subtotal.Value;
+            }
+            else if (dto.Amount.HasValue)
+            {
+                subtotal = dto.Amount.Value;
+            }
+            else
+            {
+                subtotal = entity.Amount;
+            }
 
             var vatPercent = dto.VatPercent ?? entity.VatPercent ?? 0m;
             var vatAmount = dto.VatAmount ?? entity.VatAmount ?? (vatPercent * subtotal / 100m);
@@ -185,7 +225,7 @@ namespace BE.vn.fpt.edu.services
             entity.DiscountAmount = discount;
             entity.SurchargeAmount = surcharge;
             entity.FinalAmount = final;
-            entity.Amount = dto.Amount ?? final;
+            entity.Amount = dto.Amount ?? entity.Amount;
         }
 
         private ResponseDto MapToResponse(TotalReceipt entity)
@@ -225,6 +265,17 @@ namespace BE.vn.fpt.edu.services
             dto.DiscountAmount ??= entity.DiscountAmount;
             dto.CreatedAt ??= entity.CreatedAt;
 
+            if (dto.Amount.GetValueOrDefault() == 0m || dto.FinalAmount.GetValueOrDefault() == 0m)
+            {
+                var fallback = CalculateMaintenanceTicketTotal(entity.MaintenanceTicket);
+                if (fallback > 0m)
+                {
+                    if (dto.Amount.GetValueOrDefault() == 0m) dto.Amount = fallback;
+                    if (dto.FinalAmount.GetValueOrDefault() == 0m) dto.FinalAmount = fallback;
+                    if (dto.Subtotal.GetValueOrDefault() == 0m) dto.Subtotal = fallback;
+                }
+            }
+
             return dto;
         }
 
@@ -246,6 +297,37 @@ namespace BE.vn.fpt.edu.services
                 result += chars[(int)(value % chars.Length)];
             }
             return $"INV{result}";
+        }
+
+        private static decimal CalculateMaintenanceTicketTotal(MaintenanceTicket? maintenanceTicket)
+        {
+            if (maintenanceTicket == null) return 0m;
+
+            decimal componentTotal = 0m;
+            if (maintenanceTicket.TicketComponents != null)
+            {
+                foreach (var component in maintenanceTicket.TicketComponents)
+                {
+                    var quantity = component.ActualQuantity ?? Convert.ToDecimal(component.Quantity);
+                    var unitPrice = component.UnitPrice ?? 0m;
+                    componentTotal += quantity * unitPrice;
+                }
+            }
+
+            decimal laborTotal = 0m;
+            if (maintenanceTicket.ServiceTasks != null)
+            {
+                laborTotal = maintenanceTicket.ServiceTasks.Sum(task => task.LaborCost ?? 0m);
+            }
+
+            var estimated = maintenanceTicket.TotalEstimatedCost ?? 0m;
+            var total = componentTotal + laborTotal;
+            if (total <= 0m)
+            {
+                total = estimated;
+            }
+
+            return total;
         }
     }
 }

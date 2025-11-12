@@ -1,50 +1,41 @@
 using AutoMapper;
 
-using BE.vn.fpt.edu.DTOs.MaintenanceTicket;
+using RequestDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.RequestDto;
+using ResponseDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto;
+using ListResponseDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto;
+using CreateFromCheckinDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.CreateFromCheckinDto;
+using UpdateStatusDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.UpdateStatusDto;
+using AssignTechnicianDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.AssignTechnicianDto;
+using AssignTechniciansDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.AssignTechniciansDto;
+using TechnicianInfoDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.TechnicianInfoDto;
+using TotalReceiptRequestDto = BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto;
 
+using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.interfaces;
-
 using BE.vn.fpt.edu.repository.IRepository;
-
 using BE.vn.fpt.edu.models;
-
 using System.Linq;
-
 using Microsoft.EntityFrameworkCore;
-
 using BE.vn.fpt.edu.DTOs.ServiceTask;
 
 
 
 namespace BE.vn.fpt.edu.services
-
 {
-
     public class MaintenanceTicketService : IMaintenanceTicketService
-
     {
-
         private readonly IMaintenanceTicketRepository _maintenanceTicketRepository;
-
         private readonly IVehicleCheckinRepository _vehicleCheckinRepository;
         private readonly ICarOfAutoOwnerRepository _carRepository;
         private readonly IServiceCategoryRepository _serviceCategoryRepository;
-
         private readonly IHistoryLogRepository _historyLogRepository;
-
         private readonly IServicePackageService _servicePackageService;
-
         private readonly ITicketComponentService _ticketComponentService;
-
         private readonly IServiceTaskService _serviceTaskService;
         private readonly IServiceTaskRepository _serviceTaskRepository;
-
+        private readonly ITotalReceiptService _totalReceiptService;
         private readonly IMapper _mapper;
-
         private readonly CarMaintenanceDbContext _context;
-
-
-
         public MaintenanceTicketService(
 
             IMaintenanceTicketRepository maintenanceTicketRepository,
@@ -53,39 +44,27 @@ namespace BE.vn.fpt.edu.services
             ICarOfAutoOwnerRepository carRepository,
             IServiceCategoryRepository serviceCategoryRepository,
             IHistoryLogRepository historyLogRepository,
-
             IServicePackageService servicePackageService,
-
             ITicketComponentService ticketComponentService,
-
             IServiceTaskService serviceTaskService,
-
             IServiceTaskRepository serviceTaskRepository,
-
+            ITotalReceiptService totalReceiptService,
             IMapper mapper,
-
             CarMaintenanceDbContext context)
 
         {
 
             _maintenanceTicketRepository = maintenanceTicketRepository;
-
             _vehicleCheckinRepository = vehicleCheckinRepository;
             _carRepository = carRepository;
             _serviceCategoryRepository = serviceCategoryRepository;
-
             _historyLogRepository = historyLogRepository;
-
             _servicePackageService = servicePackageService;
-
             _ticketComponentService = ticketComponentService;
-
             _serviceTaskService = serviceTaskService;
-
             _serviceTaskRepository = serviceTaskRepository;
-
+            _totalReceiptService = totalReceiptService;
             _mapper = mapper;
-
             _context = context;
 
         }
@@ -1210,8 +1189,21 @@ namespace BE.vn.fpt.edu.services
                 newData: $"Phiếu hoàn thành bởi {userName}"
 
             );
-
-
+            try
+            {
+                var receiptRequest = new TotalReceiptRequestDto
+                {
+                    MaintenanceTicketId = maintenanceTicket.Id,
+                    CarId = maintenanceTicket.CarId,
+                    BranchId = maintenanceTicket.BranchId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _totalReceiptService.CreateAsync(receiptRequest);
+            }
+            catch (Exception)
+            {
+                // Ignore failures when auto-creating receipt; optionally log if needed
+            }
 
             return _mapper.Map<ResponseDto>(updatedTicket);
 
