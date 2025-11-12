@@ -105,6 +105,117 @@
         color: var(--bs-secondary);
     }
 
+    .invoice-company-header {
+        border-bottom: 2px solid rgba(13, 110, 253, 0.2);
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .invoice-company-logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(111, 66, 193, 0.1));
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--bs-primary);
+        font-weight: 700;
+    }
+
+    .invoice-company-info h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--bs-dark);
+    }
+
+    .invoice-company-info .text-muted {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .invoice-billing-section {
+        background: rgba(13, 110, 253, 0.02);
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        border: 1px solid rgba(13, 110, 253, 0.1);
+    }
+
+    .invoice-billing-section .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--bs-secondary);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .invoice-billing-section .value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--bs-dark);
+    }
+
+    .payment-terms-box {
+        background: rgba(255, 193, 7, 0.05);
+        border-left: 3px solid #ffc107;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .payment-terms-box .title {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        color: var(--bs-dark);
+    }
+
+    .payment-terms-box .content {
+        font-size: 0.85rem;
+        color: var(--bs-secondary);
+        line-height: 1.6;
+    }
+
+    .invoice-footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--bs-border-color);
+        font-size: 0.85rem;
+        color: var(--bs-secondary);
+        text-align: center;
+    }
+
+    @@media print {
+        .no-print {
+            display: none !important;
+        }
+
+        .invoice-header-card,
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .invoice-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+        }
+
+        body {
+            background: white !important;
+        }
+
+        .container-fluid {
+            max-width: 100% !important;
+            padding: 0 !important;
+        }
+    }
+
     @@media (max-width: 767.98px) {
         .summary-tile {
             padding: 0.85rem;
@@ -113,58 +224,75 @@
         .summary-tile .value {
             font-size: 1rem;
         }
+
+        .invoice-company-header {
+            text-align: center;
+        }
     }
 </style>
 
 <div class="container-fluid">
+    <!-- Action Buttons -->
+    <div class="row mb-3 no-print">
+        <div class="col-12">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <a href="/TotalReceipts" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+                <div class="d-flex gap-2">
+                    <span id="invoiceStatus" class="invoice-status-badge pending align-self-center">Đang tải...</span>
+                    <button class="btn btn-outline-primary btn-sm" type="button" onclick="window.print()">
+                        <i class="fas fa-print me-1"></i>In hóa đơn
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Document -->
     <div class="row">
         <div class="col-12">
-            <div class="card invoice-header-card mb-4">
-                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-3">
-                    <div>
-                        <h4 class="mb-1" id="invoiceCode">Chi tiết hóa đơn</h4>
-                        <div class="text-muted" id="invoiceCreated">-</div>
+            <!-- Company Header -->
+            <div class="invoice-company-header">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center text-md-start mb-3 mb-md-0">
+                        <div class="invoice-company-logo mx-auto mx-md-0">
+                            <i class="fas fa-wrench"></i>
+                        </div>
                     </div>
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <span id="invoiceStatus" class="invoice-status-badge pending">Đang tải...</span>
-                        <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.print()">
-                            <i class="fas fa-print me-1"></i>In hóa đơn
-                        </button>
-                        <a href="/TotalReceipts" class="btn btn-sm btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Quay lại
-                        </a>
+                    <div class="col-md-5 invoice-company-info">
+                        <h5 id="companyName">CÔNG TY BẢO DƯỠNG XE</h5>
+                        <div class="text-muted" id="companyAddress">-</div>
+                        <div class="text-muted" id="companyPhone">-</div>
+                    </div>
+                    <div class="col-md-5 text-md-end">
+                        <h3 class="mb-2" id="invoiceCode">HÓA ĐƠN</h3>
+                        <div class="text-muted small mb-1">Mã: <span id="invoiceCodeValue" class="fw-semibold text-dark">-</span></div>
+                        <div class="text-muted small mb-1">Ngày: <span id="invoiceDate" class="fw-semibold text-dark">-</span></div>
+                        <div class="mt-2">
+                            <span id="invoiceStatusHeader" class="invoice-status-badge pending">Đang tải...</span>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3" id="invoiceSummary">
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="summary-tile">
-                                <div class="label">Khách hàng</div>
-                                <div class="value" id="summaryCustomer">-</div>
-                                <div class="text-muted small" id="summaryCustomerPhone"></div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="summary-tile">
-                                <div class="label">Xe</div>
-                                <div class="value" id="summaryCar">-</div>
-                                <div class="text-muted small" id="summaryLicense"></div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="summary-tile">
-                                <div class="label">Chi nhánh</div>
-                                <div class="value" id="summaryBranch">-</div>
-                                <div class="text-muted small" id="summaryTicketCode"></div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="summary-tile">
-                                <div class="label">Tổng thanh toán</div>
-                                <div class="value text-primary" id="summaryTotal">0 ₫</div>
-                                <div class="text-muted small" id="summaryCurrency">VND</div>
-                            </div>
-                        </div>
+            </div>
+
+            <!-- Billing Information: 2 Columns -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="invoice-billing-section">
+                        <div class="label">Thông tin khách hàng</div>
+                        <div class="value mb-2" id="billingCustomerName">-</div>
+                        <div class="text-muted small mb-1" id="billingCustomerPhone">-</div>
+                        <div class="text-muted small mb-1" id="billingCustomerEmail">-</div>
+                        <div class="text-muted small" id="billingCustomerAddress">-</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="invoice-billing-section">
+                        <div class="label">Thông tin xe</div>
+                        <div class="value mb-2" id="billingCarName">-</div>
+                        <div class="text-muted small mb-1">Biển số: <span id="billingLicensePlate" class="fw-semibold">-</span></div>
+                        <div class="text-muted small">Phiếu bảo dưỡng: <a href="#" id="billingTicketLink" class="text-decoration-none">-</a></div>
                     </div>
                 </div>
             </div>
@@ -218,15 +346,12 @@
                                 <tr>
                                     <th style="width: 60px;" class="text-center">#</th>
                                     <th>Tên công việc</th>
-                                    <th style="width: 120px;" class="text-end">Thời gian chuẩn</th>
-                                    <th style="width: 130px;" class="text-end">Thời gian thực tế</th>
-                                    <th style="width: 140px;" class="text-end">Phí nhân công</th>
-                                    <th style="width: 120px;">Trạng thái</th>
+                                    <th style="width: 180px;" class="text-end">Phí nhân công</th>
                                 </tr>
                             </thead>
                             <tbody id="tasksTableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted">Đang tải danh sách công việc...</td>
+                                    <td colspan="3" class="text-center text-muted">Đang tải danh sách công việc...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -281,8 +406,12 @@
                         <span>Chi phí phụ tùng</span>
                         <span id="summaryComponentCost">0 ₫</span>
                     </div>
+                    <div class="summary-row" style="border-top: 1px dashed rgba(0, 0, 0, 0.1); padding-top: 0.5rem; margin-top: 0.5rem;">
+                        <span class="fw-semibold">Tổng phụ (Subtotal)</span>
+                        <span class="fw-semibold" id="summarySubtotal">0 ₫</span>
+                    </div>
                     <div class="summary-row">
-                        <span>Thuế (VAT)</span>
+                        <span>Thuế VAT (<span id="vatPercent">0</span>%)</span>
                         <span id="summaryVat">0 ₫</span>
                     </div>
                     <div class="summary-row">
@@ -291,7 +420,7 @@
                     </div>
                     <div class="summary-row">
                         <span>Giảm giá</span>
-                        <span id="summaryDiscount">0 ₫</span>
+                        <span class="text-danger" id="summaryDiscount">-0 ₫</span>
                     </div>
                     <div class="summary-row total">
                         <span>Tổng thanh toán</span>
@@ -300,7 +429,7 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-body">
                     <div class="section-title">
                         <i class="fas fa-sticky-note text-primary"></i>Ghi chú hóa đơn
@@ -309,6 +438,41 @@
                         Không có ghi chú.
                     </div>
                 </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="payment-terms-box">
+                        <div class="title">
+                            <i class="fas fa-info-circle me-1"></i>Điều khoản thanh toán
+                        </div>
+                        <div class="content">
+                            <div class="mb-2">
+                                <strong>Hạn thanh toán:</strong> Thanh toán ngay khi nhận hóa đơn
+                            </div>
+                            <div class="mb-2">
+                                <strong>Phương thức:</strong> Tiền mặt hoặc chuyển khoản
+                            </div>
+                            <div>
+                                <strong>Lưu ý:</strong> Vui lòng thanh toán đúng hạn để tránh gián đoạn dịch vụ.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Footer -->
+    <div class="invoice-footer">
+        <div class="row">
+            <div class="col-md-6 text-md-start mb-2 mb-md-0">
+                <div class="fw-semibold mb-1">Cảm ơn quý khách đã sử dụng dịch vụ!</div>
+                <div class="small">Mọi thắc mắc vui lòng liên hệ chi nhánh để được hỗ trợ.</div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="small mb-1">Hóa đơn được tạo tự động từ hệ thống</div>
+                <div class="small">© 2025 - Hệ thống quản lý bảo dưỡng xe</div>
             </div>
         </div>
     </div>
@@ -371,24 +535,40 @@
         }
 
         function renderInvoiceSummary(data) {
-            $('#invoiceCode').text(data.code || 'Hoá đơn');
-            $('#invoiceCreated').text(formatDateTime(data.createdAt));
-            $('#invoiceStatus').removeClass('pending paid').addClass(getStatusClass(data.statusCode)).text(getStatusText(data.statusCode));
+            // Header
+            $('#invoiceCodeValue').text(data.code || '-');
+            $('#invoiceDate').text(formatDateOnly(data.createdAt));
+            const statusClass = getStatusClass(data.statusCode);
+            const statusText = getStatusText(data.statusCode);
+            $('#invoiceStatus').removeClass('pending paid').addClass(statusClass).text(statusText);
+            $('#invoiceStatusHeader').removeClass('pending paid').addClass(statusClass).text(statusText);
 
-            $('#summaryCustomer').text(data.customerName || 'Không rõ');
-            $('#summaryCustomerPhone').text(data.customerPhone || '');
-            $('#summaryCar').text(data.carName || 'Không rõ');
-            $('#summaryLicense').text(data.licensePlate || '');
-            $('#summaryBranch').text(data.branchName || 'Không rõ');
-            $('#summaryTicketCode').text(data.maintenanceTicketCode ? `Phiếu: ${data.maintenanceTicketCode}` : '');
+            // Company Info (Branch)
+            $('#companyName').text(data.branchName || 'CÔNG TY BẢO DƯỠNG XE');
+            // Note: Branch address and phone would need to be added to ResponseDto
+            $('#companyAddress').text('Địa chỉ chi nhánh sẽ được cập nhật');
+            $('#companyPhone').text('Điện thoại: Sẽ được cập nhật');
 
-            const finalAmount = data.finalAmount ?? data.amount ?? data.subtotal ?? 0;
-            $('#summaryTotal').text(formatCurrency(finalAmount));
-            $('#summaryCurrency').text(data.currencyCode || 'VND');
+            // Billing Information - Customer
+            $('#billingCustomerName').text(data.customerName || 'Không rõ');
+            $('#billingCustomerPhone').text(data.customerPhone ? `Điện thoại: ${data.customerPhone}` : '');
+            $('#billingCustomerEmail').text(data.customerEmail ? `Email: ${data.customerEmail}` : '');
+            $('#billingCustomerAddress').text('Địa chỉ: Sẽ được cập nhật');
 
+            // Billing Information - Vehicle
+            $('#billingCarName').text(data.carName || 'Không rõ');
+            $('#billingLicensePlate').text(data.licensePlate || '-');
+            if (data.maintenanceTicketId) {
+                $('#billingTicketLink').attr('href', `/MaintenanceTickets/Details/${data.maintenanceTicketId}`)
+                    .text(data.maintenanceTicketCode || `#${data.maintenanceTicketId}`);
+            } else {
+                $('#billingTicketLink').text('Không xác định').removeAttr('href');
+            }
+
+            // Detail Info (old section - keeping for compatibility)
             $('#detailCode').text(data.code || '-');
             $('#detailCreated').text(formatDateTime(data.createdAt));
-            $('#detailStatus').html(`<span class="invoice-status-badge ${getStatusClass(data.statusCode)}">${getStatusText(data.statusCode)}</span>`);
+            $('#detailStatus').html(`<span class="invoice-status-badge ${statusClass}">${statusText}</span>`);
 
             if (data.maintenanceTicketId) {
                 $('#detailTicketLink').html(`<a href="/MaintenanceTickets/Details/${data.maintenanceTicketId}" class="text-decoration-none">${data.maintenanceTicketCode || 'Xem phiếu'}</a>`);
@@ -443,8 +623,6 @@
 
             $('#tasksEmptyState').hide();
             tasks.forEach((task, index) => {
-                const standardTime = task.standardLaborTime ?? 0;
-                const actualTime = task.actualLaborTime ?? 0;
                 tbody.append(`
                     <tr>
                         <td class="text-center">${index + 1}</td>
@@ -452,10 +630,7 @@
                             <div class="fw-semibold">${escapeHtml(task.taskName || 'Công việc')}</div>
                             ${task.description ? `<div class="text-muted small">${escapeHtml(task.description)}</div>` : ''}
                         </td>
-                        <td class="text-end">${standardTime.toFixed(2)} h</td>
-                        <td class="text-end">${actualTime.toFixed(2)} h</td>
                         <td class="text-end">${formatCurrency(task.laborCost || 0)}</td>
-                        <td>${renderTaskStatus(task.statusCode)}</td>
                     </tr>
                 `);
             });
@@ -527,14 +702,24 @@
             $('#summaryLaborCost').text(formatCurrency(laborTotal));
             $('#summaryComponentCost').text(formatCurrency(componentTotal));
 
-            const vatAmount = receiptData?.vatAmount ?? 0;
+            // Calculate subtotal (before tax)
+            const subtotal = receiptData?.subtotal ?? (laborTotal + componentTotal);
+            $('#summarySubtotal').text(formatCurrency(subtotal));
+
+            // VAT
+            const vatPercent = receiptData?.vatPercent ?? 0;
+            const vatAmount = receiptData?.vatAmount ?? (vatPercent * subtotal / 100);
+            $('#vatPercent').text(vatPercent.toFixed(1));
+            $('#summaryVat').text(formatCurrency(vatAmount));
+
+            // Other charges
             const surcharge = receiptData?.surchargeAmount ?? 0;
             const discount = receiptData?.discountAmount ?? 0;
-            const grandTotal = receiptData?.finalAmount ?? receiptData?.amount ?? (laborTotal + componentTotal + vatAmount + surcharge - discount);
-
-            $('#summaryVat').text(formatCurrency(vatAmount));
             $('#summarySurcharge').text(formatCurrency(surcharge));
             $('#summaryDiscount').text(formatCurrency(discount));
+
+            // Grand total
+            const grandTotal = receiptData?.finalAmount ?? receiptData?.amount ?? (subtotal + vatAmount + surcharge - discount);
             $('#summaryGrandTotal').text(formatCurrency(grandTotal));
         }
 
@@ -577,6 +762,13 @@
             const date = new Date(value);
             if (Number.isNaN(date)) return '-';
             return `${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
+        }
+
+        function formatDateOnly(value) {
+            if (!value) return '-';
+            const date = new Date(value);
+            if (Number.isNaN(date)) return '-';
+            return date.toLocaleDateString('vi-VN');
         }
 
         function escapeHtml(str) {
