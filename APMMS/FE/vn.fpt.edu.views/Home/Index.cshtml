@@ -22,11 +22,6 @@
                         Giải pháp toàn diện cho việc quản lý xe, phụ tùng và lịch bảo dưỡng. 
                         Tối ưu hóa quy trình, tiết kiệm thời gian và chi phí.
                     </p>
-                    <div class="hero-buttons">
-                        <a href="#features" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-info-circle"></i> Tìm hiểu thêm
-                        </a>
-                    </div>
                 </div>
             </div>
             <div class="col-lg-6">
@@ -50,35 +45,222 @@
     </div>
 </section>
 
-<!-- Features Section -->
-<section id="features" class="features-section py-5">
+<!-- Feedback Management Section -->
+<section id="feedback" class="feedback-section py-5 bg-light">
     <div class="container">
         <div class="row">
-            <div class="col-lg-4 mb-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-car"></i>
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>
+                            Quản lý Phản hồi
+                        </h4>
                     </div>
-                    <h4>Quản lý Xe</h4>
-                    <p>Theo dõi thông tin xe, lịch sử bảo dưỡng và trạng thái hoạt động một cách chi tiết.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 mb-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-wrench"></i>
+                    <div class="card-body">
+                        <!-- Filter -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Lọc theo đánh giá:</label>
+                                <select class="form-select">
+                                    <option value="">Tất cả đánh giá</option>
+                                    <option value="5">5 sao</option>
+                                    <option value="4">4 sao</option>
+                                    <option value="3">3 sao</option>
+                                    <option value="2">2 sao</option>
+                                    <option value="1">1 sao</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Feedback List -->
+                        <div id="feedbackList">
+                            <!-- Feedback 1 -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-2"></i>
+                                                Nguyễn Văn A
+                                            </h6>
+                                            <div class="text-warning mb-2">★★★★★</div>
+                                            <small class="text-muted">Phiếu bảo dưỡng #12345</small>
+                                        </div>
+                                        <small class="text-muted">15/01/2025 10:30</small>
+                                    </div>
+                                    <p class="mb-2">Dịch vụ bảo dưỡng rất tốt, nhân viên chuyên nghiệp và nhiệt tình. Tôi rất hài lòng với chất lượng phục vụ.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Trả lời
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-comments me-1"></i>
+                                            Xem 2 trả lời
+                                        </button>
+                                    </div>
+                                    <!-- Replies -->
+                                    <div class="mt-3">
+                                        <div class="card bg-light ms-4 mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong><i class="fas fa-user-tie me-1"></i>Nhân viên CSKH</strong>
+                                                        <p class="mb-0 mt-1">Cảm ơn bạn đã phản hồi. Chúng tôi rất vui khi được phục vụ bạn!</p>
+                                                    </div>
+                                                    <small class="text-muted">15/01/2025 11:00</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card bg-light ms-4 mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong><i class="fas fa-user-tie me-1"></i>Quản lý dịch vụ</strong>
+                                                        <p class="mb-0 mt-1">Chúng tôi sẽ tiếp tục cải thiện chất lượng dịch vụ để phục vụ bạn tốt hơn.</p>
+                                                    </div>
+                                                    <small class="text-muted">15/01/2025 14:30</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback 2 -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-2"></i>
+                                                Trần Thị B
+                                            </h6>
+                                            <div class="text-warning mb-2">★★★★☆</div>
+                                            <small class="text-muted">Phiếu bảo dưỡng #12346</small>
+                                        </div>
+                                        <small class="text-muted">14/01/2025 16:20</small>
+                                    </div>
+                                    <p class="mb-2">Dịch vụ tốt nhưng thời gian chờ hơi lâu. Mong được cải thiện thêm về mặt này.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Trả lời
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-comments me-1"></i>
+                                            Xem 1 trả lời
+                                        </button>
+                                    </div>
+                                    <!-- Replies -->
+                                    <div class="mt-3">
+                                        <div class="card bg-light ms-4 mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong><i class="fas fa-user-tie me-1"></i>Nhân viên CSKH</strong>
+                                                        <p class="mb-0 mt-1">Cảm ơn bạn đã góp ý. Chúng tôi sẽ cố gắng rút ngắn thời gian chờ đợi trong tương lai.</p>
+                                                    </div>
+                                                    <small class="text-muted">14/01/2025 17:00</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback 3 -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-2"></i>
+                                                Lê Văn C
+                                            </h6>
+                                            <div class="text-warning mb-2">★★★★★</div>
+                                            <small class="text-muted">Phiếu bảo dưỡng #12347</small>
+                                        </div>
+                                        <small class="text-muted">13/01/2025 09:15</small>
+                                    </div>
+                                    <p class="mb-2">Rất hài lòng với dịch vụ. Xe của tôi được bảo dưỡng kỹ lưỡng, giá cả hợp lý. Sẽ quay lại lần sau.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Trả lời
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback 4 -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-2"></i>
+                                                Phạm Thị D
+                                            </h6>
+                                            <div class="text-warning mb-2">★★★☆☆</div>
+                                            <small class="text-muted">Phiếu bảo dưỡng #12348</small>
+                                        </div>
+                                        <small class="text-muted">12/01/2025 13:45</small>
+                                    </div>
+                                    <p class="mb-2">Dịch vụ ổn nhưng cần cải thiện thêm về mặt tư vấn cho khách hàng.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Trả lời
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Feedback 5 -->
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-user me-2"></i>
+                                                Hoàng Văn E
+                                            </h6>
+                                            <div class="text-warning mb-2">★★★★★</div>
+                                            <small class="text-muted">Phiếu bảo dưỡng #12349</small>
+                                        </div>
+                                        <small class="text-muted">11/01/2025 15:30</small>
+                                    </div>
+                                    <p class="mb-2">Tuyệt vời! Nhân viên rất chuyên nghiệp, giải thích rõ ràng về các công việc bảo dưỡng. Rất đáng tin cậy.</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-sm btn-primary">
+                                            <i class="fas fa-reply me-1"></i>
+                                            Trả lời
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-comments me-1"></i>
+                                            Xem 1 trả lời
+                                        </button>
+                                    </div>
+                                    <!-- Replies -->
+                                    <div class="mt-3">
+                                        <div class="card bg-light ms-4 mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <strong><i class="fas fa-user-tie me-1"></i>Quản lý dịch vụ</strong>
+                                                        <p class="mb-0 mt-1">Cảm ơn bạn đã tin tưởng và sử dụng dịch vụ của chúng tôi. Chúng tôi sẽ tiếp tục nỗ lực để mang lại dịch vụ tốt nhất!</p>
+                                                    </div>
+                                                    <small class="text-muted">11/01/2025 16:00</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <h4>Bảo dưỡng Thông minh</h4>
-                    <p>Lịch bảo dưỡng tự động, nhắc nhở và quản lý quy trình bảo dưỡng hiệu quả.</p>
-                </div>
-            </div>
-            <div class="col-lg-4 mb-4">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-boxes"></i>
-                    </div>
-                    <h4>Kho Phụ tùng</h4>
-                    <p>Quản lý tồn kho, đặt hàng tự động và theo dõi chi phí phụ tùng.</p>
                 </div>
             </div>
         </div>

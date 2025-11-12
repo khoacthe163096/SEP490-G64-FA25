@@ -293,16 +293,18 @@
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
-                                                <th>Thời gian <i class="fas fa-sort"></i></th>
-                                                <th>Loại dịch vụ <i class="fas fa-sort"></i></th>
-                                                <th>Tổng tiền xuất kho <i class="fas fa-sort"></i></th>
-                                                <th>Tổng thuế giá trị gia tăng <i class="fas fa-sort"></i></th>
-                                                <th>Tổng tiền <i class="fas fa-sort"></i></th>
+                                                <th>Ngày thanh toán <i class="fas fa-sort"></i></th>
+                                                <th>Mã phiếu bảo dưỡng <i class="fas fa-sort"></i></th>
+                                                <th>Tổng phụ (Subtotal) <i class="fas fa-sort"></i></th>
+                                                <th>Thuế VAT <i class="fas fa-sort"></i></th>
+                                                <th>Phụ thu <i class="fas fa-sort"></i></th>
+                                                <th>Giảm giá <i class="fas fa-sort"></i></th>
+                                                <th>Tổng thanh toán <i class="fas fa-sort"></i></th>
                                             </tr>
                                         </thead>
                                         <tbody id="maintenanceHistoryBody">
                                             <tr>
-                                                <td colspan="5" class="empty-history">Xe không có dịch vụ nào từng được thực hiện!</td>
+                                                <td colspan="7" class="empty-history">Xe không có dịch vụ nào từng được thực hiện!</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -449,7 +451,14 @@
         }
         
         function loadMaintenanceHistory(carId) {
-            fetch(`${API_BASE_URL}/MaintenanceTicket/by-car/${carId}`)
+            // Lấy hóa đơn đã thanh toán (PAID) - lấy nhiều trang để đảm bảo có đủ dữ liệu
+            const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+            fetch(`${API_BASE_URL}/TotalReceipt?page=1&pageSize=100&statusCode=PAID`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -457,53 +466,68 @@
                     return response.json();
                 })
                 .then(data => {
-                    const tickets = data.data || data || [];
-                    displayMaintenanceHistory(tickets);
+                    if (data.success && data.data && data.data.items) {
+                        // Filter theo carId
+                        const receipts = data.data.items.filter(receipt => 
+                            (receipt.carId || receipt.CarId) === carId
+                        );
+                        displayMaintenanceHistory(receipts);
+                    } else {
+                        displayMaintenanceHistory([]);
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading maintenance history:', error);
                     // Show empty message if error
                     document.getElementById('maintenanceHistoryBody').innerHTML = 
-                        '<tr><td colspan="5" class="empty-history">Xe không có dịch vụ nào từng được thực hiện!</td></tr>';
+                        '<tr><td colspan="7" class="empty-history">Xe không có dịch vụ nào từng được thực hiện!</td></tr>';
                 });
         }
         
-        function displayMaintenanceHistory(tickets) {
+        function displayMaintenanceHistory(receipts) {
             const tbody = document.getElementById('maintenanceHistoryBody');
-            if (!tickets || tickets.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-history">Xe không có dịch vụ nào từng được thực hiện!</td></tr>';
+            if (!receipts || receipts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-history">Chưa có lịch sử bảo dưỡng đã thanh toán!</td></tr>';
                 return;
             }
             
+            // Sắp xếp theo ngày tạo (mới nhất trước)
+            receipts.sort((a, b) => {
+                const dateA = new Date(a.createdAt || a.CreatedAt || 0);
+                const dateB = new Date(b.createdAt || b.CreatedAt || 0);
+                return dateB - dateA;
+            });
+            
             tbody.innerHTML = '';
-            tickets.forEach(ticket => {
+            receipts.forEach(receipt => {
                 const row = document.createElement('tr');
-                const serviceDate = ticket.startTime 
-                    ? new Date(ticket.startTime).toLocaleDateString('vi-VN', {
+                const receiptDate = receipt.createdAt || receipt.CreatedAt;
+                const serviceDate = receiptDate 
+                    ? new Date(receiptDate).toLocaleDateString('vi-VN', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
                     })
-                    : (ticket.createdDate 
-                        ? new Date(ticket.createdDate).toLocaleDateString('vi-VN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                        })
-                        : '-');
-                const serviceType = ticket.scheduleServiceName || ticket.description || '-';
-                const warehouseTotal = ticket.totalEstimatedCost ? formatCurrency(ticket.totalEstimatedCost) : '-';
-                const vatTotal = '-'; // VAT info not available in current DTO
-                const totalAmount = ticket.totalEstimatedCost ? formatCurrency(ticket.totalEstimatedCost) : '-';
+                    : '-';
+                
+                // Lấy thông tin từ hóa đơn
+                const serviceType = receipt.maintenanceTicketCode || receipt.MaintenanceTicketCode || 'Bảo dưỡng';
+                const subtotal = receipt.subtotal || receipt.Subtotal || 0;
+                const vatAmount = receipt.vatAmount || receipt.VatAmount || 0;
+                const surchargeAmount = receipt.surchargeAmount || receipt.SurchargeAmount || 0;
+                const discountAmount = receipt.discountAmount || receipt.DiscountAmount || 0;
+                const finalAmount = receipt.finalAmount || receipt.FinalAmount || receipt.amount || receipt.Amount || 0;
                 
                 row.innerHTML = `
                     <td>${serviceDate}</td>
                     <td>${serviceType}</td>
-                    <td>${warehouseTotal}</td>
-                    <td>${vatTotal}</td>
-                    <td>${totalAmount}</td>
+                    <td>${formatCurrency(subtotal)}</td>
+                    <td>${formatCurrency(vatAmount)}</td>
+                    <td>${formatCurrency(surchargeAmount)}</td>
+                    <td>${formatCurrency(discountAmount)}</td>
+                    <td>${formatCurrency(finalAmount)}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -552,7 +576,7 @@
                 return response.json();
             })
             .then(data => {
-                alert('Cập nhật thông tin phương tiện thành công!');
+                showSuccessAlert('Cập nhật thông tin phương tiện thành công!');
                 loadCarDetails(currentCar.id);
                 loadMaintenanceHistory(currentCar.id);
             })
@@ -566,6 +590,24 @@
             document.getElementById('errorText').textContent = message;
             document.getElementById('errorMessage').style.display = 'block';
             document.getElementById('loadingSpinner').style.display = 'none';
+        }
+        
+        function showSuccessAlert(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
         }
     </script>
 }

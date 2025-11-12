@@ -112,10 +112,6 @@
                             <i class="fas fa-arrow-left me-1"></i>
                             Quay lại
                         </a>
-                        <a href="#" class="btn btn-warning" id="editTicketBtn">
-                            <i class="fas fa-edit me-1"></i>
-                            Chỉnh sửa
-                        </a>
                     </div>
                 </div>
             </div>
@@ -595,10 +591,6 @@ $(document).ready(function() {
     
     $('#updateComponentBtn').on('click', function() {
         updateComponent();
-    });
-    
-    $('#editTicketBtn').on('click', function() {
-        window.location.href = `/MaintenanceTickets/Edit/${maintenanceTicketId}`;
     });
 
     // Gán kỹ thuật viên (mở modal chọn nhiều)
