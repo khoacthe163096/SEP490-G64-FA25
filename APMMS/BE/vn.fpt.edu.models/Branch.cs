@@ -13,7 +13,7 @@ public partial class Branch
 
     public string? Address { get; set; }
 
-    public decimal? LaborRate { get; set; } // Giá giờ công (VNĐ/giờ)
+    public decimal? LaborRate { get; set; }
 
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
 
@@ -29,6 +29,8 @@ public partial class Branch
 
     public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
 
+    public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
+
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
 
     public virtual ICollection<TypeComponent> TypeComponents { get; set; } = new List<TypeComponent>();
@@ -36,6 +38,4 @@ public partial class Branch
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 
     public virtual ICollection<VehicleCheckin> VehicleCheckins { get; set; } = new List<VehicleCheckin>();
-
-    public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 }

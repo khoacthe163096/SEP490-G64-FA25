@@ -23,6 +23,38 @@ public partial class VehicleCheckin
 
     public string? Code { get; set; }
 
+    public string? SnapshotCarName { get; set; }
+
+    public string? SnapshotCarModel { get; set; }
+
+    public string? SnapshotVehicleType { get; set; }
+
+    public long? SnapshotVehicleTypeId { get; set; }
+
+    public string? SnapshotLicensePlate { get; set; }
+
+    public string? SnapshotVinNumber { get; set; }
+
+    public string? SnapshotEngineNumber { get; set; }
+
+    public int? SnapshotYearOfManufacture { get; set; }
+
+    public string? SnapshotColor { get; set; }
+
+    public int? SnapshotMileage { get; set; }
+
+    public string? SnapshotCustomerName { get; set; }
+
+    public string? SnapshotCustomerPhone { get; set; }
+
+    public string? SnapshotCustomerEmail { get; set; }
+
+    public string? SnapshotCustomerAddress { get; set; }
+
+    public string? SnapshotBranchName { get; set; }
+
+    public string? SnapshotConsulterName { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }

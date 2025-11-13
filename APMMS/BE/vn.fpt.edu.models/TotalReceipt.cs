@@ -37,6 +37,14 @@ public partial class TotalReceipt
 
     public decimal? FinalAmount { get; set; }
 
+    public long? ServicePackageId { get; set; }
+
+    public decimal? ServicePackagePrice { get; set; }
+
+    public string? ServicePackageName { get; set; }
+
+    public decimal? PackageDiscountAmount { get; set; }
+
     public virtual User? Accountant { get; set; }
 
     public virtual Branch? Branch { get; set; }
@@ -44,6 +52,8 @@ public partial class TotalReceipt
     public virtual Car? Car { get; set; }
 
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
+
+    public virtual ServicePackage? ServicePackage { get; set; }
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 }
