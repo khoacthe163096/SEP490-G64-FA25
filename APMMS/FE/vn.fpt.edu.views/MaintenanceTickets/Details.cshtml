@@ -186,6 +186,13 @@
                             </div>
                         </div>
                         <div class="card-body">
+                            <!-- Service Package Info -->
+                            <div id="servicePackageInfo" class="alert alert-info mb-3" style="display: none;">
+                                <i class="fas fa-box me-2"></i>
+                                <strong>Gói dịch vụ đã áp dụng:</strong> 
+                                <span id="servicePackageNameDisplay"></span>
+                                <span class="text-muted ms-2" id="servicePackagePriceDisplay"></span>
+                            </div>
                             <div id="componentsList">
                                 <!-- Components will be loaded here -->
                             </div>
@@ -641,6 +648,7 @@ function loadMaintenanceTicketDetails() {
                 displayCheckinInfo(data.data);
                 displayStatusAndActions(data.data);
                 displayTimeline(data.data);
+                displayServicePackageInfo(data.data);
                 
                 // Show/hide add component and apply service package buttons based on status
                 const canEditComponents = data.data.statusCode === 'PENDING' || data.data.statusCode === 'ASSIGNED' || data.data.statusCode === 'IN_PROGRESS';
@@ -912,6 +920,37 @@ function displayCheckinInfo(data) {
         `);
     } else {
         checkinInfo.html('<p class="text-muted">Không có thông tin check-in</p>');
+    }
+}
+
+function displayServicePackageInfo(data) {
+    const servicePackageInfo = $('#servicePackageInfo');
+    const servicePackageNameDisplay = $('#servicePackageNameDisplay');
+    const servicePackagePriceDisplay = $('#servicePackagePriceDisplay');
+    
+    // Hỗ trợ cả PascalCase và camelCase
+    const servicePackageId = data?.ServicePackageId ?? data?.servicePackageId;
+    const servicePackageName = data?.ServicePackageName ?? data?.servicePackageName;
+    const servicePackagePrice = data?.ServicePackagePrice ?? data?.servicePackagePrice;
+    
+    // Debug log
+    console.log('Service Package Info Debug:', {
+        servicePackageId: servicePackageId,
+        servicePackageName: servicePackageName,
+        servicePackagePrice: servicePackagePrice,
+        data: data
+    });
+    
+    if (servicePackageId && servicePackageName) {
+        servicePackageNameDisplay.text(servicePackageName);
+        if (servicePackagePrice) {
+            servicePackagePriceDisplay.text(`(${formatCurrency(servicePackagePrice)})`);
+        } else {
+            servicePackagePriceDisplay.text('');
+        }
+        servicePackageInfo.show();
+    } else {
+        servicePackageInfo.hide();
     }
 }
 

@@ -173,56 +173,6 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="hasMaintenanceRequest" name="hasMaintenanceRequest">
-                                    <label class="form-check-label" for="hasMaintenanceRequest">
-                                        Có yêu cầu bảo dưỡng
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Maintenance Request Section (hidden by default) -->
-                        <div id="maintenanceRequestSection" style="display: none;">
-                            <hr>
-                            <h5>Thông tin yêu cầu bảo dưỡng</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="maintenanceType" class="form-label">Loại bảo dưỡng</label>
-                                        <select class="form-select" id="maintenanceType" name="maintenanceType">
-                                            <option value="">Chọn loại bảo dưỡng</option>
-                                            <option value="ROUTINE">Bảo dưỡng định kỳ</option>
-                                            <option value="REPAIR">Sửa chữa</option>
-                                            <option value="INSPECTION">Kiểm tra</option>
-                                            <option value="EMERGENCY">Khẩn cấp</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="priority" class="form-label">Mức độ ưu tiên</label>
-                                        <select class="form-select" id="priority" name="priority">
-                                            <option value="LOW">Thấp</option>
-                                            <option value="MEDIUM" selected>Trung bình</option>
-                                            <option value="HIGH">Cao</option>
-                                            <option value="URGENT">Khẩn cấp</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label for="maintenanceDescription" class="form-label">Mô tả chi tiết vấn đề</label>
-                                        <textarea class="form-control" id="maintenanceDescription" name="maintenanceDescription" rows="3" placeholder="Mô tả chi tiết vấn đề cần sửa chữa..."></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="d-flex justify-content-end gap-2">
                             <a href="/VehicleCheckins" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Quay lại
@@ -243,13 +193,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadBranches();
             setCurrentDateTime();
-            
-            // Toggle maintenance request section
-            document.getElementById('hasMaintenanceRequest').addEventListener('change', function() {
-                const section = document.getElementById('maintenanceRequestSection');
-                section.style.display = this.checked ? 'block' : 'none';
+            // Pre-load vehicle types để sẵn sàng khi search
+            ensureVehicleTypesLoaded().catch(err => {
+                console.error('Failed to pre-load vehicle types:', err);
             });
-            
+
             document.getElementById('checkinForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 createCheckin();
@@ -351,18 +299,31 @@
             }
 
             vehicleTypeLookupPromise = fetch('@apiBaseUrl/VehicleType')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('VehicleType API response:', data);
+                    // API trả về trực tiếp mảng, không có wrapper
                     const list = Array.isArray(data)
                         ? data
                         : (data && data.success && Array.isArray(data.data)) ? data.data : [];
 
+                    console.log('Parsed vehicle types list:', list);
+
                     vehicleTypeLookup = new Map();
                     list.forEach(item => {
-                        if (item && item.id !== undefined) {
-                            vehicleTypeLookup.set(item.id, item.name || item.typeName || '');
+                        if (item && item.id !== undefined && item.id !== null) {
+                            const key = String(item.id);
+                            const value = item.name || item.typeName || '';
+                            vehicleTypeLookup.set(key, value);
+                            console.log(`Loaded vehicle type: id=${key}, name=${value}`);
                         }
                     });
+                    console.log(`Total vehicle types loaded: ${vehicleTypeLookup.size}`);
                 })
                 .catch(error => {
                     console.error('Error loading vehicle types:', error);
@@ -373,40 +334,61 @@
         }
 
         function getVehicleTypeNameById(id) {
-            if (!vehicleTypeLookup || !vehicleTypeLookup.size || id === undefined || id === null) {
+            if (!vehicleTypeLookup || !vehicleTypeLookup.size) {
+                console.warn('VehicleType lookup not loaded yet or empty');
                 return '';
             }
-            return vehicleTypeLookup.get(id) || '';
+            if (id === undefined || id === null) {
+                console.warn('VehicleType id is null or undefined');
+                return '';
+            }
+            const key = String(id);
+            const name = vehicleTypeLookup.get(key);
+            if (!name) {
+                console.warn(`VehicleType not found for id: ${id} (key: ${key}). Available keys:`, Array.from(vehicleTypeLookup.keys()));
+            }
+            return name || '';
         }
 
         async function resolveVehicleType(car) {
             if (!car) {
+                console.log('resolveVehicleType: car is null/undefined');
                 return { typeName: '', typeId: null };
             }
 
+            console.log('resolveVehicleType: car data:', car);
             const directName = car.vehicleTypeName || car.vehicleType || car.typeName || car.type || '';
             const directId = car.vehicleTypeId ?? car.typeId ?? null;
+            console.log('resolveVehicleType: directName=', directName, 'directId=', directId);
 
             if (directName) {
+                console.log('resolveVehicleType: Using direct name:', directName);
                 return { typeName: directName, typeId: directId };
             }
 
             if (directId !== null && directId !== undefined) {
+                console.log('resolveVehicleType: Looking up by id:', directId);
                 await ensureVehicleTypesLoaded();
-                return { typeName: getVehicleTypeNameById(directId), typeId: directId };
+                const name = getVehicleTypeNameById(directId);
+                console.log('resolveVehicleType: Found name by id:', name);
+                return { typeName: name, typeId: directId };
             }
 
+            console.log('resolveVehicleType: Fetching car details for id:', car.id);
             const carDetails = await fetchCarDetails(car.id);
             if (carDetails) {
+                console.log('resolveVehicleType: Car details:', carDetails);
                 const detailId = carDetails.vehicleTypeId ?? carDetails.typeId ?? null;
                 let detailName = carDetails.vehicleTypeName || carDetails.vehicleType || carDetails.typeName || carDetails.type || '';
                 if (!detailName && detailId !== null && detailId !== undefined) {
                     await ensureVehicleTypesLoaded();
                     detailName = getVehicleTypeNameById(detailId);
+                    console.log('resolveVehicleType: Found name from details by id:', detailName);
                 }
                 return { typeName: detailName, typeId: detailId };
             }
 
+            console.log('resolveVehicleType: No vehicle type found');
             return { typeName: '', typeId: null };
         }
 

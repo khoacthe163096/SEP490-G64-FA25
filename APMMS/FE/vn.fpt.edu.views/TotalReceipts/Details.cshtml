@@ -420,6 +420,10 @@
                         <span>Phụ thu</span>
                         <span id="summarySurcharge">0 ₫</span>
                     </div>
+                    <div class="summary-row" id="packageDiscountRow" style="display: none;">
+                        <span>Giảm giá gói dịch vụ <span id="packageName" class="text-muted small">(-)</span></span>
+                        <span class="text-danger" id="summaryPackageDiscount">-0 ₫</span>
+                    </div>
                     <div class="summary-row">
                         <span>Giảm giá</span>
                         <span class="text-danger" id="summaryDiscount">-0 ₫</span>
@@ -621,12 +625,15 @@
                     receiptData = result.data;
                     maintenanceTicketId = receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId;
                     
-                    // Debug: Log VAT data
+                    // Debug: Log VAT data and Package info
                     console.log('Receipt Data:', receiptData);
                     console.log('VatPercent (PascalCase):', receiptData?.VatPercent);
                     console.log('VatPercent (camelCase):', receiptData?.vatPercent);
                     console.log('VatAmount (PascalCase):', receiptData?.VatAmount);
                     console.log('VatAmount (camelCase):', receiptData?.vatAmount);
+                    console.log('PackageDiscountAmount:', receiptData?.PackageDiscountAmount ?? receiptData?.packageDiscountAmount);
+                    console.log('ServicePackageName:', receiptData?.ServicePackageName ?? receiptData?.servicePackageName);
+                    console.log('ServicePackageId:', receiptData?.ServicePackageId ?? receiptData?.servicePackageId);
                     
                     renderInvoiceSummary(receiptData);
                     updateCostSummary();
@@ -839,23 +846,54 @@
             // Other charges - Hỗ trợ cả PascalCase và camelCase
             const surcharge = receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0;
             const discount = receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0;
+            const packageDiscount = receiptData?.PackageDiscountAmount ?? receiptData?.packageDiscountAmount ?? 0;
+            const packageName = receiptData?.ServicePackageName ?? receiptData?.servicePackageName;
+            const packageId = receiptData?.ServicePackageId ?? receiptData?.servicePackageId;
+            
+            // Debug: Log package discount info
+            console.log('Package Discount Debug:', {
+                packageDiscount: packageDiscount,
+                packageName: packageName,
+                packageId: packageId,
+                receiptData: receiptData
+            });
+            
             $('#summarySurcharge').text(formatCurrency(surcharge));
             $('#summaryDiscount').text(formatCurrency(discount));
+            
+            // Hiển thị Package Discount nếu có packageId (hiển thị kể cả khi discount = 0)
+            if (packageId) {
+                const displayName = packageName || 'Gói dịch vụ';
+                $('#packageName').text(`(${displayName})`);
+                $('#summaryPackageDiscount').text(formatCurrency(packageDiscount));
+                $('#packageDiscountRow').show();
+            } else {
+                $('#packageDiscountRow').hide();
+            }
 
-            // VAT - Tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
+            // ✅ VAT phải tính CUỐI CÙNG, sau khi đã trừ mọi loại giảm giá (KHÔNG tính trên phụ thu)
             const vatPercent = receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10; // Mặc định 10% nếu không có
-            const subtotalAfterDiscount = Math.max(0, subtotal - discount);
-            const subtotalForVat = subtotalAfterDiscount + surcharge; // VAT tính trên cả phụ thu
-            const vatAmount = receiptData?.VatAmount ?? receiptData?.vatAmount ?? (vatPercent * subtotalForVat / 100);
+            
+            // Bước 1: Tính tổng discount = package discount + discount khác
+            const totalDiscount = packageDiscount + discount;
+            
+            // Bước 2: Trừ tất cả giảm giá
+            const amountAfterDiscount = Math.max(0, subtotal - totalDiscount);
+            
+            // Bước 3: Tính VAT trên số tiền sau khi đã trừ giảm giá (KHÔNG tính trên phụ thu)
+            // Luôn tính lại VAT dựa trên data hiện tại để đảm bảo chính xác
+            const vatAmount = vatPercent * amountAfterDiscount / 100;
             
             // Debug
-            console.log('updateCostSummary - vatPercent:', vatPercent, 'vatAmount:', vatAmount, 'subtotal:', subtotal, 'discount:', discount, 'surcharge:', surcharge, 'subtotalForVat:', subtotalForVat);
+            console.log('updateCostSummary - vatPercent:', vatPercent, 'vatAmount:', vatAmount, 'subtotal:', subtotal, 'packageDiscount:', packageDiscount, 'discount:', discount, 'totalDiscount:', totalDiscount, 'surcharge:', surcharge, 'amountAfterDiscount:', amountAfterDiscount);
             
             $('#vatPercent').text(vatPercent.toFixed(1));
             $('#summaryVat').text(formatCurrency(vatAmount));
 
-            // Grand total - Subtotal - Discount + VAT + Surcharge
-            const grandTotal = receiptData?.FinalAmount ?? receiptData?.finalAmount ?? receiptData?.Amount ?? receiptData?.amount ?? (subtotal - discount + vatAmount + surcharge);
+            // Grand total - (Subtotal - TotalDiscount) + VAT + Surcharge
+            // totalDiscount đã được tính ở trên (dòng 878)
+            // Luôn tính lại grand total dựa trên data hiện tại để đảm bảo chính xác
+            const grandTotal = amountAfterDiscount + vatAmount + surcharge;
             $('#summaryGrandTotal').text(formatCurrency(grandTotal));
         }
 
@@ -932,7 +970,9 @@
             
             // Kiểm tra nếu là phần trăm (có dấu %)
             if (trimmed.endsWith('%')) {
-                const percent = parseFloat(trimmed.replace('%', '').replace(/,/g, ''));
+                // Xóa dấu % và các dấu phân cách (dấu chấm và phẩy)
+                const percentStr = trimmed.replace('%', '').replace(/\./g, '').replace(/,/g, '');
+                const percent = parseFloat(percentStr);
                 if (isNaN(percent) || percent < 0 || percent > 100) {
                     return { type: 'invalid', value: 0 };
                 }
@@ -940,7 +980,10 @@
             }
             
             // Kiểm tra nếu là số tiền
-            const amount = parseFloat(trimmed.replace(/,/g, ''));
+            // Xóa các dấu phân cách (dấu chấm và phẩy) - trong tiếng Việt dùng dấu chấm làm dấu phân cách hàng nghìn
+            // Ví dụ: "240.000" -> "240000"
+            const amountStr = trimmed.replace(/\./g, '').replace(/,/g, '');
+            const amount = parseFloat(amountStr);
             if (isNaN(amount) || amount < 0) {
                 return { type: 'invalid', value: 0 };
             }
@@ -1147,7 +1190,9 @@
                 return;
             }
             
-            const surchargeAmount = parseFloat(input.trim().replace(/,/g, ''));
+            // Xóa các dấu phân cách (dấu chấm và phẩy) - trong tiếng Việt dùng dấu chấm làm dấu phân cách hàng nghìn
+            // Ví dụ: "200.000" -> "200000"
+            const surchargeAmount = parseFloat(input.trim().replace(/\./g, '').replace(/,/g, ''));
             if (isNaN(surchargeAmount) || surchargeAmount < 0) {
                 showAlert('Vui lòng nhập số tiền phụ thu hợp lệ (VD: 50000)', 'warning');
                 $('#surchargeInfo').addClass('d-none');

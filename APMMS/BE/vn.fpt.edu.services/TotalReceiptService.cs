@@ -38,6 +38,8 @@ namespace BE.vn.fpt.edu.services
                 .Include(mt => mt.Branch)
                 .Include(mt => mt.ServiceTasks)
                 .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServicePackage)
+                    .ThenInclude(sp => sp.Components) // Load components của package để so sánh
                 .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
             if (maintenanceTicket == null)
@@ -63,12 +65,54 @@ namespace BE.vn.fpt.edu.services
             entity.CurrencyCode = string.IsNullOrWhiteSpace(dto.CurrencyCode) ? "VND" : dto.CurrencyCode;
             entity.StatusCode = string.IsNullOrWhiteSpace(dto.StatusCode) ? "PENDING" : dto.StatusCode;
 
+            // ✅ Tính tổng retail (giá gốc của components + labor)
+            var retailTotal = CalculateMaintenanceTicketTotal(maintenanceTicket);
+
+            // ✅ Xử lý Service Package Discount nếu có
+            if (maintenanceTicket.ServicePackageId.HasValue && maintenanceTicket.ServicePackagePrice.HasValue)
+            {
+                decimal packagePrice = maintenanceTicket.ServicePackagePrice.Value;
+                
+                // ✅ Chỉ tính giảm giá dựa trên components THUỘC GÓI, không tính phụ tùng thêm vào sau
+                var packageRetailTotal = CalculatePackageRetailTotal(maintenanceTicket);
+                
+                // Tính package discount = packageRetailTotal - packagePrice
+                decimal packageDiscount = packageRetailTotal - packagePrice;
+                // Nếu package đắt hơn retail thì discount = 0 (không có discount)
+                if (packageDiscount < 0) packageDiscount = 0m;
+                
+                // Lưu thông tin package vào receipt
+                entity.ServicePackageId = maintenanceTicket.ServicePackageId;
+                entity.ServicePackagePrice = packagePrice;
+                entity.ServicePackageName = maintenanceTicket.ServicePackage?.Name;
+                entity.PackageDiscountAmount = packageDiscount;
+                
+                // Subtotal = retail total (tổng giá gốc)
+                if (!dto.Subtotal.HasValue || dto.Subtotal.Value == 0m)
+                {
+                    entity.Subtotal = retailTotal;
+                }
+                
+                // DiscountAmount = discount khác (không phải package discount)
+                // Package discount được hiển thị riêng, không tính vào DiscountAmount
+                entity.DiscountAmount = dto.DiscountAmount ?? 0m;
+            }
+            else
+            {
+                // Không có package, tính bình thường
+                if (!dto.Subtotal.HasValue || dto.Subtotal.Value == 0m)
+                {
+                    entity.Subtotal = retailTotal;
+                }
+                entity.DiscountAmount = dto.DiscountAmount ?? 0m;
+            }
+
             ApplyFinancials(entity, dto);
 
-            var fallbackAmount = CalculateMaintenanceTicketTotal(maintenanceTicket);
+            var fallbackAmount = retailTotal;
             if (fallbackAmount > 0m)
             {
-                if (entity.Subtotal == 0m) entity.Subtotal = fallbackAmount;
+                if (entity.Subtotal.GetValueOrDefault() == 0m) entity.Subtotal = fallbackAmount;
                 if (!entity.FinalAmount.HasValue || entity.FinalAmount.Value == 0m) entity.FinalAmount = fallbackAmount;
                 if (entity.Amount == 0m) entity.Amount = fallbackAmount;
             }
@@ -140,6 +184,10 @@ namespace BE.vn.fpt.edu.services
                     .Include(mt => mt.Car)
                         .ThenInclude(c => c.User)
                     .Include(mt => mt.Branch)
+                    .Include(mt => mt.ServiceTasks)
+                    .Include(mt => mt.TicketComponents)
+                    .Include(mt => mt.ServicePackage)
+                        .ThenInclude(sp => sp.Components) // Load components của package để so sánh
                     .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
                 if (newMaintenanceTicket == null)
@@ -170,18 +218,59 @@ namespace BE.vn.fpt.edu.services
             existing.Note = dto.Note ?? existing.Note;
             existing.CreatedAt = dto.CreatedAt ?? existing.CreatedAt ?? DateTime.UtcNow;
 
-            ApplyFinancials(existing, dto);
-
+            // ✅ Xử lý Service Package Discount khi update
             var maintenanceTicketEntity = existing.MaintenanceTicket;
             if (maintenanceTicketEntity == null && existing.MaintenanceTicketId.HasValue)
             {
                 maintenanceTicketEntity = await _context.MaintenanceTickets
                     .Include(mt => mt.ServiceTasks)
                     .Include(mt => mt.TicketComponents)
+                    .Include(mt => mt.ServicePackage)
+                        .ThenInclude(sp => sp.Components) // Load components của package để so sánh
                     .FirstOrDefaultAsync(mt => mt.Id == existing.MaintenanceTicketId.Value);
             }
 
-            var fallbackAmount = CalculateMaintenanceTicketTotal(maintenanceTicketEntity);
+            if (maintenanceTicketEntity != null)
+            {
+                var retailTotal = CalculateMaintenanceTicketTotal(maintenanceTicketEntity);
+                
+                // Nếu có package, tính lại package discount
+                if (maintenanceTicketEntity.ServicePackageId.HasValue && maintenanceTicketEntity.ServicePackagePrice.HasValue)
+                {
+                    decimal packagePrice = maintenanceTicketEntity.ServicePackagePrice.Value;
+                    
+                    // ✅ Chỉ tính giảm giá dựa trên components THUỘC GÓI, không tính phụ tùng thêm vào sau
+                    var packageRetailTotal = CalculatePackageRetailTotal(maintenanceTicketEntity);
+                    decimal packageDiscount = packageRetailTotal - packagePrice;
+                    if (packageDiscount < 0) packageDiscount = 0m;
+                    
+                    existing.ServicePackageId = maintenanceTicketEntity.ServicePackageId;
+                    existing.ServicePackagePrice = packagePrice;
+                    existing.ServicePackageName = maintenanceTicketEntity.ServicePackage?.Name;
+                    existing.PackageDiscountAmount = packageDiscount;
+                    
+                    // Chỉ update nếu không có giá trị từ DTO
+                    if (!dto.Subtotal.HasValue || dto.Subtotal.Value == 0m)
+                    {
+                        existing.Subtotal = retailTotal;
+                    }
+                    // DiscountAmount = discount khác (không phải package discount)
+                    // Package discount được hiển thị riêng, không tính vào DiscountAmount
+                    // Chỉ update DiscountAmount nếu có giá trị từ DTO
+                }
+                else
+                {
+                    // Không có package, xóa thông tin package
+                    existing.ServicePackageId = null;
+                    existing.ServicePackagePrice = null;
+                    existing.ServicePackageName = null;
+                    existing.PackageDiscountAmount = null;
+                }
+            }
+
+            ApplyFinancials(existing, dto);
+
+            var fallbackAmount = maintenanceTicketEntity != null ? CalculateMaintenanceTicketTotal(maintenanceTicketEntity) : 0m;
             if (fallbackAmount > 0m)
             {
                 if (existing.Subtotal.GetValueOrDefault() == 0m) existing.Subtotal = fallbackAmount;
@@ -216,14 +305,21 @@ namespace BE.vn.fpt.edu.services
             var vatPercent = dto.VatPercent ?? entity.VatPercent ?? 10m; // Mặc định 10% VAT
             var surcharge = dto.SurchargeAmount ?? entity.SurchargeAmount ?? 0m;
             var discount = dto.DiscountAmount ?? entity.DiscountAmount ?? 0m;
+            var packageDiscount = entity.PackageDiscountAmount ?? 0m; // Package discount chỉ lấy từ entity, không từ DTO
             
-            // VAT được tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
-            var subtotalAfterDiscount = subtotal - discount;
-            if (subtotalAfterDiscount < 0) subtotalAfterDiscount = 0m; // Đảm bảo không âm
-            var subtotalForVat = subtotalAfterDiscount + surcharge; // VAT tính trên cả phụ thu
+            // Tổng discount = package discount + discount khác
+            var totalDiscount = packageDiscount + discount;
             
-            var vatAmount = dto.VatAmount ?? entity.VatAmount ?? (vatPercent * subtotalForVat / 100m);
-            var final = dto.FinalAmount ?? entity.FinalAmount ?? (subtotal - discount + vatAmount + surcharge);
+            // ✅ VAT phải tính CUỐI CÙNG, sau khi đã trừ mọi loại giảm giá (KHÔNG tính trên phụ thu)
+            // Bước 1: Trừ tất cả giảm giá
+            var amountAfterDiscount = subtotal - totalDiscount;
+            if (amountAfterDiscount < 0) amountAfterDiscount = 0m; // Đảm bảo không âm
+            
+            // Bước 2: Tính VAT trên số tiền sau khi đã trừ giảm giá (KHÔNG tính trên phụ thu)
+            var vatAmount = dto.VatAmount ?? entity.VatAmount ?? (vatPercent * amountAfterDiscount / 100m);
+            
+            // Bước 3: Final = (Subtotal - TotalDiscount) + VAT + Surcharge
+            var final = dto.FinalAmount ?? entity.FinalAmount ?? (amountAfterDiscount + vatAmount + surcharge);
 
             entity.Subtotal = subtotal;
             entity.VatPercent = vatPercent;
@@ -236,6 +332,58 @@ namespace BE.vn.fpt.edu.services
 
         private ResponseDto MapToResponse(TotalReceipt entity)
         {
+            // Load ServicePackage navigation nếu chưa có
+            if (entity.ServicePackage == null && entity.ServicePackageId.HasValue)
+            {
+                _context.Entry(entity).Reference(e => e.ServicePackage).Load();
+                // Load Components của ServicePackage
+                if (entity.ServicePackage != null)
+                {
+                    _context.Entry(entity.ServicePackage).Collection(sp => sp.Components).Load();
+                }
+            }
+            
+            // ✅ Nếu receipt chưa có package info nhưng maintenance ticket có package, tính lại
+            if (!entity.ServicePackageId.HasValue && entity.MaintenanceTicket != null)
+            {
+                var ticket = entity.MaintenanceTicket;
+                
+                // Load ServicePackage với Components nếu chưa có
+                if (ticket.ServicePackage == null && ticket.ServicePackageId.HasValue)
+                {
+                    _context.Entry(ticket).Reference(t => t.ServicePackage).Load();
+                    if (ticket.ServicePackage != null)
+                    {
+                        _context.Entry(ticket.ServicePackage).Collection(sp => sp.Components).Load();
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[TotalReceipt] Checking ticket {ticket.Id} for package. PackageId: {ticket.ServicePackageId}, PackagePrice: {ticket.ServicePackagePrice}");
+                
+                if (ticket.ServicePackageId.HasValue && ticket.ServicePackagePrice.HasValue)
+                {
+                    // ✅ Chỉ tính giảm giá dựa trên components THUỘC GÓI, không tính phụ tùng thêm vào sau
+                    var packageRetailTotal = CalculatePackageRetailTotal(ticket);
+                    var packagePrice = ticket.ServicePackagePrice.Value;
+                    var packageDiscount = Math.Max(0, packageRetailTotal - packagePrice);
+                    
+                    System.Diagnostics.Debug.WriteLine($"[TotalReceipt] Calculating package discount. PackageRetailTotal: {packageRetailTotal}, PackagePrice: {packagePrice}, PackageDiscount: {packageDiscount}");
+                    
+                    entity.ServicePackageId = ticket.ServicePackageId;
+                    entity.ServicePackagePrice = packagePrice;
+                    entity.ServicePackageName = ticket.ServicePackage?.Name;
+                    entity.PackageDiscountAmount = packageDiscount;
+                    
+                    // DiscountAmount = discount khác (không phải package discount)
+                    // Package discount được hiển thị riêng, không tính vào DiscountAmount
+                    // Không tự động set DiscountAmount = packageDiscount
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TotalReceipt] Ticket {ticket.Id} does not have package. ServicePackageId: {ticket.ServicePackageId}, ServicePackagePrice: {ticket.ServicePackagePrice}");
+                }
+            }
+            
             var dto = _mapper.Map<ResponseDto>(entity);
             dto.Code = EnsureInvoiceFormat(dto.Code, GenerateInvoiceCode(entity.Id));
             dto.MaintenanceTicketCode = entity.MaintenanceTicket?.Code;
@@ -274,6 +422,15 @@ namespace BE.vn.fpt.edu.services
             dto.SurchargeAmount ??= entity.SurchargeAmount ?? 0m;
             dto.DiscountAmount ??= entity.DiscountAmount ?? 0m;
             dto.CreatedAt ??= entity.CreatedAt;
+            
+            // ✅ Map Service Package fields (luôn map, kể cả null)
+            dto.ServicePackageId = entity.ServicePackageId;
+            dto.ServicePackagePrice = entity.ServicePackagePrice;
+            dto.ServicePackageName = entity.ServicePackageName ?? entity.ServicePackage?.Name;
+            dto.PackageDiscountAmount = entity.PackageDiscountAmount;
+            
+            // Debug log để kiểm tra
+            System.Diagnostics.Debug.WriteLine($"[TotalReceipt] Receipt ID: {entity.Id}, PackageId: {entity.ServicePackageId}, PackageName: {dto.ServicePackageName}, PackageDiscount: {dto.PackageDiscountAmount}");
             
             // VAT được tính trên giá sau khi đã trừ giảm giá và cộng phụ thu (theo quy định)
             var subtotalForVat = dto.Subtotal ?? entity.Subtotal ?? entity.Amount;
@@ -366,6 +523,46 @@ namespace BE.vn.fpt.edu.services
             }
 
             return total;
+        }
+
+        /// <summary>
+        /// Tính tổng giá retail chỉ cho các components THUỘC GÓI DỊCH VỤ
+        /// Không tính các phụ tùng được thêm vào sau khi áp dụng gói
+        /// </summary>
+        private static decimal CalculatePackageRetailTotal(MaintenanceTicket? maintenanceTicket)
+        {
+            if (maintenanceTicket == null) return 0m;
+            if (!maintenanceTicket.ServicePackageId.HasValue) return 0m;
+            if (maintenanceTicket.ServicePackage == null) return 0m;
+
+            // Lấy danh sách ComponentId thuộc gói dịch vụ
+            var packageComponentIds = maintenanceTicket.ServicePackage.Components?
+                .Select(c => c.Id)
+                .ToHashSet() ?? new HashSet<long>();
+
+            if (!packageComponentIds.Any()) return 0m;
+
+            // Chỉ tính components có ComponentId thuộc gói
+            decimal packageComponentTotal = 0m;
+            if (maintenanceTicket.TicketComponents != null)
+            {
+                foreach (var ticketComponent in maintenanceTicket.TicketComponents)
+                {
+                    // Chỉ tính nếu ComponentId thuộc gói
+                    if (ticketComponent.ComponentId.HasValue && 
+                        packageComponentIds.Contains(ticketComponent.ComponentId.Value))
+                    {
+                        var quantity = ticketComponent.ActualQuantity ?? Convert.ToDecimal(ticketComponent.Quantity);
+                        var unitPrice = ticketComponent.UnitPrice ?? 0m;
+                        packageComponentTotal += quantity * unitPrice;
+                    }
+                }
+            }
+
+            // Note: ServiceTasks không được tự động tạo từ gói, nên không tính vào package retail total
+            // Nếu cần tính tasks thuộc gói, cần thêm logic so sánh với ServicePackageCategories
+
+            return packageComponentTotal;
         }
     }
 }

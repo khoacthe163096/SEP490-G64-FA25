@@ -86,9 +86,29 @@ namespace BE.vn.fpt.edu.services
             // Validate: Car exists (no branch restriction)
             if (maintenanceTicket.CarId.HasValue)
             {
-                var car = await _carRepository.GetByIdAsync(maintenanceTicket.CarId.Value);
-                if (car == null)
+                var carDetails = await _context.Cars
+                    .Include(c => c.User)
+                    .Include(c => c.Branch)
+                    .Include(c => c.VehicleType)
+                    .FirstOrDefaultAsync(c => c.Id == maintenanceTicket.CarId.Value);
+                if (carDetails == null)
                     throw new ArgumentException("Car not found");
+
+                maintenanceTicket.SnapshotCarName = carDetails.CarName;
+                maintenanceTicket.SnapshotCarModel = carDetails.CarModel;
+                maintenanceTicket.SnapshotVehicleType = carDetails.VehicleType?.Name;
+                maintenanceTicket.SnapshotVehicleTypeId = carDetails.VehicleTypeId;
+                maintenanceTicket.SnapshotLicensePlate = carDetails.LicensePlate;
+                maintenanceTicket.SnapshotVinNumber = carDetails.VinNumber;
+                maintenanceTicket.SnapshotEngineNumber = carDetails.VehicleEngineNumber;
+                maintenanceTicket.SnapshotYearOfManufacture = carDetails.YearOfManufacture;
+                maintenanceTicket.SnapshotColor = carDetails.Color;
+                maintenanceTicket.SnapshotCustomerName = $"{carDetails.User?.FirstName} {carDetails.User?.LastName}".Trim();
+                maintenanceTicket.SnapshotCustomerPhone = carDetails.User?.Phone;
+                maintenanceTicket.SnapshotCustomerEmail = carDetails.User?.Email;
+                maintenanceTicket.SnapshotCustomerAddress = carDetails.User?.Address;
+                maintenanceTicket.SnapshotMileage = null;
+                maintenanceTicket.SnapshotBranchName = carDetails.Branch?.Name;
             }
 
             // Validate: ServiceCategory exists if provided
@@ -97,6 +117,27 @@ namespace BE.vn.fpt.edu.services
                 var sc = await _serviceCategoryRepository.GetByIdAsync(maintenanceTicket.ServiceCategoryId.Value);
                 if (sc == null)
                     throw new ArgumentException("Service category not found");
+            }
+
+            if (string.IsNullOrWhiteSpace(maintenanceTicket.PriorityLevel))
+            {
+                maintenanceTicket.PriorityLevel = "NORMAL";
+            }
+            else
+            {
+                maintenanceTicket.PriorityLevel = maintenanceTicket.PriorityLevel.ToUpperInvariant();
+            }
+
+            var branch = await _context.Branches.FirstOrDefaultAsync(b => b.Id == maintenanceTicket.BranchId);
+            if (branch != null)
+            {
+                maintenanceTicket.SnapshotBranchName = branch.Name;
+            }
+
+            var consulter = await _context.Users.FirstOrDefaultAsync(u => u.Id == maintenanceTicket.ConsulterId);
+            if (consulter != null)
+            {
+                maintenanceTicket.SnapshotConsulterName = $"{consulter.FirstName} {consulter.LastName}".Trim();
             }
 
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
@@ -111,8 +152,6 @@ namespace BE.vn.fpt.edu.services
 
         {
 
-            // Lấy thông tin Vehicle Check-in
-
             var vehicleCheckin = await _vehicleCheckinRepository.GetByIdAsync(request.VehicleCheckinId);
 
             if (vehicleCheckin == null)
@@ -121,23 +160,11 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            // Kiểm tra xem VehicleCheckin đã có MaintenanceTicket chưa
-
             if (vehicleCheckin.MaintenanceRequestId.HasValue && vehicleCheckin.MaintenanceRequestId.Value > 0)
 
                 throw new ArgumentException("Vehicle check-in already has a maintenance ticket");
 
 
-
-            // ⚠️ QUAN TRỌNG: Không cho phép gán kỹ thuật viên khi tạo phiếu
-
-            // Phiếu phải được tạo ở trạng thái PENDING và chưa có kỹ thuật viên
-
-            // Kỹ thuật viên chỉ được gán sau khi Consulter thực hiện hành động "Assign Technician"
-
-
-            
-            // Tạo Maintenance Ticket từ thông tin Check-in
 
             var maintenanceTicket = new MaintenanceTicket
 
@@ -149,64 +176,112 @@ namespace BE.vn.fpt.edu.services
 
                 ConsulterId = request.ConsulterId,
 
-                TechnicianId = null, // ✅ Luôn null - không gán kỹ thuật viên khi tạo
+                TechnicianId = null,
 
                 BranchId = request.BranchId,
 
                 ScheduleServiceId = request.ScheduleServiceId,
 
-                StatusCode = "PENDING", // ✅ Luôn PENDING khi tạo từ check-in
+                StatusCode = "PENDING",
 
-                PriorityLevel = string.IsNullOrWhiteSpace(request.PriorityLevel) ? "NORMAL" : request.PriorityLevel,
+                PriorityLevel = string.IsNullOrWhiteSpace(request.PriorityLevel)
+
+                    ? "NORMAL"
+
+                    : request.PriorityLevel.ToUpperInvariant(),
 
                 Description = request.Description,
 
-                Code = await GenerateUniqueCodeAsync() // Tự sinh code 7 ký tự ngẫu nhiên
+                Code = await GenerateUniqueCodeAsync()
 
             };
 
 
 
-            // Map optional service category
             if (request.ServiceCategoryId.HasValue)
+
             {
+
                 maintenanceTicket.ServiceCategoryId = request.ServiceCategoryId;
+
                 var sc = await _serviceCategoryRepository.GetByIdAsync(request.ServiceCategoryId.Value);
+
                 if (sc == null)
+
                     throw new ArgumentException("Service category not found");
+
             }
 
 
 
-            // Validate: Car exists (no branch restriction)
             if (maintenanceTicket.CarId.HasValue)
+
             {
-                var car = await _carRepository.GetByIdAsync(maintenanceTicket.CarId.Value);
-                if (car == null)
+
+                var carExists = await _context.Cars.AnyAsync(c => c.Id == maintenanceTicket.CarId.Value);
+
+                if (!carExists)
+
                     throw new ArgumentException("Car not found");
+
             }
+
+
+
+            var consulter = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.ConsulterId);
+
+            var branch = await _context.Branches.FirstOrDefaultAsync(b => b.Id == request.BranchId);
+
+            var carEntity = vehicleCheckin.Car ?? await _context.Cars
+
+                .Include(c => c.User)
+
+                .Include(c => c.VehicleType)
+
+                .Include(c => c.Branch)
+
+                .FirstOrDefaultAsync(c => c.Id == vehicleCheckin.CarId);
+
+
+
+            maintenanceTicket.SnapshotCarName = vehicleCheckin.SnapshotCarName ?? carEntity?.CarName;
+
+            maintenanceTicket.SnapshotCarModel = vehicleCheckin.SnapshotCarModel ?? carEntity?.CarModel;
+
+            maintenanceTicket.SnapshotVehicleType = vehicleCheckin.SnapshotVehicleType ?? carEntity?.VehicleType?.Name;
+            maintenanceTicket.SnapshotVehicleTypeId = vehicleCheckin.SnapshotVehicleTypeId
+                ?? (carEntity?.VehicleTypeId);
+            maintenanceTicket.SnapshotLicensePlate = vehicleCheckin.SnapshotLicensePlate ?? carEntity?.LicensePlate;
+            maintenanceTicket.SnapshotVinNumber = vehicleCheckin.SnapshotVinNumber ?? carEntity?.VinNumber;
+            maintenanceTicket.SnapshotEngineNumber = vehicleCheckin.SnapshotEngineNumber ?? carEntity?.VehicleEngineNumber;
+            maintenanceTicket.SnapshotYearOfManufacture = vehicleCheckin.SnapshotYearOfManufacture ?? carEntity?.YearOfManufacture;
+            maintenanceTicket.SnapshotColor = vehicleCheckin.SnapshotColor ?? carEntity?.Color;
+            maintenanceTicket.SnapshotMileage = vehicleCheckin.SnapshotMileage ?? vehicleCheckin.Mileage;
+            maintenanceTicket.SnapshotCustomerName = vehicleCheckin.SnapshotCustomerName
+                ?? ($"{carEntity?.User?.FirstName} {carEntity?.User?.LastName}").Trim();
+            maintenanceTicket.SnapshotCustomerPhone = vehicleCheckin.SnapshotCustomerPhone ?? carEntity?.User?.Phone;
+            maintenanceTicket.SnapshotCustomerEmail = vehicleCheckin.SnapshotCustomerEmail ?? carEntity?.User?.Email;
+            maintenanceTicket.SnapshotCustomerAddress = vehicleCheckin.SnapshotCustomerAddress ?? carEntity?.User?.Address;
+            maintenanceTicket.SnapshotBranchName = vehicleCheckin.SnapshotBranchName ?? branch?.Name ?? carEntity?.Branch?.Name;
+            maintenanceTicket.SnapshotConsulterName = consulter != null ? ($"{consulter.FirstName} {consulter.LastName}").Trim() : vehicleCheckin.SnapshotConsulterName;
 
 
 
             maintenanceTicket.CreatedAt = DateTime.UtcNow;
 
+
+
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
 
 
 
-            // ✅ KHÔNG lưu kỹ thuật viên vào bảng MaintenanceTicketTechnician
+            var consulterName = createdTicket.Consulter != null
 
-            // Kỹ thuật viên chỉ được gán thông qua endpoint AddTechniciansAsync
-
-
-
-            // ✅ Tạo history log để ghi nhận việc tạo phiếu
-
-            var consulterName = createdTicket.Consulter != null 
-
-                ? ($"{createdTicket.Consulter.FirstName} {createdTicket.Consulter.LastName}").Trim() 
+                ? ($"{createdTicket.Consulter.FirstName} {createdTicket.Consulter.LastName}").Trim()
 
                 : "Unknown";
+
+
 
             await CreateHistoryLogAsync(
 
@@ -224,14 +299,10 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            // Lấy thông tin đầy đủ để trả về
-
             var fullTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
 
 
             
-            // Map thủ công thay vì dùng AutoMapper và điền đầy đủ thông tin để FE hiển thị ngay
-
             var response = new ResponseDto
 
             {
@@ -264,35 +335,39 @@ namespace BE.vn.fpt.edu.services
 
                 Description = fullTicket.Description,
 
-                // Tên hiển thị
+                CarName = fullTicket.SnapshotCarName ?? fullTicket.Car?.CarName,
 
-                CarName = fullTicket.Car != null ? fullTicket.Car.CarName : null,
-
-                ConsulterName = fullTicket.Consulter != null ? ($"{fullTicket.Consulter.FirstName} {fullTicket.Consulter.LastName}").Trim() : null,
+                ConsulterName = fullTicket.SnapshotConsulterName ?? (fullTicket.Consulter != null ? ($"{fullTicket.Consulter.FirstName} {fullTicket.Consulter.LastName}").Trim() : null),
 
                 TechnicianName = fullTicket.Technician != null ? ($"{fullTicket.Technician.FirstName} {fullTicket.Technician.LastName}").Trim() : null,
 
-                BranchName = fullTicket.Branch != null ? fullTicket.Branch.Name : null,
+                BranchName = fullTicket.SnapshotBranchName ?? fullTicket.Branch?.Name,
 
                 ScheduleServiceName = fullTicket.ScheduleService != null ? fullTicket.ScheduleService.ScheduledDate.ToString("dd/MM/yyyy") : null,
 
-                // Khách hàng và xe
+                CustomerName = fullTicket.SnapshotCustomerName ?? (fullTicket.Car?.User != null ? ($"{fullTicket.Car.User.FirstName} {fullTicket.Car.User.LastName}").Trim() : null),
 
-                CustomerName = fullTicket.Car != null && fullTicket.Car.User != null ? ($"{fullTicket.Car.User.FirstName} {fullTicket.Car.User.LastName}").Trim() : null,
+                CustomerPhone = fullTicket.SnapshotCustomerPhone ?? fullTicket.Car?.User?.Phone,
 
-                CustomerPhone = fullTicket.Car != null && fullTicket.Car.User != null ? fullTicket.Car.User.Phone : null,
+                CustomerEmail = fullTicket.SnapshotCustomerEmail ?? fullTicket.Car?.User?.Email,
 
-                CustomerAddress = fullTicket.Car != null && fullTicket.Car.User != null && !string.IsNullOrWhiteSpace(fullTicket.Car.User.Address)
+                CustomerAddress = fullTicket.SnapshotCustomerAddress ?? fullTicket.Car?.User?.Address,
 
-                    ? fullTicket.Car.User.Address
+                LicensePlate = fullTicket.SnapshotLicensePlate ?? fullTicket.Car?.LicensePlate,
 
-                    : null,
+                CarModel = fullTicket.SnapshotCarModel ?? fullTicket.Car?.CarModel,
 
-                LicensePlate = fullTicket.Car != null ? fullTicket.Car.LicensePlate : null,
+                VinNumber = fullTicket.SnapshotVinNumber ?? fullTicket.Car?.VinNumber,
 
-                CarModel = fullTicket.Car != null ? fullTicket.Car.CarModel : null,
+                VehicleEngineNumber = fullTicket.SnapshotEngineNumber ?? fullTicket.Car?.VehicleEngineNumber,
 
-                // Danh sách tất cả kỹ thuật viên
+                YearOfManufacture = fullTicket.SnapshotYearOfManufacture ?? fullTicket.Car?.YearOfManufacture,
+
+                VehicleType = fullTicket.SnapshotVehicleType ?? fullTicket.Car?.VehicleType?.Name,
+
+                VehicleTypeId = fullTicket.SnapshotVehicleTypeId ?? fullTicket.Car?.VehicleTypeId,
+
+                Color = fullTicket.SnapshotColor ?? fullTicket.Car?.Color,
 
                 Technicians = fullTicket.MaintenanceTicketTechnicians != null && fullTicket.MaintenanceTicketTechnicians.Count > 0
 
@@ -316,11 +391,9 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            // Thêm thông tin từ Vehicle Check-in
-
             response.VehicleCheckinId = vehicleCheckin.Id;
 
-            response.Mileage = vehicleCheckin.Mileage;
+            response.Mileage = fullTicket.SnapshotMileage ?? vehicleCheckin.SnapshotMileage ?? vehicleCheckin.Mileage;
 
             response.CheckinNotes = vehicleCheckin.Notes;
 
@@ -1568,6 +1641,11 @@ namespace BE.vn.fpt.edu.services
             );
 
 
+
+            // ✅ Lưu thông tin Service Package vào MaintenanceTicket
+            maintenanceTicket.ServicePackageId = servicePackageId;
+            maintenanceTicket.ServicePackagePrice = servicePackage.Price;
+            await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
 
             // ✅ Cập nhật TotalEstimatedCost = ComponentTotal + LaborCostTotal
 

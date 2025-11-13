@@ -19,6 +19,19 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request)
         {
+            var car = await _context.Cars
+                .Include(c => c.User)
+                .Include(c => c.Branch)
+                .Include(c => c.VehicleType)
+                .FirstOrDefaultAsync(c => c.Id == request.CarId);
+
+            if (car == null)
+            {
+                throw new ArgumentException("Car not found");
+            }
+
+            var branch = await _context.Branches.FirstOrDefaultAsync(b => b.Id == request.BranchId);
+
             var vehicleCheckin = new VehicleCheckin
             {
                 CarId = request.CarId,
@@ -33,7 +46,23 @@ namespace BE.vn.fpt.edu.services
                 {
                     ImageUrl = url,
                     CreatedAt = DateTime.UtcNow
-                }).ToList()
+                }).ToList(),
+                SnapshotCarName = car.CarName,
+                SnapshotCarModel = car.CarModel,
+                SnapshotVehicleType = car.VehicleType?.Name,
+                SnapshotVehicleTypeId = car.VehicleTypeId,
+                SnapshotLicensePlate = car.LicensePlate,
+                SnapshotVinNumber = car.VinNumber,
+                SnapshotEngineNumber = car.VehicleEngineNumber,
+                SnapshotYearOfManufacture = car.YearOfManufacture,
+                SnapshotColor = car.Color,
+                SnapshotMileage = request.Mileage,
+                SnapshotCustomerName = $"{car.User?.FirstName} {car.User?.LastName}".Trim(),
+                SnapshotCustomerPhone = car.User?.Phone,
+                SnapshotCustomerEmail = car.User?.Email,
+                SnapshotCustomerAddress = car.User?.Address,
+                SnapshotBranchName = branch?.Name ?? car.Branch?.Name,
+                SnapshotConsulterName = null // sẽ bổ sung nếu có thông tin consulter trong request
             };
 
             var createdVehicleCheckin = await _vehicleCheckinRepository.CreateAsync(vehicleCheckin);
@@ -48,6 +77,7 @@ namespace BE.vn.fpt.edu.services
 
             existingVehicleCheckin.Mileage = request.Mileage;
             existingVehicleCheckin.Notes = request.Notes;
+            existingVehicleCheckin.SnapshotMileage = request.Mileage;
 
             // Update images if provided
             if (request.ImageUrls.Any())
@@ -131,23 +161,26 @@ namespace BE.vn.fpt.edu.services
                 CreatedAt = vehicleCheckin.CreatedAt,
                 Code = vehicleCheckin.Code,
                 
-                // Car information
-                CarName = vehicleCheckin.Car?.CarName,
-                CarModel = vehicleCheckin.Car?.CarModel,
-                LicensePlate = vehicleCheckin.Car?.LicensePlate,
-                VinNumber = vehicleCheckin.Car?.VinNumber,
-                VehicleEngineNumber = vehicleCheckin.Car?.VehicleEngineNumber,
-                Color = vehicleCheckin.Car?.Color,
-                YearOfManufacture = vehicleCheckin.Car?.YearOfManufacture,
+                // Car information (snapshot preferred)
+                CarName = vehicleCheckin.SnapshotCarName ?? vehicleCheckin.Car?.CarName,
+                CarModel = vehicleCheckin.SnapshotCarModel ?? vehicleCheckin.Car?.CarModel,
+                LicensePlate = vehicleCheckin.SnapshotLicensePlate ?? vehicleCheckin.Car?.LicensePlate,
+                VinNumber = vehicleCheckin.SnapshotVinNumber ?? vehicleCheckin.Car?.VinNumber,
+                VehicleEngineNumber = vehicleCheckin.SnapshotEngineNumber ?? vehicleCheckin.Car?.VehicleEngineNumber,
+                Color = vehicleCheckin.SnapshotColor ?? vehicleCheckin.Car?.Color,
+                YearOfManufacture = vehicleCheckin.SnapshotYearOfManufacture ?? vehicleCheckin.Car?.YearOfManufacture,
+                VehicleType = vehicleCheckin.SnapshotVehicleType ?? vehicleCheckin.Car?.VehicleType?.Name,
+                VehicleTypeId = vehicleCheckin.SnapshotVehicleTypeId ?? vehicleCheckin.Car?.VehicleTypeId,
                 
                 // Customer information
-                CustomerName = $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
-                CustomerPhone = vehicleCheckin.Car?.User?.Phone,
-                CustomerEmail = vehicleCheckin.Car?.User?.Email,
+                CustomerName = vehicleCheckin.SnapshotCustomerName ?? $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
+                CustomerPhone = vehicleCheckin.SnapshotCustomerPhone ?? vehicleCheckin.Car?.User?.Phone,
+                CustomerEmail = vehicleCheckin.SnapshotCustomerEmail ?? vehicleCheckin.Car?.User?.Email,
+                CustomerAddress = vehicleCheckin.SnapshotCustomerAddress ?? vehicleCheckin.Car?.User?.Address,
                 
                 // Branch information
                 BranchId = branchId,
-                BranchName = branchName,
+                BranchName = vehicleCheckin.SnapshotBranchName ?? branchName,
                 
                 // Images
                 Images = vehicleCheckin.VehicleCheckinImages?.Select(img => new VehicleCheckinImageDto
@@ -218,16 +251,17 @@ namespace BE.vn.fpt.edu.services
                 Id = vehicleCheckin.Id,
                 CarId = vehicleCheckin.CarId ?? 0,
                 Code = vehicleCheckin.Code,
-                CarName = vehicleCheckin.Car?.CarName,
-                LicensePlate = vehicleCheckin.Car?.LicensePlate,
-                VinNumber = vehicleCheckin.Car?.VinNumber,
-                CustomerName = $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
+                CarName = vehicleCheckin.SnapshotCarName ?? vehicleCheckin.Car?.CarName,
+                LicensePlate = vehicleCheckin.SnapshotLicensePlate ?? vehicleCheckin.Car?.LicensePlate,
+                VinNumber = vehicleCheckin.SnapshotVinNumber ?? vehicleCheckin.Car?.VinNumber,
+                CustomerName = vehicleCheckin.SnapshotCustomerName ?? $"{vehicleCheckin.Car?.User?.FirstName} {vehicleCheckin.Car?.User?.LastName}".Trim(),
+                VehicleType = vehicleCheckin.SnapshotVehicleType ?? vehicleCheckin.Car?.VehicleType?.Name,
                 Mileage = vehicleCheckin.Mileage ?? 0,
                 CreatedAt = vehicleCheckin.CreatedAt,
                 Notes = vehicleCheckin.Notes,
                 FirstImageUrl = vehicleCheckin.VehicleCheckinImages?.FirstOrDefault()?.ImageUrl,
                 BranchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId,
-                BranchName = vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
+                BranchName = vehicleCheckin.SnapshotBranchName ?? vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
                 MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
                 StatusCode = vehicleCheckin.StatusCode
             };
