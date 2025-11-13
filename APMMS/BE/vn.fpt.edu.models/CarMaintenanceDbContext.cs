@@ -398,6 +398,52 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasColumnName("priority_level");
             entity.Property(e => e.ScheduleServiceId).HasColumnName("schedule_service_id");
             entity.Property(e => e.ServiceCategoryId).HasColumnName("service_category_id");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
+            entity.Property(e => e.ServicePackagePrice)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("service_package_price");
+            entity.Property(e => e.SnapshotBranchName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_branch_name");
+            entity.Property(e => e.SnapshotCarModel)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_car_model");
+            entity.Property(e => e.SnapshotCarName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_car_name");
+            entity.Property(e => e.SnapshotColor)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_color");
+            entity.Property(e => e.SnapshotConsulterName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_consulter_name");
+            entity.Property(e => e.SnapshotCustomerAddress)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_address");
+            entity.Property(e => e.SnapshotCustomerEmail)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_email");
+            entity.Property(e => e.SnapshotCustomerName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_name");
+            entity.Property(e => e.SnapshotCustomerPhone)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_customer_phone");
+            entity.Property(e => e.SnapshotEngineNumber)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_engine_number");
+            entity.Property(e => e.SnapshotLicensePlate)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_license_plate");
+            entity.Property(e => e.SnapshotMileage).HasColumnName("snapshot_mileage");
+            entity.Property(e => e.SnapshotVehicleType)
+                .HasMaxLength(100)
+                .HasColumnName("snapshot_vehicle_type");
+            entity.Property(e => e.SnapshotVehicleTypeId).HasColumnName("snapshot_vehicle_type_id");
+            entity.Property(e => e.SnapshotVinNumber)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_vin_number");
+            entity.Property(e => e.SnapshotYearOfManufacture).HasColumnName("snapshot_year_of_manufacture");
             entity.Property(e => e.StartTime)
                 .HasColumnType("datetime")
                 .HasColumnName("start_time");
@@ -429,6 +475,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.ServiceCategory).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.ServiceCategoryId)
                 .HasConstraintName("FK_ticket_category");
+
+            entity.HasOne(d => d.ServicePackage).WithMany(p => p.MaintenanceTickets)
+                .HasForeignKey(d => d.ServicePackageId)
+                .HasConstraintName("FK_maintenance_ticket_service_package");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceTickets)
                 .HasForeignKey(d => d.StatusCode)
@@ -743,18 +793,18 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("ticket_component");
 
-            entity.HasIndex(e => e.MaintenanceTicketId, "IX_ticket_component_ticket_id");
-
             entity.HasIndex(e => e.BranchId, "IX_ticket_component_branch_id");
 
+            entity.HasIndex(e => e.MaintenanceTicketId, "IX_ticket_component_ticket_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.ComponentId).HasColumnName("component_id");
-            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
-            entity.Property(e => e.BranchId).HasColumnName("branch_id");
-            entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.ActualQuantity)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("actual_quantity");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.ComponentId).HasColumnName("component_id");
+            entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");
@@ -805,6 +855,16 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Note)
                 .HasMaxLength(255)
                 .HasColumnName("note");
+            entity.Property(e => e.PackageDiscountAmount)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("package_discount_amount");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
+            entity.Property(e => e.ServicePackageName)
+                .HasMaxLength(255)
+                .HasColumnName("service_package_name");
+            entity.Property(e => e.ServicePackagePrice)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("service_package_price");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
@@ -836,6 +896,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.MaintenanceTicketId)
                 .HasConstraintName("FK__total_rec__maint__0E6E26BF");
+
+            entity.HasOne(d => d.ServicePackage).WithMany(p => p.TotalReceipts)
+                .HasForeignKey(d => d.ServicePackageId)
+                .HasConstraintName("FK_total_receipt_service_package");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.TotalReceipts)
                 .HasForeignKey(d => d.StatusCode)
@@ -979,6 +1043,48 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Notes)
                 .HasMaxLength(255)
                 .HasColumnName("notes");
+            entity.Property(e => e.SnapshotBranchName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_branch_name");
+            entity.Property(e => e.SnapshotCarModel)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_car_model");
+            entity.Property(e => e.SnapshotCarName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_car_name");
+            entity.Property(e => e.SnapshotColor)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_color");
+            entity.Property(e => e.SnapshotConsulterName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_consulter_name");
+            entity.Property(e => e.SnapshotCustomerAddress)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_address");
+            entity.Property(e => e.SnapshotCustomerEmail)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_email");
+            entity.Property(e => e.SnapshotCustomerName)
+                .HasMaxLength(255)
+                .HasColumnName("snapshot_customer_name");
+            entity.Property(e => e.SnapshotCustomerPhone)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_customer_phone");
+            entity.Property(e => e.SnapshotEngineNumber)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_engine_number");
+            entity.Property(e => e.SnapshotLicensePlate)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_license_plate");
+            entity.Property(e => e.SnapshotMileage).HasColumnName("snapshot_mileage");
+            entity.Property(e => e.SnapshotVehicleType)
+                .HasMaxLength(100)
+                .HasColumnName("snapshot_vehicle_type");
+            entity.Property(e => e.SnapshotVehicleTypeId).HasColumnName("snapshot_vehicle_type_id");
+            entity.Property(e => e.SnapshotVinNumber)
+                .HasMaxLength(50)
+                .HasColumnName("snapshot_vin_number");
+            entity.Property(e => e.SnapshotYearOfManufacture).HasColumnName("snapshot_year_of_manufacture");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
