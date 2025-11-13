@@ -33,16 +33,28 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
         public string? CustomerAddress { get; set; }
+        public string? CustomerEmail { get; set; }
         
         // Vehicle info
         public string? LicensePlate { get; set; }
         public string? CarModel { get; set; }
+        public string? VinNumber { get; set; }
+        public string? VehicleEngineNumber { get; set; }
+        public int? YearOfManufacture { get; set; }
+        public string? VehicleType { get; set; }
+        public long? VehicleTypeId { get; set; }
+        public string? Color { get; set; }
         
         // Vehicle Check-in info (nếu được tạo từ check-in)
         public long? VehicleCheckinId { get; set; }
         public int? Mileage { get; set; }
         public string? CheckinNotes { get; set; }
         public List<string>? CheckinImages { get; set; }
+        
+        // Service Package info
+        public long? ServicePackageId { get; set; }
+        public string? ServicePackageName { get; set; }
+        public decimal? ServicePackagePrice { get; set; }
     }
 
     public class TechnicianInfoDto

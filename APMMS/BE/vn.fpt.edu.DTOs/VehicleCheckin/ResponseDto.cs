@@ -23,11 +23,14 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? VehicleEngineNumber { get; set; }
         public string? Color { get; set; }
         public int? YearOfManufacture { get; set; }
+        public string? VehicleType { get; set; }
+        public long? VehicleTypeId { get; set; }
         
         // Thông tin khách hàng
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
+        public string? CustomerAddress { get; set; }
         
         // Thông tin chi nhánh
         public long? BranchId { get; set; }
@@ -66,6 +69,7 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? LicensePlate { get; set; }
         public string? VinNumber { get; set; }
         public string? CustomerName { get; set; }
+        public string? VehicleType { get; set; }
         public int Mileage { get; set; }
         public DateTime? CreatedAt { get; set; }
         public string? Notes { get; set; }

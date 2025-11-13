@@ -30,6 +30,12 @@ namespace BE.vn.fpt.edu.DTOs.TotalReceipt
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
+        
+        // Service Package fields
+        public long? ServicePackageId { get; set; }
+        public decimal? ServicePackagePrice { get; set; }
+        public string? ServicePackageName { get; set; }
+        public decimal? PackageDiscountAmount { get; set; }
     }
 }
 
