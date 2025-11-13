@@ -1546,11 +1546,18 @@
             })
             .then(data => {
                 showNotification('Thêm xe thành công!', 'success');
-                // Close modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('addCarModal'));
-                if (modal) {
-                    modal.hide();
+                // Close modal và dọn sạch backdrop
+                const modalElement = document.getElementById('addCarModal');
+                if (modalElement) {
+                    let modalInstance = bootstrap.Modal.getInstance(modalElement);
+                    if (!modalInstance) {
+                        modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+                    }
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
                 }
+                cleanupModalBackdrop();
                 // Reset form
                 document.getElementById('addCarForm').reset();
                 // Reload cars list
@@ -1566,6 +1573,12 @@
                 submitBtn.innerHTML = originalText;
                 }
             });
+        }
+
+        function cleanupModalBackdrop() {
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
         }
         
         // Reset add car form

@@ -681,6 +681,23 @@ function displayBasicInfo(data) {
         `;
     };
 
+    const vinNumber = data.vinNumber
+        || data.vehicleVinNumber
+        || data.vehicleEngineNumber // một số API cũ lưu nhầm trường
+        || (data.vehicleInfo && (data.vehicleInfo.vinNumber || data.vehicleInfo.vin))
+        || (data.vehicle && (data.vehicle.vinNumber || data.vehicle.vin))
+        || (data.vehicleCheckin && (data.vehicleCheckin.vinNumber || data.vehicleCheckin.vin))
+        || (data.car && data.car.vinNumber)
+        || (data.checkin && data.checkin.vinNumber);
+
+    const engineNumber = data.engineNumber
+        || data.vehicleEngineNumber
+        || (data.vehicleInfo && (data.vehicleInfo.engineNumber || data.vehicleInfo.engineNo))
+        || (data.vehicle && (data.vehicle.engineNumber || data.vehicle.engineNo))
+        || (data.vehicleCheckin && (data.vehicleCheckin.engineNumber || data.vehicleCheckin.engineNo))
+        || (data.car && data.car.engineNumber)
+        || (data.checkin && data.checkin.engineNumber);
+
     let techniciansHtml = '<div class="text-muted">Chưa gán</div>';
     if (data.technicians && data.technicians.length > 0) {
         const techItems = data.technicians.map(t => {
@@ -731,6 +748,8 @@ function displayBasicInfo(data) {
                     ${renderRow('Xe', data.carName)}
                     ${renderRow('Biển số', data.licensePlate)}
                     ${renderRow('Mẫu xe', data.carModel)}
+                    ${renderRow('Số khung (VIN)', vinNumber)}
+                    ${renderRow('Số máy', engineNumber)}
                     ${renderRow('Năm sản xuất', manufactureYear)}
         </div>
                 <div class="info-section mb-0">

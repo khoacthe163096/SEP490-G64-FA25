@@ -46,7 +46,7 @@
                             <div id="noResults" style="display: none;">
                                 <div class="alert alert-warning">
                                     <h6><i class="fas fa-exclamation-triangle"></i> Không tìm thấy xe</h6>
-                                    <p>Xe chưa có trong hệ thống. Vui lòng nhập thông tin xe mới bên dưới.</p>
+                                    <p>Xe chưa có trong hệ thống. Vui lòng tạo hồ sơ xe trong phần Quản lý xe trước khi tiếp tục check-in.</p>
                                 </div>
                             </div>
                         </div>
@@ -55,6 +55,7 @@
                     <form id="checkinForm" enctype="multipart/form-data">
                         <!-- Hidden field for carId -->
                         <input type="hidden" id="carId" name="carId">
+                        <input type="hidden" id="vehicleTypeId" name="vehicleTypeId">
                         
                         <div class="row">
                             <div class="col-md-6">
@@ -74,6 +75,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
+                                    <label for="engineNumber" class="form-label">Số máy</label>
+                                    <input type="text" class="form-control" id="engineNumber" name="engineNumber" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                     <label for="carName" class="form-label">Tên xe <span class="text-danger"></span></label>
                                     <input type="text" class="form-control" id="carName" name="carName"  readonly>
                                 </div>
@@ -82,6 +92,15 @@
                                 <div class="mb-3">
                                     <label for="carModel" class="form-label">Model xe</label>
                                     <input type="text" class="form-control" id="carModel" name="carModel" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="vehicleType" class="form-label">Loại phương tiện</label>
+                                    <input type="text" class="form-control" id="vehicleType" name="vehicleType" readonly>
                                 </div>
                             </div>
                         </div>
@@ -271,6 +290,9 @@
                 });
         }
         
+        let vehicleTypeLookup = null;
+        let vehicleTypeLookupPromise = null;
+
         function selectBranchForConsulter() {
             console.log('selectBranchForConsulter called');
             // Lấy thông tin user từ token
@@ -319,60 +341,157 @@
             }
         }
 
-        function searchVehicle() {
+        async function ensureVehicleTypesLoaded() {
+            if (vehicleTypeLookup) {
+                return;
+            }
+            if (vehicleTypeLookupPromise) {
+                await vehicleTypeLookupPromise;
+                return;
+            }
+
+            vehicleTypeLookupPromise = fetch('@apiBaseUrl/VehicleType')
+                .then(response => response.json())
+                .then(data => {
+                    const list = Array.isArray(data)
+                        ? data
+                        : (data && data.success && Array.isArray(data.data)) ? data.data : [];
+
+                    vehicleTypeLookup = new Map();
+                    list.forEach(item => {
+                        if (item && item.id !== undefined) {
+                            vehicleTypeLookup.set(item.id, item.name || item.typeName || '');
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading vehicle types:', error);
+                    vehicleTypeLookup = new Map();
+                });
+
+            await vehicleTypeLookupPromise;
+        }
+
+        function getVehicleTypeNameById(id) {
+            if (!vehicleTypeLookup || !vehicleTypeLookup.size || id === undefined || id === null) {
+                return '';
+            }
+            return vehicleTypeLookup.get(id) || '';
+        }
+
+        async function resolveVehicleType(car) {
+            if (!car) {
+                return { typeName: '', typeId: null };
+            }
+
+            const directName = car.vehicleTypeName || car.vehicleType || car.typeName || car.type || '';
+            const directId = car.vehicleTypeId ?? car.typeId ?? null;
+
+            if (directName) {
+                return { typeName: directName, typeId: directId };
+            }
+
+            if (directId !== null && directId !== undefined) {
+                await ensureVehicleTypesLoaded();
+                return { typeName: getVehicleTypeNameById(directId), typeId: directId };
+            }
+
+            const carDetails = await fetchCarDetails(car.id);
+            if (carDetails) {
+                const detailId = carDetails.vehicleTypeId ?? carDetails.typeId ?? null;
+                let detailName = carDetails.vehicleTypeName || carDetails.vehicleType || carDetails.typeName || carDetails.type || '';
+                if (!detailName && detailId !== null && detailId !== undefined) {
+                    await ensureVehicleTypesLoaded();
+                    detailName = getVehicleTypeNameById(detailId);
+                }
+                return { typeName: detailName, typeId: detailId };
+            }
+
+            return { typeName: '', typeId: null };
+        }
+
+        async function fetchCarDetails(carId) {
+            if (!carId) {
+                return null;
+            }
+            try {
+                const response = await fetch(`@apiBaseUrl/CarOfAutoOwner/${carId}`);
+                if (!response.ok) {
+                    return null;
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching car details:', error);
+                return null;
+            }
+        }
+
+        async function searchVehicle() {
             const searchTerm = document.getElementById('searchTerm').value.trim();
             if (!searchTerm) {
                 showAlert('Vui lòng nhập biển số hoặc số khung', 'warning');
                 return;
             }
 
-            fetch(`@apiBaseUrl/VehicleCheckin/search-vehicle?searchTerm=${encodeURIComponent(searchTerm)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data.found) {
-                        // Xe đã tồn tại - tự động điền thông tin
-                        const car = data.data.car;
-                        document.getElementById('carId').value = car.id;
-                        document.getElementById('licensePlate').value = car.licensePlate || '';
-                        document.getElementById('vinNumber').value = car.vinNumber || '';
-                        document.getElementById('carName').value = car.carName || '';
-                        document.getElementById('carModel').value = car.carModel || '';
-                        document.getElementById('customerName').value = car.customerName || '';
-                        document.getElementById('customerPhone').value = car.customerPhone || '';
-                        document.getElementById('yearOfManufacture').value = car.yearOfManufacture || '';
-                        
-                        // Hiển thị thông tin xe tìm thấy
-                        document.getElementById('vehicleInfo').innerHTML = `
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <strong>Biển số:</strong> ${car.licensePlate || '-'}<br>
-                                    <strong>Số khung:</strong> ${car.vinNumber || '-'}<br>
-                                    <strong>Xe:</strong> ${car.carName || '-'} ${car.carModel || ''}
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Chủ xe:</strong> ${car.customerName || '-'}<br>
-                                    <strong>SĐT:</strong> ${car.customerPhone || '-'}<br>
-                                    <strong>Năm SX:</strong> ${car.yearOfManufacture || '-'}
-                                </div>
+            try {
+                const response = await fetch(`@apiBaseUrl/VehicleCheckin/search-vehicle?searchTerm=${encodeURIComponent(searchTerm)}`);
+                const data = await response.json();
+
+                if (data.success && data.data.found) {
+                    await ensureVehicleTypesLoaded();
+
+                    // Xe đã tồn tại - tự động điền thông tin
+                    const car = data.data.car;
+                    const engineNumberValue = car.engineNumber || car.vehicleEngineNumber || car.engineNo || car.engine_no || '';
+                    const { typeName: vehicleTypeValue, typeId: vehicleTypeIdValue } = await resolveVehicleType(car);
+                    const carNameValue = car.carName || '';
+                    const carModelValue = car.carModel || '';
+                    document.getElementById('carId').value = car.id;
+                    document.getElementById('vehicleTypeId').value = vehicleTypeIdValue !== null && vehicleTypeIdValue !== undefined ? vehicleTypeIdValue : '';
+                    document.getElementById('licensePlate').value = car.licensePlate || '';
+                    document.getElementById('vinNumber').value = car.vinNumber || '';
+                    document.getElementById('carName').value = carNameValue;
+                    document.getElementById('carModel').value = carModelValue;
+                    document.getElementById('vehicleType').value = vehicleTypeValue || '';
+                    document.getElementById('customerName').value = car.customerName || '';
+                    document.getElementById('customerPhone').value = car.customerPhone || '';
+                    document.getElementById('engineNumber').value = engineNumberValue;
+                    document.getElementById('yearOfManufacture').value = car.yearOfManufacture || '';
+                    
+                    // Hiển thị thông tin xe tìm thấy
+                    document.getElementById('vehicleInfo').innerHTML = `
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Biển số:</strong> ${car.licensePlate || '-'}<br>
+                                <strong>Số khung:</strong> ${car.vinNumber || '-'}<br>
+                                <strong>Số máy:</strong> ${engineNumberValue || '-'}<br>
+                                <strong>Loại xe:</strong> ${vehicleTypeValue || '-'}<br>
+                                <strong>Tên xe:</strong> ${carNameValue || '-'}<br>
+                                <strong>Model:</strong> ${carModelValue || '-'}
                             </div>
-                        `;
-                        
-                        document.getElementById('searchResults').style.display = 'block';
-                        document.getElementById('noResults').style.display = 'none';
-                        
-                        showAlert('Tìm thấy xe trong hệ thống! Thông tin đã được tự động điền.', 'success');
-                    } else {
-                        // Xe chưa tồn tại - cho phép nhập thông tin mới
-                        document.getElementById('carId').value = '';
-                        document.getElementById('searchResults').style.display = 'none';
-                        document.getElementById('noResults').style.display = 'block';
-                        showAlert('Xe chưa có trong hệ thống. Vui lòng nhập thông tin xe mới.', 'info');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showAlert('Có lỗi xảy ra khi tìm kiếm xe', 'danger');
-                });
+                            <div class="col-md-6">
+                                <strong>Chủ xe:</strong> ${car.customerName || '-'}<br>
+                                <strong>SĐT:</strong> ${car.customerPhone || '-'}<br>
+                                <strong>Năm SX:</strong> ${car.yearOfManufacture || '-'}
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('searchResults').style.display = 'block';
+                    document.getElementById('noResults').style.display = 'none';
+                    
+                    showAlert('Tìm thấy xe trong hệ thống! Thông tin đã được tự động điền.', 'success');
+                } else {
+                    // Xe chưa tồn tại - cho phép nhập thông tin mới
+                    clearVehicleFields();
+                    document.getElementById('searchResults').style.display = 'none';
+                    document.getElementById('noResults').style.display = 'block';
+                    showAlert('Xe chưa có trong hệ thống. Vui lòng tạo hồ sơ xe trong màn hình Quản lý xe trước khi check-in.', 'info');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Có lỗi xảy ra khi tìm kiếm xe', 'danger');
+            }
         }
 
         async function createCheckin() {
@@ -389,13 +508,27 @@
                 return;
             }
 
+            const vehicleInfo = {
+                licensePlate: document.getElementById('licensePlate').value,
+                vinNumber: document.getElementById('vinNumber').value,
+                engineNumber: document.getElementById('engineNumber').value,
+                carName: document.getElementById('carName').value,
+                carModel: document.getElementById('carModel').value,
+                vehicleType: document.getElementById('vehicleType').value,
+                vehicleTypeId: parseInt(document.getElementById('vehicleTypeId').value) || null,
+                customerName: document.getElementById('customerName').value,
+                customerPhone: document.getElementById('customerPhone').value,
+                yearOfManufacture: document.getElementById('yearOfManufacture').value
+            };
+
             const formData = {
                 carId: parseInt(carId),
                 maintenanceRequestId: null,
                 mileage: parseInt(document.getElementById('mileage').value),
                 notes: document.getElementById('notes').value,
                 imageUrls: imageUrls,
-                branchId: parseInt(document.getElementById('branchId').value)
+                branchId: parseInt(document.getElementById('branchId').value),
+                vehicleInfo: vehicleInfo
             };
 
             fetch('@apiBaseUrl/VehicleCheckin', {
@@ -492,6 +625,16 @@
             }
             
             return imageUrls;
+        }
+
+        function clearVehicleFields() {
+            const fieldsToClear = ['carId', 'licensePlate', 'vinNumber', 'engineNumber', 'carName', 'carModel', 'vehicleType', 'vehicleTypeId', 'customerName', 'customerPhone', 'yearOfManufacture'];
+            fieldsToClear.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = '';
+                }
+            });
         }
 
         function showAlert(message, type) {
