@@ -173,7 +173,7 @@ namespace BE.vn.fpt.edu.services
             };
         }
 
-        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
+        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto, long? currentUserId = null)
         {
             var existing = await _repository.GetByIdAsync(id);
             if (existing == null) return null;
@@ -212,9 +212,33 @@ namespace BE.vn.fpt.edu.services
 
             existing.CarId = dto.CarId ?? existing.CarId;
             existing.BranchId = dto.BranchId ?? existing.BranchId;
-            existing.AccountantId = dto.AccountantId ?? existing.AccountantId;
+            
+            // ✅ Xử lý AccountantId: Khi thanh toán (statusCode = 'PAID'), tự động lưu người bấm thanh toán vào AccountantId
+            var newStatusCode = string.IsNullOrWhiteSpace(dto.StatusCode) ? existing.StatusCode : dto.StatusCode;
+            if (!string.IsNullOrWhiteSpace(newStatusCode) && 
+                string.Equals(newStatusCode, "PAID", StringComparison.OrdinalIgnoreCase) &&
+                currentUserId.HasValue)
+            {
+                // Khi thanh toán: Nếu AccountantId chưa có hoặc được truyền null trong DTO, tự động gán currentUserId
+                if (!dto.AccountantId.HasValue && !existing.AccountantId.HasValue)
+                {
+                    existing.AccountantId = currentUserId.Value;
+                }
+                else if (dto.AccountantId.HasValue)
+                {
+                    // Nếu DTO có AccountantId, ưu tiên dùng giá trị từ DTO
+                    existing.AccountantId = dto.AccountantId.Value;
+                }
+                // Nếu existing đã có AccountantId và DTO không truyền, giữ nguyên
+            }
+            else
+            {
+                // Không phải thanh toán: Cập nhật AccountantId theo DTO hoặc giữ nguyên
+                existing.AccountantId = dto.AccountantId ?? existing.AccountantId;
+            }
+            
             existing.CurrencyCode = string.IsNullOrWhiteSpace(dto.CurrencyCode) ? (existing.CurrencyCode ?? "VND") : dto.CurrencyCode;
-            existing.StatusCode = string.IsNullOrWhiteSpace(dto.StatusCode) ? existing.StatusCode : dto.StatusCode;
+            existing.StatusCode = newStatusCode;
             existing.Note = dto.Note ?? existing.Note;
             existing.CreatedAt = dto.CreatedAt ?? existing.CreatedAt ?? DateTime.UtcNow;
 
@@ -279,6 +303,13 @@ namespace BE.vn.fpt.edu.services
             }
 
             var updated = await _repository.UpdateAsync(existing);
+            
+            // ✅ Load Accountant navigation property nếu chưa có (để map AccountantName)
+            if (updated.AccountantId.HasValue && updated.Accountant == null)
+            {
+                await _context.Entry(updated).Reference(e => e.Accountant).LoadAsync();
+            }
+            
             return MapToResponse(updated);
         }
 
@@ -332,6 +363,12 @@ namespace BE.vn.fpt.edu.services
 
         private ResponseDto MapToResponse(TotalReceipt entity)
         {
+            // ✅ Load Accountant navigation nếu chưa có (để map AccountantName)
+            if (entity.AccountantId.HasValue && entity.Accountant == null)
+            {
+                _context.Entry(entity).Reference(e => e.Accountant).Load();
+            }
+            
             // Load ServicePackage navigation nếu chưa có
             if (entity.ServicePackage == null && entity.ServicePackageId.HasValue)
             {

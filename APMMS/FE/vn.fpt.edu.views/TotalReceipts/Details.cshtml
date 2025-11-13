@@ -1454,13 +1454,14 @@
             const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? 0;
             
             // Gọi API để cập nhật trạng thái thanh toán
+            // ✅ Không truyền accountantId - Backend sẽ tự động lưu người bấm thanh toán vào AccountantId
             const updateData = {
                 statusCode: 'PAID',
                 // Giữ nguyên các trường khác
                 maintenanceTicketId: receiptData?.MaintenanceTicketId ?? receiptData?.maintenanceTicketId,
                 carId: receiptData?.CarId ?? receiptData?.carId,
                 branchId: receiptData?.BranchId ?? receiptData?.branchId,
-                accountantId: receiptData?.AccountantId ?? receiptData?.accountantId,
+                // accountantId: không truyền - để backend tự động lưu current user
                 subtotal: subtotal,
                 vatPercent: receiptData?.VatPercent ?? receiptData?.vatPercent ?? 10,
                 discountAmount: receiptData?.DiscountAmount ?? receiptData?.discountAmount ?? 0,

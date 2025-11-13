@@ -1,4 +1,5 @@
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.interfaces;
@@ -102,7 +103,15 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var updated = await _service.UpdateAsync(id, dto);
+                // ✅ Lấy current user từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? currentUserId = null;
+                if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var userId))
+                {
+                    currentUserId = userId;
+                }
+
+                var updated = await _service.UpdateAsync(id, dto, currentUserId);
                 if (updated == null)
                 {
                     return NotFound(new { success = false, message = "Invoice not found" });
