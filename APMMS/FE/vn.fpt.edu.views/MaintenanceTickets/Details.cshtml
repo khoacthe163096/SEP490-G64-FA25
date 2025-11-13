@@ -628,7 +628,7 @@ function loadMaintenanceTicketDetails() {
             }
             return response.json();
         })
-        .then(data => {
+        .then(async data => {
             if (data.__httpError) {
                 const msg = data.status === 404 ? 'Không tìm thấy phiếu bảo dưỡng hoặc đã bị xóa.' : (data.message || 'Lỗi tải dữ liệu');
                 showAlert(msg, 'danger');
@@ -637,7 +637,7 @@ function loadMaintenanceTicketDetails() {
             }
             if (data.success) {
                 maintenanceTicketData = data.data;
-                displayBasicInfo(data.data);
+                await displayBasicInfo(data.data);
                 displayCheckinInfo(data.data);
                 displayStatusAndActions(data.data);
                 displayTimeline(data.data);
@@ -661,12 +661,144 @@ function loadMaintenanceTicketDetails() {
         });
 }
 
-function displayBasicInfo(data) {
+const vehicleCheckinDetailCache = new Map();
+
+async function fetchVehicleCheckinDetail(checkinId) {
+    if (!checkinId) {
+        return null;
+    }
+    if (vehicleCheckinDetailCache.has(checkinId)) {
+        return vehicleCheckinDetailCache.get(checkinId);
+    }
+
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/VehicleCheckin/${checkinId}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
+        });
+
+        if (!response.ok) {
+            console.warn('Không thể tải chi tiết vehicle check-in:', response.status);
+            vehicleCheckinDetailCache.set(checkinId, null);
+            return null;
+        }
+
+        const json = await response.json();
+        const detail = json && json.success ? json.data : json;
+        vehicleCheckinDetailCache.set(checkinId, detail);
+        return detail;
+    } catch (error) {
+        console.error('Lỗi khi tải chi tiết vehicle check-in:', error);
+        vehicleCheckinDetailCache.set(checkinId, null);
+        return null;
+    }
+}
+
+async function displayBasicInfo(data) {
     const basicInfo = $('#basicInfo');
     const createdAt = new Date(data.createdDate).toLocaleDateString('vi-VN');
     const startTime = data.startTime ? new Date(data.startTime).toLocaleDateString('vi-VN') : 'Chưa bắt đầu';
     const endTime = data.endTime ? new Date(data.endTime).toLocaleDateString('vi-VN') : 'Chưa hoàn thành';
-    const manufactureYear = data.manufacturingYear ?? data.manufactureYear ?? data.carManufactureYear ?? data.carYear ?? null;
+    const snapshot = data.vehicleInfo || data.vehicleSnapshot || null;
+    const checkin = data.vehicleCheckin || null;
+    const checkinVehicleInfo = checkin && checkin.vehicleInfo ? checkin.vehicleInfo : null;
+
+    let manufactureYear = snapshot?.yearOfManufacture
+        ?? snapshot?.manufactureYear
+        ?? data.yearOfManufacture
+        ?? data.manufacturingYear
+        ?? data.manufactureYear
+        ?? data.carManufactureYear
+        ?? data.carYear
+        ?? checkin?.yearOfManufacture
+        ?? checkin?.manufactureYear
+        ?? checkinVehicleInfo?.yearOfManufacture
+        ?? checkinVehicleInfo?.manufactureYear
+        ?? null;
+
+    let vinNumber = snapshot?.vinNumber
+        ?? snapshot?.vin
+        ?? data.vinNumber
+        ?? data.vehicleVinNumber
+        ?? data.vehicleEngineNumber // fallback các hệ cũ
+        ?? (data.vehicle && (data.vehicle.vinNumber || data.vehicle.vin))
+        ?? (checkin && (checkin.vinNumber || checkin.vin))
+        ?? (checkinVehicleInfo && (checkinVehicleInfo.vinNumber || checkinVehicleInfo.vin))
+        ?? (data.car && data.car.vinNumber)
+        ?? (data.checkin && data.checkin.vinNumber)
+        ?? null;
+
+    let engineNumber = snapshot?.engineNumber
+        ?? snapshot?.engineNo
+        ?? data.engineNumber
+        ?? data.engineNo
+        ?? data.vehicleEngineNumber
+        ?? (data.vehicleInfo && (data.vehicleInfo.engineNumber || data.vehicleInfo.engineNo))
+        ?? (data.vehicle && (data.vehicle.engineNumber || data.vehicle.engineNo))
+        ?? (checkin && (checkin.engineNumber || checkin.vehicleEngineNumber))
+        ?? (checkinVehicleInfo && (checkinVehicleInfo.engineNumber || checkinVehicleInfo.engineNo))
+        ?? (data.car && data.car.engineNumber)
+        ?? (data.checkin && data.checkin.engineNumber)
+        ?? null;
+
+    let licensePlate = snapshot?.licensePlate
+        ?? data.licensePlate
+        ?? (checkin && checkin.licensePlate)
+        ?? (checkinVehicleInfo && checkinVehicleInfo.licensePlate)
+        ?? (data.vehicle && data.vehicle.licensePlate)
+        ?? null;
+
+    let carName = snapshot?.carName
+        ?? data.carName
+        ?? (checkin && checkin.carName)
+        ?? (checkinVehicleInfo && checkinVehicleInfo.carName)
+        ?? (data.vehicle && data.vehicle.carName)
+        ?? null;
+
+    let carModel = snapshot?.carModel
+        ?? data.carModel
+        ?? (checkin && checkin.carModel)
+        ?? (checkinVehicleInfo && checkinVehicleInfo.carModel)
+        ?? (data.vehicle && data.vehicle.carModel)
+        ?? null;
+
+    if ((!vinNumber || !engineNumber || !manufactureYear || !licensePlate || !carName || !carModel) && (data.vehicleCheckinId || checkin?.id)) {
+        const checkinId = data.vehicleCheckinId || checkin?.id;
+        const checkinDetail = await fetchVehicleCheckinDetail(checkinId);
+        if (checkinDetail) {
+            vinNumber = vinNumber
+                || checkinDetail.vinNumber
+                || (checkinDetail.vehicle && (checkinDetail.vehicle.vinNumber || checkinDetail.vehicle.vin))
+                || (checkinDetail.vehicleInfo && (checkinDetail.vehicleInfo.vinNumber || checkinDetail.vehicleInfo.vin));
+
+            engineNumber = engineNumber
+                || checkinDetail.vehicleEngineNumber
+                || checkinDetail.engineNumber
+                || (checkinDetail.vehicle && (checkinDetail.vehicle.engineNumber || checkinDetail.vehicle.engineNo))
+                || (checkinDetail.vehicleInfo && (checkinDetail.vehicleInfo.engineNumber || checkinDetail.vehicleInfo.engineNo));
+
+            manufactureYear = manufactureYear
+                || checkinDetail.yearOfManufacture
+                || checkinDetail.manufactureYear
+                || (checkinDetail.vehicle && (checkinDetail.vehicle.yearOfManufacture || checkinDetail.vehicle.manufactureYear))
+                || (checkinDetail.vehicleInfo && (checkinDetail.vehicleInfo.yearOfManufacture || checkinDetail.vehicleInfo.manufactureYear));
+
+            licensePlate = licensePlate
+                || checkinDetail.licensePlate
+                || (checkinDetail.vehicle && checkinDetail.vehicle.licensePlate)
+                || (checkinDetail.vehicleInfo && checkinDetail.vehicleInfo.licensePlate);
+
+            carName = carName
+                || checkinDetail.carName
+                || (checkinDetail.vehicle && checkinDetail.vehicle.carName)
+                || (checkinDetail.vehicleInfo && checkinDetail.vehicleInfo.carName);
+
+            carModel = carModel
+                || checkinDetail.carModel
+                || (checkinDetail.vehicle && checkinDetail.vehicle.carModel)
+                || (checkinDetail.vehicleInfo && checkinDetail.vehicleInfo.carModel);
+        }
+    }
 
     const renderRow = (label, value, options = {}) => {
         const { raw = false, valueClass = 'fw-semibold text-body' } = options;
@@ -680,23 +812,6 @@ function displayBasicInfo(data) {
             </div>
         `;
     };
-
-    const vinNumber = data.vinNumber
-        || data.vehicleVinNumber
-        || data.vehicleEngineNumber // một số API cũ lưu nhầm trường
-        || (data.vehicleInfo && (data.vehicleInfo.vinNumber || data.vehicleInfo.vin))
-        || (data.vehicle && (data.vehicle.vinNumber || data.vehicle.vin))
-        || (data.vehicleCheckin && (data.vehicleCheckin.vinNumber || data.vehicleCheckin.vin))
-        || (data.car && data.car.vinNumber)
-        || (data.checkin && data.checkin.vinNumber);
-
-    const engineNumber = data.engineNumber
-        || data.vehicleEngineNumber
-        || (data.vehicleInfo && (data.vehicleInfo.engineNumber || data.vehicleInfo.engineNo))
-        || (data.vehicle && (data.vehicle.engineNumber || data.vehicle.engineNo))
-        || (data.vehicleCheckin && (data.vehicleCheckin.engineNumber || data.vehicleCheckin.engineNo))
-        || (data.car && data.car.engineNumber)
-        || (data.checkin && data.checkin.engineNumber);
 
     let techniciansHtml = '<div class="text-muted">Chưa gán</div>';
     if (data.technicians && data.technicians.length > 0) {
@@ -745,9 +860,9 @@ function displayBasicInfo(data) {
             </div>
                 <div class="info-section mb-4">
                     <h6 class="info-section-title">Thông tin xe</h6>
-                    ${renderRow('Xe', data.carName)}
-                    ${renderRow('Biển số', data.licensePlate)}
-                    ${renderRow('Mẫu xe', data.carModel)}
+                    ${renderRow('Xe', carName)}
+                    ${renderRow('Biển số', licensePlate)}
+                    ${renderRow('Mẫu xe', carModel)}
                     ${renderRow('Số khung (VIN)', vinNumber)}
                     ${renderRow('Số máy', engineNumber)}
                     ${renderRow('Năm sản xuất', manufactureYear)}
