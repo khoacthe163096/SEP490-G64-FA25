@@ -36,7 +36,8 @@ namespace BE.vn.fpt.edu.convert
 
             CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>()
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
-                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Password, opt => opt.Ignore()); // Password được xử lý riêng trong service để tránh bị mất
 
             // Component mappings
             CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>()

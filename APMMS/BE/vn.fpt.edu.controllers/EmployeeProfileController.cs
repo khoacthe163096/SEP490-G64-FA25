@@ -1,13 +1,9 @@
 using BE.vn.fpt.edu.DTOs.Employee;
 using BE.vn.fpt.edu.interfaces;
-using BE.vn.fpt.edu.models;
-using BE.vn.fpt.edu.services;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Security.Claims;
-using System.IO;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -15,15 +11,11 @@ namespace BE.vn.fpt.edu.controllers
     [ApiController]
     public class EmployeeProfileController : ControllerBase
     {
-        private readonly CarMaintenanceDbContext _dbContext;
-        private readonly IMapper _mapper;
-        private readonly CloudinaryService _cloudinaryService;
+        private readonly IProfileService _profileService;
 
-        public EmployeeProfileController(CarMaintenanceDbContext dbContext, IMapper mapper, CloudinaryService cloudinaryService)
+        public EmployeeProfileController(IProfileService profileService)
         {
-            _dbContext = dbContext;
-            _mapper = mapper;
-            _cloudinaryService = cloudinaryService;
+            _profileService = profileService;
         }
 
         /// <summary>
@@ -44,19 +36,11 @@ namespace BE.vn.fpt.edu.controllers
                     return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
                 }
 
-                // Lấy thông tin user từ DbContext (không giới hạn role)
-                var user = await _dbContext.Users
-                    .Include(u => u.Role)
-                    .Include(u => u.Branch)
-                    .FirstOrDefaultAsync(u => u.Id == userId && (u.IsDelete == false || u.IsDelete == null));
-
-                if (user == null)
+                var employee = await _profileService.GetMyProfileAsync(userId);
+                if (employee == null)
                 {
                     return NotFound(new { success = false, message = "User not found" });
                 }
-
-                // Map sang EmployeeResponseDto
-                var employee = _mapper.Map<EmployeeResponseDto>(user);
 
                 return Ok(employee);
             }
@@ -72,10 +56,30 @@ namespace BE.vn.fpt.edu.controllers
         /// </summary>
         [HttpPut("my-profile")]
         [Authorize]
-        public async Task<IActionResult> UpdateMyProfile([FromBody] EmployeeRequestDto dto)
+        public async Task<IActionResult> UpdateMyProfile([FromBody] EmployeeProfileUpdateDto dto)
         {
             try
             {
+                // Validate model - EmployeeProfileUpdateDto không có Username, Password, RoleId, BranchId, StatusCode
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(ms => ms.Value != null && ms.Value.Errors.Count > 0)
+                        .SelectMany(ms => ms.Value.Errors.Select(e => 
+                            string.IsNullOrEmpty(e.ErrorMessage) 
+                                ? $"{ms.Key}: {e.Exception?.Message ?? "Invalid value"}" 
+                                : e.ErrorMessage))
+                        .ToList();
+                    
+                    // Nếu không có error message nào, thêm message mặc định
+                    if (errors.Count == 0)
+                    {
+                        errors.Add("Dữ liệu không hợp lệ");
+                    }
+                    
+                    return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
+                }
+                
                 // Lấy userId từ JWT token
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
@@ -84,51 +88,13 @@ namespace BE.vn.fpt.edu.controllers
                     return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
                 }
 
-                // Lấy user từ DbContext
-                var user = await _dbContext.Users
-                    .Include(u => u.Role)
-                    .Include(u => u.Branch)
-                    .FirstOrDefaultAsync(u => u.Id == userId && (u.IsDelete == false || u.IsDelete == null));
-
-                if (user == null)
-                {
-                    return NotFound(new { success = false, message = "User not found" });
-                }
-
-                // Không cho phép employee thay đổi roleId, branchId, statusCode, code của chính mình
-                // Chỉ cho phép cập nhật thông tin cá nhân
-                if (!string.IsNullOrEmpty(dto.FirstName)) user.FirstName = dto.FirstName;
-                if (!string.IsNullOrEmpty(dto.LastName)) user.LastName = dto.LastName;
-                if (!string.IsNullOrEmpty(dto.Email)) user.Email = dto.Email;
-                if (!string.IsNullOrEmpty(dto.Phone)) user.Phone = dto.Phone;
-                if (!string.IsNullOrEmpty(dto.Gender)) user.Gender = dto.Gender;
-                if (!string.IsNullOrEmpty(dto.Image)) user.Image = dto.Image;
-                if (!string.IsNullOrEmpty(dto.Address)) user.Address = dto.Address;
-                if (!string.IsNullOrEmpty(dto.CitizenId)) user.CitizenId = dto.CitizenId;
-                if (!string.IsNullOrEmpty(dto.TaxCode)) user.TaxCode = dto.TaxCode;
-                
-                // Parse Dob từ string format dd-MM-yyyy sang DateOnly
-                if (!string.IsNullOrEmpty(dto.Dob))
-                {
-                    if (DateOnly.TryParseExact(dto.Dob, "dd-MM-yyyy", out var dob))
-                    {
-                        user.Dob = dob;
-                    }
-                    else if (DateTime.TryParse(dto.Dob, out var dobDateTime))
-                    {
-                        user.Dob = DateOnly.FromDateTime(dobDateTime);
-                    }
-                }
-                
-                user.LastModifiedDate = DateTime.Now;
-
-                _dbContext.Users.Update(user);
-                await _dbContext.SaveChangesAsync();
-
-                // Map sang EmployeeResponseDto
-                var result = _mapper.Map<EmployeeResponseDto>(user);
+                var result = await _profileService.UpdateMyProfileAsync(userId, dto);
 
                 return Ok(new { success = true, data = result, message = "Profile updated successfully" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
             }
             catch (ArgumentException ex)
             {
@@ -149,25 +115,6 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest(new { success = false, message = "Không có file được chọn" });
-                }
-
-                // Validate file type
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-                var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(fileExtension))
-                {
-                    return BadRequest(new { success = false, message = "Chỉ chấp nhận file ảnh (jpg, jpeg, png, gif, webp)" });
-                }
-
-                // Validate file size (max 5MB)
-                if (file.Length > 5 * 1024 * 1024)
-                {
-                    return BadRequest(new { success = false, message = "Kích thước file không được vượt quá 5MB" });
-                }
-
                 // Lấy userId từ JWT token
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
@@ -176,36 +123,17 @@ namespace BE.vn.fpt.edu.controllers
                     return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
                 }
 
-                // Upload to Cloudinary (isAvatar = true để crop thành hình vuông)
-                var imageUrl = await _cloudinaryService.UploadImageAsync(file, "user-avatars", isAvatar: true);
-
-                // Cập nhật image URL vào database
-                var user = await _dbContext.Users.FindAsync(userId);
-                if (user == null)
-                {
-                    return NotFound(new { success = false, message = "User not found" });
-                }
-
-                // Xóa ảnh cũ từ Cloudinary nếu có (optional - có thể bỏ qua để tiết kiệm)
-                // if (!string.IsNullOrEmpty(user.Image))
-                // {
-                //     try
-                //     {
-                //         await _cloudinaryService.DeleteImageAsync(user.Image);
-                //     }
-                //     catch
-                //     {
-                //         // Ignore delete errors
-                //     }
-                // }
-
-                user.Image = imageUrl;
-                user.LastModifiedDate = DateTime.Now;
-                
-                _dbContext.Users.Update(user);
-                await _dbContext.SaveChangesAsync();
+                var imageUrl = await _profileService.UploadAvatarAsync(userId, file);
 
                 return Ok(new { success = true, data = new { imageUrl = imageUrl }, message = "Upload avatar thành công" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
