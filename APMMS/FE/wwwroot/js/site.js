@@ -244,7 +244,9 @@ async function handleLogin() {
 
             if (result.redirectTo && result.redirectTo !== '/') {
                 setTimeout(() => {
-                    window.location.href = result.redirectTo;
+                    // Dùng replace thay vì href để không đẩy trang chủ vào history
+                    // Khi bấm nút Back, sẽ không quay về trang chủ
+                    window.location.replace(result.redirectTo);
                 }, 1500);
             }
         } else {
