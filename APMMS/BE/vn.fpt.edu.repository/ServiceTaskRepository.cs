@@ -30,6 +30,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<ServiceTask?> GetByIdWithDetailsAsync(long id)
         {
             return await _context.ServiceTasks
+                .Include(st => st.ServiceCategory)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
@@ -67,6 +68,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<List<ServiceTask>> GetByMaintenanceTicketIdAsync(long maintenanceTicketId)
         {
             return await _context.ServiceTasks
+                .Include(st => st.ServiceCategory)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
@@ -89,6 +91,26 @@ namespace BE.vn.fpt.edu.repository
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Branch)
                 .Where(st => st.StatusCode == statusCode)
+                .ToListAsync();
+        }
+
+        public async Task<List<ServiceTask>> GetByTechnicianIdAsync(long technicianId)
+        {
+            // ✅ Lấy tất cả maintenance tickets mà technician này được gán (PRIMARY hoặc ASSISTANT)
+            // ServiceTasks thuộc những tickets này sẽ được hiển thị
+            return await _context.ServiceTasks
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Car)
+                        .ThenInclude(c => c!.User)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Technician)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.MaintenanceTicketTechnicians)
+                .Include(st => st.MaintenanceTicket)
+                    .ThenInclude(mt => mt!.Branch)
+                .Where(st => st.MaintenanceTicket != null && 
+                    (st.MaintenanceTicket.TechnicianId == technicianId || 
+                     st.MaintenanceTicket.MaintenanceTicketTechnicians.Any(mtt => mtt.TechnicianId == technicianId)))
                 .ToListAsync();
         }
 

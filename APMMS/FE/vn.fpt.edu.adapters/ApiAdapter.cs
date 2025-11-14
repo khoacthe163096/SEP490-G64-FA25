@@ -65,12 +65,7 @@ namespace FE.vn.fpt.edu.adapters
                 var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"ApiAdapter: Response content: {responseContent}");
                 
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"ApiAdapter: Request failed with status {response.StatusCode}");
-                    return default(T);
-                }
-                
+                // ✅ Always try to deserialize, even for error responses
                 try
                 {
                     var result = JsonSerializer.Deserialize<T>(responseContent, new JsonSerializerOptions

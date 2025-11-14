@@ -1,4 +1,4 @@
-﻿@model vn.fpt.edu.viewmodels.TypeComponentViewModel
+﻿@model FE.vn.fpt.edu.viewmodels.TypeComponentViewModel
 @{
     ViewData["Title"] = "Thêm loại linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
@@ -28,7 +28,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Chi nhánh</label>
-                            <input type="number" class="form-control" id="BranchId" name="BranchId" />
+                            <input type="number" class="form-control" id="BranchId" name="BranchId" placeholder="Nhập ID chi nhánh (nếu có)" />
                         </div>
 
                         <div class="mb-3">
@@ -40,7 +40,9 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Lưu</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -54,29 +56,48 @@
         $(function() {
             $('#createForm').on('submit', function(e) {
                 e.preventDefault();
+
                 const payload = {
                     Name: $('#Name').val(),
                     Description: $('#Description').val(),
                     BranchId: $('#BranchId').val() ? parseInt($('#BranchId').val()) : null,
                     StatusCode: $('#StatusCode').val()
                 };
+
                 $.ajax({
                     url: '@Url.Action("Create", "TypeComponent")',
                     type: 'POST',
                     data: payload,
-                    success: function (res) {
+                    success: function(res) {
                         if (res && res.success) {
-                            alert('Tạo thành công');
-                            window.location.href = '@Url.Action("Index", "TypeComponent")';
+                            showAlert('Tạo loại linh kiện thành công!', 'success');
+                            setTimeout(() => window.location.href = '@Url.Action("Index", "TypeComponent")', 1000);
                         } else {
-                            alert(res.message || 'Tạo thất bại');
+                            showAlert(res.message || 'Không thể tạo loại linh kiện!', 'danger');
                         }
                     },
-                    error: function () {
-                        alert('Lỗi khi gọi API');
+                    error: function() {
+                        showAlert('Lỗi khi gọi API!', 'danger');
                     }
                 });
             });
         });
+
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
+        }
     </script>
 }

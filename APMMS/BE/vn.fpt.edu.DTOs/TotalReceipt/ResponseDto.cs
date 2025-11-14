@@ -1,7 +1,35 @@
+using System;
+
 namespace BE.vn.fpt.edu.DTOs.TotalReceipt
 {
     public class ResponseDto
     {
+        public long Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public long? MaintenanceTicketId { get; set; }
+        public string? MaintenanceTicketCode { get; set; }
+        public long? CarId { get; set; }
+        public string? CarName { get; set; }
+        public string? LicensePlate { get; set; }
+        public long? BranchId { get; set; }
+        public string? BranchName { get; set; }
+        public long? AccountantId { get; set; }
+        public string? AccountantName { get; set; }
+        public decimal? Amount { get; set; }
+        public decimal? Subtotal { get; set; }
+        public decimal? VatPercent { get; set; }
+        public decimal? VatAmount { get; set; }
+        public decimal? DiscountAmount { get; set; }
+        public decimal? SurchargeAmount { get; set; }
+        public decimal? FinalAmount { get; set; }
+        public string? CurrencyCode { get; set; }
+        public string? StatusCode { get; set; }
+        public string? StatusName { get; set; }
+        public string? Note { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public string? CustomerName { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerEmail { get; set; }
     }
 }
 

@@ -33,6 +33,10 @@ public partial class MaintenanceTicket
 
     public string? PriorityLevel { get; set; }
 
+    public DateTime? CreatedAt { get; set; }
+
+    public long? ServiceCategoryId { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
@@ -41,9 +45,13 @@ public partial class MaintenanceTicket
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
+    public virtual ICollection<HistoryLog> HistoryLogs { get; set; } = new List<HistoryLog>();
+
     public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicketTechnician>();
 
     public virtual ScheduleService? ScheduleService { get; set; }
+
+    public virtual ServiceCategory? ServiceCategory { get; set; }
 
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
 

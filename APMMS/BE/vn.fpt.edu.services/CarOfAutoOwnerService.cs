@@ -3,6 +3,7 @@ using BE.vn.fpt.edu.DTOs.CarOfAutoOwner;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -35,10 +36,28 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<List<ResponseDto>>(cars);
         }
 
+        public async Task<List<ResponseDto>> GetServicedCarsByUserIdAsync(long userId)
+        {
+            var cars = await _repository.GetServicedCarsByUserIdAsync(userId);
+            return _mapper.Map<List<ResponseDto>>(cars);
+        }
+
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            if (dto == null)
+            {
+                throw new ArgumentNullException(nameof(dto), "Request DTO cannot be null.");
+            }
+
+            if (!dto.UserId.HasValue || dto.UserId.Value <= 0)
+            {
+                throw new ArgumentException("UserId is required and must be greater than 0.", nameof(dto));
+            }
+
             var car = _mapper.Map<Car>(dto);
             car.CreatedDate = DateTime.UtcNow;
+            // Xe của khách hàng không cần chi nhánh
+            car.BranchId = null;
 
             await _repository.CreateAsync(car);
             return _mapper.Map<ResponseDto>(car);
@@ -52,6 +71,8 @@ namespace BE.vn.fpt.edu.services
 
             _mapper.Map(dto, existing);
             existing.LastModifiedDate = DateTime.UtcNow;
+            // Xe của khách hàng không cần chi nhánh
+            existing.BranchId = null;
 
             await _repository.UpdateAsync(existing);
             return _mapper.Map<ResponseDto>(existing);

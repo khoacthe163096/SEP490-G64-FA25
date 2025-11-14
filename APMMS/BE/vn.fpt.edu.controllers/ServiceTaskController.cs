@@ -159,6 +159,47 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Cập nhật thời gian lao động thực tế của ServiceTask
+        /// </summary>
+        [HttpPut("{id}/labor-time")]
+        public async Task<IActionResult> UpdateLaborTime(long id, [FromBody] ServiceTaskUpdateLaborTimeDto request)
+        {
+            try
+            {
+                if (id != request.Id)
+                    return BadRequest(new { success = false, message = "ID mismatch" });
+
+                var result = await _serviceTaskService.UpdateLaborTimeAsync(id, request.ActualLaborTime);
+                return Ok(new { success = true, data = result, message = "Labor time updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy ServiceTasks theo Technician ID
+        /// </summary>
+        [HttpGet("by-technician/{technicianId}")]
+        public async Task<IActionResult> GetServiceTasksByTechnicianId(long technicianId)
+        {
+            try
+            {
+                var result = await _serviceTaskService.GetServiceTasksByTechnicianIdAsync(technicianId);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Xóa ServiceTask
         /// </summary>
         [HttpDelete("{id}")]

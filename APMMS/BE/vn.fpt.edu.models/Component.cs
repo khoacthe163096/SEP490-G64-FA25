@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BE.models;
+namespace BE.vn.fpt.edu.models;
 
 public partial class Component
 {

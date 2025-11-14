@@ -109,6 +109,9 @@ app.UseCors("Default");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// ✅ Check user status after authentication
+app.UseUserStatusCheck();
+
 app.MapControllers();
 
 app.Run();

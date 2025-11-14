@@ -35,11 +35,39 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
+        public async Task<List<Car>> GetServicedCarsByUserIdAsync(long userId)
+        {
+            // Lấy các xe đã từng có schedule (đã bảo dưỡng) - loại trừ CANCELLED
+            var servicedCarIds = await _context.ScheduleServices
+                .Where(s => s.UserId == userId && 
+                           s.CarId != null &&
+                           s.StatusCode != "CANCELLED")
+                .Select(s => s.CarId.Value)
+                .Distinct()
+                .ToListAsync();
+
+            if (servicedCarIds.Count == 0)
+                return new List<Car>();
+
+            return await _context.Cars
+                .Where(c => servicedCarIds.Contains(c.Id))
+                .OrderByDescending(c => c.CreatedDate)
+                .ToListAsync();
+        }
+
         public async Task<Car> CreateAsync(Car car)
         {
-            _context.Cars.Add(car);
-            await _context.SaveChangesAsync();
-            return car;
+            try
+            {
+                _context.Cars.Add(car);
+                await _context.SaveChangesAsync();
+                return car;
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+            {
+                // Re-throw to be handled by service/controller
+                throw;
+            }
         }
 
         public async Task<Car> UpdateAsync(Car car)

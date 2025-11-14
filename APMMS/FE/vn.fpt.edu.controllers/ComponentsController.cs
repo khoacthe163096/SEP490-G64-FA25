@@ -5,7 +5,7 @@ using FE.vn.fpt.edu.viewmodels;
 namespace FE.vn.fpt.edu.controllers
 {
     [Route("Components")]
-    public class ComponentsController : Controller
+    public class ComponentsController : Controller 
     {
         private readonly ComponentService _componentService;
 
@@ -32,8 +32,8 @@ namespace FE.vn.fpt.edu.controllers
         [HttpGet]
         [Route("Edit/{id}")]
         public IActionResult Edit(int id)
-        {
-            ViewBag.ComponentId = id;
+            {
+                ViewBag.ComponentId = id;
             return View("~/vn.fpt.edu.views/Components/Edit.cshtml");
         }
 
@@ -41,7 +41,7 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Details/{id}")]
         public IActionResult Details(int id)
         {
-            ViewBag.ComponentId = id;
+                ViewBag.ComponentId = id;
             return View("~/vn.fpt.edu.views/Components/Details.cshtml");
         }
     }

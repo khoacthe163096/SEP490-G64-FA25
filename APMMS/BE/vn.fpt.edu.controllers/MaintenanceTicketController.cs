@@ -84,6 +84,23 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Lấy lịch sử hoạt động của Maintenance Ticket
+        /// </summary>
+        [HttpGet("{id}/history")]
+        public async Task<IActionResult> GetHistoryLogs(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.GetHistoryLogsAsync(id);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// L?y Maintenance Ticket theo ID
         /// </summary>
         [HttpGet("{id}")]
@@ -222,6 +239,48 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Thêm nhiều kỹ thuật viên cho Maintenance Ticket
+        /// </summary>
+        [HttpPut("{id}/technicians")]
+        public async Task<IActionResult> AddTechnicians(long id, [FromBody] AssignTechniciansDto request)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.AddTechniciansAsync(id, request?.TechnicianIds ?? new List<long>(), request?.PrimaryId);
+                return Ok(new { success = true, data = result, message = "Technicians added successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xóa tất cả kỹ thuật viên khỏi Maintenance Ticket
+        /// </summary>
+        [HttpDelete("{id}/technicians")]
+        public async Task<IActionResult> RemoveTechnicians(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.RemoveTechniciansAsync(id);
+                return Ok(new { success = true, data = result, message = "Technicians removed successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Bắt đầu bảo dưỡng
         /// </summary>
         [HttpPut("{id}/start")]
@@ -256,6 +315,48 @@ namespace BE.vn.fpt.edu.controllers
             catch (ArgumentException ex)
             {
                 return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hủy phiếu bảo dưỡng (status = CANCELLED)
+        /// </summary>
+        [HttpPut("{id}/cancel")]
+        public async Task<IActionResult> CancelMaintenanceTicket(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.CancelMaintenanceTicketAsync(id);
+                return Ok(new { success = true, data = result, message = "Phiếu bảo dưỡng đã được hủy thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Áp dụng Service Package vào Maintenance Ticket - tự động thêm các Components từ package
+        /// </summary>
+        [HttpPut("{id}/apply-service-package/{servicePackageId}")]
+        public async Task<IActionResult> ApplyServicePackage(long id, long servicePackageId)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.ApplyServicePackageAsync(id, servicePackageId);
+                return Ok(new { success = true, data = result, message = "Áp dụng gói dịch vụ thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
