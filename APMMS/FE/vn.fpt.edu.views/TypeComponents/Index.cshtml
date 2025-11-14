@@ -1,4 +1,4 @@
-@model FE.vn.fpt.edu.viewmodels.TypeComponentIndexViewModel
+@model vn.fpt.edu.viewmodels.TypeComponentIndexViewModel
 @{
     ViewData["Title"] = "Danh sách loại linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
@@ -16,7 +16,6 @@
                 </div>
 
                 <div class="card-body">
-                    <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm loại linh kiện..." value="@Model.Search">
@@ -35,7 +34,6 @@
                         </div>
                     </div>
 
-                    <!-- Table -->
                     <div class="table-responsive">
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-dark">
@@ -50,7 +48,7 @@
                                 </tr>
                             </thead>
                             <tbody id="typeComponentsTable">
-                                @if (Model.Items.Any())
+                                @if (Model.Items != null && Model.Items.Any())
                                 {
                                     foreach (var item in Model.Items)
                                     {
@@ -73,7 +71,7 @@
                                                 <button class="btn btn-sm btn-outline-warning toggle-status" data-id="@item.Id" data-status="@item.StatusCode">
                                                     <i class="fas fa-toggle-on"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteTypeComponent(@item.Id)">
+                                                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="@item.Id">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -88,7 +86,6 @@
                         </table>
                     </div>
 
-                    <!-- Pagination placeholder -->
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
                             <li class="page-item disabled">
@@ -134,19 +131,16 @@
                 .fail(() => alert('Lỗi khi gọi API!'));
         });
 
-        // Delete action (need endpoint del if BE sup)
-        function deleteTypeComponent(id) {
-            if (!confirm('Bạn có chắc chắn muốn xóa loại linh kiện này?')) return;
-            $.ajax({
-                url: '@Url.Content("~/api/TypeComponent/")' + id,
-                type: 'DELETE',
-                success: function () {
-                    location.reload();
-                },
-                error: function () {
-                    alert('Không thể xóa loại linh kiện!');
-                }
-            });
-        }
+        // Delete
+        $('.btn-delete').click(function () {
+            const id = $(this).data('id');
+            if (!confirm('Bạn có chắc chắn muốn xóa?')) return;
+            $.post('@Url.Action("Delete", "TypeComponent")/' + id)
+                .done(res => {
+                    if (res.success) location.reload();
+                    else alert('Không thể xóa!');
+                })
+                .fail(() => alert('Lỗi khi gọi API!'));
+        });
     </script>
 }

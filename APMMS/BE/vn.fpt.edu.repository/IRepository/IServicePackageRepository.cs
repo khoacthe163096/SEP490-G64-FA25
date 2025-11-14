@@ -6,8 +6,9 @@ namespace BE.vn.fpt.edu.repository.IRepository
     {
         Task<IEnumerable<ServicePackage>> GetAllAsync();
         Task<ServicePackage?> GetByIdAsync(long id);
-        Task<ServicePackage> AddAsync(ServicePackage entity, List<long>? componentIds);
-        Task<ServicePackage> UpdateAsync(ServicePackage entity, List<long>? componentIds);
-        Task<bool> DeleteAsync(long id);
+        Task AddAsync(ServicePackage entity);
+        Task UpdateAsync(ServicePackage entity);
+        Task DeleteAsync(ServicePackage entity);
+        Task SaveChangesAsync();
     }
 }

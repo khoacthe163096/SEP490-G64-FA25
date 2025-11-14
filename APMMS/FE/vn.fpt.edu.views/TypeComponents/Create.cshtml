@@ -1,4 +1,4 @@
-﻿@model FE.vn.fpt.edu.viewmodels.TypeComponentViewModel
+﻿@model vn.fpt.edu.viewmodels.TypeComponentViewModel
 @{
     ViewData["Title"] = "Thêm loại linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
@@ -28,7 +28,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Chi nhánh</label>
-                            <input type="number" class="form-control" id="BranchId" name="BranchId" placeholder="Nhập ID chi nhánh (nếu có)" />
+                            <input type="number" class="form-control" id="BranchId" name="BranchId" />
                         </div>
 
                         <div class="mb-3">
@@ -40,9 +40,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Lưu
-                            </button>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Lưu</button>
                         </div>
                     </form>
                 </div>
@@ -56,28 +54,26 @@
         $(function() {
             $('#createForm').on('submit', function(e) {
                 e.preventDefault();
-
                 const payload = {
                     Name: $('#Name').val(),
                     Description: $('#Description').val(),
                     BranchId: $('#BranchId').val() ? parseInt($('#BranchId').val()) : null,
                     StatusCode: $('#StatusCode').val()
                 };
-
                 $.ajax({
                     url: '@Url.Action("Create", "TypeComponent")',
                     type: 'POST',
                     data: payload,
-                    success: function(res) {
+                    success: function (res) {
                         if (res && res.success) {
-                            alert('Tạo loại linh kiện thành công!');
+                            alert('Tạo thành công');
                             window.location.href = '@Url.Action("Index", "TypeComponent")';
                         } else {
-                            alert(res.message || 'Không thể tạo loại linh kiện!');
+                            alert(res.message || 'Tạo thất bại');
                         }
                     },
-                    error: function() {
-                        alert('Lỗi khi gọi API!');
+                    error: function () {
+                        alert('Lỗi khi gọi API');
                     }
                 });
             });

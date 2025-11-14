@@ -1,4 +1,4 @@
-﻿@model FE.vn.fpt.edu.viewmodels.TypeComponentViewModel
+﻿@model vn.fpt.edu.viewmodels.TypeComponentViewModel
 @{
     ViewData["Title"] = "Chỉnh sửa loại linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
@@ -17,7 +17,6 @@
                 <div class="card-body">
                     <form id="editForm">
                         <input type="hidden" id="Id" value="@Model.Id" />
-
                         <div class="mb-3">
                             <label class="form-label">Tên loại linh kiện</label>
                             <input type="text" class="form-control" id="Name" value="@Model.Name" required />
@@ -42,9 +41,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save"></i> Cập nhật
-                            </button>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Cập nhật</button>
                         </div>
                     </form>
                 </div>
@@ -58,30 +55,27 @@
         $(function() {
             $('#editForm').on('submit', function(e) {
                 e.preventDefault();
-
                 const id = $('#Id').val();
                 const payload = {
-                    Id: id,
                     Name: $('#Name').val(),
                     Description: $('#Description').val(),
                     BranchId: $('#BranchId').val() ? parseInt($('#BranchId').val()) : null,
                     StatusCode: $('#StatusCode').val()
                 };
-
                 $.ajax({
                     url: '@Url.Action("Edit", "TypeComponent")/' + id,
                     type: 'POST',
                     data: payload,
                     success: function(res) {
                         if (res && res.success) {
-                            alert('Cập nhật thành công!');
+                            alert('Cập nhật thành công');
                             window.location.href = '@Url.Action("Index", "TypeComponent")';
                         } else {
-                            alert(res.message || 'Không thể cập nhật!');
+                            alert(res.message || 'Cập nhật thất bại');
                         }
                     },
                     error: function() {
-                        alert('Lỗi khi gọi API!');
+                        alert('Lỗi khi gọi API');
                     }
                 });
             });

@@ -1,4 +1,6 @@
-﻿namespace FE.vn.fpt.edu.viewmodels
+﻿using System.Collections.Generic;
+
+namespace vn.fpt.edu.viewmodels
 {
     public class TypeComponentViewModel
     {

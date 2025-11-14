@@ -1,0 +1,111 @@
+﻿@model vn.fpt.edu.viewmodels.ComponentViewModel
+@{
+    ViewData["Title"] = "Thêm linh kiện mới";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var types = ViewBag.TypeComponents as List<vn.fpt.edu.viewmodels.TypeComponentLookupViewModel> ?? new List<vn.fpt.edu.viewmodels.TypeComponentLookupViewModel>();
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Thêm linh kiện mới</h5>
+                    <a href="/Components" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form id="createForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên linh kiện</label>
+                            <input type="text" class="form-control" id="Name" placeholder="Nhập tên linh kiện" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mã linh kiện</label>
+                            <input type="text" class="form-control" id="Code" placeholder="VD: LK001">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Giá bán (VNĐ)</label>
+                                <input type="number" class="form-control" id="UnitPrice" placeholder="VD: 250000">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Giá nhập (VNĐ)</label>
+                                <input type="number" class="form-control" id="PurchasePrice" placeholder="VD: 200000">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Số lượng tồn</label>
+                            <input type="number" class="form-control" id="QuantityStock" placeholder="VD: 10">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại linh kiện</label>
+                            <select id="TypeComponentId" class="form-select">
+                                <option value="">-- Chọn loại --</option>
+                                @foreach (var t in types)
+                                {
+                                    <option value="@t.Id">@t.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ảnh (URL)</label>
+                            <input type="text" class="form-control" id="ImageUrl" placeholder="https://...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Trạng thái</label>
+                            <select id="StatusCode" class="form-select">
+                                <option value="ACTIVE">Có sẵn</option>
+                                <option value="OUT_OF_STOCK">Hết hàng</option>
+                                <option value="DISCONTINUED">Ngừng sản xuất</option>
+                            </select>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            $('#createForm').on('submit', function(e) {
+                e.preventDefault();
+                const data = {
+                    Name: $('#Name').val(),
+                    Code: $('#Code').val(),
+                    UnitPrice: parseFloat($('#UnitPrice').val()) || 0,
+                    PurchasePrice: parseFloat($('#PurchasePrice').val()) || 0,
+                    QuantityStock: parseInt($('#QuantityStock').val()) || 0,
+                    TypeComponentId: $('#TypeComponentId').val() ? parseInt($('#TypeComponentId').val()) : null,
+                    ImageUrl: $('#ImageUrl').val(),
+                    StatusCode: $('#StatusCode').val()
+                };
+                $.post('@Url.Action("Create", "Component")', data)
+                    .done(res => {
+                        if (res.success) {
+                            alert("Thêm linh kiện thành công!");
+                            window.location = '/Components';
+                        } else {
+                            alert(res.message || "Lỗi khi tạo linh kiện");
+                        }
+                    })
+                    .fail(() => alert("Lỗi server!"));
+            });
+        });
+    </script>
+}

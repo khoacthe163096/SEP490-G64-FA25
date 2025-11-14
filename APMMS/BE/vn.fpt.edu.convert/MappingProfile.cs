@@ -1,7 +1,8 @@
 using AutoMapper;
 using BE.models;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
-using BE.vn.fpt.edu.DTOs.Component; 
+using BE.vn.fpt.edu.DTOs.Component;
+using BE.vn.fpt.edu.DTOs.ServicePackage;
 
 namespace BE.vn.fpt.edu.convert
 {
@@ -27,11 +28,9 @@ namespace BE.vn.fpt.edu.convert
             // ServicePackage mapping
             CreateMap<ServicePackage, DTOs.ServicePackage.ResponseDto>()
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
-                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.StatusCodeNavigation != null ? src.StatusCodeNavigation.Name : null))
-                .ForMember(dest => dest.ComponentNames, opt => opt.MapFrom(src => src.Components.Select(c => c.Name).ToList()));
+                .ForMember(dest => dest.StatusName, opt => opt.MapFrom(src => src.StatusCodeNavigation != null ? src.StatusCodeNavigation.Name : null));
 
-            CreateMap<DTOs.ServicePackage.RequestDto, ServicePackage>()
-                .ForMember(dest => dest.Components, opt => opt.Ignore());
+            CreateMap<DTOs.ServicePackage.RequestDto, ServicePackage>();
         }
     }
 }

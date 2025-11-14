@@ -8,8 +8,5 @@ namespace BE.vn.fpt.edu.DTOs.ServicePackage
         public string? Code { get; set; }
         public long? BranchId { get; set; }
         public string? StatusCode { get; set; }
-
-        // list ID Component go with service package
-        public List<long>? ComponentIds { get; set; }
     }
 }

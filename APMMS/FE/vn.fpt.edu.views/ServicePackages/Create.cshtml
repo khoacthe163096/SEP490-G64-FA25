@@ -1,0 +1,63 @@
+﻿@model vn.fpt.edu.viewmodels.ServicePackageViewModel
+@{
+    ViewData["Title"] = "Tạo gói dịch vụ";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-plus"></i> Tạo gói dịch vụ</h5>
+                    <a href="/ServicePackages" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form id="createForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên gói</label>
+                            <input type="text" id="Name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô tả</label>
+                            <textarea id="Description" class="form-control"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Giá (VNĐ)</label>
+                            <input type="number" id="Price" class="form-control" required>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save"></i> Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('#createForm').on('submit', function (e) {
+            e.preventDefault();
+            const data = {
+                Name: $('#Name').val(),
+                Description: $('#Description').val(),
+                Price: parseFloat($('#Price').val()) || 0,
+                StatusCode: 'ACTIVE'
+            };
+            $.post('/ServicePackages/Create', data)
+                .done(res => {
+                    if (res.success) {
+                        alert('Thêm gói dịch vụ thành công!');
+                        window.location = '/ServicePackages';
+                    } else alert('Thêm thất bại');
+                })
+                .fail(() => alert('Lỗi server'));
+        });
+    </script>
+}

@@ -1,0 +1,76 @@
+﻿@model vn.fpt.edu.viewmodels.ComponentViewModel
+@{
+    ViewData["Title"] = "Chi tiết linh kiện";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Chi tiết linh kiện</h5>
+                    <a href="/Components" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4">Mã linh kiện</dt>
+                        <dd class="col-sm-8">@Model.Code</dd>
+
+                        <dt class="col-sm-4">Tên linh kiện</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+
+                        <dt class="col-sm-4">Loại linh kiện</dt>
+                        <dd class="col-sm-8">@Model.TypeComponentName</dd>
+
+                        <dt class="col-sm-4">Chi nhánh</dt>
+                        <dd class="col-sm-8">@Model.BranchName</dd>
+
+                        <dt class="col-sm-4">Số lượng tồn</dt>
+                        <dd class="col-sm-8">@Model.QuantityStock</dd>
+
+                        <dt class="col-sm-4">Giá bán</dt>
+                        <dd class="col-sm-8">@Model.UnitPrice?.ToString("N0") VNĐ</dd>
+
+                        <dt class="col-sm-4">Giá nhập</dt>
+                        <dd class="col-sm-8">@Model.PurchasePrice?.ToString("N0") VNĐ</dd>
+
+                        <dt class="col-sm-4">Trạng thái</dt>
+                        <dd class="col-sm-8">
+                            @if (Model.StatusCode == "ACTIVE")
+                            {
+                                <span class="badge bg-success">Có sẵn</span>
+                            }
+                            else if (Model.StatusCode == "OUT_OF_STOCK")
+                            {
+                                <span class="badge bg-warning text-dark">Hết hàng</span>
+                            }
+                            else if (Model.StatusCode == "DISCONTINUED")
+                            {
+                                <span class="badge bg-secondary">Ngừng sản xuất</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-dark">@Model.StatusCode</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4">Ảnh linh kiện</dt>
+                        <dd class="col-sm-8">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <img src="@Model.ImageUrl" class="img-fluid rounded border" style="max-width: 200px;" alt="Component Image" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có hình ảnh</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

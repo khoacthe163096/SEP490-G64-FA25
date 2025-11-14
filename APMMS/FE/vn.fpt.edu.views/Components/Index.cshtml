@@ -1,3 +1,4 @@
+@model vn.fpt.edu.viewmodels.ComponentIndexViewModel
 @{
     ViewData["Title"] = "Danh sách linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
@@ -9,7 +10,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Danh sách linh kiện</h4>
-                    <a href="/Components/Create" class="btn btn-primary">
+                    <a href="@Url.Action("Create", "Component")" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Thêm linh kiện mới
                     </a>
                 </div>
@@ -17,23 +18,24 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm linh kiện...">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm linh kiện..." value="@Model.Search">
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" id="typeFilter">
                                 <option value="">Tất cả loại</option>
-                                <option value="1">Động cơ</option>
-                                <option value="2">Phanh</option>
-                                <option value="3">Lốp</option>
-                                <option value="4">Điện</option>
+                                @foreach (var t in Model.TypeComponents ?? Enumerable.Empty<vn.fpt.edu.viewmodels.TypeComponentLookupViewModel>())
+                                {
+                                    var isSelected = Model?.TypeComponentFilterId == t.Id ? "selected" : null;
+                                    <option value="@t.Id" selected="@isSelected">@t.Name</option>
+                                }
                             </select>
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" id="statusFilter">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="ACTIVE">Có sẵn</option>
-                                <option value="OUT_OF_STOCK">Hết hàng</option>
-                                <option value="DISCONTINUED">Ngừng sản xuất</option>
+                                <option value="ACTIVE" selected="@(Model?.StatusCode == "ACTIVE" ? "selected" : null)">Có sẵn</option>
+                                <option value="OUT_OF_STOCK" selected="@(Model?.StatusCode == "OUT_OF_STOCK" ? "selected" : null)">Hết hàng</option>
+                                <option value="DISCONTINUED" selected="@(Model?.StatusCode == "DISCONTINUED" ? "selected" : null)">Ngừng sản xuất</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -52,7 +54,7 @@
                                     <th>Mã linh kiện</th>
                                     <th>Tên linh kiện</th>
                                     <th>Loại</th>
-                                    <th>Nhà sản xuất</th>
+                                    <th>Nhà phân phối / Chi nhánh</th>
                                     <th>Số lượng</th>
                                     <th>Giá</th>
                                     <th>Trạng thái</th>
@@ -60,70 +62,77 @@
                                 </tr>
                             </thead>
                             <tbody id="componentsTable">
-                                <tr>
-                                    <td><input type="checkbox"></td>
-                                    <td>LK001</td>
-                                    <td>Dầu động cơ 5W-30</td>
-                                    <td>Động cơ</td>
-                                    <td>Castrol</td>
-                                    <td>50</td>
-                                    <td>250,000 VNĐ</td>
-                                    <td><span class="badge bg-success">Có sẵn</span></td>
-                                    <td>
-                                        <a href="/Components/Details/1" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="/Components/Edit/1" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteComponent(1)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><input type="checkbox"></td>
-                                    <td>LK002</td>
-                                    <td>Phanh đĩa trước</td>
-                                    <td>Phanh</td>
-                                    <td>Brembo</td>
-                                    <td>0</td>
-                                    <td>1,500,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Hết hàng</span></td>
-                                    <td>
-                                        <a href="/Components/Details/2" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="/Components/Edit/2" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteComponent(2)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                @if (Model.Items != null && Model.Items.Any())
+                                {
+                                    foreach (var item in Model.Items)
+                                    {
+                                        string statusLabel;
+                                        string badgeClass;
+                                        switch ((item.StatusCode ?? "").ToUpperInvariant())
+                                        {
+                                            case "ACTIVE":
+                                                statusLabel = "Có sẵn";
+                                                badgeClass = "bg-success";
+                                                break;
+                                            case "OUT_OF_STOCK":
+                                            case "OUTOFSTOCK":
+                                                statusLabel = "Hết hàng";
+                                                badgeClass = "bg-warning text-dark";
+                                                break;
+                                            case "DISCONTINUED":
+                                                statusLabel = "Ngừng sản xuất";
+                                                badgeClass = "bg-secondary";
+                                                break;
+                                            default:
+                                                statusLabel = item.StatusCode ?? "-";
+                                                badgeClass = "bg-secondary";
+                                                break;
+                                        }
+
+                                        <tr data-id="@item.Id">
+                                            <td><input type="checkbox" class="row-check" /></td>
+                                            <td>@(item.Code ?? ("ID-" + item.Id))</td>
+                                            <td>@item.Name</td>
+                                            <td>@(item.TypeComponentName ?? "-")</td>
+                                            <td>@(item.BranchName ?? "-")</td>
+                                            <td>@(item.QuantityStock?.ToString() ?? "0")</td>
+                                            <td>@(item.UnitPrice.HasValue? item.UnitPrice.Value.ToString("N0") + " VNĐ" : "-")</td>
+                                            <td><span class="badge @badgeClass">@statusLabel</span></td>
+                                            <td>
+                                                <a href="@Url.Action("Details", "Component", new { id = item.Id })" class="btn btn-sm btn-outline-info" title="Xem">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="@Url.Action("Edit", "Component", new { id = item.Id })" class="btn btn-sm btn-outline-primary" title="Sửa">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button class="btn btn-sm btn-outline-warning btn-toggle" data-id="@item.Id" data-status="@item.StatusCode" title="Bật/tắt">
+                                                    <i class="fas fa-toggle-on"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger btn-delete" data-id="@item.Id" title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted">Không có dữ liệu</td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Pagination -->
+                    <!-- Pagination (placeholder, implement backend paging later if needed) -->
                     <nav aria-label="Page navigation">
                         <ul class="pagination justify-content-center">
-                            <li class="page-item disabled">
-                                <a class="page-link" href="#" tabindex="-1">Trước</a>
-                            </li>
-                            <li class="page-item active">
-                                <a class="page-link" href="#">1</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">2</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">3</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="#">Sau</a>
-                            </li>
+                            <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Trước</a></li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Sau</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -134,11 +143,58 @@
 
 @section Scripts {
     <script>
-        function deleteComponent(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa linh kiện này?')) {
-                // Implement delete logic
-                console.log('Delete component:', id);
-            }
-        }
+        $(function () {
+            // Filter button — go to controller Index with querystring
+            $('#filterBtn').on('click', function () {
+                const q = $('#searchInput').val();
+                const typeId = $('#typeFilter').val();
+                const status = $('#statusFilter').val();
+                const query = [];
+                if (q) query.push('search=' + encodeURIComponent(q));
+                if (typeId) query.push('typeComponentId=' + encodeURIComponent(typeId));
+                if (status) query.push('statusCode=' + encodeURIComponent(status));
+                const url = '@Url.Action("Index", "Component")' + (query.length ? '?' + query.join('&') : '');
+                window.location.href = url;
+            });
+
+            // Toggle status (calls FE controller which calls BE)
+            $('#componentsTable').on('click', '.btn-toggle', function () {
+                const id = $(this).data('id');
+                const current = $(this).data('status') || '';
+                const next = (current.toUpperCase() === 'ACTIVE') ? 'OUT_OF_STOCK' : 'ACTIVE';
+                if (!confirm('Chuyển trạng thái sang ' + next + '?')) return;
+
+                $.post('@Url.Action("ToggleStatus", "Component")', { id: id, statusCode: next })
+                    .done(function (res) {
+                        if (res && res.success) location.reload();
+                        else alert('Không thể cập nhật trạng thái');
+                    })
+                    .fail(function () {
+                        alert('Lỗi server khi cập nhật trạng thái');
+                    });
+            });
+
+            // Delete
+            $('#componentsTable').on('click', '.btn-delete', function () {
+                const id = $(this).data('id');
+                if (!confirm('Bạn có chắc chắn muốn xóa linh kiện này?')) return;
+
+                // FE controller Delete action: POST /Components/Delete/{id}
+                $.post('@Url.Action("Delete", "Component")/' + id)
+                    .done(function (res) {
+                        if (res && res.success) location.reload();
+                        else alert('Không thể xóa linh kiện');
+                    })
+                    .fail(function () {
+                        alert('Lỗi server khi xóa');
+                    });
+            });
+
+            // Select all checkbox
+            $('#selectAll').on('change', function () {
+                const checked = $(this).is(':checked');
+                $('.row-check').prop('checked', checked);
+            });
+        });
     </script>
 }

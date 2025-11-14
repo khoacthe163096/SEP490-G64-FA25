@@ -26,6 +26,7 @@ namespace FE.vn.fpt.edu.extensions
             services.AddScoped<VehicleCheckinService>();
             services.AddScoped<MaintenanceTicketService>();
             services.AddScoped<ComponentService>();
+            services.AddScoped<TypeComponentService>();
 
             return services;
         }

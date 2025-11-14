@@ -7,7 +7,6 @@ namespace BE.vn.fpt.edu.repository
     public class ServicePackageRepository : IServicePackageRepository
     {
         private readonly CarMaintenanceDbContext _context;
-
         public ServicePackageRepository(CarMaintenanceDbContext context)
         {
             _context = context;
@@ -18,7 +17,6 @@ namespace BE.vn.fpt.edu.repository
             return await _context.ServicePackages
                 .Include(x => x.Branch)
                 .Include(x => x.StatusCodeNavigation)
-                .Include(x => x.Components)
                 .ToListAsync();
         }
 
@@ -27,61 +25,29 @@ namespace BE.vn.fpt.edu.repository
             return await _context.ServicePackages
                 .Include(x => x.Branch)
                 .Include(x => x.StatusCodeNavigation)
-                .Include(x => x.Components)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<ServicePackage> AddAsync(ServicePackage entity, List<long>? componentIds)
+        public async Task AddAsync(ServicePackage entity)
         {
-            if (componentIds != null && componentIds.Any())
-            {
-                var components = await _context.Components
-                    .Where(c => componentIds.Contains(c.Id))
-                    .ToListAsync();
-                entity.Components = components;
-            }
-
-            _context.ServicePackages.Add(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            await _context.ServicePackages.AddAsync(entity);
         }
 
-        public async Task<ServicePackage> UpdateAsync(ServicePackage entity, List<long>? componentIds)
+        public async Task UpdateAsync(ServicePackage entity)
         {
-            var existing = await _context.ServicePackages
-                .Include(sp => sp.Components)
-                .FirstOrDefaultAsync(sp => sp.Id == entity.Id);
-
-            if (existing == null) throw new Exception("ServicePackage not found.");
-
-            // Update base info
-            _context.Entry(existing).CurrentValues.SetValues(entity);
-
-            // Update components relationship
-            existing.Components.Clear();
-
-            if (componentIds != null && componentIds.Any())
-            {
-                var components = await _context.Components
-                    .Where(c => componentIds.Contains(c.Id))
-                    .ToListAsync();
-                foreach (var c in components)
-                    existing.Components.Add(c);
-            }
-
-            await _context.SaveChangesAsync();
-            return existing;
+            _context.ServicePackages.Update(entity);
+            await Task.CompletedTask;
         }
 
-        public async Task<bool> DeleteAsync(long id)
+        public async Task DeleteAsync(ServicePackage entity)
         {
-            var entity = await _context.ServicePackages.FindAsync(id);
-            if (entity == null)
-                return false;
-
             _context.ServicePackages.Remove(entity);
+            await Task.CompletedTask;
+        }
+
+        public async Task SaveChangesAsync()
+        {
             await _context.SaveChangesAsync();
-            return true;
         }
     }
 }
