@@ -17,6 +17,8 @@ public partial class StatusLookup
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
+    public virtual ICollection<ServiceCategory> ServiceCategories { get; set; } = new List<ServiceCategory>();
+
     public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
 
     public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();

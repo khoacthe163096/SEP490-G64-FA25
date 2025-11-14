@@ -22,6 +22,11 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
 
         [StringLength(255, ErrorMessage = "Note cannot exceed 255 characters")]
         public string? Note { get; set; }
+
+        // Labor cost fields
+        public long? ServiceCategoryId { get; set; } // Tham chiếu đến ServiceCategory (catalog)
+        public decimal? StandardLaborTime { get; set; } // Thời gian chuẩn (giờ)
+        public decimal? ActualLaborTime { get; set; } // Thời gian thực tế (có thể chỉnh sửa)
     }
 
     /// <summary>
@@ -47,6 +52,23 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
 
         [StringLength(255, ErrorMessage = "Note cannot exceed 255 characters")]
         public string? Note { get; set; }
+
+        // Labor cost fields
+        public long? ServiceCategoryId { get; set; }
+        public decimal? StandardLaborTime { get; set; }
+        public decimal? ActualLaborTime { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho việc cập nhật thời gian lao động của ServiceTask
+    /// </summary>
+    public class ServiceTaskUpdateLaborTimeDto
+    {
+        [Required(ErrorMessage = "ID is required")]
+        public long Id { get; set; }
+
+        [Range(0.01, 999.99, ErrorMessage = "Actual labor time must be between 0.01 and 999.99 hours")]
+        public decimal ActualLaborTime { get; set; }
     }
 
     /// <summary>

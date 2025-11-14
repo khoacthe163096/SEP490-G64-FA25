@@ -12,12 +12,19 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public string? StatusCode { get; set; }
         public string? Note { get; set; }
 
+        // Labor cost fields
+        public long? ServiceCategoryId { get; set; }
+        public decimal? StandardLaborTime { get; set; }
+        public decimal? ActualLaborTime { get; set; }
+        public decimal? LaborCost { get; set; }
+
         // Navigation properties
         public string? MaintenanceTicketDescription { get; set; }
         public string? CarName { get; set; }
         public string? CustomerName { get; set; }
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
+        public string? ServiceCategoryName { get; set; }
     }
 
     /// <summary>
@@ -32,10 +39,17 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public string? StatusCode { get; set; }
         public string? Note { get; set; }
 
+        // Labor cost fields
+        public long? ServiceCategoryId { get; set; }
+        public decimal? StandardLaborTime { get; set; }
+        public decimal? ActualLaborTime { get; set; }
+        public decimal? LaborCost { get; set; }
+
         // Basic info
         public string? CarName { get; set; }
         public string? CustomerName { get; set; }
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
+        public string? ServiceCategoryName { get; set; }
     }
 }

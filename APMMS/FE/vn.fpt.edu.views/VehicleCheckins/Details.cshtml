@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Chi tiết check-in xe";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -207,7 +208,7 @@
         }
 
         function loadCheckinDetails(id) {
-            fetch(`https://localhost:7173/api/VehicleCheckin/${id}`)
+            fetch(`@apiBaseUrl/VehicleCheckin/${id}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

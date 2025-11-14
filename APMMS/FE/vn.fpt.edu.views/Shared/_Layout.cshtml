@@ -72,20 +72,15 @@
                                     <label for="serviceType" class="form-label">Chọn loại dịch vụ <span class="text-danger">*</span></label>
                                     <select class="form-select" id="serviceType" required>
                                         <option value="">-- Chọn dịch vụ --</option>
-                                        <option value="maintenance">Bảo Dưỡng & Sửa Chữa Ô Tô</option>
-                                        <option value="repair">Sửa chữa động cơ</option>
-                                        <option value="inspection">Kiểm tra tổng quát</option>
-                                        <option value="tire">Thay lốp & Cân bằng</option>
-                                        <option value="oil">Thay dầu & Lọc</option>
                                     </select>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-3 guest-field">
                                     <label for="fullName" class="form-label">Họ Và Tên <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="fullName" required>
+                                    <input type="text" class="form-control" id="fullName" autocomplete="off" required>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-3 guest-field">
                                     <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email">
+                                    <input type="email" class="form-control" id="email" autocomplete="off">
                                 </div>
                                 <div class="mb-3">
                                     <label for="appointmentTime" class="form-label">Chọn Thời Gian <span class="text-danger">*</span></label>
@@ -97,27 +92,23 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="mb-3">
+                                <div class="mb-3 guest-field">
                                     <label for="phone" class="form-label">Số Điện Thoại <span class="text-danger">*</span></label>
-                                    <input type="tel" class="form-control" id="phone" required>
+                                    <input type="tel" class="form-control" id="phone" autocomplete="off" required>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-3 guest-field">
                                     <label for="vehicleType" class="form-label">Loại Xe</label>
-                                    <input type="text" class="form-control" id="vehicleType" placeholder="VD: Toyota Camry, Honda Civic...">
+                                    <input type="text" class="form-control" id="vehicleType" placeholder="VD: Toyota Camry, Honda Civic..." autocomplete="off">
                                 </div>
                                 <div class="mb-3">
                                     <label for="branch" class="form-label">Chọn loại chi nhánh <span class="text-danger">*</span></label>
                                     <select class="form-select" id="branch" required>
-                                        <option value="">-- Chọn chi nhánh --</option>
-                                        <option value="company">Văn Phòng Công Ty</option>
-                                        <option value="branch1">Chi nhánh 1</option>
-                                        <option value="branch2">Chi nhánh 2</option>
-                                        <option value="branch3">Chi nhánh 3</option>
+                                        <option value="">-- Đang tải danh sách chi nhánh --</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="licensePlate" class="form-label">Biển Số Xe</label>
-                                    <input type="text" class="form-control" id="licensePlate" placeholder="VD: 30A-12345">
+                                    <input type="text" class="form-control" id="licensePlate" placeholder="VD: 30A-12345" autocomplete="off">
                                 </div>
                                 <div class="mb-3">
                                     <label for="mileage" class="form-label">Số Km</label>
@@ -138,9 +129,14 @@
         </div>
     </div>
 
+    <script>
+        // Set API base URL from config
+        window.API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
+    </script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js"></script>
+    <script src="~/js/bookingForm.js"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

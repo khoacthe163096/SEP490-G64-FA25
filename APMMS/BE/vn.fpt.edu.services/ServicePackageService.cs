@@ -99,6 +99,13 @@ namespace BE.vn.fpt.edu.services
                 Name = c.Name,
                 UnitPrice = c.UnitPrice
             }).ToList();
+            
+            // ❌ ĐÃ LOẠI BỎ: Map ServiceCategories
+            // Lý do: ServiceCategory chỉ dùng cho ScheduleService (đặt lịch), không phải để tạo công việc thực tế
+            // ServicePackage chỉ nên chứa Components (phụ tùng)
+            // ServiceTasks nên được tạo thủ công bởi người dùng
+            dto.ServiceCategories = null; // Không load ServiceCategories
+            
             return dto;
         }
     }

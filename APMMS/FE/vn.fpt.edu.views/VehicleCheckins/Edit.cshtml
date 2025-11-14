@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Sửa thông tin check-in xe";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -329,7 +330,7 @@
             // Lấy dữ liệu chi nhánh thật từ database có sẵn
             console.log('Loading branches from API...');
             
-            fetch('https://localhost:7173/api/Branch')
+            fetch('@apiBaseUrl/Branch')
                 .then(response => {
                     console.log('Response status:', response.status);
                     if (!response.ok) {
@@ -456,7 +457,7 @@
                 formData.append('files', file);
             });
 
-            fetch(`https://localhost:7173/api/Image/upload-multiple-cloudinary?vehicleCheckinId=${checkinId}`, {
+            fetch(`@apiBaseUrl/Image/upload-multiple-cloudinary?vehicleCheckinId=${checkinId}`, {
                 method: 'POST',
                 body: formData
             })

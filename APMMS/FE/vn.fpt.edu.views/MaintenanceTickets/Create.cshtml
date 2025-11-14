@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Tạo Phiếu Bảo Dưỡng";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <div class="container-fluid">
@@ -101,36 +102,61 @@
                                     </select>
                                 </div>
                             </div>
+                            <!-- ✅ QUY TRÌNH ĐÚNG: Không cho phép chọn kỹ thuật viên khi tạo phiếu -->
+                            <!-- Kỹ thuật viên chỉ được gán sau khi phiếu được tạo, thông qua trang Details -->
+                            <!--
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="technicianId" class="form-label">Kỹ thuật viên</label>
-                                    <select class="form-select" id="technicianId">
-                                        <option value="">Chọn kỹ thuật viên (tùy chọn)</option>
-                                        <!-- Will be loaded dynamically -->
-                                    </select>
+                                    <label class="form-label">Kỹ thuật viên</label>
+                                    <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto; background-color: #f8f9fa;" id="techniciansContainer">
+                                        <div class="text-center text-muted py-3">
+                                            <i class="fas fa-spinner fa-spin"></i> Đang tải danh sách kỹ thuật viên...
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Chọn một hoặc nhiều kỹ thuật viên</small>
+                                    
+                                    <div class="mt-3 border rounded p-2" id="selectedTechniciansPreview" style="background-color: #e7f3ff; display: none;">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong class="text-primary">
+                                                <i class="fas fa-users me-1"></i>
+                                                Đã chọn: <span id="selectedCount">0</span> kỹ thuật viên
+                                            </strong>
+                                        </div>
+                                        <div id="selectedTechniciansList" class="text-muted small">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                            -->
+                        </div>
+                        
+                        <!-- Thông báo cho user biết quy trình đúng -->
+                        <div class="alert alert-info mb-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong> Kỹ thuật viên sẽ được gán sau khi phiếu bảo dưỡng được tạo, thông qua trang chi tiết phiếu.
                         </div>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="branchId" required>
+                                    <input type="hidden" id="branchIdHidden" />
+                                    <select class="form-select" id="branchId" required disabled>
                                         <option value="">Chọn chi nhánh</option>
                                         <!-- Will be loaded dynamically -->
                                     </select>
+                                    <div class="form-text"><span>Chi nhánh được tự động lấy theo tư vấn viên:</span> <strong id="branchNameDisplay">(đang tải...)</strong></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="scheduleServiceId" class="form-label">Dịch vụ đã lên lịch</label>
-                                    <select class="form-select" id="scheduleServiceId">
-                                        <option value="">Chọn dịch vụ (tùy chọn)</option>
-                                        <!-- Will be loaded dynamically -->
+                                    <label for="serviceCategoryId" class="form-label">Nhóm dịch vụ</label>
+                                    <select class="form-select" id="serviceCategoryId">
+                                        <option value="">Chọn nhóm dịch vụ (tuỳ chọn)</option>
                                     </select>
                                 </div>
                             </div>
+                            <!-- Ẩn trường dịch vụ đã lên lịch vì API chưa sẵn sàng -->
                         </div>
 
                         <div class="row">
@@ -141,15 +167,6 @@
                                         <option value="NORMAL">Bình thường</option>
                                         <option value="HIGH">Cao</option>
                                         <option value="URGENT">Khẩn cấp</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="statusCode" class="form-label">Trạng thái ban đầu</label>
-                                    <select class="form-select" id="statusCode">
-                                        <option value="PENDING">Chờ xử lý</option>
-                                        <option value="ASSIGNED">Đã gán kỹ thuật viên</option>
                                     </select>
                                 </div>
                             </div>
@@ -190,15 +207,20 @@ let selectedCheckinId = null;
 
 $(document).ready(function() {
     loadVehicleCheckins();
-    loadConsulter();
-    loadTechnicians();
-    loadBranches();
-    loadScheduleServices();
+    loadConsulterFromToken();
+    // loadTechniciansByRole(); // ✅ Đã comment - không cho phép chọn kỹ thuật viên khi tạo
+    loadBranchesAndSelectUserBranch();
+    loadServiceCategories();
     
     // Filter events
     $('#checkinStatusFilter, #checkinSearchInput, #checkinDateFilter').on('change keyup', function() {
         loadVehicleCheckins();
     });
+    
+    // ✅ Đã comment - không cần xử lý checkbox kỹ thuật viên
+    // $(document).on('change', '.technician-checkbox', function() {
+    //     updateSelectedTechniciansPreview();
+    // });
     
     // Form submission
     $('#maintenanceTicketForm').on('submit', function(e) {
@@ -352,54 +374,91 @@ function displaySelectedCheckin(checkin) {
     `);
 }
 
-function loadConsulter() {
-    // Load consolters from API
-    fetch('/api/User/consolters')
-        .then(response => response.json())
-        .then(data => {
+function loadConsulterFromToken() {
+    const token = localStorage.getItem('authToken');
             const select = $('#consulterId');
-            if (data.success && data.data) {
-                data.data.forEach(consulter => {
-                    select.append(`<option value="${consulter.id}">${consulter.fullName}</option>`);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading consolters:', error);
-        });
+    select.empty();
+    if (!token) {
+        select.append('<option value="">Không xác định tư vấn viên</option>');
+        return;
+    }
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+        const userName = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || 'consulter';
+        select.append(`<option value="${userId}" selected>${userName}</option>`);
+        select.prop('disabled', true);
+    } catch (e) {
+        console.error('Token parse error:', e);
+        select.append('<option value="">Không xác định tư vấn viên</option>');
+    }
 }
 
-function loadTechnicians() {
-    // Load technicians from API
-    fetch('/api/User/technicians')
-        .then(response => response.json())
-        .then(data => {
-            const select = $('#technicianId');
-            if (data.success && data.data) {
-                data.data.forEach(tech => {
-                    select.append(`<option value="${tech.id}">${tech.fullName}</option>`);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading technicians:', error);
-        });
-}
 
-function loadBranches() {
-    // Load branches from API
-    fetch('/api/Branch')
+function loadBranchesAndSelectUserBranch() {
+    const token = localStorage.getItem('authToken');
+    let userId = null;
+    try {
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+        }
+    } catch {}
+
+    // Tải danh sách chi nhánh
+    fetch('@apiBaseUrl/Branch')
         .then(response => response.json())
-        .then(data => {
+        .then(branchRes => {
             const select = $('#branchId');
-            if (data.success && data.data) {
-                data.data.forEach(branch => {
+            select.find('option:not(:first)').remove();
+            if (branchRes.success && branchRes.data) {
+                branchRes.data.forEach(branch => {
                     select.append(`<option value="${branch.id}">${branch.name}</option>`);
                 });
             }
+
+            if (!userId) return;
+            // Lấy thông tin nhân viên để biết chi nhánh
+            fetch(`@apiBaseUrl/Employee/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(async r => {
+                    if (!r.ok) throw new Error(`Employee fetch failed: ${r.status}`);
+                    return r.json();
+                })
+                .then(empRes => {
+                    if (!empRes || empRes.success !== true || !empRes.data) throw new Error('Empty employee');
+                    const emp = empRes.data;
+                    // Prefer branchId if available
+                    if (emp.branchId) {
+                        $('#branchId').val(String(emp.branchId));
+                        $('#branchIdHidden').val(String(emp.branchId));
+                        $('#branchNameDisplay').text(emp.branchName || $('#branchId option:selected').text());
+                    } else if (emp.branchName) {
+                    $('#branchId option').each(function() {
+                        if ($(this).text() === emp.branchName) {
+                            $('#branchId').val($(this).val());
+                        }
+                    });
+                        $('#branchIdHidden').val($('#branchId').val());
+                        $('#branchNameDisplay').text(emp.branchName);
+                    }
+                    // Disable to enforce consulter's branch
+                    $('#branchId').prop('disabled', true);
+                })
+                .catch(err => {
+                    console.warn('Employee fetch error, blocking submit:', err);
+                    $('#branchNameDisplay').text('Không lấy được chi nhánh');
+                    // Block submit if cannot resolve branch
+                    $('#createTicketBtn').prop('disabled', true).text('Không thể tạo - thiếu chi nhánh');
+                });
         })
         .catch(error => {
             console.error('Error loading branches:', error);
+            $('#branchNameDisplay').text('Không lấy được danh sách chi nhánh');
+            $('#createTicketBtn').prop('disabled', true).text('Không thể tạo - lỗi chi nhánh');
         });
 }
 
@@ -420,22 +479,46 @@ function loadScheduleServices() {
         });
 }
 
+function loadServiceCategories() {
+    fetch('@apiBaseUrl/ServiceCategory')
+        .then(r => r.json())
+        .then(res => {
+            const select = $('#serviceCategoryId');
+            select.find('option:not(:first)').remove();
+            if (res && res.success && Array.isArray(res.data)) {
+                res.data.forEach(item => {
+                    select.append(`<option value="${item.id}">${item.name}</option>`);
+                });
+            }
+        })
+        .catch(err => console.error('Error loading service categories:', err));
+}
+
 function createMaintenanceTicket() {
     if (!selectedCheckinId) {
         showAlert('Vui lòng chọn vehicle check-in', 'warning');
         return;
     }
     
+    // ✅ QUY TRÌNH ĐÚNG: Không gán kỹ thuật viên khi tạo phiếu
+    // Kỹ thuật viên chỉ được gán sau khi phiếu được tạo
+    
     const formData = {
         vehicleCheckinId: selectedCheckinId,
         consulterId: $('#consulterId').val(),
-        technicianId: $('#technicianId').val() || null,
-        branchId: $('#branchId').val(),
-        scheduleServiceId: $('#scheduleServiceId').val() || null,
-        statusCode: $('#statusCode').val(),
+        technicianId: null, // ✅ Luôn null khi tạo phiếu
+        technicianIds: null, // ✅ Luôn null khi tạo phiếu
+        branchId: $('#branchIdHidden').val(),
+        scheduleServiceId: $('#scheduleServiceId')?.val?.() || null,
+        serviceCategoryId: $('#serviceCategoryId').val() || null,
         priorityLevel: $('#priorityLevel').val(),
         description: $('#description').val()
     };
+
+    if (!formData.branchId) {
+        showAlert('Không lấy được chi nhánh của tư vấn viên. Vui lòng đăng nhập lại hoặc thử lại.', 'danger');
+        return;
+    }
     
     // Validation
     if (!formData.consulterId || !formData.branchId) {

@@ -16,7 +16,7 @@ namespace FE.vn.fpt.edu.services
             // Backend currently supports page and pageSize
             return await _apiAdapter.GetAsync<object>($"VehicleCheckin?page={page}&pageSize={pageSize}");
         }
-
+        //Update
         public async Task<object?> GetByIdAsync(long id)
         {
             try

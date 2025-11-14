@@ -129,9 +129,9 @@
             $.post('@Url.Action("ToggleStatus", "TypeComponent")', { id: id, statusCode: next })
                 .done(res => {
                     if (res.success) location.reload();
-                    else alert('Không thể cập nhật trạng thái!');
+                    else showAlert('Không thể cập nhật trạng thái!', 'danger');
                 })
-                .fail(() => alert('Lỗi khi gọi API!'));
+                .fail(() => showAlert('Lỗi khi gọi API!', 'danger'));
         });
 
         // Delete action (need endpoint del if BE sup)
@@ -144,9 +144,25 @@
                     location.reload();
                 },
                 error: function () {
-                    alert('Không thể xóa loại linh kiện!');
+                    showAlert('Không thể xóa loại linh kiện!', 'danger');
                 }
             });
+        }
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);';
+            alertDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            document.body.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
         }
     </script>
 }

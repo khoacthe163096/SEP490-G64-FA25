@@ -16,6 +16,7 @@ using BE.vn.fpt.edu.DTOs.ServiceTask;
 using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
+using System.Linq;
 
 namespace BE.vn.fpt.edu.convert
 {
@@ -26,8 +27,16 @@ namespace BE.vn.fpt.edu.convert
             // Auth mappings removed - using database entities directly
 
             // AutoOwner mappings
-            CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>();
+            CreateMap<User, BE.vn.fpt.edu.DTOs.AutoOwner.ResponseDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
+
+            CreateMap<BE.vn.fpt.edu.DTOs.AutoOwner.RequestDto, User>()
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone));
 
             // Component mappings
             CreateMap<BE.vn.fpt.edu.DTOs.Component.RequestDto, Component>()
@@ -40,8 +49,15 @@ namespace BE.vn.fpt.edu.convert
 
 
             // Employee mappings
-            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>();
-            CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>();
+            CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>()
+                .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.BranchId, opt => opt.MapFrom(src => src.BranchId))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Dob, opt => opt.MapFrom(src => src.Dob.HasValue ? new DateTime(src.Dob.Value.Year, src.Dob.Value.Month, src.Dob.Value.Day) : (DateTime?)null));
+            CreateMap<BE.vn.fpt.edu.DTOs.Employee.EmployeeRequestDto, User>()
+                .ForMember(dest => dest.Dob, opt => opt.MapFrom(src => ParseDobString(src.Dob)));
 
             // Feedback mappings
             CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>();
@@ -52,9 +68,29 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.HistoryLog.RequestDto, HistoryLog>();
 
             // MaintenanceTicket mappings
-            CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>();
+            CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ResponseDto>()
+                // Basic fields
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.ServiceCategoryId, opt => opt.MapFrom(src => src.ServiceCategoryId))
+                .ForMember(dest => dest.ServiceCategoryName, opt => opt.MapFrom(src => src.ServiceCategory != null ? src.ServiceCategory.Name : null))
+                .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
+                .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? ($"{src.Consulter.FirstName} {src.Consulter.LastName}").Trim() : null))
+                .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? ($"{src.Technician.FirstName} {src.Technician.LastName}").Trim() : null))
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
+                .ForMember(dest => dest.ScheduleServiceName, opt => opt.MapFrom(src => src.ScheduleService != null ? src.ScheduleService.ScheduledDate.ToString("dd/MM/yyyy") : null))
+                // Customer info from car owner
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? ($"{src.Car.User.FirstName} {src.Car.User.LastName}").Trim() : null))
+                .ForMember(dest => dest.CustomerPhone, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null ? src.Car.User.Phone : null))
+                .ForMember(dest => dest.CustomerAddress, opt => opt.MapFrom(src => src.Car != null && src.Car.User != null && !string.IsNullOrWhiteSpace(src.Car.User.Address) ? src.Car.User.Address : null))
+                // Vehicle info
+                .ForMember(dest => dest.LicensePlate, opt => opt.MapFrom(src => src.Car != null ? src.Car.LicensePlate : null))
+                .ForMember(dest => dest.CarModel, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarModel : null))
+                // Vehicle checkin info
+                .ForMember(dest => dest.Mileage, opt => opt.MapFrom(src => src.VehicleCheckin != null ? src.VehicleCheckin.Mileage : null))
+                .ForMember(dest => dest.CheckinNotes, opt => opt.MapFrom(src => src.VehicleCheckin != null ? src.VehicleCheckin.Notes : null))
+                .ForMember(dest => dest.CheckinImages, opt => opt.MapFrom(src => src.VehicleCheckin != null && src.VehicleCheckin.VehicleCheckinImages != null ? src.VehicleCheckin.VehicleCheckinImages.Select(i => i.ImageUrl).ToList() : new List<string>()));
             CreateMap<MaintenanceTicket, BE.vn.fpt.edu.DTOs.MaintenanceTicket.ListResponseDto>()
-                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.StartTime ?? DateTime.Now.AddDays(-src.Id)))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.CarName, opt => opt.MapFrom(src => src.Car != null ? src.Car.CarName : null))
                 .ForMember(dest => dest.ConsulterName, opt => opt.MapFrom(src => src.Consulter != null ? $"{src.Consulter.FirstName} {src.Consulter.LastName}".Trim() : null))
                 .ForMember(dest => dest.TechnicianName, opt => opt.MapFrom(src => src.Technician != null ? $"{src.Technician.FirstName} {src.Technician.LastName}".Trim() : null))
@@ -113,6 +149,22 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<Car, BE.vn.fpt.edu.DTOs.CarOfAutoOwner.ResponseDto>();
             CreateMap<BE.vn.fpt.edu.DTOs.CarOfAutoOwner.RequestDto, Car>();
 
+        }
+
+        private static DateOnly? ParseDobString(string? dobString)
+        {
+            if (string.IsNullOrWhiteSpace(dobString))
+                return null;
+            
+            // Parse dd-MM-yyyy format
+            if (DateOnly.TryParseExact(dobString, "dd-MM-yyyy", null, System.Globalization.DateTimeStyles.None, out DateOnly date))
+                return date;
+            
+            // Fallback: try standard formats
+            if (DateTime.TryParse(dobString, out DateTime dt))
+                return DateOnly.FromDateTime(dt);
+            
+            return null;
         }
     }
 }

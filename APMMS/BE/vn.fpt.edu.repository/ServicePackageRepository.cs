@@ -37,6 +37,8 @@ namespace BE.vn.fpt.edu.repository
         {
             var q = _context.ServicePackages
                 .Include(sp => sp.Components)
+                .Include(sp => sp.ServicePackageCategories)
+                    .ThenInclude(spc => spc.ServiceCategory)
                 .AsQueryable();
 
             if (branchId.HasValue) q = q.Where(x => x.BranchId == branchId.Value);
@@ -54,6 +56,8 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ServicePackages
                 .Include(sp => sp.Components)
+                .Include(sp => sp.ServicePackageCategories)
+                    .ThenInclude(spc => spc.ServiceCategory)
                 .FirstOrDefaultAsync(sp => sp.Id == id);
         }
 

@@ -33,8 +33,8 @@ main {
     flex: 1;
 }
 
-/* Top Bar */
-.top-bar {
+/* Top Bar - Only apply to non-dashboard pages */
+body:not(.dashboard-body) .top-bar {
     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     color: white;
     padding: 8px 0;

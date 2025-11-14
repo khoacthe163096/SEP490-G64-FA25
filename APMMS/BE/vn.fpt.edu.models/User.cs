@@ -39,8 +39,6 @@ public partial class User
 
     public long? BranchId { get; set; }
 
-    public long? AddressId { get; set; }
-
     public long? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }
@@ -49,11 +47,17 @@ public partial class User
 
     public DateTime? LastModifiedDate { get; set; }
 
-    public virtual Address? Address { get; set; }
+    public DateOnly? Dob { get; set; }
+
+    public string? CitizenId { get; set; }
+
+    public string? Address { get; set; }
 
     public virtual Branch? Branch { get; set; }
 
     public virtual ICollection<Car> Cars { get; set; } = new List<Car>();
+
+    public virtual ICollection<CustomerGuest> CustomerGuests { get; set; } = new List<CustomerGuest>();
 
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 
@@ -68,6 +72,8 @@ public partial class User
     public virtual ICollection<MaintenanceTicketTechnician> MaintenanceTicketTechniciansNavigation { get; set; } = new List<MaintenanceTicketTechnician>();
 
     public virtual Role? Role { get; set; }
+
+    public virtual ICollection<ScheduleServiceNote> ScheduleServiceNotes { get; set; } = new List<ScheduleServiceNote>();
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
