@@ -11,11 +11,11 @@ namespace BE.vn.fpt.edu.repository.IRepository
     {
         Task<User?> GetByUsernameAsync(string username);
         Task<User?> GetByIdAsync(long id);
+        Task<User?> GetByIdWithIncludesAsync(long id);
         Task<bool> UsernameExistsAsync(string username);
         Task<bool> EmailExistsAsync(string email);
         Task AddAsync(User user);
         Task SaveChangesAsync();
         Task UpdateAsync(User user);
-
     }
 }
