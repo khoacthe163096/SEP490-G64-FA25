@@ -339,9 +339,36 @@
                     </div>
                 </div>
                 
-                <div id="errorMessage" class="alert alert-danger m-3" style="display: none; border-radius: 10px;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="errorText">Có lỗi xảy ra khi tải thông tin cá nhân</span>
+                <!-- Error Modal -->
+                <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                            <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border-radius: 15px 15px 0 0; border: none; padding: 20px 25px;">
+                                <h5 class="modal-title" id="errorModalLabel" style="font-weight: 600; font-size: 1.2rem;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Lỗi
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" style="padding: 30px 25px;">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-shrink-0">
+                                        <div style="width: 50px; height: 50px; background: #fee; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-exclamation-circle" style="font-size: 24px; color: #dc3545;"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <p id="errorModalText" style="margin: 0; font-size: 1rem; line-height: 1.6; color: #495057;"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 15px 25px; border-radius: 0 0 15px 15px;">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 30px; font-weight: 500;">
+                                    <i class="fas fa-check me-2"></i>Đã hiểu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -565,8 +592,10 @@
         }
 
         function showError(message) {
-            document.getElementById('errorText').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
+            // Hiển thị error trong modal pop-up
+            const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+            document.getElementById('errorModalText').textContent = message;
+            errorModal.show();
         }
 
         // Handle edit form submission
@@ -734,9 +763,69 @@
                     if (!response.ok) {
                         let errorMessage = `HTTP error! status: ${response.status}`;
                         try {
-                            const errorData = await response.json();
-                            errorMessage = errorData.message || errorData.error || errorMessage;
+                            // Đọc response text và parse JSON
+                            const responseText = await response.text();
+                            console.log('Error response text:', responseText);
+                            
+                            let errorData;
+                            try {
+                                errorData = JSON.parse(responseText);
+                                console.log('Error response data:', errorData);
+                            } catch (parseError) {
+                                // Nếu không parse được JSON, dùng text làm error message
+                                console.error('Failed to parse error response:', parseError);
+                                errorMessage = responseText || errorMessage;
+                                throw new Error(errorMessage);
+                            }
+                            
+                            // Nếu có errors (validation errors), hiển thị từng lỗi cụ thể
+                            if (errorData.errors) {
+                                let allErrors = [];
+                                
+                                // Xử lý errors là array
+                                if (Array.isArray(errorData.errors)) {
+                                    allErrors = errorData.errors;
+                                } 
+                                // Xử lý errors là object (ASP.NET Core validation format: { "FieldName": ["error1", "error2"] })
+                                else if (typeof errorData.errors === 'object') {
+                                    // Flatten object thành array của tất cả error messages
+                                    Object.keys(errorData.errors).forEach(fieldName => {
+                                        const fieldErrors = errorData.errors[fieldName];
+                                        if (Array.isArray(fieldErrors)) {
+                                            allErrors = allErrors.concat(fieldErrors);
+                                        } else {
+                                            allErrors.push(fieldErrors);
+                                        }
+                                    });
+                                }
+                                
+                                if (allErrors.length > 0) {
+                                    console.log('Found validation errors:', allErrors);
+                                    errorMessage = allErrors.join('. ');
+                                } else if (errorData.message) {
+                                    console.log('Using error message:', errorData.message);
+                                    errorMessage = errorData.message;
+                                } else if (errorData.title) {
+                                    console.log('Using error title:', errorData.title);
+                                    errorMessage = errorData.title;
+                                }
+                            } else if (errorData.message) {
+                                console.log('Using error message:', errorData.message);
+                                errorMessage = errorData.message;
+                            } else if (errorData.title) {
+                                console.log('Using error title:', errorData.title);
+                                errorMessage = errorData.title;
+                            } else if (errorData.error) {
+                                console.log('Using error field:', errorData.error);
+                                errorMessage = errorData.error;
+                            }
                         } catch (e) {
+                            // Nếu đã throw Error ở trên, re-throw nó
+                            if (e instanceof Error) {
+                                console.log('Re-throwing error:', e.message);
+                                throw e;
+                            }
+                            // Nếu không, xử lý các status code đặc biệt
                             if (response.status === 404) {
                                 errorMessage = 'Không tìm thấy nhân viên với ID này. Vui lòng làm mới trang và thử lại.';
                             } else if (response.status === 401) {
@@ -792,9 +881,69 @@
                     if (!response.ok) {
                         let errorMessage = `HTTP error! status: ${response.status}`;
                         try {
-                            const errorData = await response.json();
-                            errorMessage = errorData.message || errorData.error || errorMessage;
+                            // Đọc response text và parse JSON
+                            const responseText = await response.text();
+                            console.log('Error response text:', responseText);
+                            
+                            let errorData;
+                            try {
+                                errorData = JSON.parse(responseText);
+                                console.log('Error response data:', errorData);
+                            } catch (parseError) {
+                                // Nếu không parse được JSON, dùng text làm error message
+                                console.error('Failed to parse error response:', parseError);
+                                errorMessage = responseText || errorMessage;
+                                throw new Error(errorMessage);
+                            }
+                            
+                            // Nếu có errors (validation errors), hiển thị từng lỗi cụ thể
+                            if (errorData.errors) {
+                                let allErrors = [];
+                                
+                                // Xử lý errors là array
+                                if (Array.isArray(errorData.errors)) {
+                                    allErrors = errorData.errors;
+                                } 
+                                // Xử lý errors là object (ASP.NET Core validation format: { "FieldName": ["error1", "error2"] })
+                                else if (typeof errorData.errors === 'object') {
+                                    // Flatten object thành array của tất cả error messages
+                                    Object.keys(errorData.errors).forEach(fieldName => {
+                                        const fieldErrors = errorData.errors[fieldName];
+                                        if (Array.isArray(fieldErrors)) {
+                                            allErrors = allErrors.concat(fieldErrors);
+                                        } else {
+                                            allErrors.push(fieldErrors);
+                                        }
+                                    });
+                                }
+                                
+                                if (allErrors.length > 0) {
+                                    console.log('Found validation errors:', allErrors);
+                                    errorMessage = allErrors.join('. ');
+                                } else if (errorData.message) {
+                                    console.log('Using error message:', errorData.message);
+                                    errorMessage = errorData.message;
+                                } else if (errorData.title) {
+                                    console.log('Using error title:', errorData.title);
+                                    errorMessage = errorData.title;
+                                }
+                            } else if (errorData.message) {
+                                console.log('Using error message:', errorData.message);
+                                errorMessage = errorData.message;
+                            } else if (errorData.title) {
+                                console.log('Using error title:', errorData.title);
+                                errorMessage = errorData.title;
+                            } else if (errorData.error) {
+                                console.log('Using error field:', errorData.error);
+                                errorMessage = errorData.error;
+                            }
                         } catch (e) {
+                            // Nếu đã throw Error ở trên, re-throw nó
+                            if (e instanceof Error) {
+                                console.log('Re-throwing error:', e.message);
+                                throw e;
+                            }
+                            // Nếu không, xử lý các status code đặc biệt
                             if (response.status === 404) {
                                 errorMessage = 'Không tìm thấy nhân viên với ID này. Vui lòng làm mới trang và thử lại.';
                             } else if (response.status === 401) {
