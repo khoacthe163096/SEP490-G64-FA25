@@ -79,7 +79,46 @@ namespace BE.vn.fpt.edu.services
             if (existing == null)
                 throw new KeyNotFoundException("Auto Owner not found.");
 
+            // QUAN TRỌNG: Lưu các giá trị quan trọng trước khi map để tránh bị mất
+            var currentPassword = existing.Password;
+            var currentUsername = existing.Username;
+            var currentCode = existing.Code;
+            var currentRoleId = existing.RoleId;
+            var currentStatusCode = existing.StatusCode;
+
             _mapper.Map(dto, existing);
+            
+            // QUAN TRỌNG: Xử lý password riêng - không bao giờ để password bị null/empty
+            // Nếu password là null, empty, hoặc là default value "123456", giữ lại password cũ
+            // Chỉ update password nếu có password mới thực sự (khác default)
+            if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password == "123456")
+            {
+                // Không có password mới hoặc là default value - giữ lại password cũ
+                existing.Password = currentPassword;
+            }
+            else
+            {
+                // Có password mới thực sự - hash và cập nhật
+                using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                {
+                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(dto.Password));
+                    existing.Password = Convert.ToBase64String(hashedBytes);
+                }
+            }
+            
+            // Bảo vệ các field quan trọng khác
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                existing.Username = currentUsername;
+            }
+            
+            // Code không có trong DTO, luôn giữ lại giá trị cũ
+            existing.Code = currentCode;
+            
+            // RoleId và StatusCode không được thay đổi khi update từ danh sách người dùng
+            existing.RoleId = currentRoleId;
+            existing.StatusCode = currentStatusCode;
+            
             // Explicitly set Address to ensure it's updated
             existing.Address = dto.Address;
             existing.LastModifiedDate = DateTime.UtcNow;
