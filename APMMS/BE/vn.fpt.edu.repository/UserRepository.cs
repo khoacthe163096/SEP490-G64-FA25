@@ -32,6 +32,14 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(u => u.Id == id && u.IsDelete != true);
         }
 
+        public async Task<User?> GetByIdWithIncludesAsync(long id)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Branch)
+                .FirstOrDefaultAsync(u => u.Id == id && (u.IsDelete == false || u.IsDelete == null));
+        }
+
         public async Task<bool> UsernameExistsAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.Username == username);
