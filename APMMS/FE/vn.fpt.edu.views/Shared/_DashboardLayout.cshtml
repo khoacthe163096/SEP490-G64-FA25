@@ -73,6 +73,37 @@
                 }
             }
             
+            // ✅ Show Branch Management menu only for Admin (role id = 1)
+            const branchManagementSection = document.getElementById('branchManagementSection');
+            if (branchManagementSection) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                        
+                        console.log('Checking Branch Management access for RoleId:', roleId);
+                        
+                        // Only Admin (1) can see Branch Management menu
+                        if (roleId === 1) {
+                            branchManagementSection.style.display = 'block';
+                            console.log('Branch Management menu shown for Admin');
+                        } else {
+                            branchManagementSection.style.display = 'none';
+                            console.log('Branch Management menu hidden for role:', roleId);
+                        }
+                    } else {
+                        // If no token, hide the menu
+                        branchManagementSection.style.display = 'none';
+                        console.log('No token found, hiding Branch Management menu');
+                    }
+                } catch (e) {
+                    console.error('Error checking role for Branch Management:', e);
+                    // On error, hide the menu for security
+                    branchManagementSection.style.display = 'none';
+                }
+            }
+            
             // Sidebar toggle functionality
             const sidebarToggle = document.getElementById('sidebarToggle');
             const sidebar = document.getElementById('sidebar');
