@@ -16,6 +16,7 @@ using BE.vn.fpt.edu.DTOs.ServiceTask;
 using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
+using BE.vn.fpt.edu.DTOs.Branch;
 using System.Linq;
 
 namespace BE.vn.fpt.edu.convert
@@ -160,6 +161,10 @@ namespace BE.vn.fpt.edu.convert
             // CarOfOutoOwner mappings
             CreateMap<Car, BE.vn.fpt.edu.DTOs.CarOfAutoOwner.ResponseDto>();
             CreateMap<BE.vn.fpt.edu.DTOs.CarOfAutoOwner.RequestDto, Car>();
+
+            // Branch mappings
+            CreateMap<Branch, BranchResponseDto>();
+            CreateMap<BranchRequestDto, Branch>();
 
         }
 
