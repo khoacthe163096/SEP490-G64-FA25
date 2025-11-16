@@ -22,17 +22,41 @@
                         </div>
                     </div>
                     <form id="scheduleForm" style="display: none;">
+                        <!-- Status Badge Section -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <span class="text-muted">Trạng thái hiện tại:</span>
+                                    <span id="statusBadge"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Information Section -->
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Thông tin lịch hẹn
+                        </h5>
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Khách hàng</label>
-                                    <input type="text" class="form-control" id="userName" readonly>
+                                    <label class="form-label">
+                                        <i class="fas fa-user me-1"></i>
+                                        Khách hàng
+                                    </label>
+                                    <input type="text" class="form-control" id="userName" readonly style="background-color: #f8f9fa;">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Xe</label>
-                                    <input type="text" class="form-control" id="carInfo" readonly>
+                                    <label class="form-label">
+                                        <i class="fas fa-car me-1"></i>
+                                        Xe
+                                    </label>
+                                    <input type="text" class="form-control" id="carInfo" readonly style="background-color: #f8f9fa;">
                                 </div>
                             </div>
                         </div>
@@ -40,23 +64,73 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Chi nhánh</label>
-                                    <input type="text" class="form-control" id="branchName" readonly>
+                                    <label class="form-label">
+                                        <i class="fas fa-building me-1"></i>
+                                        Chi nhánh
+                                    </label>
+                                    <input type="text" class="form-control" id="branchName" readonly style="background-color: #f8f9fa;">
                                     <input type="hidden" id="branchId">
                                 </div>
                             </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Editable Section -->
+                        <h5 class="mb-3 text-primary">
+                            <i class="fas fa-edit me-2"></i>
+                            Chỉnh sửa
+                        </h5>
+
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="scheduledDate" class="form-label">Ngày và giờ hẹn <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control" id="scheduledDate" required>
+                                    <label for="serviceCategoryId" class="form-label">
+                                        <i class="fas fa-tags me-1"></i>
+                                        Dịch vụ <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" id="serviceCategoryId" required>
+                                        <option value="">Chọn dịch vụ</option>
+                                    </select>
+                                    <small class="form-text text-muted">Chọn loại dịch vụ</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        Ngày và giờ hẹn <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="row g-2">
+                                        <div class="col-5">
+                                            <input type="date" class="form-control" id="scheduledDate" required>
+                                        </div>
+                                        <div class="col-3">
+                                            <select class="form-select" id="scheduledHour" required>
+                                                <option value="">Giờ</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-4">
+                                            <select class="form-select" id="scheduledMinute" required>
+                                                <option value="">Phút</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Chọn ngày, giờ và phút hẹn mới (Giờ làm việc: 7:00 - 17:00)</small>
                                 </div>
                             </div>
                         </div>
 
-
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Lưu ý:</strong> Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành.
+                        <div class="alert alert-warning d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                            <div>
+                                <strong>Lưu ý:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Không thể chỉnh sửa lịch hẹn đã hủy, đã hoàn thành hoặc đã xác nhận.</li>
+                                    <li>Khi chỉnh sửa, trạng thái sẽ tự động chuyển sang "Đang xử lý".</li>
+                                    <li>Ngày và giờ hẹn phải trong tương lai.</li>
+                                </ul>
+                            </div>
                         </div>
 
                         <div class="d-flex justify-content-between">
@@ -82,6 +156,28 @@
         const scheduleId = @scheduleId;
 
         $(document).ready(function() {
+            // Populate giờ làm việc từ 7 đến 17
+            const hourSelect = $('#scheduledHour');
+            for (let hour = 7; hour <= 17; hour++) {
+                const hourStr = hour.toString().padStart(2, '0');
+                hourSelect.append(`<option value="${hourStr}">${hourStr}</option>`);
+            }
+            
+            // Populate phút: 00, 15, 30, 45
+            const minuteSelect = $('#scheduledMinute');
+            const minutes = ['00', '15', '30', '45'];
+            minutes.forEach(minute => {
+                minuteSelect.append(`<option value="${minute}">${minute}</option>`);
+            });
+
+            // Load service categories
+            loadServiceCategories();
+
+            // Set min date to now (cho phép chọn từ bây giờ)
+            const now = new Date();
+            const minDateStr = now.toISOString().split('T')[0];
+            $('#scheduledDate').attr('min', minDateStr);
+
             loadScheduleDetails();
 
             $('#scheduleForm').on('submit', function(e) {
@@ -108,7 +204,36 @@
                 if (result.success && result.data) {
                     const schedule = result.data;
                     
-                    if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED' || schedule.statusCode === 'CONFIRMED') {
+                    // Hiển thị status badge
+                    let statusBadge = '';
+                    switch(schedule.statusCode) {
+                        case 'PENDING':
+                            statusBadge = '<span class="badge bg-warning text-dark">Chờ xử lý</span>';
+                            break;
+                        case 'IN_PROGRESS':
+                            statusBadge = '<span class="badge bg-primary">Đang xử lý</span>';
+                            break;
+                        case 'CANCELLED':
+                            statusBadge = '<span class="badge bg-danger">Đã hủy</span>';
+                            break;
+                        case 'COMPLETED':
+                            statusBadge = '<span class="badge bg-success">Hoàn thành</span>';
+                            break;
+                        default:
+                            statusBadge = '<span class="badge bg-secondary">' + (schedule.statusName || schedule.statusCode) + '</span>';
+                    }
+                    $('#statusBadge').html(statusBadge);
+                    
+                    // Kiểm tra nếu chưa nhận đơn (chưa có consultant nhận)
+                    if (!schedule.acceptedById && schedule.statusCode === 'PENDING') {
+                        showToast('Không thể chỉnh sửa lịch hẹn chưa được nhận đơn. Vui lòng nhận đơn trước khi chỉnh sửa.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/ServiceSchedules/Details/' + scheduleId;
+                        }, 2000);
+                        return;
+                    }
+                    
+                    if (schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED') {
                         showToast('Không thể chỉnh sửa lịch hẹn đã hủy hoặc đã hoàn thành', 'error');
                         setTimeout(() => {
                         window.location.href = '/ServiceSchedules/Details/' + scheduleId;
@@ -125,26 +250,34 @@
                     $('#branchId').val(branchId || '');
                     $('#branchName').val(branchName);
                     
-                    // Xử lý timezone - backend trả về UTC, cần convert sang local time cho datetime-local input
+                    // Set service category
+                    if (schedule.serviceCategoryId) {
+                        $('#serviceCategoryId').val(schedule.serviceCategoryId);
+                    }
+                    
+                    // Xử lý timezone - backend trả về UTC, cần convert sang local time
                     let scheduleDateStr = schedule.scheduledDate;
                     if (typeof scheduleDateStr === 'string' && !scheduleDateStr.endsWith('Z') && !scheduleDateStr.includes('+') && !scheduleDateStr.includes('-', 10)) {
                         scheduleDateStr = scheduleDateStr + 'Z';
                     }
                     const date = new Date(scheduleDateStr);
                     
-                    // Convert sang format datetime-local (YYYY-MM-DDTHH:mm)
+                    // Tách ngày, giờ và phút
                     const year = date.getFullYear();
                     const month = String(date.getMonth() + 1).padStart(2, '0');
                     const day = String(date.getDate()).padStart(2, '0');
-                    const hours = String(date.getHours()).padStart(2, '0');
-                    const minutes = String(date.getMinutes()).padStart(2, '0');
-                    const dateTimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
-                    $('#scheduledDate').val(dateTimeLocal);
+                    const dateStr = `${year}-${month}-${day}`;
+                    $('#scheduledDate').val(dateStr);
                     
-                    // Set min date to now (cho phép chọn từ bây giờ)
-                    const now = new Date();
-                    const minDate = now.toISOString().slice(0, 16);
-                    $('#scheduledDate').attr('min', minDate);
+                    // Set giờ
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    $('#scheduledHour').val(hours);
+                    
+                    // Set phút (làm tròn về 00, 15, 30, 45 gần nhất)
+                    const rawMinutes = date.getMinutes();
+                    const roundedMinutes = Math.round(rawMinutes / 15) * 15;
+                    const minutes = String(roundedMinutes).padStart(2, '0');
+                    $('#scheduledMinute').val(minutes);
 
                     $('#loadingSpinner').hide();
                     $('#scheduleForm').show();
@@ -159,36 +292,103 @@
         }
 
 
+        function loadServiceCategories() {
+            const token = localStorage.getItem('authToken');
+            const select = $('#serviceCategoryId');
+            
+            select.html('<option value="">-- Đang tải danh sách dịch vụ --</option>');
+            
+            fetch(`${API_BASE_URL}/ServiceCategory`, {
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(result => {
+                const categories = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                
+                select.empty();
+                select.append('<option value="">-- Chọn dịch vụ --</option>');
+                
+                if (categories.length > 0) {
+                    categories.forEach(category => {
+                        const optionText = category.name || 'N/A';
+                        const optionValue = category.id;
+                        select.append(`<option value="${optionValue}">${optionText}</option>`);
+                    });
+                } else {
+                    select.append('<option value="">-- Không có dịch vụ nào --</option>');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading service categories:', error);
+                select.empty();
+                select.append('<option value="">-- Lỗi tải danh sách dịch vụ --</option>');
+            });
+        }
+
         function updateSchedule() {
             // Validation
             const branchId = $('#branchId').val();
-            const scheduledDate = $('#scheduledDate').val();
+            const scheduledDateStr = $('#scheduledDate').val();
+            const scheduledHour = $('#scheduledHour').val();
+            const scheduledMinute = $('#scheduledMinute').val();
+            const serviceCategoryId = $('#serviceCategoryId').val();
             
             if (!branchId) {
                 showToast('Không tìm thấy chi nhánh', 'error');
                 return;
             }
             
-            if (!scheduledDate) {
-                showToast('Vui lòng chọn ngày và giờ hẹn', 'error');
+            if (!scheduledDateStr) {
+                showToast('Vui lòng chọn ngày hẹn', 'error');
+                return;
+            }
+
+            if (!scheduledHour) {
+                showToast('Vui lòng chọn giờ hẹn', 'error');
+                return;
+            }
+
+            if (!scheduledMinute) {
+                showToast('Vui lòng chọn phút hẹn', 'error');
+                return;
+            }
+
+            if (!serviceCategoryId) {
+                showToast('Vui lòng chọn dịch vụ', 'error');
+                return;
+            }
+            
+            // Combine date, hour và minute
+            const [year, month, day] = scheduledDateStr.split('-');
+            const scheduledDate = new Date(year, month - 1, day, parseInt(scheduledHour), parseInt(scheduledMinute), 0);
+            
+            if (isNaN(scheduledDate.getTime())) {
+                showToast('Ngày và giờ hẹn không hợp lệ', 'error');
                 return;
             }
             
             // Kiểm tra ngày hẹn phải trong tương lai
-            const selectedDate = new Date(scheduledDate);
             const now = new Date();
-            if (selectedDate <= now) {
+            if (scheduledDate <= now) {
                 showToast('Ngày và giờ hẹn phải trong tương lai', 'error');
                 return;
             }
 
             const token = localStorage.getItem('authToken');
-            // datetime-local input trả về local time, cần convert sang UTC để gửi lên server
-            const scheduledDateObj = new Date(scheduledDate);
 
             const payload = {
                 branchId: parseInt(branchId),
-                scheduledDate: scheduledDateObj.toISOString(), // Convert local time sang UTC
+                scheduledDate: scheduledDate.toISOString(), // Convert local time sang UTC
+                serviceCategoryId: parseInt(serviceCategoryId),
                 statusCode: 'IN_PROGRESS' // Tự động set status thành "Đang xử lý" khi chỉnh sửa
             };
 

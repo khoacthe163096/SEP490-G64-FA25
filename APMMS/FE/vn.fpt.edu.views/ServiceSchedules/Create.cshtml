@@ -149,16 +149,21 @@
                                 <div class="mb-3">
                                     <label class="form-label">Ngày và giờ hẹn <span class="text-danger">*</span></label>
                                     <div class="row g-2">
-                                        <div class="col-7">
+                                        <div class="col-5">
                                             <input type="date" class="form-control" id="scheduledDate" required>
                                         </div>
-                                        <div class="col-5">
-                                            <select class="form-select" id="scheduledTime" required>
-                                                <option value="">Chọn giờ</option>
+                                        <div class="col-3">
+                                            <select class="form-select" id="scheduledHour" required>
+                                                <option value="">Giờ</option>
                                             </select>
                                         </div>
+                                        <div class="col-4">
+                                            <select class="form-select" id="scheduledMinute" required>
+                                                <option value="">Phút</option>
+                                            </select>
                                     </div>
-                                    <small class="form-text text-muted">Chọn ngày và giờ muốn đặt lịch (Giờ làm việc: 7:00 - 17:00)</small>
+                                    </div>
+                                    <small class="form-text text-muted">Chọn ngày, giờ và phút muốn đặt lịch (Giờ làm việc: 7:00 - 17:00)</small>
                                 </div>
                             </div>
                         </div>
@@ -375,14 +380,19 @@
             const minDateStr = tomorrow.toISOString().split('T')[0];
             $('#scheduledDate').attr('min', minDateStr);
             
-            // Populate giờ làm việc từ 7:00 đến 17:00
-            const timeSelect = $('#scheduledTime');
+            // Populate giờ làm việc từ 7 đến 17
+            const hourSelect = $('#scheduledHour');
             for (let hour = 7; hour <= 17; hour++) {
                 const hourStr = hour.toString().padStart(2, '0');
-                const timeValue = `${hourStr}:00`;
-                const timeLabel = `${hourStr}:00`;
-                timeSelect.append(`<option value="${timeValue}">${timeLabel}</option>`);
+                hourSelect.append(`<option value="${hourStr}">${hourStr}</option>`);
             }
+            
+            // Populate phút: 00, 15, 30, 45
+            const minuteSelect = $('#scheduledMinute');
+            const minutes = ['00', '15', '30', '45'];
+            minutes.forEach(minute => {
+                minuteSelect.append(`<option value="${minute}">${minute}</option>`);
+            });
 
             // Khởi tạo trạng thái ban đầu
             const initialCustomerType = $('input[name="customerType"]:checked').val();
@@ -829,22 +839,27 @@
             }
 
             const scheduledDateStr = $('#scheduledDate').val();
-            const scheduledTimeStr = $('#scheduledTime').val();
+            const scheduledHour = $('#scheduledHour').val();
+            const scheduledMinute = $('#scheduledMinute').val();
             
             if (!scheduledDateStr) {
                 showToast('Vui lòng chọn ngày hẹn', 'error');
                 return;
             }
 
-            if (!scheduledTimeStr) {
+            if (!scheduledHour) {
                 showToast('Vui lòng chọn giờ hẹn', 'error');
                 return;
             }
 
-            // Combine date và time
+            if (!scheduledMinute) {
+                showToast('Vui lòng chọn phút hẹn', 'error');
+                return;
+            }
+
+            // Combine date, hour và minute
             const [year, month, day] = scheduledDateStr.split('-');
-            const [hour, minute] = scheduledTimeStr.split(':');
-            const scheduledDate = new Date(year, month - 1, day, parseInt(hour), parseInt(minute), 0);
+            const scheduledDate = new Date(year, month - 1, day, parseInt(scheduledHour), parseInt(scheduledMinute), 0);
             
             if (isNaN(scheduledDate.getTime())) {
                 showToast('Ngày và giờ hẹn không hợp lệ', 'error');

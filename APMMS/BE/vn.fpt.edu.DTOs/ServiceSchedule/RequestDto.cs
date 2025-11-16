@@ -26,6 +26,7 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
     {
         public DateTime? ScheduledDate { get; set; }
         public long? BranchId { get; set; }
+        public long? ServiceCategoryId { get; set; }
         public string? StatusCode { get; set; }
     }
 

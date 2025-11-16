@@ -214,6 +214,9 @@ namespace BE.vn.fpt.edu.services
                 "accountant" => "AC",
                 "technician" => "TC",
                 "warehouse keeper" => "WK",
+                "branch manager" => "BM",
+                "director" => "DR",
+                "manager" => "MG",
                 _ => "EM"
             };
         }

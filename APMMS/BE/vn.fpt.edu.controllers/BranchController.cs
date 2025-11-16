@@ -141,5 +141,50 @@ namespace BE.vn.fpt.edu.controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
+        [HttpGet("{id}/Director")]
+        public async Task<IActionResult> GetDirector(long id)
+        {
+            try
+            {
+                var director = await _branchService.GetDirectorAsync(id);
+                if (director == null)
+                {
+                    return Ok(new { success = true, data = (object?)null, message = "Chi nhánh chưa có giám đốc" });
+                }
+                return Ok(new { success = true, data = director });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/Director/{directorId}")]
+        public async Task<IActionResult> ChangeDirector(long id, long directorId)
+        {
+            try
+            {
+                var result = await _branchService.ChangeDirectorAsync(id, directorId);
+                if (!result)
+                {
+                    return BadRequest(new { success = false, message = "Không thể thay đổi giám đốc" });
+                }
+
+                return Ok(new { success = true, message = "Thay đổi giám đốc thành công" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

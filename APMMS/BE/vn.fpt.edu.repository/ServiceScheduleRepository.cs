@@ -29,6 +29,7 @@ namespace BE.vn.fpt.edu.repository
                 .Include(s => s.Car)
                     .ThenInclude(c => c.User)
                 .Include(s => s.Branch)
+                .Include(s => s.ServiceCategory)
                 .Include(s => s.StatusCodeNavigation)
                 .Include(s => s.ScheduleServiceNotes)
                     .ThenInclude(n => n.Consultant)
@@ -177,6 +178,17 @@ namespace BE.vn.fpt.edu.repository
                 existing.UserId = scheduleService.UserId.Value;
                 // Nếu set UserId, thì GuestId phải là null (theo CHECK constraint)
                 existing.GuestId = null;
+            }
+            
+            // Update audit fields if provided
+            if (scheduleService.UpdatedAt.HasValue)
+            {
+                existing.UpdatedAt = scheduleService.UpdatedAt;
+            }
+            
+            if (scheduleService.UpdatedBy.HasValue)
+            {
+                existing.UpdatedBy = scheduleService.UpdatedBy;
             }
 
             // Save changes - chỉ update các properties đã thay đổi

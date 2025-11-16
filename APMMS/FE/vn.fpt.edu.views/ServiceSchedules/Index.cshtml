@@ -34,22 +34,18 @@
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="PENDING">Chờ xử lý</option>
                                 <option value="IN_PROGRESS">Đang xử lý</option>
-                                <option value="CONFIRMED">Đã xác nhận</option>
                                 <option value="CANCELLED">Đã hủy</option>
                                 <option value="COMPLETED">Hoàn thành</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">&nbsp;</label>
-                            <button class="btn btn-outline-secondary w-100" id="filterBtn">
-                                <i class="fas fa-filter"></i> Lọc
-                            </button>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="myAcceptedFilter">
+                                <label class="form-check-label" for="myAcceptedFilter">
+                                    Đơn đã nhận
+                                </label>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button class="btn btn-outline-secondary w-100" id="resetBtn">
-                                <i class="fas fa-redo"></i> Làm mới
-                            </button>
                         </div>
                     </div>
 
@@ -110,19 +106,6 @@
         $(document).ready(function() {
             loadServiceSchedules();
 
-            $('#filterBtn').on('click', function() {
-                currentPage = 1;
-                applyFilters();
-            });
-
-            $('#resetBtn').on('click', function() {
-                $('#searchInput').val('');
-                $('#dateFilter').val('');
-                $('#statusFilter').val('');
-                currentPage = 1;
-                loadServiceSchedules();
-            });
-
             // Search với debounce
             let searchTimeout;
             $('#searchInput').on('input', function() {
@@ -141,8 +124,8 @@
                 }
             });
 
-            // Filter khi thay đổi status hoặc date
-            $('#statusFilter, #dateFilter').on('change', function() {
+            // Filter khi thay đổi status, date hoặc myAcceptedFilter
+            $('#statusFilter, #dateFilter, #myAcceptedFilter').on('change', function() {
                 currentPage = 1;
                 applyFilters();
             });
@@ -207,6 +190,17 @@
                 }
             })
             .then(async response => {
+                if (response.status === 401) {
+                    showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/Auth/Login';
+                    }, 2000);
+                    throw new Error('Unauthorized');
+                }
+                if (response.status === 403) {
+                    showToast('Bạn không có quyền truy cập tài nguyên này.', 'error');
+                    throw new Error('Forbidden');
+                }
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
@@ -238,6 +232,7 @@
             const status = $('#statusFilter').val();
             const date = $('#dateFilter').val();
             const search = $('#searchInput').val().trim().toLowerCase();
+            const myAcceptedOnly = $('#myAcceptedFilter').is(':checked');
 
             // Bắt đầu với tất cả schedules
             filteredSchedules = [...allSchedules];
@@ -272,8 +267,36 @@
                 );
             }
 
-            // Sort by scheduledDate (newest first)
-            filteredSchedules.sort((a, b) => new Date(b.scheduledDate) - new Date(a.scheduledDate));
+            // Filter by "Đơn đã nhận" - chỉ hiển thị đơn mà user hiện tại đã nhận
+            if (myAcceptedOnly) {
+                let currentUserId = null;
+                try {
+                    const userInfoStr = localStorage.getItem('userInfo');
+                    if (userInfoStr) {
+                        const userInfo = JSON.parse(userInfoStr);
+                        currentUserId = Number(userInfo.userId || userInfo.id || userInfo.UserId);
+                    }
+                } catch (err) {
+                    console.warn('Không thể đọc thông tin người dùng hiện tại:', err);
+                }
+                
+                if (currentUserId) {
+                    filteredSchedules = filteredSchedules.filter(s => 
+                        s.acceptedById && Number(s.acceptedById) === currentUserId
+                    );
+                } else {
+                    // Nếu không lấy được userId, không filter gì cả
+                    filteredSchedules = [];
+                }
+            }
+
+            // Sort by ID (newest first - ID lớn nhất = mới nhất)
+            // Nếu ID bằng nhau thì sort theo scheduledDate
+            filteredSchedules.sort((a, b) => {
+                const idDiff = (b.id || 0) - (a.id || 0);
+                if (idDiff !== 0) return idDiff;
+                return new Date(b.scheduledDate) - new Date(a.scheduledDate);
+            });
 
             totalRecords = filteredSchedules.length;
             currentPage = Math.min(currentPage, Math.ceil(totalRecords / pageSize) || 1);
@@ -406,9 +429,17 @@
             }
 
             schedules.forEach((schedule, index) => {
-                const date = new Date(schedule.scheduledDate);
+                // Xử lý timezone cho scheduledDate
+                let scheduleDateStr = schedule.scheduledDate;
+                if (typeof scheduleDateStr === 'string' && !scheduleDateStr.endsWith('Z') && !scheduleDateStr.includes('+') && !scheduleDateStr.includes('-', 10)) {
+                    scheduleDateStr = scheduleDateStr + 'Z';
+                }
+                const date = new Date(scheduleDateStr);
                 const formattedDate = date.toLocaleDateString('vi-VN');
-                const formattedTime = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                // Hiển thị cả giờ và phút
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const formattedTime = `${hours}:${minutes}`;
                 const acceptedAt = schedule.acceptedAt ? new Date(schedule.acceptedAt).toLocaleString('vi-VN') : null;
 
                 let statusBadge = '';
@@ -418,9 +449,6 @@
                         break;
                     case 'IN_PROGRESS':
                         statusBadge = '<span class="badge bg-primary">Đang xử lý</span>';
-                        break;
-                    case 'CONFIRMED':
-                        statusBadge = '<span class="badge bg-info">Đã xác nhận</span>';
                         break;
                     case 'CANCELLED':
                         statusBadge = '<span class="badge bg-danger">Đã hủy</span>';
@@ -436,7 +464,7 @@
                     ? `<div><strong>${schedule.acceptedByName}</strong>${acceptedAt ? `<br><small class="text-muted">${acceptedAt}</small>` : ''}${schedule.acceptNote ? `<br><small class="text-muted">${schedule.acceptNote}</small>` : ''}</div>`
                     : '<span class="text-muted">Chưa nhận</span>';
 
-                const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED' || schedule.statusCode === 'CONFIRMED';
+                const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED';
                 const acceptButtonHtml = (!schedule.acceptedById && !actionsDisabled)
                     ? `<button class="btn btn-sm btn-outline-success me-1" onclick="acceptSchedule(${schedule.id})" title="Nhận đơn">
                             <i class="fas fa-handshake"></i>
@@ -451,13 +479,12 @@
                                 <i class="fas fa-eye"></i>
                             </a>`;
 
-                const editAndCancelButtons = !actionsDisabled ? `
+                // Chỉ hiển thị nút Edit nếu đã nhận đơn và không bị disabled
+                const canEdit = schedule.acceptedById && !actionsDisabled;
+                const editButton = canEdit ? `
                                 <a href="/ServiceSchedules/Edit/${schedule.id}" class="btn btn-sm btn-outline-primary me-1" title="Chỉnh sửa">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="cancelSchedule(${schedule.id})" title="Hủy lịch">
-                                    <i class="fas fa-times"></i>
-                                </button>
                             ` : '';
 
                 // Badge phân biệt khách đặt lịch công khai và khách có tài khoản
@@ -482,7 +509,7 @@
                             ${acceptedLabelHtml}
                             ${viewButtonHtml}
                             ${schedule.acceptedById && Number(schedule.acceptedById) !== currentUserId ? '<span class="badge bg-success-subtle text-success me-1">Đã nhận</span>' : ''}
-                            ${editAndCancelButtons}
+                            ${editButton}
                         </td>
                     </tr>
                 `;
@@ -502,6 +529,17 @@
                     body: JSON.stringify({})
                 })
                 .then(async response => {
+                    if (response.status === 401) {
+                        showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+                        setTimeout(() => {
+                            window.location.href = '/Auth/Login';
+                        }, 2000);
+                        return;
+                    }
+                    if (response.status === 403) {
+                        showToast('Bạn không có quyền hủy lịch hẹn.', 'error');
+                        return;
+                    }
                     const result = await response.json();
                     if (result.success) {
                         showToast('Hủy lịch hẹn thành công!', 'success');
@@ -678,6 +716,17 @@
                 body: JSON.stringify(payload)
             })
             .then(async response => {
+                if (response.status === 401) {
+                    showToast('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'error');
+                    setTimeout(() => {
+                        window.location.href = '/Auth/Login';
+                    }, 2000);
+                    return;
+                }
+                if (response.status === 403) {
+                    showToast('Bạn không có quyền nhận đơn. Chỉ tài khoản tư vấn viên mới có thể nhận đơn.', 'error');
+                    return;
+                }
                 const result = await response.json();
                 if (response.ok && result.success) {
                     showToast('Nhận đơn thành công!', 'success');

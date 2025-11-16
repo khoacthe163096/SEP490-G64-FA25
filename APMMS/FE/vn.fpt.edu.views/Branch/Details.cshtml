@@ -63,6 +63,27 @@
                                 <p id="branchLaborRate" class="mb-0"></p>
                             </div>
                         </div>
+
+                        <hr class="my-4">
+
+                        <!-- Director Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong><i class="fas fa-user-tie me-2"></i>Giám đốc chi nhánh:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                <div id="directorInfo">
+                                    <p id="directorName" class="mb-1"></p>
+                                    <small id="directorDetails" class="text-muted"></small>
+                                </div>
+                                <div id="noDirector" style="display: none;">
+                                    <p class="text-muted mb-2">Chưa có giám đốc</p>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#changeDirectorModal">
+                                    <i class="fas fa-exchange-alt me-1"></i>Thay đổi giám đốc
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="errorState" style="display: none;" class="text-center py-5">
@@ -78,10 +99,200 @@
     </div>
 </div>
 
+<!-- Change Director Modal -->
+<div class="modal fade" id="changeDirectorModal" tabindex="-1" aria-labelledby="changeDirectorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); color: white; border-radius: 15px 15px 0 0; border: none; padding: 20px 25px;">
+                <h5 class="modal-title" id="changeDirectorModalLabel" style="font-weight: 600; font-size: 1.2rem;">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    Thay đổi giám đốc chi nhánh
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="padding: 30px 25px;">
+                <div id="currentDirectorInfo" class="alert alert-info mb-3" style="display: none;">
+                    <strong>Giám đốc hiện tại:</strong> <span id="currentDirectorName"></span>
+                </div>
+                
+                <!-- Toggle between Select and Create -->
+                <div class="mb-3">
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="directorOption" id="selectEmployeeOption" value="select" checked>
+                        <label class="btn btn-outline-primary" for="selectEmployeeOption">
+                            <i class="fas fa-search me-2"></i>Chọn nhân viên có sẵn
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="directorOption" id="createEmployeeOption" value="create">
+                        <label class="btn btn-outline-primary" for="createEmployeeOption">
+                            <i class="fas fa-user-plus me-2"></i>Tạo nhân viên mới
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Select Employee Section -->
+                <div id="selectEmployeeSection">
+                    <div class="mb-3">
+                        <label class="form-label">Chọn nhân viên làm giám đốc mới <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="employeeSearch" 
+                                   placeholder="Tìm kiếm nhân viên (nhập tên, email, số điện thoại)..."
+                                   autocomplete="off">
+                            <input type="hidden" id="newDirectorId" value="">
+                            <div id="employeeDropdown" class="employee-dropdown" style="display: none;">
+                                <div id="employeeList" class="employee-list"></div>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Chỉ hiển thị nhân viên thuộc chi nhánh này (không bao gồm giám đốc hiện tại)</small>
+                        <div class="invalid-feedback">Vui lòng chọn nhân viên</div>
+                    </div>
+                </div>
+
+                <!-- Create Employee Section -->
+                <div id="createEmployeeSection" style="display: none;">
+                    <form id="createEmployeeForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="createUsername" name="username" 
+                                       placeholder="Nhập tên đăng nhập" minlength="6" maxlength="12" 
+                                       pattern="^[a-zA-Z0-9_]+$" required>
+                                <small class="form-text text-muted">6-12 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới</small>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="createPassword" name="password" 
+                                       placeholder="Nhập mật khẩu" minlength="6" maxlength="12" required>
+                                <small class="form-text text-muted">6-12 ký tự</small>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ</label>
+                                <input type="text" class="form-control" id="createFirstName" name="firstName" 
+                                       placeholder="Nhập họ" maxlength="100">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên</label>
+                                <input type="text" class="form-control" id="createLastName" name="lastName" 
+                                       placeholder="Nhập tên" maxlength="100">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="createEmail" name="email" 
+                                       placeholder="Nhập email" maxlength="100">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="text" class="form-control" id="createPhone" name="phone" 
+                                       placeholder="Nhập số điện thoại (VD: 0912345678)" maxlength="20"
+                                       pattern="^(0[35789])+([0-9]{8})$">
+                                <small class="form-text text-muted">Phải bắt đầu bằng 0 và có 10 chữ số</small>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <textarea class="form-control" id="createAddress" name="address" rows="2" 
+                                      placeholder="Nhập địa chỉ" maxlength="255"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Giám đốc hiện tại sẽ được chuyển sang trạng thái INACTIVE và nhân viên được chọn/tạo sẽ trở thành giám đốc mới (RoleId = 2, StatusCode = ACTIVE).
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #e9ecef; padding: 15px 25px; border-radius: 0 0 15px 15px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 10px 30px; font-weight: 500;">
+                    <i class="fas fa-times me-2"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmChangeDirectorBtn" style="border-radius: 8px; padding: 10px 30px; font-weight: 500;">
+                    <i class="fas fa-check me-2"></i>Xác nhận thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <style>
+        .employee-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 2px;
+        }
+        
+        .employee-list {
+            padding: 0;
+        }
+        
+        .employee-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+        
+        .employee-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+        
+        .employee-item.selected {
+            background-color: #e7f3ff;
+        }
+        
+        .employee-name {
+            font-weight: 500;
+            color: #212529;
+            margin-bottom: 2px;
+        }
+        
+        .employee-role {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+        
+        .employee-contact {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .no-results {
+            padding: 15px;
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
     <script>
         const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
         const BRANCH_ID = @branchId;
+        
+        // Lưu danh sách employees để search
+        let allEmployees = [];
 
         document.addEventListener('DOMContentLoaded', async function() {
             await loadBranchDetails();
@@ -118,6 +329,22 @@
                         'N/A';
                     document.getElementById('branchLaborRate').textContent = laborRate;
 
+                    // Display director information
+                    if (branch.director) {
+                        const director = branch.director;
+                        const fullName = `${director.firstName || ''} ${director.lastName || ''}`.trim() || director.username || 'N/A';
+                        document.getElementById('directorName').textContent = fullName;
+                        const details = [];
+                        if (director.email) details.push(`Email: ${director.email}`);
+                        if (director.phone) details.push(`SĐT: ${director.phone}`);
+                        document.getElementById('directorDetails').textContent = details.join(' | ') || '';
+                        document.getElementById('directorInfo').style.display = 'block';
+                        document.getElementById('noDirector').style.display = 'none';
+                    } else {
+                        document.getElementById('directorInfo').style.display = 'none';
+                        document.getElementById('noDirector').style.display = 'block';
+                    }
+
                     document.getElementById('loadingState').style.display = 'none';
                     document.getElementById('branchDetails').style.display = 'block';
                 } else {
@@ -149,6 +376,477 @@
                 }
             }, 3000);
         }
+
+        // Load employees for director selection
+        async function loadEmployeesForDirector() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                // Get all employees, we'll filter by branchId on frontend
+                const response = await fetch(`${API_BASE_URL}/Employee?page=1&pageSize=1000`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                console.log('Employee API response:', result);
+
+                // Handle different response formats
+                let employees = [];
+                if (result.success && result.data) {
+                    // Check if data has items property (paged response)
+                    if (result.data.items && Array.isArray(result.data.items)) {
+                        employees = result.data.items;
+                    } 
+                    // Check if data is directly an array
+                    else if (Array.isArray(result.data)) {
+                        employees = result.data;
+                    }
+                } else if (Array.isArray(result)) {
+                    // Direct array response
+                    employees = result;
+                }
+
+                console.log('Total employees from API:', employees.length);
+                console.log('BRANCH_ID:', BRANCH_ID, 'Type:', typeof BRANCH_ID);
+
+                // Filter employees by branchId and exclude current director (roleId = 2)
+                allEmployees = employees.filter(emp => {
+                    // Convert to numbers for comparison
+                    const empBranchId = emp.branchId ? Number(emp.branchId) : null;
+                    const empRoleId = emp.roleId ? Number(emp.roleId) : null;
+                    const branchIdNum = Number(BRANCH_ID);
+                    
+                    const match = empBranchId === branchIdNum && 
+                                 empRoleId !== 2 && // Exclude current directors
+                                 emp.statusCode === 'ACTIVE';
+                    
+                    if (match) {
+                        console.log('✅ Matched employee:', emp.firstName, emp.lastName, 'BranchId:', empBranchId, 'RoleId:', empRoleId);
+                    } else {
+                        console.log('❌ Not matched:', emp.firstName, emp.lastName, 'BranchId:', empBranchId, 'Expected:', branchIdNum, 'RoleId:', empRoleId, 'Status:', emp.statusCode);
+                    }
+                    return match;
+                });
+                
+                console.log('✅ Filtered employees for director selection:', allEmployees.length);
+                if (allEmployees.length > 0) {
+                    console.log('All employees array:', allEmployees);
+                } else {
+                    console.warn('⚠️ No employees found! Check filters.');
+                }
+            } catch (error) {
+                console.error('Error loading employees:', error);
+                allEmployees = [];
+            }
+        }
+        
+        // Hàm tìm kiếm nhân viên
+        function searchEmployees(query) {
+            if (!query || query.trim() === '') {
+                return [];
+            }
+            
+            const searchTerm = query.toLowerCase().trim();
+            return allEmployees.filter(emp => {
+                const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim().toLowerCase();
+                const username = (emp.username || '').toLowerCase();
+                const email = (emp.email || '').toLowerCase();
+                const phone = (emp.phone || '').toLowerCase();
+                const roleName = (emp.roleName || '').toLowerCase();
+                
+                return fullName.includes(searchTerm) || 
+                       username.includes(searchTerm) ||
+                       email.includes(searchTerm) || 
+                       phone.includes(searchTerm) ||
+                       roleName.includes(searchTerm);
+            });
+        }
+        
+        // Hiển thị dropdown với kết quả tìm kiếm
+        function displayEmployeeResults(results) {
+            const dropdown = document.getElementById('employeeDropdown');
+            const list = document.getElementById('employeeList');
+            
+            list.innerHTML = '';
+            
+            if (results.length === 0) {
+                list.innerHTML = '<div class="no-results">Không tìm thấy nhân viên nào</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            
+            results.forEach(emp => {
+                const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || 'N/A';
+                const item = document.createElement('div');
+                item.className = 'employee-item';
+                item.setAttribute('data-employee-id', emp.id);
+                
+                item.innerHTML = `
+                    <div class="employee-name">${escapeHtml(fullName)}</div>
+                    <div class="employee-role">${escapeHtml(emp.roleName || 'N/A')}</div>
+                    ${emp.email || emp.phone ? `<div class="employee-contact">${emp.email ? `📧 ${escapeHtml(emp.email)}` : ''} ${emp.phone ? `📞 ${escapeHtml(emp.phone)}` : ''}</div>` : ''}
+                `;
+                
+                item.addEventListener('click', function() {
+                    selectEmployee(emp);
+                });
+                
+                list.appendChild(item);
+            });
+            
+            dropdown.style.display = 'block';
+        }
+        
+        // Chọn nhân viên
+        function selectEmployee(emp) {
+            const fullName = `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.username || 'N/A';
+            document.getElementById('employeeSearch').value = fullName;
+            document.getElementById('newDirectorId').value = emp.id;
+            document.getElementById('employeeDropdown').style.display = 'none';
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load current director info for modal
+        async function loadCurrentDirectorForModal() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+
+                const response = await fetch(`${API_BASE_URL}/Branch/${BRANCH_ID}/Director`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+                const currentDirectorDiv = document.getElementById('currentDirectorInfo');
+                const currentDirectorName = document.getElementById('currentDirectorName');
+
+                if (result.success && result.data) {
+                    const director = result.data;
+                    const fullName = `${director.firstName || ''} ${director.lastName || ''}`.trim() || director.username || 'N/A';
+                    currentDirectorName.textContent = fullName;
+                    currentDirectorDiv.style.display = 'block';
+                } else {
+                    currentDirectorDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading current director:', error);
+            }
+        }
+
+        // Handle toggle between select and create
+        document.querySelectorAll('input[name="directorOption"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'select') {
+                    document.getElementById('selectEmployeeSection').style.display = 'block';
+                    document.getElementById('createEmployeeSection').style.display = 'none';
+                    document.getElementById('employeeSearch').required = true;
+                } else {
+                    document.getElementById('selectEmployeeSection').style.display = 'none';
+                    document.getElementById('createEmployeeSection').style.display = 'block';
+                    document.getElementById('employeeSearch').required = false;
+                }
+                // Reset values
+                document.getElementById('employeeSearch').value = '';
+                document.getElementById('newDirectorId').value = '';
+                document.getElementById('employeeDropdown').style.display = 'none';
+                document.getElementById('createEmployeeForm').reset();
+            });
+        });
+
+        // Handle modal open
+        document.getElementById('changeDirectorModal')?.addEventListener('show.bs.modal', async function() {
+            // Reset to select option
+            document.getElementById('selectEmployeeOption').checked = true;
+            document.getElementById('selectEmployeeSection').style.display = 'block';
+            document.getElementById('createEmployeeSection').style.display = 'none';
+            
+            // Reset search input
+            document.getElementById('employeeSearch').value = '';
+            document.getElementById('newDirectorId').value = '';
+            document.getElementById('employeeDropdown').style.display = 'none';
+            document.getElementById('createEmployeeForm').reset();
+            
+            // Load employees and current director
+            await Promise.all([
+                loadEmployeesForDirector(),
+                loadCurrentDirectorForModal()
+            ]);
+            
+            console.log('Modal opened, employees loaded:', allEmployees.length);
+        });
+        
+        // Handle employee search input
+        let searchTimeout;
+        document.getElementById('employeeSearch')?.addEventListener('input', function() {
+            const query = this.value;
+            
+            // Clear timeout trước đó
+            clearTimeout(searchTimeout);
+            
+            // Nếu xóa hết text, reset selection
+            if (!query || query.trim() === '') {
+                document.getElementById('newDirectorId').value = '';
+                document.getElementById('employeeDropdown').style.display = 'none';
+                return;
+            }
+            
+            // Debounce search để tránh search quá nhiều lần
+            searchTimeout = setTimeout(function() {
+                const results = searchEmployees(query);
+                displayEmployeeResults(results);
+            }, 300);
+        });
+        
+        // Hiển thị dropdown khi focus vào input
+        document.getElementById('employeeSearch')?.addEventListener('focus', function() {
+            const query = this.value;
+            console.log('Focus on employee search, query:', query, 'allEmployees length:', allEmployees.length);
+            if (query && query.trim() !== '') {
+                const results = searchEmployees(query);
+                displayEmployeeResults(results);
+            } else if (allEmployees.length > 0) {
+                // Nếu chưa có query, hiển thị tất cả employees
+                console.log('Showing all employees (first 10)');
+                displayEmployeeResults(allEmployees.slice(0, 20)); // Limit to 20 for performance
+            } else {
+                console.log('No employees loaded yet, showing message');
+                const dropdown = document.getElementById('employeeDropdown');
+                const list = document.getElementById('employeeList');
+                list.innerHTML = '<div class="no-results">Đang tải danh sách nhân viên...</div>';
+                dropdown.style.display = 'block';
+            }
+        });
+        
+        // Đóng dropdown khi click outside
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('employeeSearch');
+            const dropdown = document.getElementById('employeeDropdown');
+            if (searchInput && dropdown && 
+                !searchInput.contains(e.target) && 
+                !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Xử lý keyboard
+        document.getElementById('employeeSearch')?.addEventListener('keydown', function(e) {
+            // Nếu nhấn Escape, đóng dropdown
+            if (e.key === 'Escape') {
+                document.getElementById('employeeDropdown').style.display = 'none';
+            }
+            // Nếu xóa hết và nhấn Backspace/Delete, reset
+            if ((e.key === 'Backspace' || e.key === 'Delete') && this.value === '') {
+                document.getElementById('newDirectorId').value = '';
+            }
+        });
+
+        // Handle confirm change director
+        document.getElementById('confirmChangeDirectorBtn')?.addEventListener('click', async function() {
+            const selectedOption = document.querySelector('input[name="directorOption"]:checked').value;
+            let newDirectorId = null;
+
+            // Check which option is selected
+            if (selectedOption === 'select') {
+                newDirectorId = document.getElementById('newDirectorId').value;
+                const searchInput = document.getElementById('employeeSearch');
+
+                if (!newDirectorId) {
+                    searchInput.classList.add('is-invalid');
+                    showAlert('Vui lòng chọn nhân viên', 'warning');
+                    return;
+                }
+            } else {
+                // Create new employee first
+                const form = document.getElementById('createEmployeeForm');
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    showAlert('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+                    return;
+                }
+
+                // Create employee
+                try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) {
+                        showAlert('Vui lòng đăng nhập lại', 'warning');
+                        window.location.href = '/Auth/Login';
+                        return;
+                    }
+
+                    const btn = this;
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang tạo nhân viên...';
+
+                    const employeeData = {
+                        username: document.getElementById('createUsername').value.trim(),
+                        password: document.getElementById('createPassword').value,
+                        firstName: document.getElementById('createFirstName').value.trim() || null,
+                        lastName: document.getElementById('createLastName').value.trim() || null,
+                        email: document.getElementById('createEmail').value.trim() || null,
+                        phone: document.getElementById('createPhone').value.trim() || null,
+                        address: document.getElementById('createAddress').value.trim() || null,
+                        roleId: 2, // Director role - mã nhân viên sẽ được tự động sinh với prefix của Director
+                        branchId: BRANCH_ID,
+                        statusCode: 'ACTIVE'
+                    };
+
+                    const createResponse = await fetch(`${API_BASE_URL}/Employee`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(employeeData)
+                    });
+
+                    let createResult;
+                    if (!createResponse.ok) {
+                        try {
+                            createResult = await createResponse.json();
+                        } catch (parseError) {
+                            const errorText = await createResponse.text();
+                            throw new Error(errorText || 'Không thể tạo nhân viên');
+                        }
+                    } else {
+                        createResult = await createResponse.json();
+                    }
+
+                    if (createResult.success && createResult.data) {
+                        newDirectorId = createResult.data.id;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+                    } else {
+                        // Display validation errors
+                        let errorMessage = 'Không thể tạo nhân viên';
+                        if (createResult.errors && Array.isArray(createResult.errors)) {
+                            errorMessage = createResult.errors.join('. ');
+                        } else if (createResult.message) {
+                            errorMessage = createResult.message;
+                        }
+                        showAlert(errorMessage, 'danger');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error creating employee:', error);
+                    showAlert('Lỗi khi tạo nhân viên: ' + error.message, 'danger');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check me-2"></i>Xác nhận thay đổi';
+                    return;
+                }
+            }
+
+            // Now change director (either selected or newly created)
+            if (!newDirectorId) {
+                showAlert('Không thể xác định nhân viên', 'danger');
+                return;
+            }
+
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showAlert('Vui lòng đăng nhập lại', 'warning');
+                    window.location.href = '/Auth/Login';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/Branch/${BRANCH_ID}/Director/${newDirectorId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('changeDirectorModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+
+                    showAlert(selectedOption === 'create' ? 'Tạo nhân viên và thay đổi giám đốc thành công!' : 'Thay đổi giám đốc thành công!', 'success');
+                    
+                    // Reload branch details
+                    setTimeout(() => {
+                        loadBranchDetails();
+                    }, 500);
+                } else {
+                    showAlert(result.message || 'Không thể thay đổi giám đốc', 'danger');
+                }
+            } catch (error) {
+                console.error('Error changing director:', error);
+                showAlert('Lỗi khi thay đổi giám đốc: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        // Reset modal when closed
+        document.getElementById('changeDirectorModal')?.addEventListener('hidden.bs.modal', function() {
+            // Remove modal backdrop
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Remove modal-open class and reset body styles
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            
+            // Reset form fields
+            document.getElementById('employeeSearch').value = '';
+            document.getElementById('newDirectorId').value = '';
+            document.getElementById('employeeSearch').classList.remove('is-invalid');
+            document.getElementById('employeeDropdown').style.display = 'none';
+            allEmployees = []; // Clear employees list
+            
+            // Reset create employee form if exists
+            const createUsername = document.getElementById('createUsername');
+            const createPassword = document.getElementById('createPassword');
+            const createFirstName = document.getElementById('createFirstName');
+            const createLastName = document.getElementById('createLastName');
+            const createEmail = document.getElementById('createEmail');
+            const createPhone = document.getElementById('createPhone');
+            const createAddress = document.getElementById('createAddress');
+            
+            if (createUsername) createUsername.value = '';
+            if (createPassword) createPassword.value = '';
+            if (createFirstName) createFirstName.value = '';
+            if (createLastName) createLastName.value = '';
+            if (createEmail) createEmail.value = '';
+            if (createPhone) createPhone.value = '';
+            if (createAddress) createAddress.value = '';
+            
+            // Remove validation classes
+            [createUsername, createPassword, createFirstName, createLastName, createEmail, createPhone, createAddress].forEach(field => {
+                if (field) {
+                    field.classList.remove('is-invalid', 'is-valid');
+                }
+            });
+        });
     </script>
 }
 

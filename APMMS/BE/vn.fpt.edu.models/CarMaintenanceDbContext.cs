@@ -73,7 +73,6 @@ public partial class CarMaintenanceDbContext : DbContext
         }
     }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Branch>(entity =>
@@ -574,11 +573,18 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("schedule_service");
 
+            entity.HasIndex(e => e.CreatedAt, "IX_schedule_service_created_at");
+
             entity.HasIndex(e => e.GuestId, "IX_schedule_service_guest_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.BranchId).HasColumnName("branch_id");
             entity.Property(e => e.CarId).HasColumnName("car_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
             entity.Property(e => e.GuestId).HasColumnName("guest_id");
             entity.Property(e => e.ScheduledDate)
                 .HasColumnType("datetime")
@@ -587,6 +593,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedBy).HasColumnName("updated_by");
             entity.Property(e => e.UserId).HasColumnName("user_id");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.ScheduleServices)

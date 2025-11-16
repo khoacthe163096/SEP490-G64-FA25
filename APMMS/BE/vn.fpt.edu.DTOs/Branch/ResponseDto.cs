@@ -1,3 +1,5 @@
+using BE.vn.fpt.edu.DTOs.Employee;
+
 namespace BE.vn.fpt.edu.DTOs.Branch
 {
     public class BranchResponseDto
@@ -7,6 +9,7 @@ namespace BE.vn.fpt.edu.DTOs.Branch
         public string? Phone { get; set; }
         public string? Address { get; set; }
         public decimal? LaborRate { get; set; }
+        public EmployeeResponseDto? Director { get; set; }
     }
 }
 

@@ -12,6 +12,7 @@ namespace BE.vn.fpt.edu.DTOs.Employee
         public string? Gender { get; set; }
         public string? Image { get; set; }
         public string? RoleName { get; set; }
+        public long? RoleId { get; set; }
         public long? BranchId { get; set; }
         public string? BranchName { get; set; }
         public DateTime? CreatedDate { get; set; }

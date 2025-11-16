@@ -33,9 +33,21 @@ namespace BE.vn.fpt.edu.DTOs.ServiceSchedule
 
         public string? ConsultantBranchName { get; set; }
 
+        public long? ServiceCategoryId { get; set; }
+
+        public string? ServiceCategoryName { get; set; }
+
         public bool IsPublicBooking { get; set; } // true nếu là khách đặt lịch công khai (không có tài khoản)
 
         public List<NoteResponseDto> Notes { get; set; } = new List<NoteResponseDto>();
+        
+        // Audit trail fields
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public long? CreatedBy { get; set; }
+        public long? UpdatedBy { get; set; }
+        public string? CreatedByName { get; set; }
+        public string? UpdatedByName { get; set; }
     }
 
     public class ListResponseDto

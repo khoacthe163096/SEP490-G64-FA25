@@ -53,6 +53,7 @@ namespace BE.vn.fpt.edu.convert
             // Employee mappings
             CreateMap<User, BE.vn.fpt.edu.DTOs.Employee.EmployeeResponseDto>()
                 .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : null))
+                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.RoleId))
                 .ForMember(dest => dest.BranchId, opt => opt.MapFrom(src => src.BranchId))
                 .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null))
                 .ForMember(dest => dest.FullAddress, opt => opt.MapFrom(src => src.Address))
