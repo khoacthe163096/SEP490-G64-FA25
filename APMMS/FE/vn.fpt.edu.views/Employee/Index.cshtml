@@ -32,9 +32,27 @@
                                 <option value="5">Warehouse Keeper</option>
                                 <option value="6">Consulter</option>
                             </select>
+                            <select class="form-select" id="branchFilter" style="width: 180px; display: none;">
+                                <option value="">Chọn chi nhánh</option>
+                            </select>
                         </div>
                         <div class="col-md-6 d-flex justify-content-end align-items-center">
                             <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm nhân viên" style="max-width: 300px;">
+                        </div>
+                    </div>
+
+                    <!-- Branch Manager Info (chỉ hiển thị khi Admin chọn chi nhánh) -->
+                    <div id="branchManagerInfo" class="mb-3" style="display: none;">
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-user-tie me-3 fs-4"></i>
+                            <div class="flex-grow-1">
+                                <strong>Giám đốc chi nhánh:</strong>
+                                <span id="branchManagerName" class="ms-2">-</span>
+                                <div class="mt-1 small text-muted">
+                                    <span id="branchManagerEmail">-</span> | 
+                                    <span id="branchManagerPhone">-</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -127,6 +145,9 @@
         let totalRecords = 0;
 
         document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra role và hiển thị branch filter nếu là Admin
+            checkUserRoleAndShowBranchFilter();
+            
             loadEmployees();
             
             // Search functionality
@@ -142,12 +163,127 @@
                 currentPage = 1;
                 loadEmployees();
             });
+            document.getElementById('branchFilter').addEventListener('change', function() {
+                currentPage = 1;
+                const branchId = this.value;
+                if (branchId) {
+                    loadBranchManager(branchId);
+                } else {
+                    // Ẩn thông tin Branch Manager nếu không chọn chi nhánh
+                    document.getElementById('branchManagerInfo').style.display = 'none';
+                }
+                loadEmployees();
+            });
         });
+
+        async function checkUserRoleAndShowBranchFilter() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                
+                // Role Admin thường có roleId = 1 (cần kiểm tra lại trong hệ thống)
+                // Hoặc có thể check roleName
+                const roleName = userInfo.roleName || userInfo.role || '';
+                const isAdmin = roleId === 1 || roleName.toUpperCase() === 'ADMIN';
+
+                if (isAdmin) {
+                    // Hiển thị branch filter
+                    document.getElementById('branchFilter').style.display = 'block';
+                    // Load danh sách chi nhánh
+                    await loadBranches();
+                }
+            } catch (error) {
+                console.error('Error checking user role:', error);
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/Branch`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const branches = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                    
+                    const branchFilter = document.getElementById('branchFilter');
+                    branchFilter.innerHTML = '<option value="">Chọn chi nhánh</option>';
+                    
+                    branches.forEach(branch => {
+                        const branchId = branch.id || branch.Id;
+                        const branchName = branch.name || branch.Name || 'N/A';
+                        const option = document.createElement('option');
+                        option.value = branchId;
+                        option.textContent = branchName;
+                        branchFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
+        async function loadBranchManager(branchId) {
+            try {
+                const token = localStorage.getItem('authToken');
+                
+                // Sử dụng endpoint Branch để lấy giám đốc chi nhánh
+                const response = await fetch(`${API_BASE_URL}/Branch/${branchId}/Director`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const director = result.success && result.data ? result.data : null;
+
+                    const branchManagerInfo = document.getElementById('branchManagerInfo');
+                    const branchManagerName = document.getElementById('branchManagerName');
+                    const branchManagerEmail = document.getElementById('branchManagerEmail');
+                    const branchManagerPhone = document.getElementById('branchManagerPhone');
+
+                    if (director) {
+                        const firstName = director.firstName || director.FirstName || '';
+                        const lastName = director.lastName || director.LastName || '';
+                        const fullName = `${firstName} ${lastName}`.trim() || 'N/A';
+                        const email = director.email || director.Email || 'N/A';
+                        const phone = director.phone || director.Phone || 'N/A';
+
+                        branchManagerName.textContent = fullName;
+                        branchManagerEmail.textContent = email;
+                        branchManagerPhone.textContent = phone;
+                        branchManagerInfo.style.display = 'block';
+                    } else {
+                        branchManagerName.textContent = 'Chưa có giám đốc';
+                        branchManagerEmail.textContent = '-';
+                        branchManagerPhone.textContent = '-';
+                        branchManagerInfo.style.display = 'block';
+                    }
+                } else {
+                    // Ẩn nếu không load được
+                    document.getElementById('branchManagerInfo').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading branch manager:', error);
+                document.getElementById('branchManagerInfo').style.display = 'none';
+            }
+        }
 
         function loadEmployees() {
             const search = document.getElementById('searchInput').value;
             const status = document.getElementById('statusFilter').value;
             const role = document.getElementById('roleFilter').value;
+            const branch = document.getElementById('branchFilter').value;
 
             // ✅ Get JWT token from localStorage
             const token = localStorage.getItem('authToken');
@@ -163,7 +299,13 @@
                 </tr>
             `;
 
-            fetch(`${API_BASE_URL}/Employee?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`, {
+            // Build query string
+            let queryParams = `page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=${encodeURIComponent(role || '')}`;
+            if (branch) {
+                queryParams += `&branchId=${encodeURIComponent(branch)}`;
+            }
+
+            fetch(`${API_BASE_URL}/Employee?${queryParams}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -489,6 +631,7 @@
             document.getElementById('searchInput').value = '';
             document.getElementById('statusFilter').value = '';
             document.getElementById('roleFilter').value = '';
+            document.getElementById('branchFilter').value = '';
             currentPage = 1;
             selectedEmployees.clear();
             document.getElementById('selectAll').checked = false;
@@ -522,3 +665,9 @@
         }
     </script>
 }
+
+        
+
+
+
+       

@@ -1052,9 +1052,12 @@ function openAssignTechniciansModal() {
     <div class="modal fade" id="assignTechniciansModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-user-plus me-2"></i>
+              ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? `
@@ -1065,20 +1068,43 @@ function openAssignTechniciansModal() {
             </div>
             ` : ''}
             <div class="mb-3">
-              <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc username...">
-              <small class="text-muted">Gõ để lọc nhanh. Kết quả hiển thị tức thì như Google.</small>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc username...">
+              </div>
+              <small class="text-muted">Gõ để lọc nhanh.</small>
+            </div>
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllTechBtn">
+                  <i class="fas fa-check-double me-1"></i>Chọn tất cả
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllTechBtn">
+                  <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
+                </button>
+              </div>
+              <div>
+                <span class="badge bg-primary" id="selectedCountBadge">Đã chọn: 0</span>
+              </div>
             </div>
             <div class="mb-3">
-              <label class="form-label">Chọn kỹ thuật viên chính</label>
+              <label class="form-label">
+                <i class="fas fa-star text-warning me-1"></i>Chọn kỹ thuật viên chính
+              </label>
               <select id="primaryTechSelect" class="form-select">
                 <option value="">-- Chưa chọn --</option>
               </select>
+              <small class="text-muted">Kỹ thuật viên chính sẽ được tự động chọn nếu bạn chọn checkbox đầu tiên</small>
             </div>
-            <div id="assignTechContainer" class="row g-2"></div>
+            <div id="assignTechContainer" class="row g-2" style="max-height: 400px; overflow-y: auto;"></div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button type="button" class="btn btn-primary" id="saveAssignTechBtn">Lưu</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i>Hủy
+            </button>
+            <button type="button" class="btn btn-primary" id="saveAssignTechBtn">
+              <i class="fas fa-save me-1"></i>Lưu
+            </button>
           </div>
         </div>
       </div>
@@ -1087,6 +1113,20 @@ function openAssignTechniciansModal() {
     $('body').append(modalHtml);
     const modal = new bootstrap.Modal(document.getElementById('assignTechniciansModal'));
     modal.show();
+    
+    // Focus vào search box khi modal hiển thị
+    setTimeout(() => $('#assignTechSearch').focus(), 300);
+
+    let allEmployees = [];
+    let currentPrimaryId = null;
+    
+    // Lấy primary technician hiện tại
+    if (maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
+      const primaryTech = maintenanceTicketData.technicians.find(t => t.roleInTicket === 'PRIMARY');
+      if (primaryTech) {
+        currentPrimaryId = primaryTech.technicianId;
+      }
+    }
 
     // Tải danh sách kỹ thuật viên
     const token = localStorage.getItem('authToken');
@@ -1103,43 +1143,204 @@ function openAssignTechniciansModal() {
           return r.json();
       })
       .then(list => {
-        const container = $('#assignTechContainer');
-        container.empty();
-        const employees = (list || []).map(emp => ({
+        allEmployees = (list || []).map(emp => ({
           id: emp.id,
           name: (`${emp.firstName || ''} ${emp.lastName || ''}`).trim() || emp.username || `#${emp.id}`,
           username: emp.username || ''
         }));
 
-        function render(listToRender) {
+        function updateSelectedCount() {
+          const count = $('.assign-tech-checkbox:checked').length;
+          $('#selectedCountBadge').text(`Đã chọn: ${count}`);
+        }
+
+        function updatePrimarySelect() {
+          const primarySelect = $('#primaryTechSelect');
+          const checkedIds = [];
+          $('.assign-tech-checkbox:checked').each(function() {
+            checkedIds.push(parseInt($(this).val()));
+          });
+          
+          primarySelect.empty();
+          primarySelect.append('<option value="">-- Chưa chọn --</option>');
+          
+          allEmployees.forEach(emp => {
+            if (checkedIds.includes(emp.id)) {
+              const isPrimary = currentPrimaryId === emp.id;
+              primarySelect.append(`<option value="${emp.id}" ${isPrimary ? 'selected' : ''}>${emp.name}</option>`);
+            }
+          });
+          
+          // Nếu chưa có primary và có ít nhất 1 checkbox được chọn, tự động chọn checkbox đầu tiên làm primary
+          if (!currentPrimaryId && checkedIds.length > 0) {
+            currentPrimaryId = checkedIds[0];
+            primarySelect.val(currentPrimaryId);
+          }
+        }
+
+        function render(listToRender, searchQuery = '') {
+          const container = $('#assignTechContainer');
           container.empty();
+          
           if (!listToRender || listToRender.length === 0) {
-            container.html('<div class="text-center text-muted py-3">Không có kỹ thuật viên phù hợp</div>');
+            container.html('<div class="text-center text-muted py-5"><i class="fas fa-user-slash fa-3x mb-3"></i><p>Không có kỹ thuật viên phù hợp</p></div>');
+            updateSelectedCount();
             return;
           }
+          
+          // Lấy danh sách đã chọn từ checkbox hiện tại hoặc từ data ban đầu
+          const checkedIds = [];
+          $('.assign-tech-checkbox:checked').each(function() {
+            checkedIds.push(parseInt($(this).val()));
+          });
+          
+          // Nếu chưa có checkbox nào (lần đầu render), lấy từ maintenanceTicketData
+          if (checkedIds.length === 0 && maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
+            maintenanceTicketData.technicians.forEach(t => {
+              if (!checkedIds.includes(t.technicianId)) {
+                checkedIds.push(t.technicianId);
+              }
+            });
+          }
+          
           listToRender.forEach(emp => {
-            const checked = (maintenanceTicketData.technicians || []).some(t => t.technicianId === emp.id) ? 'checked' : '';
+            const isChecked = checkedIds.includes(emp.id);
+            const isPrimary = currentPrimaryId === emp.id;
+            const highlightClass = isPrimary ? 'border-warning bg-warning bg-opacity-10' : '';
+            const primaryBadge = isPrimary ? '<span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>' : '';
+            
+            // Highlight search query
+            let displayName = emp.name;
+            let displayUsername = emp.username;
+            if (searchQuery) {
+              const regex = new RegExp(`(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+              displayName = displayName.replace(regex, '<mark>$1</mark>');
+              displayUsername = displayUsername.replace(regex, '<mark>$1</mark>');
+            }
+            
             container.append(`
               <div class="col-md-6">
-                <div class="form-check border rounded p-2">
-                  <input class="form-check-input assign-tech-checkbox" type="checkbox" value="${emp.id}" id="assign_${emp.id}" ${checked}>
-                  <label class="form-check-label w-100" for="assign_${emp.id}"><strong>${emp.name}</strong><br><small class="text-muted">${emp.username}</small></label>
+                <div class="form-check border rounded p-3 ${highlightClass} tech-card" style="transition: all 0.2s; cursor: pointer;" data-tech-id="${emp.id}">
+                  <input class="form-check-input assign-tech-checkbox" type="checkbox" value="${emp.id}" id="assign_${emp.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; pointer-events: auto;">
+                  <label class="form-check-label w-100" for="assign_${emp.id}" style="cursor: pointer; pointer-events: auto;">
+                    <strong>${displayName}</strong>${primaryBadge}
+                    <br><small class="text-muted">${displayUsername}</small>
+                  </label>
                 </div>
               </div>
             `);
           });
-          // Build primary select options
-          const primarySelect = $('#primaryTechSelect');
-          primarySelect.empty();
-          primarySelect.append('<option value="">-- Chưa chọn --</option>');
-          listToRender.forEach(emp => {
-            const isPrimary = (maintenanceTicketData.technicians || []).some(t => t.technicianId === emp.id && t.roleInTicket === 'PRIMARY');
-            primarySelect.append(`<option value="${emp.id}" ${isPrimary ? 'selected' : ''}>${emp.name}</option>`);
-          });
+          
+          updateSelectedCount();
+          updatePrimarySelect();
         }
 
+        // Xử lý click vào card để toggle checkbox (chỉ khi click vào vùng trống, không phải checkbox/label)
+        $(document).on('click', '.tech-card', function(e) {
+          // Nếu click vào checkbox, để browser xử lý tự nhiên
+          if ($(e.target).is('input[type="checkbox"]')) {
+            return; // Cho phép default behavior của checkbox
+          }
+          // Nếu click vào label, để browser xử lý tự nhiên (label tự động toggle checkbox)
+          if ($(e.target).is('label') || $(e.target).closest('label').length > 0) {
+            return; // Cho phép default behavior của label
+          }
+          // Nếu click vào vùng khác của card, toggle checkbox
+          e.preventDefault();
+          e.stopPropagation();
+          const checkbox = $(this).find('input[type="checkbox"]');
+          if (checkbox.length) {
+            checkbox.prop('checked', !checkbox.prop('checked'));
+            checkbox.trigger('change');
+          }
+          return false;
+        });
+
+        // Xử lý checkbox change
+        $(document).on('change', '.assign-tech-checkbox', function(e) {
+          e.stopPropagation();
+          const techId = parseInt($(this).val());
+          const isChecked = $(this).is(':checked');
+          
+          // Nếu đây là checkbox đầu tiên được chọn và chưa có primary, tự động set làm primary
+          if (isChecked && !currentPrimaryId && $('.assign-tech-checkbox:checked').length === 1) {
+            currentPrimaryId = techId;
+            $('#primaryTechSelect').val(techId);
+          }
+          
+          // Nếu bỏ chọn primary technician, xóa primary
+          if (!isChecked && currentPrimaryId === techId) {
+            currentPrimaryId = null;
+            $('#primaryTechSelect').val('');
+          }
+          
+          // Cập nhật UI mà không re-render toàn bộ
+          updateSelectedCount();
+          updatePrimarySelect();
+          
+          // Cập nhật highlight cho card
+          const card = $(this).closest('.tech-card');
+          if (currentPrimaryId === techId) {
+            card.addClass('border-warning bg-warning bg-opacity-10');
+            card.find('label strong').html(function() {
+              const text = $(this).text().replace(/\s*\(Chính\)\s*$/, '');
+              return text + ' <span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>';
+            });
+          } else {
+            card.removeClass('border-warning bg-warning bg-opacity-10');
+            card.find('label strong').html(function() {
+              return $(this).text().replace(/\s*\(Chính\)\s*$/, '');
+            });
+          }
+        });
+
+        // Xử lý thay đổi primary select
+        $(document).on('change', '#primaryTechSelect', function() {
+          currentPrimaryId = $(this).val() ? parseInt($(this).val()) : null;
+          // Đảm bảo checkbox của primary được chọn
+          if (currentPrimaryId) {
+            $(`#assign_${currentPrimaryId}`).prop('checked', true);
+          }
+          // Re-render để highlight
+          const searchQuery = $('#assignTechSearch').val().toLowerCase();
+          const filtered = searchQuery ? 
+            allEmployees.filter(e => e.name.toLowerCase().includes(searchQuery) || e.username.toLowerCase().includes(searchQuery)) :
+            allEmployees;
+          render(filtered, searchQuery);
+        });
+
+        // Chọn tất cả
+        $(document).on('click', '#selectAllTechBtn', function() {
+          const searchQuery = $('#assignTechSearch').val().toLowerCase();
+          const filtered = searchQuery ? 
+            allEmployees.filter(e => e.name.toLowerCase().includes(searchQuery) || e.username.toLowerCase().includes(searchQuery)) :
+            allEmployees;
+          
+          filtered.forEach(emp => {
+            $(`#assign_${emp.id}`).prop('checked', true);
+          });
+          
+          // Tự động chọn primary nếu chưa có
+          if (!currentPrimaryId && filtered.length > 0) {
+            currentPrimaryId = filtered[0].id;
+            $('#primaryTechSelect').val(currentPrimaryId);
+          }
+          
+          updateSelectedCount();
+          updatePrimarySelect();
+        });
+
+        // Bỏ chọn tất cả
+        $(document).on('click', '#deselectAllTechBtn', function() {
+          $('.assign-tech-checkbox').prop('checked', false);
+          currentPrimaryId = null;
+          $('#primaryTechSelect').val('');
+          updateSelectedCount();
+          updatePrimarySelect();
+        });
+
         // Lần đầu render tất cả
-        render(employees);
+        render(allEmployees);
 
         // Lọc theo thời gian thực với debounce
         let t;
@@ -1147,24 +1348,46 @@ function openAssignTechniciansModal() {
           clearTimeout(t);
           const q = $(this).val().toLowerCase();
           t = setTimeout(() => {
-            if (!q) { render(employees); return; }
-            const filtered = employees.filter(e => e.name.toLowerCase().includes(q) || e.username.toLowerCase().includes(q));
-            render(filtered);
+            if (!q) { 
+              render(allEmployees); 
+              return; 
+            }
+            const filtered = allEmployees.filter(e => 
+              e.name.toLowerCase().includes(q) || e.username.toLowerCase().includes(q)
+            );
+            render(filtered, q);
           }, 120);
         });
       })
       .catch(error => {
           console.error('Error loading employees:', error);
-          $('#assignTechContainer').html('<div class="text-center text-danger py-3">Lỗi tải danh sách kỹ thuật viên: ' + error.message + '</div>');
+          $('#assignTechContainer').html('<div class="text-center text-danger py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><p>Lỗi tải danh sách kỹ thuật viên: ' + error.message + '</p></div>');
           showAlert('Không thể tải danh sách kỹ thuật viên. Vui lòng thử lại sau.', 'danger');
       });
 
     $(document).on('click', '#saveAssignTechBtn', function() {
       const ids = [];
-      $('.assign-tech-checkbox:checked').each(function(){ ids.push(parseInt($(this).val())); });
+      $('.assign-tech-checkbox:checked').each(function(){ 
+        ids.push(parseInt($(this).val())); 
+      });
+      
       const primaryIdVal = $('#primaryTechSelect').val();
       const primaryId = primaryIdVal ? parseInt(primaryIdVal) : null;
-      if (primaryId && !ids.includes(primaryId)) ids.push(primaryId);
+      
+      if (ids.length === 0) {
+        showAlert('Vui lòng chọn ít nhất một kỹ thuật viên', 'warning');
+        return;
+      }
+      
+      if (primaryId && !ids.includes(primaryId)) {
+        ids.push(primaryId);
+      }
+      
+      const submitBtn = $(this);
+      const originalText = submitBtn.html();
+      submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...');
+      submitBtn.prop('disabled', true);
+      
       const token = localStorage.getItem('authToken');
       fetch(`${API_BASE_URL}/MaintenanceTicket/${maintenanceTicketId}/technicians`, {
         method: 'PUT',
@@ -1183,8 +1406,14 @@ function openAssignTechniciansModal() {
           $('#assignTechniciansModal').remove();
         } else {
           showAlert(res.message || 'Gán kỹ thuật viên thất bại', 'danger');
+          submitBtn.html(originalText);
+          submitBtn.prop('disabled', false);
         }
-      }).catch(()=> showAlert('Lỗi kết nối máy chủ', 'danger'));
+      }).catch(() => {
+        showAlert('Lỗi kết nối máy chủ', 'danger');
+        submitBtn.html(originalText);
+        submitBtn.prop('disabled', false);
+      });
     });
 }
 

@@ -36,10 +36,11 @@ namespace BE.vn.fpt.edu.controllers
             [FromQuery] int pageSize = 10,
             [FromQuery] string? search = null,
             [FromQuery] string? status = null,
-            [FromQuery] long? role = null)
+            [FromQuery] long? role = null,
+            [FromQuery] long? branchId = null)
         {
             // Luôn dùng filter method để đảm bảo format response đồng nhất
-            var result = await _employeeService.GetWithFiltersAsync(page, pageSize, search, status, role);
+            var result = await _employeeService.GetWithFiltersAsync(page, pageSize, search, status, role, branchId);
             return Ok(result);
         }
 

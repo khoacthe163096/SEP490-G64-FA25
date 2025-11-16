@@ -396,17 +396,98 @@
         // Expose changePage to global scope for onclick handlers
         window.changePage = changePage;
 
+        let currentBranchId = null;
+
         function createMaintenanceTicket(checkinId) {
             // Store checkinId for later use
             window.currentCheckinId = checkinId;
+            
+            // Load data when modal opens
+            loadBranchesAndSelectUserBranch();
+            loadServiceCategories();
+            
+            // Reset form
+            $('#modalServiceCategoryId').val('');
+            $('#modalPriorityLevel').val('NORMAL');
+            $('#modalDescription').val('');
             
             // Show custom modal instead of browser confirm
             $('#createMaintenanceModal').modal('show');
         }
 
+        function loadBranchesAndSelectUserBranch() {
+            const token = localStorage.getItem('authToken');
+            let userId = null;
+            try {
+                if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+                }
+            } catch {}
+
+            // Lấy thông tin nhân viên để biết chi nhánh
+            if (userId && token) {
+                fetch(`${API_BASE_URL}/Employee/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(async r => {
+                    if (!r.ok) throw new Error(`Employee fetch failed: ${r.status}`);
+                    return r.json();
+                })
+                .then(empRes => {
+                    if (empRes && empRes.success === true && empRes.data) {
+                        const emp = empRes.data;
+                        if (emp.branchId) {
+                            currentBranchId = String(emp.branchId);
+                            $('#modalBranchNameDisplay').text(emp.branchName || 'Chi nhánh');
+                        } else if (emp.branchName) {
+                            $('#modalBranchNameDisplay').text(emp.branchName);
+                            // Try to find branch ID by name
+                            fetch(`${API_BASE_URL}/Branch`)
+                                .then(response => response.json())
+                                .then(branchRes => {
+                                    if (branchRes.success && branchRes.data) {
+                                        const branch = branchRes.data.find(b => b.name === emp.branchName);
+                                        if (branch) {
+                                            currentBranchId = String(branch.id);
+                                        }
+                                    }
+                                });
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.warn('Employee fetch error:', err);
+                    $('#modalBranchNameDisplay').text('Không lấy được chi nhánh');
+                });
+            }
+        }
+
+        function loadServiceCategories() {
+            fetch(`${API_BASE_URL}/ServiceCategory`)
+                .then(r => r.json())
+                .then(res => {
+                    const select = $('#modalServiceCategoryId');
+                    select.find('option:not(:first)').remove();
+                    if (res && res.success && Array.isArray(res.data)) {
+                        res.data.forEach(item => {
+                            select.append(`<option value="${item.id}">${item.name}</option>`);
+                        });
+                    }
+                })
+                .catch(err => console.error('Error loading service categories:', err));
+        }
+
         function confirmCreateMaintenanceTicket() {
             const checkinId = window.currentCheckinId;
             if (!checkinId) return;
+            
+            if (!currentBranchId) {
+                showAlert('Không lấy được chi nhánh của tư vấn viên. Vui lòng đăng nhập lại hoặc thử lại.', 'danger');
+                return;
+            }
             
             // Get consulter ID from token
             const token = localStorage.getItem('authToken');
@@ -421,6 +502,17 @@
                 }
             }
             
+            // Get form values
+            const serviceCategoryId = $('#modalServiceCategoryId').val() || null;
+            const priorityLevel = $('#modalPriorityLevel').val() || 'NORMAL';
+            const description = $('#modalDescription').val() || 'Tạo từ vehicle check-in';
+            
+            // Show loading
+            const submitBtn = $('#modalCreateBtn');
+            const originalText = submitBtn.html();
+            submitBtn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang tạo...');
+            submitBtn.prop('disabled', true);
+            
             // Create maintenance ticket via API
             fetch(`${API_BASE_URL}/MaintenanceTicket/create-from-checkin`, {
                 method: 'POST',
@@ -430,32 +522,37 @@
                 },
                 body: JSON.stringify({
                     vehicleCheckinId: checkinId,
-                    consulterId: consulterId, // Get from token or use default
+                    consulterId: consulterId,
                     technicianId: null,
-                    branchId: 1, // Default branch ID - should be from session
+                    technicianIds: null,
+                    branchId: currentBranchId,
                     scheduleServiceId: null,
+                    serviceCategoryId: serviceCategoryId,
+                    priorityLevel: priorityLevel,
                     statusCode: 'PENDING',
-                    description: 'Tạo từ vehicle check-in'
+                    description: description
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     showAlert('Tạo phiếu bảo dưỡng thành công!', 'success');
+                    $('#createMaintenanceModal').modal('hide');
                     // Optionally redirect to maintenance tickets list
                     setTimeout(() => {
                         window.location.href = '/MaintenanceTickets';
                     }, 1500);
                 } else {
                     showAlert('Lỗi tạo phiếu bảo dưỡng: ' + data.message, 'danger');
+                    submitBtn.html(originalText);
+                    submitBtn.prop('disabled', false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 showAlert('Có lỗi xảy ra khi tạo phiếu bảo dưỡng', 'danger');
-            })
-            .finally(() => {
-                $('#createMaintenanceModal').modal('hide');
+                submitBtn.html(originalText);
+                submitBtn.prop('disabled', false);
             });
         }
 
@@ -569,7 +666,7 @@
 
 <!-- Custom Modal for Creating Maintenance Ticket -->
 <div class="modal fade" id="createMaintenanceModal" tabindex="-1" aria-labelledby="createMaintenanceModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="createMaintenanceModalLabel">
@@ -578,25 +675,60 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center">
-                <div class="mb-4">
-                    <i class="fas fa-question-circle fa-3x text-primary mb-3"></i>
-                    <h5>Xác nhận tạo phiếu bảo dưỡng</h5>
-                    <p class="text-muted mb-0">
-                        Bạn có muốn tạo phiếu bảo dưỡng từ vehicle check-in này không?
-                    </p>
-                </div>
-                <div class="alert alert-info">
+            <div class="modal-body">
+                <div class="alert alert-info mb-3">
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Lưu ý:</strong> Sau khi tạo phiếu bảo dưỡng, bạn sẽ được chuyển hướng đến trang quản lý phiếu bảo dưỡng.
                 </div>
+                
+                <form id="modalMaintenanceTicketForm">
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label class="form-label mb-0">Chi nhánh:</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <div class="form-control-plaintext">
+                                <strong id="modalBranchNameDisplay">(đang tải...)</strong>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label for="modalServiceCategoryId" class="form-label mb-0">Nhóm dịch vụ:</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" id="modalServiceCategoryId">
+                                <option value="">Chọn nhóm dịch vụ (tuỳ chọn)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <label for="modalPriorityLevel" class="form-label mb-0">Mức độ ưu tiên:</label>
+                        </div>
+                        <div class="col-sm-8">
+                            <select class="form-select" id="modalPriorityLevel">
+                                <option value="NORMAL">Bình thường</option>
+                                <option value="HIGH">Cao</option>
+                                <option value="URGENT">Khẩn cấp</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="modalDescription" class="form-label">Mô tả bảo dưỡng</label>
+                        <textarea class="form-control" id="modalDescription" rows="3" placeholder="Mô tả chi tiết về công việc bảo dưỡng cần thực hiện..."></textarea>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>
                     Hủy
                 </button>
-                <button type="button" class="btn btn-primary" onclick="confirmCreateMaintenanceTicket()">
+                <button type="button" class="btn btn-primary" id="modalCreateBtn" onclick="confirmCreateMaintenanceTicket()">
                     <i class="fas fa-check me-1"></i>
                     Tạo phiếu bảo dưỡng
                 </button>

@@ -11,7 +11,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task UpdateAsync(User employee);
         Task SoftDeleteAsync(User employee);
         Task SaveChangesAsync();
-        Task<List<User>> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null);
-        Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null);
+        Task<List<User>> GetWithFiltersAsync(int page = 1, int pageSize = 10, string? search = null, string? status = null, long? roleId = null, long? branchId = null);
+        Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null, long? branchId = null);
     }
 }
