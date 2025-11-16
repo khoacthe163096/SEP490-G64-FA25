@@ -124,7 +124,7 @@ namespace BE.vn.fpt.edu.services
 
             var existingSchedules = await _repository.GetByUserIdAsync(request.UserId);
 
-            var conflictingSchedule = existingSchedules.FirstOrDefault(s => 
+            var conflictingSchedule = existingSchedules.FirstOrDefault(s =>
 
                 s.ScheduledDate.Date == request.ScheduledDate.Date &&
 
@@ -141,14 +141,14 @@ namespace BE.vn.fpt.edu.services
 
 
             var scheduleService = _mapper.Map<ScheduleService>(request);
-            
+
             // Set audit fields - khi tạo mới, chỉ set CreatedAt/CreatedBy
             var now = DateTime.UtcNow;
             scheduleService.CreatedAt = now;
             scheduleService.UpdatedAt = null; // Chưa có cập nhật nào
             scheduleService.CreatedBy = currentUserId;
             scheduleService.UpdatedBy = null; // Chưa có cập nhật nào
-            
+
             var createdSchedule = await _repository.CreateAsync(scheduleService);
 
             return await MapToResponseDtoAsync(createdSchedule);
@@ -350,7 +350,7 @@ namespace BE.vn.fpt.edu.services
 
 
             schedule.StatusCode = "CANCELLED";
-            
+
             // Update audit fields
             schedule.UpdatedAt = DateTime.UtcNow;
             schedule.UpdatedBy = currentUserId;
@@ -361,10 +361,10 @@ namespace BE.vn.fpt.edu.services
                 var user = await _userRepository.GetByIdAsync(currentUserId.Value);
                 if (user != null)
                 {
-                    var cancelReason = !string.IsNullOrWhiteSpace(request?.Reason) 
-                        ? request.Reason.Trim() 
+                    var cancelReason = !string.IsNullOrWhiteSpace(request?.Reason)
+                        ? request.Reason.Trim()
                         : null;
-                    
+
                     var cancelNote = new ScheduleServiceNote
                     {
                         ScheduleServiceId = schedule.Id,
@@ -419,7 +419,7 @@ namespace BE.vn.fpt.edu.services
 
 
             schedule.StatusCode = "COMPLETED";
-            
+
             // Update audit fields
             schedule.UpdatedAt = DateTime.UtcNow;
             schedule.UpdatedBy = currentUserId;
@@ -737,7 +737,7 @@ namespace BE.vn.fpt.edu.services
 
             _context.ScheduleServiceNotes.Add(assignmentNote);
 
-            
+
 
             // Cập nhật status thành IN_PROGRESS khi nhận công việc (chỉ khi đang là PENDING)
 
@@ -806,7 +806,7 @@ namespace BE.vn.fpt.edu.services
                 Consultant = consultant
 
             };
-            
+
             // Update schedule audit fields when note is added
             schedule.UpdatedAt = DateTime.UtcNow;
             schedule.UpdatedBy = currentUserId;
@@ -814,7 +814,7 @@ namespace BE.vn.fpt.edu.services
 
 
             _context.ScheduleServiceNotes.Add(note);
-            
+
             // Update schedule in context
             _context.Entry(schedule).Property(s => s.UpdatedAt).IsModified = true;
             _context.Entry(schedule).Property(s => s.UpdatedBy).IsModified = true;
@@ -1066,7 +1066,7 @@ namespace BE.vn.fpt.edu.services
                 IsPublicBooking = isPublicBooking,
 
                 Notes = notes,
-                
+
                 // Audit trail fields
                 CreatedAt = schedule.CreatedAt,
                 UpdatedAt = schedule.UpdatedAt,
@@ -1223,25 +1223,25 @@ namespace BE.vn.fpt.edu.services
 
         }
 
-        
 
-        
+
+
         private async Task<ResponseDto> MapToResponseDtoAsync(ScheduleService schedule)
         {
             // Load user info for audit fields
             User? createdByUser = null;
             User? updatedByUser = null;
-            
+
             if (schedule.CreatedBy.HasValue)
             {
                 createdByUser = await _userRepository.GetByIdAsync(schedule.CreatedBy.Value);
             }
-            
+
             if (schedule.UpdatedBy.HasValue)
             {
                 updatedByUser = await _userRepository.GetByIdAsync(schedule.UpdatedBy.Value);
             }
-            
+
             return MapToResponseDto(schedule, createdByUser, updatedByUser);
         }
 

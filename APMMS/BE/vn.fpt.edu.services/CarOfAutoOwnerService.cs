@@ -33,7 +33,18 @@ namespace BE.vn.fpt.edu.services
         public async Task<List<ResponseDto>> GetByUserIdAsync(long userId)
         {
             var cars = await _repository.GetByUserIdAsync(userId);
-            return _mapper.Map<List<ResponseDto>>(cars);
+            var result = _mapper.Map<List<ResponseDto>>(cars);
+            
+            // Đảm bảo VehicleTypeName được set đúng
+            for (int i = 0; i < result.Count; i++)
+            {
+                if (string.IsNullOrEmpty(result[i].VehicleTypeName) && cars[i].VehicleType != null)
+                {
+                    result[i].VehicleTypeName = cars[i].VehicleType.Name;
+                }
+            }
+            
+            return result;
         }
 
         public async Task<List<ResponseDto>> GetServicedCarsByUserIdAsync(long userId)

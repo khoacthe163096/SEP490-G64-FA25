@@ -16,6 +16,7 @@ namespace BE.vn.fpt.edu.repository
         public async Task<List<Car>> GetAllAsync(int page = 1, int pageSize = 10)
         {
             return await _context.Cars
+                .Include(c => c.VehicleType)
                 .OrderByDescending(c => c.CreatedDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -24,12 +25,15 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<Car?> GetByIdAsync(long id)
         {
-            return await _context.Cars.FirstOrDefaultAsync(c => c.Id == id);
+            return await _context.Cars
+                .Include(c => c.VehicleType)
+                .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<List<Car>> GetByUserIdAsync(long userId)
         {
             return await _context.Cars
+                .Include(c => c.VehicleType)
                 .Where(c => c.UserId == userId)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToListAsync();
@@ -50,6 +54,7 @@ namespace BE.vn.fpt.edu.repository
                 return new List<Car>();
 
             return await _context.Cars
+                .Include(c => c.VehicleType)
                 .Where(c => servicedCarIds.Contains(c.Id))
                 .OrderByDescending(c => c.CreatedDate)
                 .ToListAsync();
