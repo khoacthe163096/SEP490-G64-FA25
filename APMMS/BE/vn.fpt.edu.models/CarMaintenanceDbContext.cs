@@ -72,7 +72,6 @@ public partial class CarMaintenanceDbContext : DbContext
             // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
         }
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Branch>(entity =>
@@ -1123,10 +1122,16 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.ToTable("vehicle_checkin_image");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Category)
+                .HasMaxLength(50)
+                .HasColumnName("category");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
             entity.Property(e => e.ImageUrl).HasColumnName("image_url");
             entity.Property(e => e.VehicleCheckinId).HasColumnName("vehicle_checkin_id");
 

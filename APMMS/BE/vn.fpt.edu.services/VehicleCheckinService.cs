@@ -42,10 +42,16 @@ namespace BE.vn.fpt.edu.services
                 Code = await GenerateVehicleCheckinCodeAsync(),
                 StatusCode = "PENDING", // Default status - chỉ có PENDING và CONFIRMED
                 CreatedAt = DateTime.UtcNow,
-                VehicleCheckinImages = request.ImageUrls.Select(url => new VehicleCheckinImage
+                VehicleCheckinImages = request.ImageUrls.Select((url, index) => new VehicleCheckinImage
                 {
                     ImageUrl = url,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    Description = request.ImageDescriptions != null && index < request.ImageDescriptions.Count 
+                        ? request.ImageDescriptions[index] 
+                        : null,
+                    Category = request.ImageCategories != null && index < request.ImageCategories.Count 
+                        ? request.ImageCategories[index] 
+                        : null
                 }).ToList(),
                 SnapshotCarName = car.CarName,
                 SnapshotCarModel = car.CarModel,
@@ -86,10 +92,16 @@ namespace BE.vn.fpt.edu.services
                 existingVehicleCheckin.VehicleCheckinImages.Clear();
                 
                 // Add new images
-                existingVehicleCheckin.VehicleCheckinImages = request.ImageUrls.Select(url => new VehicleCheckinImage
+                existingVehicleCheckin.VehicleCheckinImages = request.ImageUrls.Select((url, index) => new VehicleCheckinImage
                 {
                     ImageUrl = url,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    Description = request.ImageDescriptions != null && index < request.ImageDescriptions.Count 
+                        ? request.ImageDescriptions[index] 
+                        : null,
+                    Category = request.ImageCategories != null && index < request.ImageCategories.Count 
+                        ? request.ImageCategories[index] 
+                        : null
                 }).ToList();
             }
 
@@ -187,7 +199,9 @@ namespace BE.vn.fpt.edu.services
                 {
                     Id = img.Id,
                     ImageUrl = img.ImageUrl,
-                    CreatedAt = img.CreatedAt
+                    CreatedAt = img.CreatedAt,
+                    Description = img.Description,
+                    Category = img.Category
                 }).ToList() ?? new List<VehicleCheckinImageDto>(),
                 
                 // Maintenance request info

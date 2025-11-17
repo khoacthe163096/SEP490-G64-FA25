@@ -13,5 +13,9 @@ public partial class VehicleCheckinImage
 
     public DateTime? CreatedAt { get; set; }
 
+    public string? Description { get; set; }
+
+    public string? Category { get; set; }
+
     public virtual VehicleCheckin? VehicleCheckin { get; set; }
 }

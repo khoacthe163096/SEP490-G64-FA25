@@ -167,8 +167,8 @@
                                 <div class="mb-3">
                                     <label for="images" class="form-label">Hình ảnh xe</label>
                                     <input type="file" class="form-control" id="images" name="images" multiple accept="image/*" onchange="previewImages()">
-                                    <div class="form-text">Có thể chọn nhiều hình ảnh (JPG, PNG, GIF)</div>
-                                    <div id="imagePreview" class="mt-2"></div>
+                                    <div class="form-text">Có thể chọn nhiều hình ảnh (JPG, PNG, GIF). Vui lòng nhập mô tả và phân loại cho từng ảnh.</div>
+                                    <div id="imagePreview" class="mt-3"></div>
                                 </div>
                             </div>
                         </div>
@@ -483,6 +483,18 @@
                 return;
             }
 
+            const branchId = document.getElementById('branchId').value;
+            if (!branchId) {
+                showAlert('Vui lòng chọn chi nhánh', 'warning');
+                return;
+            }
+
+            const mileage = document.getElementById('mileage').value;
+            if (!mileage || mileage <= 0) {
+                showAlert('Vui lòng nhập số km hợp lệ', 'warning');
+                return;
+            }
+
             // Upload ảnh trước
             const imageUrls = await uploadImages();
             if (imageUrls === null) {
@@ -490,29 +502,57 @@
                 return;
             }
 
-            const vehicleInfo = {
-                licensePlate: document.getElementById('licensePlate').value,
-                vinNumber: document.getElementById('vinNumber').value,
-                engineNumber: document.getElementById('engineNumber').value,
-                carName: document.getElementById('carName').value,
-                carModel: document.getElementById('carModel').value,
-                vehicleType: document.getElementById('vehicleType').value,
-                vehicleTypeId: parseInt(document.getElementById('vehicleTypeId').value) || null,
-                customerName: document.getElementById('customerName').value,
-                customerPhone: document.getElementById('customerPhone').value,
-                yearOfManufacture: document.getElementById('yearOfManufacture').value
-            };
+            if (imageUrls.length === 0) {
+                showAlert('Vui lòng chọn ít nhất một hình ảnh', 'warning');
+                return;
+            }
+
+            // Lấy descriptions và categories từ form
+            const imageDescriptions = [];
+            const imageCategories = [];
+            const descriptionInputs = document.querySelectorAll('.image-description');
+            const categorySelects = document.querySelectorAll('.image-category');
+            
+            // Sắp xếp theo index
+            const sortedDescriptions = Array.from(descriptionInputs).sort((a, b) => 
+                parseInt(a.dataset.index) - parseInt(b.dataset.index)
+            );
+            const sortedCategories = Array.from(categorySelects).sort((a, b) => 
+                parseInt(a.dataset.index) - parseInt(b.dataset.index)
+            );
+            
+            sortedDescriptions.forEach(input => {
+                const value = input.value.trim();
+                imageDescriptions.push(value || null);
+            });
+            
+            sortedCategories.forEach(select => {
+                const value = select.value;
+                imageCategories.push(value || null);
+            });
+
+            // Đảm bảo số lượng descriptions và categories khớp với số ảnh
+            while (imageDescriptions.length < imageUrls.length) {
+                imageDescriptions.push(null);
+            }
+            while (imageCategories.length < imageUrls.length) {
+                imageCategories.push(null);
+            }
 
             const formData = {
                 carId: parseInt(carId),
                 maintenanceRequestId: null,
-                mileage: parseInt(document.getElementById('mileage').value),
-                notes: document.getElementById('notes').value,
+                mileage: parseInt(mileage),
+                notes: document.getElementById('notes').value || null,
                 imageUrls: imageUrls,
-                branchId: parseInt(document.getElementById('branchId').value),
-                vehicleInfo: vehicleInfo
+                imageDescriptions: imageDescriptions.length > 0 && imageDescriptions.some(d => d !== null) ? imageDescriptions : null,
+                imageCategories: imageCategories.length > 0 && imageCategories.some(c => c !== null) ? imageCategories : null,
+                branchId: parseInt(branchId)
             };
 
+            // Debug: Log formData trước khi gửi
+            console.log('FormData to send:', formData);
+            
             fetch('@apiBaseUrl/VehicleCheckin', {
                 method: 'POST',
                 headers: {
@@ -520,7 +560,16 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    // Log chi tiết lỗi
+                    console.error('Error response:', data);
+                    console.error('Status:', response.status);
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
                     showAlert('Check-in xe thành công!', 'success');
@@ -528,12 +577,12 @@
                         window.location.href = '/VehicleCheckins';
                     }, 1500);
                 } else {
-                    showAlert('Lỗi: ' + data.message, 'danger');
+                    showAlert('Lỗi: ' + (data.message || 'Không xác định'), 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi check-in xe', 'danger');
+                showAlert('Có lỗi xảy ra khi check-in xe: ' + error.message, 'danger');
             });
         }
 
@@ -550,15 +599,39 @@
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = function(e) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.style.width = '100px';
-                            img.style.height = '100px';
-                            img.style.objectFit = 'cover';
-                            img.style.margin = '5px';
-                            img.style.border = '1px solid #ddd';
-                            img.style.borderRadius = '5px';
-                            preview.appendChild(img);
+                            const imageContainer = document.createElement('div');
+                            imageContainer.className = 'card mb-3';
+                            imageContainer.innerHTML = `
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <img src="${e.target.result}" class="img-thumbnail" style="width: 100%; max-height: 150px; object-fit: cover;" alt="Preview ${i + 1}">
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="mb-2">
+                                                <label class="form-label small">Mô tả ảnh ${i + 1} <span class="text-muted">(tùy chọn)</span></label>
+                                                <input type="text" class="form-control form-control-sm image-description" 
+                                                       placeholder="VD: Cửa trái - vết xước dài 20cm" 
+                                                       data-index="${i}">
+                                                <small class="text-muted">Mô tả ngắn về nội dung ảnh</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label small">Phân loại <span class="text-muted">(tùy chọn)</span></label>
+                                                <select class="form-select form-select-sm image-category" data-index="${i}">
+                                                    <option value="">-- Chọn phân loại --</option>
+                                                    <option value="Exterior">Ngoại thất</option>
+                                                    <option value="Interior">Nội thất</option>
+                                                    <option value="Damage">Hư hỏng</option>
+                                                    <option value="Engine">Động cơ</option>
+                                                    <option value="Tire">Lốp xe</option>
+                                                    <option value="Other">Khác</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            preview.appendChild(imageContainer);
                         };
                         reader.readAsDataURL(file);
                     }

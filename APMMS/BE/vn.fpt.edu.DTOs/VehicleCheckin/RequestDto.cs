@@ -25,6 +25,16 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         [Required(ErrorMessage = "At least one image is required")]
         public List<string> ImageUrls { get; set; } = new List<string>();
         
+        /// <summary>
+        /// Danh sách mô tả cho từng ảnh (tương ứng với ImageUrls)
+        /// </summary>
+        public List<string>? ImageDescriptions { get; set; }
+        
+        /// <summary>
+        /// Danh sách phân loại cho từng ảnh (tương ứng với ImageUrls)
+        /// </summary>
+        public List<string>? ImageCategories { get; set; }
+        
         [Required(ErrorMessage = "Branch ID is required")]
         public long BranchId { get; set; }
         
@@ -47,6 +57,16 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public string? Notes { get; set; }
         
         public List<string> ImageUrls { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// Danh sách mô tả cho từng ảnh (tương ứng với ImageUrls)
+        /// </summary>
+        public List<string>? ImageDescriptions { get; set; }
+        
+        /// <summary>
+        /// Danh sách phân loại cho từng ảnh (tương ứng với ImageUrls)
+        /// </summary>
+        public List<string>? ImageCategories { get; set; }
     }
 }
 

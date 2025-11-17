@@ -302,15 +302,34 @@
                 
                 // Kiểm tra URL hình ảnh
                 const imageUrl = image.imageUrl || image.url || image.src;
+                const description = image.description || '';
+                const category = image.category || '';
                 console.log(`Image URL for ${index + 1}:`, imageUrl); // Debug log
                 
+                // Tạo badge cho category
+                let categoryBadge = '';
+                if (category) {
+                    const categoryLabels = {
+                        'Exterior': 'Ngoại thất',
+                        'Interior': 'Nội thất',
+                        'Damage': 'Hư hỏng',
+                        'Engine': 'Động cơ',
+                        'Tire': 'Lốp xe',
+                        'Other': 'Khác'
+                    };
+                    const categoryLabel = categoryLabels[category] || category;
+                    categoryBadge = `<span class="badge bg-info mb-1">${categoryLabel}</span>`;
+                }
+                
                 col.innerHTML = `
-                    <div class="card">
-                        <img src="${imageUrl}" class="card-img-top" style="height: 200px; object-fit: cover;" 
+                    <div class="card h-100">
+                        <img src="${imageUrl}" class="card-img-top" style="height: 200px; object-fit: cover; cursor: pointer;" 
                              alt="Hình ảnh xe ${index + 1}" 
                              onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjVGNUY1Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Lb8O0bmcgY8O0IGjDsm5oIMSR4b5uPC90ZXh0Pgo8L3N2Zz4K'; this.alt='Không thể tải hình ảnh';"
                              onclick="openImageModal('${imageUrl}')">
                         <div class="card-body p-2">
+                            ${categoryBadge}
+                            ${description ? `<p class="card-text small mb-1" style="font-size: 0.85rem;">${description}</p>` : ''}
                             <small class="text-muted">Hình ${index + 1}</small>
                         </div>
                     </div>
