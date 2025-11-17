@@ -33,16 +33,6 @@
                         <div class="col-md-2">
                             <input type="date" class="form-control" id="toDateFilter" placeholder="Đến ngày">
                         </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                                <i class="fas fa-refresh"></i> Reset
-                            </button>
-                        </div>
-                        <div class="col-md-1">
-                            <button class="btn btn-success w-100" onclick="exportToExcel()">
-                                <i class="fas fa-file-excel"></i> Export
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Table -->
@@ -577,31 +567,6 @@
             }
         }
 
-        function exportToExcel() {
-            const search = $('#searchInput').val();
-            const status = $('#statusFilter').val();
-            const fromDate = $('#fromDateFilter').val();
-            const toDate = $('#toDateFilter').val();
-            
-            const params = new URLSearchParams({
-                searchTerm: search,
-                statusCode: status,
-                fromDate: fromDate,
-                toDate: toDate,
-                export: 'excel'
-            });
-            
-            window.open(`${API_BASE_URL}/VehicleCheckin/export?${params.toString()}`, '_blank');
-        }
-
-        function resetFilters() {
-            $('#searchInput').val('');
-            $('#statusFilter').val('');
-            $('#fromDateFilter').val('');
-            $('#toDateFilter').val('');
-            currentPage = 1;
-            applyFilters();
-        }
 
         function confirmCheckin(id) {
             // Lưu ID để sử dụng trong modal

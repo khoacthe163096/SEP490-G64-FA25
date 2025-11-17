@@ -103,6 +103,12 @@
                                     <input type="text" class="form-control" id="vehicleType" name="vehicleType" readonly>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="carColor" class="form-label">Màu xe</label>
+                                    <input type="text" class="form-control" id="carColor" name="carColor" readonly>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row">
@@ -138,11 +144,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger"></span></label>
-                                    <select class="form-select" id="branchId" name="branchId" readonly>
-                                        <option value="">Chọn chi nhánh</option>
-                                        <!-- Will be loaded dynamically -->
-                                    </select>
+                                    <label for="branchId" class="form-label">Chi nhánh <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="branchName" name="branchName" readonly style="background-color: #e9ecef;">
+                                    <input type="hidden" id="branchId" name="branchId">
+                                    <div class="form-text mt-1">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Chi nhánh của tài khoản hiện tại
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -217,76 +225,52 @@
         }
 
         function loadBranches() {
-            fetch('@apiBaseUrl/Branch')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const select = document.getElementById('branchId');
-                        data.data.forEach(branch => {
-                            const option = document.createElement('option');
-                            option.value = branch.id;
-                            option.textContent = branch.name;
-                            select.appendChild(option);
-                        });
-                        
-                        // Tự động chọn chi nhánh của Consulter
-                        selectBranchForConsulter();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading branches:', error);
-                });
+            // Tự động lấy chi nhánh của user hiện tại
+            loadCurrentUserBranch();
         }
         
         let vehicleTypeLookup = null;
         let vehicleTypeLookupPromise = null;
 
-        function selectBranchForConsulter() {
-            console.log('selectBranchForConsulter called');
-            // Lấy thông tin user từ token
+        function loadCurrentUserBranch() {
             const token = localStorage.getItem('authToken');
-            console.log('Token found:', token ? 'Yes' : 'No');
-            if (!token) return;
-            
-            try {
-                // Decode token để lấy thông tin user
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
-                const roleId = payload['RoleId'];
-                console.log('User ID:', userId, 'Role ID:', roleId);
-                
-                // Nếu là Consulter (roleId = 6), tự động chọn chi nhánh
-                if (roleId === '6') {
-                    console.log('User is Consulter, getting branch info...');
-                    // Gọi API để lấy thông tin chi nhánh của Consulter
-                    fetch(`@apiBaseUrl/Employee/${userId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Employee data:', data);
-                            if (data.branchName) {
-                                // Tìm chi nhánh theo tên
-                                const select = document.getElementById('branchId');
-                                for (let i = 0; i < select.options.length; i++) {
-                                    if (select.options[i].textContent === data.branchName) {
-                                        select.value = select.options[i].value;
-                                        console.log('Auto-selected branch for Consulter:', data.branchName, 'ID:', select.options[i].value);
-                                        break;
-                                    }
-                                }
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error getting Consulter branch:', error);
-                            // Fallback: chọn chi nhánh đầu tiên
-                            const select = document.getElementById('branchId');
-                            if (select.options.length > 1) {
-                                select.selectedIndex = 1; // Skip "Chọn chi nhánh" option
-                            }
-                        });
-                }
-            } catch (e) {
-                console.error('Error decoding token:', e);
+            if (!token) {
+                document.getElementById('branchName').value = 'Không lấy được thông tin';
+                return;
             }
+            
+            // Gọi API để lấy thông tin employee hiện tại
+            fetch('@apiBaseUrl/Employee/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.data) {
+                    const employee = data.data;
+                    if (employee.branchName) {
+                        document.getElementById('branchName').value = employee.branchName;
+                    } else {
+                        document.getElementById('branchName').value = 'Không có chi nhánh';
+                    }
+                    if (employee.branchId) {
+                        document.getElementById('branchId').value = employee.branchId;
+                    }
+                    console.log('Loaded branch:', employee.branchName, 'ID:', employee.branchId);
+                } else {
+                    document.getElementById('branchName').value = 'Không lấy được thông tin';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading current user branch:', error);
+                document.getElementById('branchName').value = 'Lỗi tải chi nhánh';
+            });
         }
 
         async function ensureVehicleTypesLoaded() {
@@ -428,16 +412,35 @@
                     const { typeName: vehicleTypeValue, typeId: vehicleTypeIdValue } = await resolveVehicleType(car);
                     const carNameValue = car.carName || '';
                     const carModelValue = car.carModel || '';
+                    const carColorValue = car.color || car.carColor || '';
                     document.getElementById('carId').value = car.id;
                     document.getElementById('vehicleTypeId').value = vehicleTypeIdValue !== null && vehicleTypeIdValue !== undefined ? vehicleTypeIdValue : '';
                     document.getElementById('licensePlate').value = car.licensePlate || '';
-                    document.getElementById('vinNumber').value = car.vinNumber || '';
+                    
+                    // Số khung - chỉ dùng màu đỏ nếu không có giá trị
+                    const vinNumberInput = document.getElementById('vinNumber');
+                    vinNumberInput.value = car.vinNumber || '';
+                    if (car.vinNumber && car.vinNumber.trim() !== '') {
+                        vinNumberInput.style.color = '';
+                    } else {
+                        vinNumberInput.style.color = '#dc3545';
+                    }
+                    
+                    // Số máy - chỉ dùng màu đỏ nếu không có giá trị
+                    const engineNumberInput = document.getElementById('engineNumber');
+                    engineNumberInput.value = engineNumberValue;
+                    if (engineNumberValue && engineNumberValue.trim() !== '') {
+                        engineNumberInput.style.color = '';
+                    } else {
+                        engineNumberInput.style.color = '#dc3545';
+                    }
+                    
                     document.getElementById('carName').value = carNameValue;
                     document.getElementById('carModel').value = carModelValue;
                     document.getElementById('vehicleType').value = vehicleTypeValue || '';
+                    document.getElementById('carColor').value = carColorValue;
                     document.getElementById('customerName').value = car.customerName || '';
                     document.getElementById('customerPhone').value = car.customerPhone || '';
-                    document.getElementById('engineNumber').value = engineNumberValue;
                     document.getElementById('yearOfManufacture').value = car.yearOfManufacture || '';
                     
                     // Hiển thị thông tin xe tìm thấy
@@ -449,7 +452,8 @@
                                 <strong>Số máy:</strong> ${engineNumberValue || '-'}<br>
                                 <strong>Loại xe:</strong> ${vehicleTypeValue || '-'}<br>
                                 <strong>Tên xe:</strong> ${carNameValue || '-'}<br>
-                                <strong>Model:</strong> ${carModelValue || '-'}
+                                <strong>Model:</strong> ${carModelValue || '-'}<br>
+                                <strong>Màu xe:</strong> ${carColorValue || '-'}
                             </div>
                             <div class="col-md-6">
                                 <strong>Chủ xe:</strong> ${car.customerName || '-'}<br>
@@ -683,7 +687,7 @@
         }
 
         function clearVehicleFields() {
-            const fieldsToClear = ['carId', 'licensePlate', 'vinNumber', 'engineNumber', 'carName', 'carModel', 'vehicleType', 'vehicleTypeId', 'customerName', 'customerPhone', 'yearOfManufacture'];
+            const fieldsToClear = ['carId', 'licensePlate', 'vinNumber', 'engineNumber', 'carName', 'carModel', 'vehicleType', 'vehicleTypeId', 'carColor', 'customerName', 'customerPhone', 'yearOfManufacture'];
             fieldsToClear.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {

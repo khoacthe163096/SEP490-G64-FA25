@@ -50,10 +50,6 @@
                                         <div class="col-sm-8" id="checkinCode">-</div>
                                     </div>
                                     <div class="row mb-2">
-                                        <div class="col-sm-4"><strong>ID:</strong></div>
-                                        <div class="col-sm-8" id="checkinId">-</div>
-                                    </div>
-                                    <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Biển số:</strong></div>
                                         <div class="col-sm-8" id="licensePlate">-</div>
                                     </div>
@@ -71,11 +67,15 @@
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Số khung:</strong></div>
-                                        <div class="col-sm-8"><code id="vinNumber">-</code></div>
+                                        <div class="col-sm-8" id="vinNumber">-</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Số máy:</strong></div>
-                                        <div class="col-sm-8"><code id="engineNumber">-</code></div>
+                                        <div class="col-sm-8" id="engineNumber">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Màu xe:</strong></div>
+                                        <div class="col-sm-8" id="carColor">-</div>
                                     </div>
                                     <div class="row mb-2">
                                         <div class="col-sm-4"><strong>Số km:</strong></div>
@@ -237,13 +237,22 @@
             console.log('BranchName from API:', checkin.branchName); // Debug branch name
             
             document.getElementById('checkinCode').textContent = checkin.code || 'VCI-' + checkin.id;
-            document.getElementById('checkinId').textContent = checkin.id || '-';
             document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
             document.getElementById('vehicleType').textContent = checkin.carName || '-'; // Sử dụng carName thay vì vehicleType
             document.getElementById('customerName').textContent = checkin.customerName || '-';
             document.getElementById('customerPhone').textContent = checkin.customerPhone || '-';
-            document.getElementById('vinNumber').textContent = checkin.vinNumber || '-';
-            document.getElementById('engineNumber').textContent = checkin.vehicleEngineNumber || '-';
+            const vinNumber = checkin.vinNumber || '-';
+            const engineNumber = checkin.vehicleEngineNumber || '-';
+            document.getElementById('vinNumber').textContent = vinNumber;
+            document.getElementById('engineNumber').textContent = engineNumber;
+            // Chỉ hiển thị màu đỏ nếu không có giá trị
+            if (vinNumber === '-') {
+                document.getElementById('vinNumber').style.color = '#dc3545';
+            }
+            if (engineNumber === '-') {
+                document.getElementById('engineNumber').style.color = '#dc3545';
+            }
+            document.getElementById('carColor').textContent = checkin.carColor || checkin.color || '-';
             document.getElementById('mileage').textContent = checkin.mileage ? checkin.mileage + ' km' : '-';
             document.getElementById('branchName').textContent = checkin.branchName || '-';
             document.getElementById('status').innerHTML = getStatusBadge(checkin.statusCode);
