@@ -14,14 +14,16 @@ namespace BE.vn.fpt.edu.services
     {
         private readonly ITicketComponentRepository _repository;
         private readonly CarMaintenanceDbContext _context;
+        private readonly IHistoryLogRepository _historyLogRepository;
 
-        public TicketComponentService(ITicketComponentRepository repository, CarMaintenanceDbContext context)
+        public TicketComponentService(ITicketComponentRepository repository, CarMaintenanceDbContext context, IHistoryLogRepository historyLogRepository)
         {
             _repository = repository;
             _context = context;
+            _historyLogRepository = historyLogRepository;
         }
 
-        public async Task<ResponseDto> CreateAsync(RequestDto dto)
+        public async Task<ResponseDto> CreateAsync(RequestDto dto, long? userId = null)
         {
             // Validate MaintenanceTicket exists and get BranchId
             var ticket = await _context.MaintenanceTickets
@@ -86,6 +88,30 @@ namespace BE.vn.fpt.edu.services
             
             // Cập nhật TotalEstimatedCost của MaintenanceTicket
             await UpdateMaintenanceTicketTotalCost(dto.MaintenanceTicketId);
+            
+            // ✅ Tạo history log để ghi nhận việc thêm phụ tùng
+            if (userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                var userName = user != null 
+                    ? ($"{user.FirstName} {user.LastName}").Trim() 
+                    : "Unknown";
+                
+                var componentDetails = $"Thêm phụ tùng '{component.Name}' (Mã: {component.Code})";
+                componentDetails += $" - Số lượng: {dto.Quantity}";
+                if (dto.UnitPrice.HasValue)
+                {
+                    componentDetails += $" - Đơn giá: {dto.UnitPrice.Value:N0} ₫";
+                    componentDetails += $" - Thành tiền: {(dto.Quantity * dto.UnitPrice.Value):N0} ₫";
+                }
+                
+                await CreateHistoryLogAsync(
+                    userId: userId,
+                    action: "ADD_COMPONENT",
+                    maintenanceTicketId: dto.MaintenanceTicketId,
+                    newData: $"{componentDetails} bởi {userName}"
+                );
+            }
             
             return MapToResponse(created);
         }
@@ -291,6 +317,24 @@ namespace BE.vn.fpt.edu.services
             // Cập nhật TotalEstimatedCost
             maintenanceTicket.TotalEstimatedCost = componentTotal + laborCostTotal;
             await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Helper method để tạo history log
+        /// </summary>
+        private async Task CreateHistoryLogAsync(long? userId, string action, long? maintenanceTicketId = null, string? oldData = null, string? newData = null)
+        {
+            var historyLog = new HistoryLog
+            {
+                UserId = userId,
+                MaintenanceTicketId = maintenanceTicketId,
+                Action = action,
+                OldData = oldData,
+                NewData = newData,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _historyLogRepository.CreateAsync(historyLog);
         }
 
         private ResponseDto MapToResponse(TicketComponent entity)

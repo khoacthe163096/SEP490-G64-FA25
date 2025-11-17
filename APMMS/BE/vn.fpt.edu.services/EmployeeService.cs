@@ -265,7 +265,7 @@ namespace BE.vn.fpt.edu.services
             return _mapper.Map<IEnumerable<EmployeeResponseDto>>(employees);
         }
 
-        public async Task<IEnumerable<EmployeeResponseDto>> FilterAsync(bool? isDelete, long? roleId)
+        public async Task<IEnumerable<EmployeeResponseDto>> FilterAsync(bool? isDelete, long? roleId, long? branchId = null)
         {
             var query = _employeeRepository.GetAll();
 
@@ -274,6 +274,9 @@ namespace BE.vn.fpt.edu.services
 
             if (roleId.HasValue)
                 query = query.Where(e => e.RoleId == roleId.Value);
+
+            if (branchId.HasValue)
+                query = query.Where(e => e.BranchId == branchId.Value);
 
             var employees = await query.ToListAsync();
             return employees.Select(e => _mapper.Map<EmployeeResponseDto>(e));

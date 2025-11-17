@@ -21,6 +21,8 @@ namespace BE.vn.fpt.edu.services
         private readonly IServiceTaskRepository _serviceTaskRepository;
         private readonly IMaintenanceTicketRepository _maintenanceTicketRepository;
         private readonly IServiceCategoryRepository _serviceCategoryRepository;
+        private readonly IHistoryLogRepository _historyLogRepository;
+        private readonly CarMaintenanceDbContext _context;
         private readonly IMapper _mapper;
 
 
@@ -29,6 +31,8 @@ namespace BE.vn.fpt.edu.services
             IServiceTaskRepository serviceTaskRepository, 
             IMaintenanceTicketRepository maintenanceTicketRepository,
             IServiceCategoryRepository serviceCategoryRepository,
+            IHistoryLogRepository historyLogRepository,
+            CarMaintenanceDbContext context,
             IMapper mapper)
 
         {
@@ -36,13 +40,15 @@ namespace BE.vn.fpt.edu.services
             _serviceTaskRepository = serviceTaskRepository;
             _maintenanceTicketRepository = maintenanceTicketRepository;
             _serviceCategoryRepository = serviceCategoryRepository;
+            _historyLogRepository = historyLogRepository;
+            _context = context;
             _mapper = mapper;
 
         }
 
 
 
-        public async Task<ServiceTaskResponseDto> CreateServiceTaskAsync(ServiceTaskRequestDto request)
+        public async Task<ServiceTaskResponseDto> CreateServiceTaskAsync(ServiceTaskRequestDto request, long? userId = null)
         {
             var serviceTask = _mapper.Map<ServiceTask>(request);           
             // Tính LaborCost nếu có StandardLaborTime và Branch.LaborRate
@@ -87,6 +93,32 @@ namespace BE.vn.fpt.edu.services
 
             await UpdateMaintenanceTicketTotalCost(serviceTask.MaintenanceTicketId ?? 0);
 
+            // ✅ Tạo history log để ghi nhận việc thêm công việc
+            if (userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                var userName = user != null 
+                    ? ($"{user.FirstName} {user.LastName}").Trim() 
+                    : "Unknown";
+                
+                var taskDetails = $"Thêm công việc '{createdTask.TaskName ?? "N/A"}'";
+                if (createdTask.StandardLaborTime.HasValue)
+                {
+                    taskDetails += $" - Thời gian chuẩn: {createdTask.StandardLaborTime.Value} giờ";
+                }
+                if (createdTask.LaborCost.HasValue)
+                {
+                    taskDetails += $" - Phí nhân công: {createdTask.LaborCost.Value:N0} ₫";
+                }
+                
+                await CreateHistoryLogAsync(
+                    userId: userId,
+                    action: "ADD_SERVICE_TASK",
+                    maintenanceTicketId: serviceTask.MaintenanceTicketId,
+                    newData: $"{taskDetails} bởi {userName}"
+                );
+            }
+
             
 
             return await GetServiceTaskByIdAsync(createdTask.Id);
@@ -105,7 +137,11 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Service task not found");
 
-
+            // ✅ VALIDATION: Không cho phép sửa công việc đã hoàn thành
+            if (existingTask.StatusCode == "DONE" || existingTask.StatusCode == "COMPLETED")
+            {
+                throw new ArgumentException("Không thể sửa công việc đã hoàn thành");
+            }
 
             _mapper.Map(request, existingTask);
 
@@ -205,7 +241,13 @@ namespace BE.vn.fpt.edu.services
 
             if (serviceTask == null)
 
-                return false;          
+                return false;
+
+            // ✅ VALIDATION: Không cho phép xóa công việc đã hoàn thành
+            if (serviceTask.StatusCode == "DONE" || serviceTask.StatusCode == "COMPLETED")
+            {
+                throw new ArgumentException("Không thể xóa công việc đã hoàn thành");
+            }          
 
             var maintenanceTicketId = serviceTask.MaintenanceTicketId ?? 0;
 
@@ -231,7 +273,7 @@ namespace BE.vn.fpt.edu.services
 
 
 
-        public async Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode)
+        public async Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode, long? userId = null)
 
         {
 
@@ -241,11 +283,53 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Service task not found");
 
-
+            var oldStatus = serviceTask.StatusCode;
 
             serviceTask.StatusCode = statusCode;
 
             var updatedTask = await _serviceTaskRepository.UpdateAsync(serviceTask);
+
+            // ✅ Tạo history log để ghi nhận việc cập nhật trạng thái công việc
+            if (userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                var userName = user != null 
+                    ? ($"{user.FirstName} {user.LastName}").Trim() 
+                    : "Unknown";
+                
+                string action = "";
+                string statusText = "";
+                
+                if (statusCode == "IN_PROGRESS" && oldStatus != "IN_PROGRESS")
+                {
+                    action = "START_SERVICE_TASK";
+                    statusText = "Bắt đầu công việc";
+                }
+                else if ((statusCode == "DONE" || statusCode == "COMPLETED") && oldStatus != statusCode)
+                {
+                    action = "COMPLETE_SERVICE_TASK";
+                    statusText = "Hoàn thành công việc";
+                }
+                else
+                {
+                    action = "UPDATE_SERVICE_TASK_STATUS";
+                    statusText = "Cập nhật trạng thái công việc";
+                }
+                
+                var taskDetails = $"{statusText} '{serviceTask.TaskName ?? "N/A"}'";
+                if (oldStatus != statusCode)
+                {
+                    taskDetails += $" (Từ {oldStatus} → {statusCode})";
+                }
+                
+                await CreateHistoryLogAsync(
+                    userId: userId,
+                    action: action,
+                    maintenanceTicketId: serviceTask.MaintenanceTicketId,
+                    oldData: $"Trạng thái cũ: {oldStatus}",
+                    newData: $"{taskDetails} bởi {userName}"
+                );
+            }
 
             return await GetServiceTaskByIdAsync(updatedTask.Id);
 
@@ -450,6 +534,24 @@ namespace BE.vn.fpt.edu.services
 
             };
 
+        }
+
+        /// <summary>
+        /// Helper method để tạo history log
+        /// </summary>
+        private async Task CreateHistoryLogAsync(long? userId, string action, long? maintenanceTicketId = null, string? oldData = null, string? newData = null)
+        {
+            var historyLog = new HistoryLog
+            {
+                UserId = userId,
+                MaintenanceTicketId = maintenanceTicketId,
+                Action = action,
+                OldData = oldData,
+                NewData = newData,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _historyLogRepository.CreateAsync(historyLog);
         }
 
     }
