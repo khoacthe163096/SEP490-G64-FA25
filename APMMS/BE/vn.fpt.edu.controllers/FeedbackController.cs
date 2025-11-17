@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BE.vn.fpt.edu.DTOs.Feedback;
 using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +18,22 @@ namespace BE.vn.fpt.edu.controllers
             _mapper = mapper;
         }
 
+        // Lấy tất cả feedback, có filter rating và phân trang
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? rating, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var feedbacks = await _feedbackService.GetAllAsync();
-            return Ok(feedbacks);
+            var (items, totalCount) = await _feedbackService.FilterAsync(rating, page, pageSize);
+            var result = new
+            {
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize,
+                Items = items
+            };
+            return Ok(result);
         }
 
+        // Lấy feedback theo ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id)
         {
@@ -33,6 +42,7 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(feedback);
         }
 
+        // Lấy tất cả feedback của user
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetByUserId(long userId)
         {
@@ -40,6 +50,7 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(feedbacks);
         }
 
+        // Lấy tất cả feedback của ticket
         [HttpGet("ticket/{ticketId}")]
         public async Task<IActionResult> GetByTicketId(long ticketId)
         {
@@ -47,13 +58,33 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(feedbacks);
         }
 
+        // Lấy tất cả reply của 1 feedback
+        [HttpGet("{parentId}/replies")]
+        public async Task<IActionResult> GetReplies(long parentId)
+        {
+            var replies = await _feedbackService.GetRepliesAsync(parentId);
+            return Ok(replies);
+        }
+
+        // Tạo feedback hoặc reply
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RequestDto request)
         {
-            var created = await _feedbackService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            if (request.ParentId.HasValue)
+            {
+                // Đây là reply
+                var reply = await _feedbackService.CreateAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = reply.Id }, reply);
+            }
+            else
+            {
+                // Đây là feedback bình thường
+                var feedback = await _feedbackService.CreateAsync(request);
+                return CreatedAtAction(nameof(GetById), new { id = feedback.Id }, feedback);
+            }
         }
 
+        // Cập nhật feedback
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] RequestDto request)
         {
@@ -62,6 +93,7 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(updated);
         }
 
+        // Xóa feedback
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {

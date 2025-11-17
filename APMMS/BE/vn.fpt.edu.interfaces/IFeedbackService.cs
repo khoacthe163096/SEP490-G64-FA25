@@ -1,4 +1,4 @@
-using BE.vn.fpt.edu.DTOs.Feedback;
+﻿using BE.vn.fpt.edu.DTOs.Feedback;
 
 namespace BE.vn.fpt.edu.interfaces
 {
@@ -11,5 +11,10 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CreateAsync(RequestDto request);
         Task<ResponseDto?> UpdateAsync(long id, RequestDto request);
         Task<bool> DeleteAsync(long id);
+
+        // Mới
+        Task<(IEnumerable<ResponseDto> Items, int TotalCount)> FilterAsync(int? rating, int page, int pageSize);
+        Task<IEnumerable<ResponseDto>> GetRepliesAsync(long parentId);
+        Task<ResponseDto> CreateReplyAsync(RequestDto request);
     }
 }

@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BE.vn.fpt.edu.DTOs.Feedback;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
@@ -59,6 +59,31 @@ namespace BE.vn.fpt.edu.services
         public async Task<bool> DeleteAsync(long id)
         {
             return await _repository.DeleteAsync(id);
+        }
+
+        // Mới: filter + paging
+        public async Task<(IEnumerable<ResponseDto> Items, int TotalCount)> FilterAsync(int? rating, int page, int pageSize)
+        {
+            var (items, total) = await _repository.FilterAsync(rating, page, pageSize);
+            return (_mapper.Map<IEnumerable<ResponseDto>>(items), total);
+        }
+
+        // Mới: lấy reply theo parentId
+        public async Task<IEnumerable<ResponseDto>> GetRepliesAsync(long parentId)
+        {
+            var replies = await _repository.GetRepliesAsync(parentId);
+            return _mapper.Map<IEnumerable<ResponseDto>>(replies);
+        }
+
+        // Mới: tạo reply (feedback con)
+        public async Task<ResponseDto> CreateReplyAsync(RequestDto request)
+        {
+            if (!request.ParentId.HasValue)
+                throw new ArgumentException("ParentId is required for a reply.");
+
+            var feedback = _mapper.Map<Feedback>(request);
+            var created = await _repository.CreateAsync(feedback);
+            return _mapper.Map<ResponseDto>(created);
         }
     }
 }

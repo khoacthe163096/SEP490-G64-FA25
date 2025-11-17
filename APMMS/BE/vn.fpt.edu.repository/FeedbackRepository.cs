@@ -74,5 +74,37 @@ namespace BE.vn.fpt.edu.repository
             await _context.SaveChangesAsync();
             return true;
         }
+
+        // Mới: filter + paging
+        public async Task<(IEnumerable<Feedback> Items, int TotalCount)> FilterAsync(int? rating, int page, int pageSize)
+        {
+            var query = _context.Feedbacks
+                .Include(f => f.User)
+                .Include(f => f.MaintenanceTicket)
+                .AsQueryable();
+
+            if (rating.HasValue)
+                query = query.Where(f => f.Rating == rating.Value);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(f => f.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+
+        // Mới: get reply theo parentId
+        public async Task<IEnumerable<Feedback>> GetRepliesAsync(long parentId)
+        {
+            return await _context.Feedbacks
+                .Include(f => f.User)
+                .Where(f => f.ParentId == parentId)
+                .OrderBy(f => f.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

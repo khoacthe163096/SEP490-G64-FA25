@@ -137,67 +137,168 @@
             });
         });
 
-        $(document).ready(function () {
-            const apiBase = '@ViewBag.ApiBaseUrl'; // Tự động lấy base URL từ controller
+    const apiBase = '@ViewBag.ApiBaseUrl';
+    let currentPage = 1;
+    let pageSize = 5;
+    let currentRatingFilter = '';
 
+    $(document).ready(function () {
+
+        // Load feedback lần đầu
+        loadFeedback();
+
+        // Thay đổi filter
+        $('.form-select').on('change', function() {
+            currentRatingFilter = $(this).val();
+            currentPage = 1;
             loadFeedback();
+        });
 
-            function loadFeedback() {
-                $.ajax({
-                    url: `${apiBase}/Feedback`,
-                    type: 'GET',
-                    success: function (data) {
-                        renderFeedback(data);
-                    },
-                    error: function (xhr) {
-                        $('#feedbackList').html(`<p class="text-danger">Không thể tải dữ liệu feedback!</p>`);
-                    }
-                });
-            }
-            function renderFeedback(list) {
-                if (!list || list.length === 0) {
-                    $('#feedbackList').html(`<p class="text-muted">Chưa có phản hồi nào.</p>`);
-                    return;
+        function loadFeedback() {
+            let url = `${apiBase}/Feedback?page=${currentPage}&pageSize=${pageSize}`;
+            if(currentRatingFilter) url += `&rating=${currentRatingFilter}`;
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                    renderFeedback(data.items || []);
+                    renderPagination(data.totalPages || 1);
+                },
+                error: function() {
+                    $('#feedbackList').html(`<p class="text-danger">Không thể tải dữ liệu feedback!</p>`);
                 }
+            });
+        }
 
-                let html = '';
+        function renderFeedback(list) {
+            if(!list.length) {
+                $('#feedbackList').html('<p class="text-muted">Chưa có phản hồi nào.</p>');
+                return;
+            }
 
-                list.forEach(item => {
-                    const stars = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
+            let html = '';
+            list.forEach(item => {
+                const stars = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
+                const avatar = item.image
+                    ? `<img src="${item.image}" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">`
+                    : `<i class="fas fa-user-circle fa-2x me-2 text-secondary"></i>`;
 
-                    const avatar = item.image
-                        ? `<img src="${item.image}" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">`
-                        : `<i class="fas fa-user-circle fa-2x me-2 text-secondary"></i>`; // fallback nếu không có ảnh
-
-                    html += `
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="d-flex align-items-center mb-2">
-                                    ${avatar}
-                                    <div>
-                                        <h6 class="mb-1">${item.userName ?? 'Người dùng'}</h6>
-                                        <div class="text-warning mb-1">${stars}</div>
-                                        <small class="text-muted">Phiếu bảo dưỡng #${item.maintenanceTicketId ?? '--'}</small>
-                                    </div>
+                html += `
+                <div class="card mb-3" data-id="${item.id}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center mb-2">
+                                ${avatar}
+                                <div>
+                                    <h6 class="mb-1">${item.userName ?? 'Người dùng'}</h6>
+                                    <div class="text-warning mb-1">${stars}</div>
+                                    <small class="text-muted">Phiếu bảo dưỡng #${item.maintenanceTicketId ?? '--'}</small>
                                 </div>
-                                <small class="text-muted">${formatDate(item.createdAt)}</small>
                             </div>
-                            <p class="mb-2">${item.comment}</p>
+                            <small class="text-muted">${formatDate(item.createdAt)}</small>
+                        </div>
+                        <p class="mb-2">${item.comment}</p>
+                        <button class="btn btn-sm btn-link view-replies">Xem trả lời</button>
+                        <div class="replies mt-2"></div>
+                        <div class="reply-form mt-2">
+                            <textarea class="form-control mb-1" placeholder="Viết trả lời..."></textarea>
+                            <button class="btn btn-sm btn-primary submit-reply">Gửi</button>
                         </div>
                     </div>
+                </div>
                 `;
-                });
+            });
 
-                $('#feedbackList').html(html);
+            $('#feedbackList').html(html);
+        }
+
+        // Pagination
+        function renderPagination(totalPages) {
+            let html = '';
+            if(totalPages <= 1) return;
+
+            html += `<nav><ul class="pagination">`;
+            for(let i=1;i<=totalPages;i++) {
+                html += `<li class="page-item ${i===currentPage?'active':''}"><a class="page-link" href="#">${i}</a></li>`;
             }
+            html += `</ul></nav>`;
+            $('#feedbackList').append(html);
 
+            $('.pagination a').click(function(e){
+                e.preventDefault();
+                currentPage = parseInt($(this).text());
+                loadFeedback();
+            });
+        }
 
-            function formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleString("vi-VN");
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString("vi-VN");
+        }
+
+        // Xem reply
+        $(document).on('click', '.view-replies', function() {
+            const card = $(this).closest('.card');
+            const id = card.data('id');
+            const container = card.find('.replies');
+
+            if(container.is(':empty')) {
+                $.get(`${apiBase}/Feedback/${id}/replies`, function(data) {
+                    if(data.length === 0) container.html('<small class="text-muted">Chưa có trả lời nào.</small>');
+                    else {
+                        let replyHtml = '';
+                        data.forEach(r => {
+                            const avatar = r.image
+                                ? `<img src="${r.image}" class="rounded-circle me-2" style="width:30px;height:30px;object-fit:cover;">`
+                                : `<i class="fas fa-user-circle fa-1x me-2 text-secondary"></i>`;
+                            replyHtml += `
+                                <div class="d-flex align-items-center mb-1">
+                                    ${avatar}
+                                    <div>
+                                        <small><strong>${r.userName ?? 'Người dùng'}</strong> - ${formatDate(r.createdAt)}</small>
+                                        <p class="mb-0">${r.comment}</p>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        container.html(replyHtml);
+                    }
+                });
+            } else {
+                container.empty();
             }
         });
+
+        // Gửi reply
+        $(document).on('click', '.submit-reply', function() {
+            const card = $(this).closest('.card');
+            const id = card.data('id');
+            const textarea = card.find('textarea');
+            const comment = textarea.val().trim();
+            if(!comment) return;
+
+            const payload = { comment: comment, parentId: id };
+            $.ajax({
+                url: `${apiBase}/Feedback`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() {
+                    showAlert('Đã gửi trả lời!', 'success');
+                    textarea.val('');
+                    card.find('.replies').empty();
+                },
+                error: function() {
+                    showAlert('Gửi trả lời thất bại!', 'danger');
+                }
+            });
+        });
+
+    });
+
+
 
     </script>
 }
