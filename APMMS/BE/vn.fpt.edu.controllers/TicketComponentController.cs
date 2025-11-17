@@ -1,6 +1,7 @@
 using BE.vn.fpt.edu.DTOs.TicketComponent;
 using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -59,7 +60,11 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _service.CreateAsync(dto);
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _service.CreateAsync(dto, userId);
                 return Ok(new { success = true, data = result, message = "Component added successfully" });
             }
             catch (ArgumentException ex)

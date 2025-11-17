@@ -3,6 +3,7 @@ using BE.vn.fpt.edu.DTOs.ServiceTask;
 using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -28,7 +29,11 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _serviceTaskService.CreateServiceTaskAsync(request);
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _serviceTaskService.CreateServiceTaskAsync(request, userId);
                 return Ok(new { success = true, data = result, message = "Service task created successfully" });
             }
             catch (ArgumentException ex)
@@ -145,7 +150,11 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _serviceTaskService.UpdateStatusAsync(id, request.StatusCode);
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _serviceTaskService.UpdateStatusAsync(id, request.StatusCode, userId);
                 return Ok(new { success = true, data = result, message = "Status updated successfully" });
             }
             catch (ArgumentException ex)

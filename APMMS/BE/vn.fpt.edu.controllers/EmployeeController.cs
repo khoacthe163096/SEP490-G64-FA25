@@ -160,9 +160,9 @@ namespace BE.vn.fpt.edu.controllers
         
         [HttpGet("filter")]
         [Authorize] // Cho phép tất cả user đã đăng nhập (bao gồm Consulter) truy cập để lấy danh sách technician
-        public async Task<IActionResult> FilterEmployees([FromQuery] bool? isDelete, [FromQuery] long? roleId)
+        public async Task<IActionResult> FilterEmployees([FromQuery] bool? isDelete, [FromQuery] long? roleId, [FromQuery] long? branchId = null)
         {
-            var employees = await _employeeService.FilterAsync(isDelete, roleId);
+            var employees = await _employeeService.FilterAsync(isDelete, roleId, branchId);
             return Ok(employees);
         }
 
