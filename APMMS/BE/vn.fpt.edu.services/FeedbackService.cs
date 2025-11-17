@@ -68,6 +68,7 @@ namespace BE.vn.fpt.edu.services
             return (_mapper.Map<IEnumerable<ResponseDto>>(items), total);
         }
 
+
         // Mới: lấy reply theo parentId
         public async Task<IEnumerable<ResponseDto>> GetRepliesAsync(long parentId)
         {

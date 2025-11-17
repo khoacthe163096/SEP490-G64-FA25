@@ -179,20 +179,23 @@
         }
 
         // Render feedback
-        function renderFeedback(list) {
-            if(!list.length) {
-                $('#feedbackList').html('<p class="text-muted">Chưa có phản hồi nào.</p>');
-                return;
-            }
+            function renderFeedback(list) {
+                // Chỉ lấy feedback gốc (ParentId null)
+                list = list.filter(f => f.parentId == null);
 
-            let html = '';
-            list.forEach(item => {
-                const stars = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
-                const avatar = item.image
-                    ? `<img src="${item.image}" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">`
-                    : `<i class="fas fa-user-circle fa-2x me-2 text-secondary"></i>`;
+                if (!list.length) {
+                    $('#feedbackList').html('<p class="text-muted">Chưa có phản hồi nào.</p>');
+                    return;
+                }
 
-                html += `
+                let html = '';
+                list.forEach(item => {
+                    const stars = "★".repeat(item.rating) + "☆".repeat(5 - item.rating);
+                    const avatar = item.image
+                        ? `<img src="${item.image}" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;">`
+                        : `<i class="fas fa-user-circle fa-2x me-2 text-secondary"></i>`;
+
+                    html += `
                 <div class="card mb-3" data-id="${item.id}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -209,7 +212,6 @@
                         <p class="mb-2">${item.comment}</p>
                         <button class="btn btn-sm btn-link view-replies">Xem trả lời</button>
                         <div class="replies mt-2"></div>
-                        <!-- Reply form sẽ hiển thị khi click -->
                         <div class="reply-form mt-2" style="display:none;">
                             <textarea class="form-control mb-1" placeholder="Viết trả lời..."></textarea>
                             <button class="btn btn-sm btn-primary submit-reply">Gửi</button>
@@ -217,10 +219,11 @@
                     </div>
                 </div>
                 `;
-            });
+                });
 
-            $('#feedbackList').html(html);
-        }
+                $('#feedbackList').html(html);
+            }
+
 
         // Render khung viết feedback mới
         function renderNewFeedbackForm() {
