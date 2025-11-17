@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "Trang chủ";
+
 }
 
 <!-- Hero Section -->
@@ -137,10 +138,14 @@
             });
         });
 
+  
     const apiBase = '@ViewBag.ApiBaseUrl';
     let currentPage = 1;
     let pageSize = 5;
     let currentRatingFilter = '';
+       let currentUserId = '@ViewBag.CurrentUserId';
+
+        // Hoặc lấy từ session, claim
 
     $(document).ready(function () {
 
@@ -154,6 +159,7 @@
             loadFeedback();
         });
 
+        // Load feedback từ API
         function loadFeedback() {
             let url = `${apiBase}/Feedback?page=${currentPage}&pageSize=${pageSize}`;
             if(currentRatingFilter) url += `&rating=${currentRatingFilter}`;
@@ -164,6 +170,7 @@
                 success: function(data) {
                     renderFeedback(data.items || []);
                     renderPagination(data.totalPages || 1);
+                    renderNewFeedbackForm(); // Khung viết feedback mới
                 },
                 error: function() {
                     $('#feedbackList').html(`<p class="text-danger">Không thể tải dữ liệu feedback!</p>`);
@@ -171,6 +178,7 @@
             });
         }
 
+        // Render feedback
         function renderFeedback(list) {
             if(!list.length) {
                 $('#feedbackList').html('<p class="text-muted">Chưa có phản hồi nào.</p>');
@@ -201,7 +209,8 @@
                         <p class="mb-2">${item.comment}</p>
                         <button class="btn btn-sm btn-link view-replies">Xem trả lời</button>
                         <div class="replies mt-2"></div>
-                        <div class="reply-form mt-2">
+                        <!-- Reply form sẽ hiển thị khi click -->
+                        <div class="reply-form mt-2" style="display:none;">
                             <textarea class="form-control mb-1" placeholder="Viết trả lời..."></textarea>
                             <button class="btn btn-sm btn-primary submit-reply">Gửi</button>
                         </div>
@@ -211,6 +220,29 @@
             });
 
             $('#feedbackList').html(html);
+        }
+
+        // Render khung viết feedback mới
+        function renderNewFeedbackForm() {
+            if(!currentUserId) return; // Chỉ hiện nếu đã đăng nhập
+
+            const html = `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Viết phản hồi mới</h6>
+                        <textarea id="newFeedbackComment" class="form-control mb-2" placeholder="Nhập phản hồi..."></textarea>
+                        <select id="newFeedbackRating" class="form-select mb-2">
+                            <option value="5">5 sao</option>
+                            <option value="4">4 sao</option>
+                            <option value="3">3 sao</option>
+                            <option value="2">2 sao</option>
+                            <option value="1">1 sao</option>
+                        </select>
+                        <button id="submitNewFeedback" class="btn btn-primary btn-sm">Gửi phản hồi</button>
+                    </div>
+                </div>
+            `;
+            $('#feedbackList').append(html);
         }
 
         // Pagination
@@ -238,12 +270,17 @@
             return date.toLocaleString("vi-VN");
         }
 
-        // Xem reply
+        // Xem reply & hiện form reply
         $(document).on('click', '.view-replies', function() {
             const card = $(this).closest('.card');
             const id = card.data('id');
             const container = card.find('.replies');
+            const replyForm = card.find('.reply-form');
 
+            // Toggle hiển thị form
+            replyForm.toggle();
+
+            // Load reply nếu chưa load
             if(container.is(':empty')) {
                 $.get(`${apiBase}/Feedback/${id}/replies`, function(data) {
                     if(data.length === 0) container.html('<small class="text-muted">Chưa có trả lời nào.</small>');
@@ -266,20 +303,20 @@
                         container.html(replyHtml);
                     }
                 });
-            } else {
-                container.empty();
             }
         });
 
         // Gửi reply
         $(document).on('click', '.submit-reply', function() {
+            if(!currentUserId) { showAlert('Bạn phải đăng nhập để trả lời', 'warning'); return; }
+
             const card = $(this).closest('.card');
             const id = card.data('id');
             const textarea = card.find('textarea');
             const comment = textarea.val().trim();
             if(!comment) return;
 
-            const payload = { comment: comment, parentId: id };
+            const payload = { comment: comment, parentId: id, userId: parseInt(currentUserId) };
             $.ajax({
                 url: `${apiBase}/Feedback`,
                 type: 'POST',
@@ -289,6 +326,7 @@
                     showAlert('Đã gửi trả lời!', 'success');
                     textarea.val('');
                     card.find('.replies').empty();
+                    card.find('.reply-form').hide();
                 },
                 error: function() {
                     showAlert('Gửi trả lời thất bại!', 'danger');
@@ -296,7 +334,33 @@
             });
         });
 
+        // Gửi feedback mới
+        $(document).on('click', '#submitNewFeedback', function() {
+            if(!currentUserId) { showAlert('Bạn phải đăng nhập để gửi phản hồi', 'warning'); return; }
+
+            const comment = $('#newFeedbackComment').val().trim();
+            const rating = parseInt($('#newFeedbackRating').val());
+            if(!comment) { showAlert('Nhập nội dung phản hồi', 'warning'); return; }
+
+            const payload = { comment, rating, userId: parseInt(currentUserId) };
+            $.ajax({
+                url: `${apiBase}/Feedback`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(payload),
+                success: function() {
+                    showAlert('Đã gửi phản hồi!', 'success');
+                    $('#newFeedbackComment').val('');
+                    loadFeedback();
+                },
+                error: function() {
+                    showAlert('Gửi phản hồi thất bại!', 'danger');
+                }
+            });
+        });
+
     });
+
 
 
 
