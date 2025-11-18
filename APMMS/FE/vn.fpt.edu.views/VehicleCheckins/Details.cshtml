@@ -7,27 +7,26 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">
-                            <i class="fas fa-eye me-2"></i>
+                        <h5 class="mb-0 fw-bold">
                             Chi tiết check-in xe
-                        </h4>
+                        </h5>
                         <div>
-                            <a href="/VehicleCheckins/Edit/@ViewBag.CheckinId" class="btn btn-outline-light" id="editButton" style="display: none;">
+                            <a href="/VehicleCheckins/Edit/@ViewBag.CheckinId" class="btn btn-outline-secondary btn-sm" id="editButton" style="display: none;">
                                 <i class="fas fa-edit me-1"></i> Sửa
                             </a>
-                            <button class="btn btn-light" onclick="createMaintenanceTicket()" id="createMaintenanceButton" style="display: none;">
+                            <button class="btn btn-outline-primary btn-sm" onclick="createMaintenanceTicket()" id="createMaintenanceButton" style="display: none;">
                                 <i class="fas fa-wrench me-1"></i> Tạo phiếu bảo dưỡng
                             </button>
-                            <a href="/VehicleCheckins" class="btn btn-outline-light">
+                            <a href="/VehicleCheckins" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-arrow-left me-1"></i> Quay lại
                             </a>
                         </div>
                     </div>
                 </div>
-                <div class="card-body" style="background-color: #f8f9fa;">
+                <div class="card-body bg-white">
                     <div id="loadingSpinner" class="text-center">
                         <div class="spinner-border" role="status">
                             <span class="visually-hidden">Đang tải...</span>
@@ -37,12 +36,11 @@
                     <div id="checkinDetails" style="display: none;">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="card mb-4 border-0 shadow-sm">
-                                    <div class="card-header" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c3e50;">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-car me-2"></i>
+                                <div class="card mb-4 border">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0 fw-semibold">
                                             Thông tin xe
-                                        </h5>
+                                        </h6>
                                     </div>
                                     <div class="card-body">
                                     <div class="row mb-2">
@@ -86,12 +84,11 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <div class="card mb-4 border-0 shadow-sm">
-                                    <div class="card-header" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #2c3e50;">
-                                        <h5 class="mb-0">
-                                            <i class="fas fa-clipboard-check me-2"></i>
+                                <div class="card mb-4 border">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0 fw-semibold">
                                             Thông tin check-in
-                                        </h5>
+                                        </h6>
                                     </div>
                                     <div class="card-body">
                                     <div class="row mb-2">
@@ -124,12 +121,11 @@
                         </div>
 
                         <!-- Images Section -->
-                        <div class="card mb-4 border-0 shadow-sm">
-                            <div class="card-header" style="background: linear-gradient(135deg, #e0c3fc 0%, #9bb5ff 100%); color: #2c3e50;">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-images me-2"></i>
+                        <div class="card mb-4 border">
+                            <div class="card-header bg-light">
+                                <h6 class="mb-0 fw-semibold">
                                     Hình ảnh xe
-                                </h5>
+                                </h6>
                             </div>
                             <div class="card-body">
                                 <div id="imagesContainer" class="row">
@@ -140,12 +136,11 @@
 
                         <!-- Maintenance Request Section -->
                         <div id="maintenanceRequestSection" style="display: none;">
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #2c3e50;">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-tools me-2"></i>
+                            <div class="card mb-4 border">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-semibold">
                                         Yêu cầu bảo dưỡng
-                                    </h5>
+                                    </h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
@@ -239,13 +234,7 @@
             const engineNumber = checkin.vehicleEngineNumber || '-';
             document.getElementById('vinNumber').textContent = vinNumber;
             document.getElementById('engineNumber').textContent = engineNumber;
-            // Chỉ hiển thị màu đỏ nếu không có giá trị
-            if (vinNumber === '-') {
-                document.getElementById('vinNumber').style.color = '#dc3545';
-            }
-            if (engineNumber === '-') {
-                document.getElementById('engineNumber').style.color = '#dc3545';
-            }
+            // Không hiển thị màu đỏ, giữ màu mặc định
             document.getElementById('carColor').textContent = checkin.carColor || checkin.color || '-';
             document.getElementById('mileage').textContent = checkin.mileage ? checkin.mileage + ' km' : '-';
             document.getElementById('branchName').textContent = checkin.branchName || '-';
@@ -322,7 +311,7 @@
                         'Other': 'Khác'
                     };
                     const categoryLabel = categoryLabels[category] || category;
-                    categoryBadge = `<span class="badge bg-info mb-1">${categoryLabel}</span>`;
+                    categoryBadge = `<span class="badge bg-secondary mb-1">${categoryLabel}</span>`;
                 }
                 
                 col.innerHTML = `
@@ -354,8 +343,8 @@
 
         function getStatusBadge(status) {
             switch(status) {
-                case 'PENDING': return '<span class="badge bg-warning">Chờ xử lý</span>';
-                case 'CONFIRMED': return '<span class="badge bg-success">Đã xác nhận</span>';
+                case 'PENDING': return '<span class="badge bg-secondary">Chờ xử lý</span>';
+                case 'CONFIRMED': return '<span class="badge bg-dark">Đã xác nhận</span>';
                 default: return `<span class="badge bg-secondary">${status}</span>`;
             }
         }
@@ -372,9 +361,9 @@
 
         function getPriorityBadge(priority) {
             switch(priority) {
-                case 'LOW': return '<span class="badge bg-success">Thấp</span>';
-                case 'MEDIUM': return '<span class="badge bg-warning">Trung bình</span>';
-                case 'HIGH': return '<span class="badge bg-danger">Cao</span>';
+                case 'LOW': return '<span class="badge bg-secondary">Thấp</span>';
+                case 'MEDIUM': return '<span class="badge bg-dark">Trung bình</span>';
+                case 'HIGH': return '<span class="badge bg-dark">Cao</span>';
                 case 'URGENT': return '<span class="badge bg-dark">Khẩn cấp</span>';
                 default: return `<span class="badge bg-secondary">${priority}</span>`;
             }
