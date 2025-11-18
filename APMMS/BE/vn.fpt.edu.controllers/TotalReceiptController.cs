@@ -25,7 +25,25 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _service.GetPagedAsync(page, pageSize, search, statusCode, fromDate, toDate, branchId);
+                // ✅ Lấy userId từ JWT token để service tự động lấy BranchId
+                long? userId = null;
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var parsedUserId))
+                {
+                    userId = parsedUserId;
+                }
+
+                // ✅ Nếu có BranchId trong JWT claim, ưu tiên dùng nó
+                if (!branchId.HasValue)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    {
+                        branchId = claimBranchId;
+                    }
+                }
+
+                var result = await _service.GetPagedAsync(page, pageSize, search, statusCode, fromDate, toDate, branchId, userId);
                 return Ok(new
                 {
                     success = true,

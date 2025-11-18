@@ -294,6 +294,8 @@
                         <div class="label">Thông tin xe</div>
                         <div class="value mb-2" id="billingCarName">-</div>
                         <div class="text-muted small mb-1">Biển số: <span id="billingLicensePlate" class="fw-semibold">-</span></div>
+                        <div class="text-muted small mb-1">Số khung: <span id="billingVinNumber" class="fw-semibold">-</span></div>
+                        <div class="text-muted small mb-1">Số máy: <span id="billingEngineNumber" class="fw-semibold">-</span></div>
                         <div class="text-muted small">Phiếu bảo dưỡng: <a href="#" id="billingTicketLink" class="text-decoration-none">-</a></div>
                     </div>
                 </div>
@@ -681,9 +683,10 @@
 
             // Company Info (Branch)
             $('#companyName').text(getValue('BranchName', 'branchName', 'CÔNG TY BẢO DƯỠNG XE'));
-            // Note: Branch address and phone would need to be added to ResponseDto
-            $('#companyAddress').text('Địa chỉ chi nhánh sẽ được cập nhật');
-            $('#companyPhone').text('Điện thoại: Sẽ được cập nhật');
+            const branchAddress = getValue('BranchAddress', 'branchAddress');
+            $('#companyAddress').text(branchAddress || 'Địa chỉ chi nhánh sẽ được cập nhật');
+            const branchPhone = getValue('BranchPhone', 'branchPhone');
+            $('#companyPhone').text(branchPhone ? `Điện thoại: ${branchPhone}` : 'Điện thoại: Sẽ được cập nhật');
 
             // Billing Information - Customer
             $('#billingCustomerName').text(getValue('CustomerName', 'customerName', 'Không rõ'));
@@ -691,11 +694,14 @@
             $('#billingCustomerPhone').text(customerPhone ? `Điện thoại: ${customerPhone}` : '');
             const customerEmail = getValue('CustomerEmail', 'customerEmail');
             $('#billingCustomerEmail').text(customerEmail ? `Email: ${customerEmail}` : '');
-            $('#billingCustomerAddress').text('Địa chỉ: Sẽ được cập nhật');
+            const customerAddress = getValue('CustomerAddress', 'customerAddress');
+            $('#billingCustomerAddress').text(customerAddress ? `Địa chỉ: ${customerAddress}` : 'Địa chỉ: Sẽ được cập nhật');
 
             // Billing Information - Vehicle
             $('#billingCarName').text(getValue('CarName', 'carName', 'Không rõ'));
             $('#billingLicensePlate').text(getValue('LicensePlate', 'licensePlate', '-'));
+            $('#billingVinNumber').text(getValue('VinNumber', 'vinNumber', '-'));
+            $('#billingEngineNumber').text(getValue('EngineNumber', 'engineNumber', '-'));
             const maintenanceTicketId = getValue('MaintenanceTicketId', 'maintenanceTicketId');
             if (maintenanceTicketId) {
                 $('#billingTicketLink').attr('href', `/MaintenanceTickets/Details/${maintenanceTicketId}`)

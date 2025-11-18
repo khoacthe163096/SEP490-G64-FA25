@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using Microsoft.AspNetCore.Http;
 
 namespace FE.vn.fpt.edu.adapters
 {
@@ -24,7 +25,42 @@ namespace FE.vn.fpt.edu.adapters
                 var url = $"{_baseUrl}/{endpoint}";
                 Console.WriteLine($"ApiAdapter: Calling GET {url}");
                 
-                var response = await _httpClient.GetAsync(url);
+                // ✅ Thêm Authorization header từ HttpContext session hoặc cookie
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var httpContext = _httpContextAccessor.HttpContext;
+                string? token = null;
+                
+                if (httpContext != null)
+                {
+                    // Thử lấy token từ session trước (được lưu khi login)
+                    token = httpContext.Session.GetString("AuthToken");
+                    if (string.IsNullOrEmpty(token))
+                    {
+                        // Thử lấy từ cookie
+                        token = httpContext.Request.Cookies["authToken"];
+                    }
+                    if (string.IsNullOrEmpty(token))
+                    {
+                        // Thử lấy từ header
+                        var authHeader = httpContext.Request.Headers["Authorization"].FirstOrDefault();
+                        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                        {
+                            token = authHeader.Substring(7); // Remove "Bearer " prefix
+                        }
+                    }
+                    
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                        Console.WriteLine($"ApiAdapter: Added Authorization header with token (length: {token.Length})");
+                    }
+                    else
+                    {
+                        Console.WriteLine("ApiAdapter: No token found in session, cookie, or header");
+                    }
+                }
+                
+                var response = await _httpClient.SendAsync(request);
                 Console.WriteLine($"ApiAdapter: Response status: {response.StatusCode}");
                 
                 var content = await response.Content.ReadAsStringAsync();

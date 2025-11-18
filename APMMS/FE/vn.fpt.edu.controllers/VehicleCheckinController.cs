@@ -25,7 +25,78 @@ namespace FE.vn.fpt.edu.controllers
         [Route("ListData")]
         public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var data = await _service.GetAllAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
+            // ✅ Mặc định chỉ hiển thị check-in đã xác nhận (CONFIRMED) nếu không có statusCode
+            if (string.IsNullOrWhiteSpace(statusCode))
+            {
+                statusCode = "CONFIRMED";
+            }
+
+            // ✅ Lấy branchId của user đang đăng nhập
+            long? branchId = null;
+            
+            // Thử lấy từ session trước (nếu có)
+            var branchIdFromSession = HttpContext.Session.GetString("BranchId");
+            if (!string.IsNullOrEmpty(branchIdFromSession) && long.TryParse(branchIdFromSession, out var sessionBranchId))
+            {
+                branchId = sessionBranchId;
+                Console.WriteLine($"[FE VehicleCheckinController] Got branchId from session: {branchId}");
+            }
+            else
+            {
+                // Thử lấy từ JWT claim (nếu có)
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (long.TryParse(branchIdClaim, out var claimBranchId))
+                {
+                    branchId = claimBranchId;
+                    Console.WriteLine($"[FE VehicleCheckinController] Got branchId from JWT claim: {branchId}");
+                }
+                else
+                {
+                    Console.WriteLine("[FE VehicleCheckinController] No branchId in session or JWT claim, trying Employee/me API");
+                    // Nếu không có trong session hoặc claim, lấy từ Employee/me API
+                    try
+                    {
+                        var employeeResponse = await _service.GetEmployeeInfoAsync();
+                        if (employeeResponse != null)
+                        {
+                            // Response format: { success: true, data: { id, branchId, branchName } }
+                            var successProperty = employeeResponse.GetType().GetProperty("success");
+                            var dataProperty = employeeResponse.GetType().GetProperty("data");
+                            
+                            if (successProperty != null && dataProperty != null)
+                            {
+                                var success = successProperty.GetValue(employeeResponse);
+                                var employeeData = dataProperty.GetValue(employeeResponse);
+                                
+                                if (success != null && success.ToString() == "True" && employeeData != null)
+                                {
+                                    var branchIdProp = employeeData.GetType().GetProperty("branchId") 
+                                        ?? employeeData.GetType().GetProperty("BranchId");
+                                    if (branchIdProp != null)
+                                    {
+                                        var branchIdValue = branchIdProp.GetValue(employeeData);
+                                        if (branchIdValue != null && long.TryParse(branchIdValue.ToString(), out var empBranchId))
+                                        {
+                                            branchId = empBranchId;
+                                            // Lưu vào session để lần sau không cần gọi API
+                                            HttpContext.Session.SetString("BranchId", branchId.Value.ToString());
+                                            Console.WriteLine($"[FE VehicleCheckinController] Got branchId from Employee/me API: {branchId}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error nhưng không throw
+                        Console.WriteLine($"[FE VehicleCheckinController] Error getting employee info: {ex.Message}");
+                    }
+                }
+            }
+
+            Console.WriteLine($"[FE VehicleCheckinController] Final branchId: {branchId}, statusCode: {statusCode}");
+            var data = await _service.GetAllAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate, branchId);
             return Json(data);
         }
 

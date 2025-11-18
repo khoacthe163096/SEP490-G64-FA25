@@ -138,10 +138,20 @@ namespace BE.vn.fpt.edu.services
             return entity == null ? null : MapToResponse(entity);
         }
 
-        public async Task<PagedResultDto<ResponseDto>> GetPagedAsync(int page, int pageSize, string? search = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? branchId = null)
+        public async Task<PagedResultDto<ResponseDto>> GetPagedAsync(int page, int pageSize, string? search = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? branchId = null, long? userId = null)
         {
             if (page <= 0) page = 1;
             if (pageSize <= 0) pageSize = 10;
+
+            // ✅ Tự động lấy BranchId của user đang đăng nhập nếu chưa có
+            if (!branchId.HasValue && userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                if (user != null && user.BranchId.HasValue)
+                {
+                    branchId = user.BranchId;
+                }
+            }
 
             var list = await _repository.GetListAsync(statusCode, branchId, fromDate, toDate);
             var mapped = list.Select(MapToResponse).ToList();
@@ -431,17 +441,53 @@ namespace BE.vn.fpt.edu.services
                 dto.CarId = car.Id;
                 dto.CarName = car.CarName;
                 dto.LicensePlate = car.LicensePlate;
+                dto.VinNumber = car.VinNumber;
+                dto.EngineNumber = car.VehicleEngineNumber;
                 if (car.User != null)
                 {
                     var fullName = $"{car.User.FirstName} {car.User.LastName}".Trim();
                     dto.CustomerName = string.IsNullOrWhiteSpace(fullName) ? car.User.Username : fullName;
                     dto.CustomerPhone = car.User.Phone;
                     dto.CustomerEmail = car.User.Email;
+                    dto.CustomerAddress = car.User.Address;
+                }
+            }
+            
+            // Nếu không có từ Car, lấy từ MaintenanceTicket snapshot
+            if (entity.MaintenanceTicket != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.VinNumber))
+                {
+                    dto.VinNumber = entity.MaintenanceTicket.SnapshotVinNumber;
+                }
+                if (string.IsNullOrWhiteSpace(dto.EngineNumber))
+                {
+                    dto.EngineNumber = entity.MaintenanceTicket.SnapshotEngineNumber;
+                }
+                // Lấy địa chỉ từ snapshot nếu chưa có
+                if (string.IsNullOrWhiteSpace(dto.CustomerAddress))
+                {
+                    dto.CustomerAddress = entity.MaintenanceTicket.SnapshotCustomerAddress;
+                }
+                // Lấy thông tin khách hàng từ snapshot nếu chưa có
+                if (string.IsNullOrWhiteSpace(dto.CustomerName))
+                {
+                    dto.CustomerName = entity.MaintenanceTicket.SnapshotCustomerName;
+                }
+                if (string.IsNullOrWhiteSpace(dto.CustomerPhone))
+                {
+                    dto.CustomerPhone = entity.MaintenanceTicket.SnapshotCustomerPhone;
+                }
+                if (string.IsNullOrWhiteSpace(dto.CustomerEmail))
+                {
+                    dto.CustomerEmail = entity.MaintenanceTicket.SnapshotCustomerEmail;
                 }
             }
 
             dto.BranchId = entity.BranchId ?? entity.MaintenanceTicket?.BranchId;
             dto.BranchName = entity.Branch?.Name ?? entity.MaintenanceTicket?.Branch?.Name;
+            dto.BranchAddress = entity.Branch?.Address ?? entity.MaintenanceTicket?.Branch?.Address;
+            dto.BranchPhone = entity.Branch?.Phone ?? entity.MaintenanceTicket?.Branch?.Phone;
             dto.AccountantName = entity.Accountant != null
                 ? $"{entity.Accountant.FirstName} {entity.Accountant.LastName}".Trim()
                 : null;

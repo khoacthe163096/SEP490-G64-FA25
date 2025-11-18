@@ -11,8 +11,12 @@ namespace BE.vn.fpt.edu.DTOs.TotalReceipt
         public long? CarId { get; set; }
         public string? CarName { get; set; }
         public string? LicensePlate { get; set; }
+        public string? VinNumber { get; set; }
+        public string? EngineNumber { get; set; }
         public long? BranchId { get; set; }
         public string? BranchName { get; set; }
+        public string? BranchAddress { get; set; }
+        public string? BranchPhone { get; set; }
         public long? AccountantId { get; set; }
         public string? AccountantName { get; set; }
         public decimal? Amount { get; set; }
@@ -30,6 +34,7 @@ namespace BE.vn.fpt.edu.DTOs.TotalReceipt
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
+        public string? CustomerAddress { get; set; }
         
         // Service Package fields
         public long? ServicePackageId { get; set; }

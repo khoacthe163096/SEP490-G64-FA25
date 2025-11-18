@@ -100,12 +100,39 @@ namespace vn.fpt.edu.controllers
             [FromQuery] string? searchTerm = null,
             [FromQuery] string? statusCode = null,
             [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] long? branchId = null)
         {
             try
             {
-                var result = await _vehicleCheckinService.GetAllVehicleCheckinsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
-                var totalCount = await _vehicleCheckinService.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate);
+                // ✅ Lấy userId từ JWT token để service tự động lấy BranchId
+                long? userId = null;
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var parsedUserId))
+                {
+                    userId = parsedUserId;
+                    System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Got userId from JWT: {userId}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[VehicleCheckinController] No userId found in JWT token");
+                }
+
+                // ✅ Nếu có BranchId trong JWT claim, ưu tiên dùng nó
+                if (!branchId.HasValue)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    {
+                        branchId = claimBranchId;
+                        System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Got branchId from JWT claim: {branchId}");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Final branchId: {branchId}, userId: {userId}, statusCode: {statusCode}");
+
+                var result = await _vehicleCheckinService.GetAllVehicleCheckinsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate, userId, branchId);
+                var totalCount = await _vehicleCheckinService.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate, userId, branchId);
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
                 
                 return Ok(new { 

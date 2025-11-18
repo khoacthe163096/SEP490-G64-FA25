@@ -60,14 +60,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="licensePlate" class="form-label">Biển số xe <span class="text-danger"></span></label>
-                                    <input type="text" class="form-control" id="licensePlate" name="licensePlate" readonly>
+                                    <label for="licensePlate" class="form-label">Biển số xe <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="licensePlate" name="licensePlate" readonly required style="background-color:#e9ecef;">
+                                    <small class="text-muted">Thông tin lấy từ hồ sơ xe và không thể thay đổi tại bước này</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="vinNumber" class="form-label">Số khung (VIN)</label>
-                                    <input type="text" class="form-control" id="vinNumber" name="vinNumber" readonly>
+                                    <input type="text" class="form-control" id="vinNumber" name="vinNumber" placeholder="Nhập hoặc chỉnh sửa số khung">
                                 </div>
                             </div>
                         </div>
@@ -76,7 +77,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="engineNumber" class="form-label">Số máy</label>
-                                    <input type="text" class="form-control" id="engineNumber" name="engineNumber" readonly>
+                                    <input type="text" class="form-control" id="engineNumber" name="engineNumber" placeholder="Nhập hoặc chỉnh sửa số máy">
                                 </div>
                             </div>
                         </div>
@@ -84,14 +85,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="carName" class="form-label">Tên xe <span class="text-danger"></span></label>
-                                    <input type="text" class="form-control" id="carName" name="carName"  readonly>
+                                    <label for="carName" class="form-label">Tên xe <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="carName" name="carName" required readonly style="background-color:#e9ecef;">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="carModel" class="form-label">Model xe</label>
-                                    <input type="text" class="form-control" id="carModel" name="carModel" readonly>
+                                    <input type="text" class="form-control" id="carModel" name="carModel" readonly style="background-color:#e9ecef;">
                                 </div>
                             </div>
                         </div>
@@ -100,13 +101,13 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="vehicleType" class="form-label">Loại phương tiện</label>
-                                    <input type="text" class="form-control" id="vehicleType" name="vehicleType" readonly>
+                                    <input type="text" class="form-control" id="vehicleType" name="vehicleType" readonly style="background-color:#e9ecef;">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="carColor" class="form-label">Màu xe</label>
-                                    <input type="text" class="form-control" id="carColor" name="carColor" readonly>
+                                    <input type="text" class="form-control" id="carColor" name="carColor" placeholder="Ví dụ: Đen">
                                 </div>
                             </div>
                         </div>
@@ -115,13 +116,13 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="customerName" class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="customerName" name="customerName" readonly>
+                                    <input type="text" class="form-control" id="customerName" name="customerName" placeholder="Tên khách hàng" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="customerPhone" class="form-label">Số điện thoại khách hàng</label>
-                                    <input type="tel" class="form-control" id="customerPhone" name="customerPhone" readonly>
+                                    <input type="tel" class="form-control" id="customerPhone" name="customerPhone" placeholder="Số điện thoại">
                                 </div>
                             </div>
                         </div>
@@ -136,7 +137,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="yearOfManufacture" class="form-label">Năm sản xuất</label>
-                                    <input type="number" class="form-control" id="yearOfManufacture" name="yearOfManufacture" min="1900" max="2030" readonly>
+                                    <input type="number" class="form-control" id="yearOfManufacture" name="yearOfManufacture" min="1900" max="2030" readonly style="background-color:#e9ecef;">
                                 </div>
                             </div>
                         </div>
@@ -543,6 +544,12 @@
                 imageCategories.push(null);
             }
 
+            const sanitize = (value) => {
+                if (value === undefined || value === null) return null;
+                const trimmed = value.trim();
+                return trimmed.length > 0 ? trimmed : null;
+            };
+
             const formData = {
                 carId: parseInt(carId),
                 maintenanceRequestId: null,
@@ -551,7 +558,18 @@
                 imageUrls: imageUrls,
                 imageDescriptions: imageDescriptions.length > 0 && imageDescriptions.some(d => d !== null) ? imageDescriptions : null,
                 imageCategories: imageCategories.length > 0 && imageCategories.some(c => c !== null) ? imageCategories : null,
-                branchId: parseInt(branchId)
+                branchId: parseInt(branchId),
+                licensePlate: sanitize(document.getElementById('licensePlate').value),
+                vinNumber: sanitize(document.getElementById('vinNumber').value),
+                engineNumber: sanitize(document.getElementById('engineNumber').value),
+                carName: sanitize(document.getElementById('carName').value),
+                carModel: sanitize(document.getElementById('carModel').value),
+                vehicleTypeName: sanitize(document.getElementById('vehicleType').value),
+                vehicleTypeId: document.getElementById('vehicleTypeId').value ? parseInt(document.getElementById('vehicleTypeId').value) : null,
+                carColor: sanitize(document.getElementById('carColor').value),
+                yearOfManufacture: document.getElementById('yearOfManufacture').value ? parseInt(document.getElementById('yearOfManufacture').value) : null,
+                customerName: sanitize(document.getElementById('customerName').value),
+                customerPhone: sanitize(document.getElementById('customerPhone').value)
             };
 
             // Debug: Log formData trước khi gửi
@@ -713,3 +731,6 @@
         }
     </script>
 }
+
+
+

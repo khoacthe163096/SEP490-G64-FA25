@@ -11,7 +11,7 @@ namespace FE.vn.fpt.edu.services
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<object?> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? branchId = null)
         {
             var queryParams = new List<string>
             {
@@ -31,9 +31,13 @@ namespace FE.vn.fpt.edu.services
             if (toDate.HasValue)
                 queryParams.Add($"toDate={toDate.Value:yyyy-MM-dd}");
 
+            if (branchId.HasValue)
+                queryParams.Add($"branchId={branchId.Value}");
+
             var queryString = string.Join("&", queryParams);
             return await _apiAdapter.GetAsync<object>($"VehicleCheckin?{queryString}");
         }
+
         //Update
         public async Task<object?> GetByIdAsync(long id)
         {
@@ -71,6 +75,20 @@ namespace FE.vn.fpt.edu.services
             {
                 Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
                 return new { success = false, message = ex.Message };
+            }
+        }
+
+        public async Task<object?> GetEmployeeInfoAsync()
+        {
+            try
+            {
+                var result = await _apiAdapter.GetAsync<object>("Employee/me");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetEmployeeInfoAsync: {ex.Message}");
+                return null;
             }
         }
     }

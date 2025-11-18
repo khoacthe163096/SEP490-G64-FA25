@@ -44,6 +44,62 @@ namespace BE.vn.fpt.edu.services
                 }
             }
 
+            var overrideLicensePlate = string.IsNullOrWhiteSpace(request.LicensePlate)
+                ? car.LicensePlate
+                : request.LicensePlate.Trim();
+            var overrideVin = string.IsNullOrWhiteSpace(request.VinNumber)
+                ? car.VinNumber
+                : request.VinNumber.Trim();
+            var overrideEngineNumber = string.IsNullOrWhiteSpace(request.EngineNumber)
+                ? car.VehicleEngineNumber
+                : request.EngineNumber.Trim();
+            var overrideCarName = string.IsNullOrWhiteSpace(request.CarName)
+                ? car.CarName
+                : request.CarName.Trim();
+            var overrideCarModel = string.IsNullOrWhiteSpace(request.CarModel)
+                ? car.CarModel
+                : request.CarModel.Trim();
+            var overrideVehicleTypeName = string.IsNullOrWhiteSpace(request.VehicleTypeName)
+                ? car.VehicleType?.Name
+                : request.VehicleTypeName.Trim();
+            var overrideVehicleTypeId = request.VehicleTypeId ?? car.VehicleTypeId;
+            var overrideCarColor = string.IsNullOrWhiteSpace(request.CarColor)
+                ? car.Color
+                : request.CarColor.Trim();
+            var overrideYearOfManufacture = request.YearOfManufacture ?? car.YearOfManufacture;
+
+            string? defaultCustomerName = null;
+            if (car.User != null)
+            {
+                var firstName = car.User.FirstName?.Trim();
+                var lastName = car.User.LastName?.Trim();
+                if (!string.IsNullOrWhiteSpace(firstName) && !string.IsNullOrWhiteSpace(lastName))
+                {
+                    defaultCustomerName = $"{firstName} {lastName}";
+                }
+                else if (!string.IsNullOrWhiteSpace(firstName))
+                {
+                    defaultCustomerName = firstName;
+                }
+                else if (!string.IsNullOrWhiteSpace(lastName))
+                {
+                    defaultCustomerName = lastName;
+                }
+            }
+
+            var overrideCustomerName = string.IsNullOrWhiteSpace(request.CustomerName)
+                ? defaultCustomerName
+                : request.CustomerName.Trim();
+            var overrideCustomerPhone = string.IsNullOrWhiteSpace(request.CustomerPhone)
+                ? car.User?.Phone
+                : request.CustomerPhone.Trim();
+            var overrideCustomerEmail = string.IsNullOrWhiteSpace(request.CustomerEmail)
+                ? car.User?.Email
+                : request.CustomerEmail.Trim();
+            var overrideCustomerAddress = string.IsNullOrWhiteSpace(request.CustomerAddress)
+                ? car.User?.Address
+                : request.CustomerAddress.Trim();
+
             var vehicleCheckin = new VehicleCheckin
             {
                 CarId = request.CarId,
@@ -65,20 +121,20 @@ namespace BE.vn.fpt.edu.services
                         ? request.ImageCategories[index] 
                         : null
                 }).ToList(),
-                SnapshotCarName = car.CarName,
-                SnapshotCarModel = car.CarModel,
-                SnapshotVehicleType = car.VehicleType?.Name,
-                SnapshotVehicleTypeId = car.VehicleTypeId,
-                SnapshotLicensePlate = car.LicensePlate,
-                SnapshotVinNumber = car.VinNumber,
-                SnapshotEngineNumber = car.VehicleEngineNumber,
-                SnapshotYearOfManufacture = car.YearOfManufacture,
-                SnapshotColor = car.Color,
+                SnapshotCarName = overrideCarName,
+                SnapshotCarModel = overrideCarModel,
+                SnapshotVehicleType = overrideVehicleTypeName,
+                SnapshotVehicleTypeId = overrideVehicleTypeId,
+                SnapshotLicensePlate = overrideLicensePlate,
+                SnapshotVinNumber = overrideVin,
+                SnapshotEngineNumber = overrideEngineNumber,
+                SnapshotYearOfManufacture = overrideYearOfManufacture,
+                SnapshotColor = overrideCarColor,
                 SnapshotMileage = request.Mileage,
-                SnapshotCustomerName = $"{car.User?.FirstName} {car.User?.LastName}".Trim(),
-                SnapshotCustomerPhone = car.User?.Phone,
-                SnapshotCustomerEmail = car.User?.Email,
-                SnapshotCustomerAddress = car.User?.Address,
+                SnapshotCustomerName = overrideCustomerName,
+                SnapshotCustomerPhone = overrideCustomerPhone,
+                SnapshotCustomerEmail = overrideCustomerEmail,
+                SnapshotCustomerAddress = overrideCustomerAddress,
                 SnapshotBranchName = branch?.Name ?? car.Branch?.Name,
                 SnapshotConsulterName = consulterName
             };
@@ -130,15 +186,44 @@ namespace BE.vn.fpt.edu.services
             return await MapToResponseDTO(vehicleCheckin);
         }
 
-        public async Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? userId = null, long? branchId = null)
         {
-            var vehicleCheckins = await _vehicleCheckinRepository.GetAllWithDetailsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate);
+            System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] GetAllVehicleCheckinsAsync - Input: branchId={branchId}, userId={userId}, statusCode={statusCode}");
+            
+            // ✅ Tự động lấy BranchId của user đang đăng nhập nếu chưa có
+            if (!branchId.HasValue && userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                if (user != null && user.BranchId.HasValue)
+                {
+                    branchId = user.BranchId;
+                    System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] Got branchId from user: {branchId}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] User not found or no branchId. userId={userId}");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] Final branchId before repository call: {branchId}");
+            var vehicleCheckins = await _vehicleCheckinRepository.GetAllWithDetailsAsync(page, pageSize, searchTerm, statusCode, fromDate, toDate, branchId);
+            System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] Repository returned {vehicleCheckins.Count} check-ins");
             return vehicleCheckins.Select(MapToListResponseDTO).ToList();
         }
 
-        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? userId = null, long? branchId = null)
         {
-            return await _vehicleCheckinRepository.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate);
+            // ✅ Tự động lấy BranchId của user đang đăng nhập nếu chưa có
+            if (!branchId.HasValue && userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                if (user != null && user.BranchId.HasValue)
+                {
+                    branchId = user.BranchId;
+                }
+            }
+
+            return await _vehicleCheckinRepository.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate, branchId);
         }
 
         public async Task<List<ListResponseDto>> GetVehicleCheckinsByCarIdAsync(long carId)

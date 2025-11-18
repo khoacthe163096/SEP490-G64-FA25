@@ -132,7 +132,7 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(vc => vc.Id == id);
         }
 
-        public async Task<List<VehicleCheckin>> GetAllWithDetailsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<List<VehicleCheckin>> GetAllWithDetailsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? branchId = null)
         {
             var query = _context.VehicleCheckins
                 .Include(vc => vc.Car)
@@ -143,6 +143,17 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(mr => mr.User)
                 .Include(vc => vc.VehicleCheckinImages)
                 .AsQueryable();
+
+            // Apply branch filter
+            if (branchId.HasValue)
+            {
+                query = query.Where(vc => vc.BranchId == branchId.Value);
+                System.Diagnostics.Debug.WriteLine($"[VehicleCheckinRepository] Branch filter applied: branchId={branchId.Value}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("[VehicleCheckinRepository] No branchId provided, returning all branches");
+            }
 
             // Apply search filter
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -178,9 +189,15 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
-        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<int> GetTotalCountAsync(string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null, long? branchId = null)
         {
             var query = _context.VehicleCheckins.AsQueryable();
+
+            // Apply branch filter
+            if (branchId.HasValue)
+            {
+                query = query.Where(vc => vc.BranchId == branchId.Value);
+            }
 
             // Apply search filter
             if (!string.IsNullOrWhiteSpace(searchTerm))

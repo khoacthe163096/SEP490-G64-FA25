@@ -39,6 +39,22 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public long BranchId { get; set; }
         
         public string? Code { get; set; }
+
+        // Cho phép override thông tin xe / khách hàng ngay tại thời điểm check-in
+        public string? LicensePlate { get; set; }
+        public string? VinNumber { get; set; }
+        public string? EngineNumber { get; set; }
+        public string? CarName { get; set; }
+        public string? CarModel { get; set; }
+        public string? VehicleTypeName { get; set; }
+        public long? VehicleTypeId { get; set; }
+        public string? CarColor { get; set; }
+        public int? YearOfManufacture { get; set; }
+        
+        public string? CustomerName { get; set; }
+        public string? CustomerPhone { get; set; }
+        public string? CustomerEmail { get; set; }
+        public string? CustomerAddress { get; set; }
     }
     
     /// <summary>
