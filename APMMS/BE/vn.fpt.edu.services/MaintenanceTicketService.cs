@@ -523,12 +523,12 @@ namespace BE.vn.fpt.edu.services
 
 
 
-        public async Task<List<ListResponseDto>> GetAllMaintenanceTicketsAsync(int page = 1, int pageSize = 10)
+        public async Task<List<ListResponseDto>> GetAllMaintenanceTicketsAsync(int page = 1, int pageSize = 10, long? branchId = null)
 
         {
-
-            var maintenanceTickets = await _maintenanceTicketRepository.GetAllAsync(page, pageSize);
-
+            System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketService] GetAllMaintenanceTicketsAsync called with branchId: {branchId}");
+            var maintenanceTickets = await _maintenanceTicketRepository.GetAllAsync(page, pageSize, branchId);
+            System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketService] Found {maintenanceTickets.Count} tickets");
             return _mapper.Map<List<ListResponseDto>>(maintenanceTickets);
 
         }

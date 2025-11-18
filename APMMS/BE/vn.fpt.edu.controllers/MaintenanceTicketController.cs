@@ -3,6 +3,7 @@ using BE.vn.fpt.edu.DTOs.MaintenanceTicket;
 using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -125,11 +126,23 @@ namespace BE.vn.fpt.edu.controllers
         /// L?y danh s�ch t?t c? Maintenance Tickets
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAllMaintenanceTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAllMaintenanceTickets([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] long? branchId = null)
         {
             try
             {
-                var result = await _maintenanceTicketService.GetAllMaintenanceTicketsAsync(page, pageSize);
+                // ✅ Nếu có BranchId trong JWT claim, ưu tiên dùng nó
+                if (!branchId.HasValue && User.Identity?.IsAuthenticated == true)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    {
+                        branchId = claimBranchId;
+                        System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketController] Got branchId from JWT: {branchId}");
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketController] Calling GetAllMaintenanceTicketsAsync with branchId: {branchId}");
+                var result = await _maintenanceTicketService.GetAllMaintenanceTicketsAsync(page, pageSize, branchId);
                 return Ok(new { success = true, data = result });
             }
             catch (Exception ex)

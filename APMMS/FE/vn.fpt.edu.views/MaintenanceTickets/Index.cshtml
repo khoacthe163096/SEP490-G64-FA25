@@ -201,11 +201,8 @@
 });
 
         function loadMaintenanceTickets() {
-            const token = localStorage.getItem('authToken');
-            
-            // Load tất cả tickets với pageSize lớn (client-side pagination)
-            // Tương tự như ServiceSchedules
-            const url = `${API_BASE_URL}/MaintenanceTicket?page=1&pageSize=500`;
+            // ✅ Gọi qua FE controller để tự động filter theo branchId của user đăng nhập
+            const url = `/MaintenanceTickets/ListData?page=1&pageSize=500`;
 
             // Show loading
             $('#maintenanceTicketsTableBody').html(`
@@ -219,10 +216,11 @@
             `);
 
             fetch(url, {
+                method: 'GET',
                 headers: {
-                    'Authorization': token ? `Bearer ${token}` : '',
                     'Content-Type': 'application/json'
-                }
+                },
+                credentials: 'include' // Include cookies for session
             })
             .then(async response => {
                 if (!response.ok) {
@@ -231,16 +229,21 @@
                 return response.json();
             })
             .then(result => {
-                if (result.success && result.data) {
-                    allTickets = result.data;
-                    applyFilters();
-                } else {
-                    allTickets = [];
-                    filteredTickets = [];
-                    totalRecords = 0;
-                    displayMaintenanceTickets([]);
-                    updatePagination();
+                // FE controller trả về { success: true, data: [...] } hoặc trực tiếp data từ backend
+                let tickets = [];
+                if (result && result.success && result.data) {
+                    // Format từ backend API qua FE controller
+                    tickets = result.data;
+                } else if (Array.isArray(result)) {
+                    // Trường hợp trả về trực tiếp array
+                    tickets = result;
+                } else if (result && result.data && Array.isArray(result.data)) {
+                    // Trường hợp có wrapper data
+                    tickets = result.data;
                 }
+                
+                allTickets = tickets;
+                applyFilters();
             })
             .catch(error => {
                 console.error('Error loading maintenance tickets:', error);

@@ -8,7 +8,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CreateFromVehicleCheckinAsync(CreateFromCheckinDto request);
         Task<ResponseDto> UpdateMaintenanceTicketAsync(long id, RequestDto request);
         Task<ResponseDto> GetMaintenanceTicketByIdAsync(long id);
-        Task<List<ListResponseDto>> GetAllMaintenanceTicketsAsync(int page = 1, int pageSize = 10);
+        Task<List<ListResponseDto>> GetAllMaintenanceTicketsAsync(int page = 1, int pageSize = 10, long? branchId = null);
         Task<List<ListResponseDto>> GetMaintenanceTicketsByCarIdAsync(long carId);
         Task<List<ListResponseDto>> GetMaintenanceTicketsByStatusAsync(string statusCode);
         Task<bool> DeleteMaintenanceTicketAsync(long id);

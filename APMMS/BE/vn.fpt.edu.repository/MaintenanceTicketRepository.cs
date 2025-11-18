@@ -53,18 +53,35 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(mt => mt.Id == id);
         }
 
-        public async Task<List<MaintenanceTicket>> GetAllAsync(int page = 1, int pageSize = 10)
+        public async Task<List<MaintenanceTicket>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null)
         {
-            return await _context.MaintenanceTickets
+            System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketRepository] GetAllAsync called with branchId: {branchId}");
+            var query = _context.MaintenanceTickets
                 .Include(mt => mt.Car)
                     .ThenInclude(c => c.User)
                 .Include(mt => mt.Consulter)
                 .Include(mt => mt.Technician)
                 .Include(mt => mt.Branch)
+                .AsQueryable();
+            
+            if (branchId.HasValue)
+            {
+                System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketRepository] Filtering by branchId: {branchId.Value}");
+                query = query.Where(mt => mt.BranchId == branchId.Value);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketRepository] No branchId filter applied");
+            }
+            
+            var result = await query
                 .OrderByDescending(mt => mt.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+            
+            System.Diagnostics.Debug.WriteLine($"[BE MaintenanceTicketRepository] Returning {result.Count} tickets");
+            return result;
         }
 
         public async Task<List<MaintenanceTicket>> GetByCarIdAsync(long carId)

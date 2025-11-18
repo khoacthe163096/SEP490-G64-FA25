@@ -110,14 +110,35 @@
                                     <i class="fas fa-arrow-left me-1"></i> 
                                     Quay lại
                                 </a>
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-save me-1"></i> 
-                                    Cập nhật
+                                <button type="submit" id="submitBtn" class="btn btn-primary btn-sm">
+                                    <span id="submitText">
+                                        <i class="fas fa-save me-1"></i> 
+                                        Cập nhật
+                                    </span>
+                                    <span id="submitSpinner" class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
                                 </button>
                             </div>
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
+                </div>
+                <h5 class="mb-2">Cập nhật thành công!</h5>
+                <p class="text-muted mb-0">Thông tin check-in đã được cập nhật.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-0">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="closeSuccessModal">Đóng</button>
             </div>
         </div>
     </div>
@@ -273,7 +294,26 @@
             });
         }
 
+        function setLoadingState(isLoading) {
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitSpinner = document.getElementById('submitSpinner');
+            
+            if (isLoading) {
+                submitBtn.disabled = true;
+                submitText.classList.add('d-none');
+                submitSpinner.classList.remove('d-none');
+            } else {
+                submitBtn.disabled = false;
+                submitText.classList.remove('d-none');
+                submitSpinner.classList.add('d-none');
+            }
+        }
+
         async function updateCheckin() {
+            // Set loading state
+            setLoadingState(true);
+            
             const checkinId = document.getElementById('checkinId').value;
             const vinNumber = document.getElementById('vinNumber').value;
             const vehicleEngineNumber = document.getElementById('vehicleEngineNumber').value;
@@ -359,15 +399,32 @@
                 }
 
                 if (data.success) {
-                    showAlert('Cập nhật check-in thành công!', 'success');
-                    setTimeout(() => {
+                    // Reset loading state
+                    setLoadingState(false);
+                    
+                    // Show success modal
+                    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                    successModal.show();
+                    
+                    // Redirect after modal is closed
+                    document.getElementById('closeSuccessModal').addEventListener('click', function() {
                         window.location.href = `/VehicleCheckins/Details/${checkinId}`;
-                    }, 1500);
+                    }, { once: true });
+                    
+                    // Auto redirect after 2 seconds if user doesn't close modal
+                    setTimeout(() => {
+                        if (document.getElementById('successModal').classList.contains('show')) {
+                            successModal.hide();
+                            window.location.href = `/VehicleCheckins/Details/${checkinId}`;
+                        }
+                    }, 2000);
                 } else {
+                    setLoadingState(false);
                     showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật'), 'danger');
                 }
             } catch (error) {
                 console.error('Error:', error);
+                setLoadingState(false);
                 showAlert('Có lỗi xảy ra khi cập nhật check-in: ' + error.message, 'danger');
             }
         }
