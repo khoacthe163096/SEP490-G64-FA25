@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
 using BE.vn.fpt.edu.interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace vn.fpt.edu.controllers
 {
@@ -27,7 +28,11 @@ namespace vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _vehicleCheckinService.CreateVehicleCheckinAsync(request);
+                // Get current user ID from JWT claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? createdByUserId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _vehicleCheckinService.CreateVehicleCheckinAsync(request, createdByUserId);
                 return Ok(new { success = true, data = result, message = "Vehicle check-in created successfully" });
             }
             catch (ArgumentException ex)

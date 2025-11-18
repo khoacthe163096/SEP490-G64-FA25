@@ -557,10 +557,12 @@
             // Debug: Log formData trước khi gửi
             console.log('FormData to send:', formData);
             
+            const token = localStorage.getItem('authToken');
             fetch('@apiBaseUrl/VehicleCheckin', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
                 },
                 body: JSON.stringify(formData)
             })

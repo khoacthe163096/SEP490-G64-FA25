@@ -36,6 +36,9 @@ namespace BE.vn.fpt.edu.DTOs.VehicleCheckin
         public long? BranchId { get; set; }
         public string? BranchName { get; set; }
         
+        // Thông tin người tạo
+        public string? ConsulterName { get; set; }
+        
         // Hình ảnh
         public List<VehicleCheckinImageDto> Images { get; set; } = new List<VehicleCheckinImageDto>();
         

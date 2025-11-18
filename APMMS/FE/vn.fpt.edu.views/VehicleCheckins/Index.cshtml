@@ -79,9 +79,13 @@
         let allCheckins = []; // Lưu tất cả checkins để phân trang client-side
         let filteredCheckins = []; // Lưu checkins sau khi filter
         let totalRecords = 0;
+        let currentUserBranchId = null; // Lưu branchId của người dùng đăng nhập
 
         $(document).ready(function() {
-            loadCheckins();
+            // Load branchId của người dùng trước, sau đó mới load checkins
+            loadUserBranchId().then(() => {
+                loadCheckins();
+            });
             
             // Search functionality với debounce
             let searchTimeout;
@@ -107,6 +111,57 @@
                 applyFilters();
             });
         });
+
+        // Hàm lấy branchId của người dùng đăng nhập
+        function loadUserBranchId() {
+            return new Promise((resolve) => {
+                const token = localStorage.getItem('authToken');
+                let userId = null;
+                
+                try {
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        userId = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+                    }
+                } catch (e) {
+                    console.warn('Could not parse token:', e);
+                    resolve(); // Continue even if we can't get userId
+                    return;
+                }
+
+                if (userId && token) {
+                    fetch(`${API_BASE_URL}/Employee/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                    .then(async r => {
+                        if (!r.ok) {
+                            console.warn('Employee fetch failed:', r.status);
+                            resolve();
+                            return;
+                        }
+                        return r.json();
+                    })
+                    .then(empRes => {
+                        if (empRes && empRes.success === true && empRes.data) {
+                            const emp = empRes.data;
+                            if (emp.branchId) {
+                                currentUserBranchId = String(emp.branchId);
+                                console.log('User branch ID loaded:', currentUserBranchId);
+                            }
+                        }
+                        resolve();
+                    })
+                    .catch(err => {
+                        console.warn('Error loading user branch:', err);
+                        resolve(); // Continue even if we can't get branch
+                    });
+                } else {
+                    resolve(); // No token or userId, continue anyway
+                }
+            });
+        }
 
         function loadCheckins() {
             const token = localStorage.getItem('authToken');
@@ -168,6 +223,15 @@
 
             // Bắt đầu với tất cả checkins
             filteredCheckins = [...allCheckins];
+
+            // Filter by branchId của người dùng đăng nhập
+            if (currentUserBranchId) {
+                filteredCheckins = filteredCheckins.filter(c => {
+                    // So sánh branchId (có thể là số hoặc chuỗi)
+                    const checkinBranchId = c.branchId ? String(c.branchId) : null;
+                    return checkinBranchId === currentUserBranchId;
+                });
+            }
 
             // Filter by status
             if (status) {

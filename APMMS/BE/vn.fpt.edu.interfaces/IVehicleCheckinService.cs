@@ -4,7 +4,7 @@ namespace BE.vn.fpt.edu.interfaces
 {
     public interface IVehicleCheckinService
     {
-        Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request);
+        Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request, long? createdByUserId = null);
         Task<ResponseDto> UpdateVehicleCheckinAsync(UpdateDto request);
         Task<ResponseDto> GetVehicleCheckinByIdAsync(long id);
         Task<List<ListResponseDto>> GetAllVehicleCheckinsAsync(int page = 1, int pageSize = 10, string? searchTerm = null, string? statusCode = null, DateTime? fromDate = null, DateTime? toDate = null);

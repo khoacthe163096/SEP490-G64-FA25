@@ -17,7 +17,7 @@ namespace BE.vn.fpt.edu.services
             _context = context;
         }
 
-        public async Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request)
+        public async Task<ResponseDto> CreateVehicleCheckinAsync(VehicleCheckinRequestDto request, long? createdByUserId = null)
         {
             var car = await _context.Cars
                 .Include(c => c.User)
@@ -31,6 +31,18 @@ namespace BE.vn.fpt.edu.services
             }
 
             var branch = await _context.Branches.FirstOrDefaultAsync(b => b.Id == request.BranchId);
+            
+            // Lấy thông tin người tạo (consulter) nếu có userId
+            string? consulterName = null;
+            if (createdByUserId.HasValue)
+            {
+                var employee = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == createdByUserId.Value);
+                if (employee != null)
+                {
+                    consulterName = $"{employee.FirstName} {employee.LastName}".Trim();
+                }
+            }
 
             var vehicleCheckin = new VehicleCheckin
             {
@@ -68,7 +80,7 @@ namespace BE.vn.fpt.edu.services
                 SnapshotCustomerEmail = car.User?.Email,
                 SnapshotCustomerAddress = car.User?.Address,
                 SnapshotBranchName = branch?.Name ?? car.Branch?.Name,
-                SnapshotConsulterName = null // sẽ bổ sung nếu có thông tin consulter trong request
+                SnapshotConsulterName = consulterName
             };
 
             var createdVehicleCheckin = await _vehicleCheckinRepository.CreateAsync(vehicleCheckin);
@@ -154,6 +166,7 @@ namespace BE.vn.fpt.edu.services
             Console.WriteLine($"Debug - Branch: {vehicleCheckin.Branch?.Name}");
             Console.WriteLine($"Debug - Car.BranchId: {vehicleCheckin.Car?.BranchId}");
             Console.WriteLine($"Debug - Car.Branch: {vehicleCheckin.Car?.Branch?.Name}");
+            Console.WriteLine($"Debug - SnapshotConsulterName: {vehicleCheckin.SnapshotConsulterName ?? "NULL"}");
             
             // Get branch name as fallback
             var branchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId;
@@ -193,6 +206,9 @@ namespace BE.vn.fpt.edu.services
                 // Branch information
                 BranchId = branchId,
                 BranchName = vehicleCheckin.SnapshotBranchName ?? branchName,
+                
+                // Consulter information (người tạo)
+                ConsulterName = vehicleCheckin.SnapshotConsulterName,
                 
                 // Images
                 Images = vehicleCheckin.VehicleCheckinImages?.Select(img => new VehicleCheckinImageDto

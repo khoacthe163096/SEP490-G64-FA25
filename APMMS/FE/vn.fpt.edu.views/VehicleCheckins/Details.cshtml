@@ -110,6 +110,10 @@
                                         <div class="col-sm-4"><strong>Ngày tạo:</strong></div>
                                         <div class="col-sm-8" id="createdDate">-</div>
                                     </div>
+                                    <div class="row mb-2">
+                                        <div class="col-sm-4"><strong>Người tạo:</strong></div>
+                                        <div class="col-sm-8" id="consulterName">-</div>
+                                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -235,6 +239,7 @@
         function displayCheckinDetails(checkin) {
             console.log('Displaying checkin details:', checkin); // Debug log
             console.log('BranchName from API:', checkin.branchName); // Debug branch name
+            console.log('ConsulterName from API:', checkin.consulterName); // Debug consulter name
             
             document.getElementById('checkinCode').textContent = checkin.code || 'VCI-' + checkin.id;
             document.getElementById('licensePlate').textContent = checkin.licensePlate || '-';
@@ -260,6 +265,7 @@
                 new Date(checkin.createdAt).toLocaleString('vi-VN') : '-'; // Sử dụng createdAt thay vì checkinDate
             document.getElementById('createdDate').textContent = checkin.createdAt ? 
                 new Date(checkin.createdAt).toLocaleString('vi-VN') : '-';
+            document.getElementById('consulterName').textContent = checkin.consulterName || '-';
             document.getElementById('notes').textContent = checkin.notes || 'Không có ghi chú';
 
             // Hiển thị/ẩn nút Sửa dựa trên trạng thái
