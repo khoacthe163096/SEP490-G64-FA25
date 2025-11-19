@@ -1460,15 +1460,9 @@ function openAssignTechniciansModal() {
           displayBasicInfo(maintenanceTicketData);
           displayStatusAndActions(maintenanceTicketData);
           
-          // ✅ Tự động gán kỹ thuật viên cho tất cả công việc hiện có
-          updateAllServiceTasksWithTechnicians(ids, primaryId).then(() => {
-            showAlert('Gán kỹ thuật viên thành công và đã cập nhật cho tất cả công việc', 'success');
-            loadServiceTasks(); // Reload danh sách công việc để hiển thị kỹ thuật viên mới
-          }).catch(err => {
-            console.error('Error updating service tasks:', err);
-            showAlert('Gán kỹ thuật viên thành công, nhưng có lỗi khi cập nhật công việc', 'warning');
-            loadServiceTasks(); // Vẫn reload để hiển thị
-          });
+          // ✅ Gán kỹ thuật viên ở "Thao tác" chỉ để quản lý, KHÔNG tự động gán cho công việc
+          // Công việc chỉ hiển thị khi được gán TRỰC TIẾP vào từng ServiceTask
+          showAlert('Gán kỹ thuật viên thành công!', 'success');
           
           bootstrap.Modal.getInstance(document.getElementById('assignTechniciansModal')).hide();
           $('#assignTechniciansModal').remove();

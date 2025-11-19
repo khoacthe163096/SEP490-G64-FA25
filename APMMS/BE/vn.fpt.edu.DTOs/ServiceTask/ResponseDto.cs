@@ -26,6 +26,7 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public string? CompletionNote { get; set; }
 
         // Navigation properties
+        public string? MaintenanceTicketCode { get; set; }
         public string? MaintenanceTicketDescription { get; set; }
         public string? CarName { get; set; }
         public string? CustomerName { get; set; }
@@ -74,6 +75,7 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public string? CompletionNote { get; set; }
 
         // Basic info
+        public string? MaintenanceTicketCode { get; set; }
         public string? CarName { get; set; }
         public string? CustomerName { get; set; }
         public string? TechnicianName { get; set; }

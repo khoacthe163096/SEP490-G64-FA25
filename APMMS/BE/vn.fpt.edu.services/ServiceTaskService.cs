@@ -484,7 +484,7 @@ namespace BE.vn.fpt.edu.services
                 CompletionNote = serviceTask.CompletionNote,
 
                 // Navigation properties
-
+                MaintenanceTicketCode = serviceTask.MaintenanceTicket?.Code,
                 MaintenanceTicketDescription = serviceTask.MaintenanceTicket?.Description,
 
                 CarName = serviceTask.MaintenanceTicket?.Car?.CarName,
@@ -498,7 +498,7 @@ namespace BE.vn.fpt.edu.services
                 TechnicianName = serviceTask.Technician != null
                     ? $"{serviceTask.Technician.FirstName} {serviceTask.Technician.LastName}".Trim()
                     : (serviceTask.MaintenanceTicket?.Technician != null
-                        ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
+                    ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
                         : null),
 
                 BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,
@@ -552,7 +552,7 @@ namespace BE.vn.fpt.edu.services
                 CompletionNote = serviceTask.CompletionNote,
 
                 // Basic info
-
+                MaintenanceTicketCode = serviceTask.MaintenanceTicket?.Code,
                 CarName = serviceTask.MaintenanceTicket?.Car?.CarName,
 
                 CustomerName = serviceTask.MaintenanceTicket?.Car?.User != null 
@@ -564,7 +564,7 @@ namespace BE.vn.fpt.edu.services
                 TechnicianName = serviceTask.Technician != null
                     ? $"{serviceTask.Technician.FirstName} {serviceTask.Technician.LastName}".Trim()
                     : (serviceTask.MaintenanceTicket?.Technician != null
-                        ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
+                    ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
                         : null),
 
                 BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,

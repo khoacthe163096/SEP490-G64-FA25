@@ -104,21 +104,21 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<List<ServiceTask>> GetByTechnicianIdAsync(long technicianId)
         {
-            // ✅ Lấy tất cả maintenance tickets mà technician này được gán (PRIMARY hoặc ASSISTANT)
-            // ServiceTasks thuộc những tickets này sẽ được hiển thị
+            // ✅ CHỈ lấy ServiceTasks mà technician này được gán TRỰC TIẾP (từ ServiceTaskTechnicians)
+            // KHÔNG lấy từ MaintenanceTicketTechnicians (gán ở "Thao tác")
             return await _context.ServiceTasks
+                .Include(st => st.ServiceCategory)
+                .Include(st => st.Technician)
+                .Include(st => st.ServiceTaskTechnicians)
+                    .ThenInclude(stt => stt.Technician)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Technician)
                 .Include(st => st.MaintenanceTicket)
-                    .ThenInclude(mt => mt!.MaintenanceTicketTechnicians)
-                .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Branch)
-                .Where(st => st.MaintenanceTicket != null && 
-                    (st.MaintenanceTicket.TechnicianId == technicianId || 
-                     st.MaintenanceTicket.MaintenanceTicketTechnicians.Any(mtt => mtt.TechnicianId == technicianId)))
+                .Where(st => st.ServiceTaskTechnicians.Any(stt => stt.TechnicianId == technicianId))
                 .ToListAsync();
         }
 
