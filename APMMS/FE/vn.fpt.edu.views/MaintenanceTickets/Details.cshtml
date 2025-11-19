@@ -319,6 +319,18 @@
                         <small class="text-muted">Thời gian thực tế thực hiện công việc. Nếu để trống, sẽ lấy bằng thời gian chuẩn. <strong>Lưu ý:</strong> Phí nhân công được tính dựa trên thời gian chuẩn, không phải thời gian thực tế.</small>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Kỹ thuật viên</label>
+                        <div id="taskTechniciansContainer" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                            <small class="text-muted">Đang tải danh sách...</small>
+                        </div>
+                        <small class="text-muted">Chọn một hoặc nhiều kỹ thuật viên đã được gán ở phần "Thao tác"</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDisplayOrder" class="form-label">Thứ tự hiển thị</label>
+                        <input type="number" class="form-control" id="taskDisplayOrder" min="0" placeholder="Số càng nhỏ càng hiển thị trước">
+                        <small class="text-muted">Để trống hoặc 0 sẽ hiển thị cuối cùng</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="taskNote" class="form-label">Ghi chú</label>
                         <textarea class="form-control" id="taskNote" rows="2"></textarea>
                     </div>
@@ -534,6 +546,7 @@ $(document).ready(function() {
         $('#taskId').val('');
         $('#addServiceTaskModalLabel').text('Thêm công việc');
         $('#saveServiceTaskBtn').html('Lưu');
+        loadTechniciansForTask();
         $('#addServiceTaskModal').modal('show');
     });
     
@@ -934,11 +947,20 @@ function displayCheckinInfo(data) {
     const checkinInfo = $('#checkinInfo');
     
     if (data.vehicleCheckinId) {
+        const checkinId = data.vehicleCheckinId;
         checkinInfo.html(`
             <div class="row">
                 <div class="col-md-6">
                     <strong>Mã Check-in:</strong><br>
-                    VCI-${data.vehicleCheckinId}
+                    <a href="/VehicleCheckins/Details/${checkinId}" 
+                       class="text-decoration-none" 
+                       style="color: #007bff; cursor: pointer;"
+                       onmouseover="this.style.textDecoration='underline'; this.style.color='#0056b3';"
+                       onmouseout="this.style.textDecoration='none'; this.style.color='#007bff';"
+                       title="Xem chi tiết phiếu check-in">
+                        VCI-${checkinId}
+                        <i class="fas fa-external-link-alt ms-1" style="font-size: 0.8em;"></i>
+                    </a>
                 </div>
                 <div class="col-md-6">
                     <strong>Số km:</strong><br>
@@ -1437,7 +1459,17 @@ function openAssignTechniciansModal() {
           maintenanceTicketData = res.data;
           displayBasicInfo(maintenanceTicketData);
           displayStatusAndActions(maintenanceTicketData);
-          showAlert('Gán kỹ thuật viên thành công', 'success');
+          
+          // ✅ Tự động gán kỹ thuật viên cho tất cả công việc hiện có
+          updateAllServiceTasksWithTechnicians(ids, primaryId).then(() => {
+            showAlert('Gán kỹ thuật viên thành công và đã cập nhật cho tất cả công việc', 'success');
+            loadServiceTasks(); // Reload danh sách công việc để hiển thị kỹ thuật viên mới
+          }).catch(err => {
+            console.error('Error updating service tasks:', err);
+            showAlert('Gán kỹ thuật viên thành công, nhưng có lỗi khi cập nhật công việc', 'warning');
+            loadServiceTasks(); // Vẫn reload để hiển thị
+          });
+          
           bootstrap.Modal.getInstance(document.getElementById('assignTechniciansModal')).hide();
           $('#assignTechniciansModal').remove();
         } else {
@@ -1634,6 +1666,39 @@ function displayServiceTasks(tasks) {
                             <h6 class="mb-1 fw-bold">${escapeHtml(task.taskName || 'N/A')}</h6>
                             ${task.description ? `<p class="mb-1 text-muted small">${escapeHtml(task.description)}</p>` : ''}
                             ${task.note ? `<div class="mt-2"><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${escapeHtml(task.note)}</small></div>` : ''}
+                            ${task.completionNote ? `<div class="mt-2"><small class="text-success"><i class="fas fa-check-circle me-1"></i><strong>Ghi chú hoàn thành:</strong> ${escapeHtml(task.completionNote)}</small></div>` : ''}
+                            
+                            <!-- Technician Info -->
+                            ${task.technicians && task.technicians.length > 0 ? `
+                                <div class="mt-2">
+                                    <small class="text-muted d-block">Kỹ thuật viên:</small>
+                                    <div>
+                                        ${task.technicians.map(tech => {
+                                            const roleBadge = tech.roleInTask === 'PRIMARY' 
+                                                ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-star me-1"></i>Chính</span>' 
+                                                : '';
+                                            return `<span class="badge bg-secondary me-1"><i class="fas fa-user-tie me-1"></i>${escapeHtml(tech.technicianName || 'N/A')}${roleBadge}</span>`;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            ` : (task.technicianName ? `
+                                <div class="mt-2">
+                                    <small class="text-muted d-block">Kỹ thuật viên:</small>
+                                    <strong><i class="fas fa-user-tie me-1"></i>${escapeHtml(task.technicianName)}</strong>
+                                </div>
+                            ` : '')}
+                            
+                            <!-- Time Info -->
+                            ${task.startTime ? `
+                                <div class="mt-1">
+                                    <small class="text-muted">Bắt đầu: ${formatVietnamDateTime(task.startTime)}</small>
+                                </div>
+                            ` : ''}
+                            ${task.endTime ? `
+                                <div class="mt-1">
+                                    <small class="text-muted">Kết thúc: ${formatVietnamDateTime(task.endTime)}</small>
+                                </div>
+                            ` : ''}
                             
                             <!-- Labor Cost Information -->
                             <div class="mt-2 row g-2">
@@ -1653,6 +1718,11 @@ function displayServiceTasks(tasks) {
                                         <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian thực tế">
                                             <i class="fas fa-edit text-primary"></i>
                                         </button>
+                                    ` : ''}
+                                    ${standardLaborTime !== null && actualLaborTime > (standardLaborTime * 1.5) ? `
+                                        <div class="mt-1">
+                                            <span class="badge bg-warning"><i class="fas fa-exclamation-triangle me-1"></i>Vượt quá thời gian chuẩn</span>
+                                        </div>
                                     ` : ''}
                                 </div>
                                 <div class="col-md-4">
@@ -1692,6 +1762,26 @@ function displayServiceTasks(tasks) {
 }
 
 function updateTaskStatus(taskId, newStatus) {
+    // ✅ Nếu hoàn thành (DONE), yêu cầu nhập CompletionNote
+    if (newStatus === 'DONE' || newStatus === 'COMPLETED') {
+        const completionNote = prompt('Vui lòng nhập ghi chú khi hoàn thành công việc:');
+        if (completionNote === null) {
+            return; // User cancelled
+        }
+        // Nếu user nhập rỗng, vẫn cho phép nhưng cảnh báo
+        if (completionNote.trim() === '') {
+            if (!confirm('Bạn chưa nhập ghi chú. Bạn có muốn tiếp tục không?')) {
+                return;
+            }
+        }
+        
+        updateTaskStatusWithNote(taskId, newStatus, completionNote.trim() || null);
+    } else {
+        updateTaskStatusWithNote(taskId, newStatus, null);
+    }
+}
+
+function updateTaskStatusWithNote(taskId, newStatus, completionNote) {
     const token = localStorage.getItem('authToken');
     
     fetch(`${API_BASE_URL}/ServiceTask/${taskId}/status`, {
@@ -1700,7 +1790,10 @@ function updateTaskStatus(taskId, newStatus) {
             'Content-Type': 'application/json',
             'Authorization': token ? `Bearer ${token}` : ''
         },
-        body: JSON.stringify({ statusCode: newStatus })
+        body: JSON.stringify({ 
+            statusCode: newStatus,
+            completionNote: completionNote
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -2391,6 +2484,17 @@ function saveServiceTask() {
             }
             
             const task = taskData.data;
+            // ✅ Lấy danh sách technicians đã chọn (checkbox)
+            const selectedTechnicianIds = [];
+            $('.task-technician-checkbox:checked').each(function() {
+                selectedTechnicianIds.push(parseInt($(this).val()));
+            });
+            const primaryTechnicianId = $('.task-technician-checkbox:checked[data-is-primary="true"]').first().val() 
+                ? parseInt($('.task-technician-checkbox:checked[data-is-primary="true"]').first().val()) 
+                : (selectedTechnicianIds.length > 0 ? selectedTechnicianIds[0] : null);
+            
+            const taskDisplayOrder = $('#taskDisplayOrder').val() ? parseInt($('#taskDisplayOrder').val()) : null;
+            
             const updateData = {
                 id: parseInt(taskId),
                 maintenanceTicketId: task.maintenanceTicketId,
@@ -2400,7 +2504,9 @@ function saveServiceTask() {
                 note: taskNote || null,
                 serviceCategoryId: task.serviceCategoryId || null,
                 standardLaborTime: taskStandardLaborTime,
-                actualLaborTime: actualLaborTime
+                actualLaborTime: actualLaborTime,
+                technicianId: primaryTechnicianId, // Giữ lại để backward compatibility
+                displayOrder: taskDisplayOrder
             };
             
             // Gọi API update
@@ -2411,9 +2517,27 @@ function saveServiceTask() {
                     'Authorization': token ? `Bearer ${token}` : ''
                 },
                 body: JSON.stringify(updateData)
+            }).then(response => response.json()).then(updateResult => {
+                // ✅ Sau khi update task, gán technicians nếu có
+                if (updateResult.success && selectedTechnicianIds.length > 0) {
+                    return fetch(`${API_BASE_URL}/ServiceTask/${taskId}/technicians`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({
+                            technicianIds: selectedTechnicianIds,
+                            primaryTechnicianId: primaryTechnicianId
+                        })
+                    }).then(response => response.json()).then(assignResult => {
+                        // Trả về kết quả update task (không phải assign)
+                        return updateResult;
+                    });
+                }
+                return updateResult;
             });
         })
-        .then(response => response.json())
         .then(data => {
             btn.html(originalText);
             btn.prop('disabled', false);
@@ -2435,6 +2559,17 @@ function saveServiceTask() {
         });
     } else {
         // Create mode
+        // ✅ Lấy danh sách technicians đã chọn (checkbox)
+        const selectedTechnicianIds = [];
+        $('.task-technician-checkbox:checked').each(function() {
+            selectedTechnicianIds.push(parseInt($(this).val()));
+        });
+        const primaryTechnicianId = $('.task-technician-checkbox:checked[data-is-primary="true"]').first().val() 
+            ? parseInt($('.task-technician-checkbox:checked[data-is-primary="true"]').first().val()) 
+            : (selectedTechnicianIds.length > 0 ? selectedTechnicianIds[0] : null);
+        
+        const taskDisplayOrder = $('#taskDisplayOrder').val() ? parseInt($('#taskDisplayOrder').val()) : null;
+        
         const taskData = {
             maintenanceTicketId: maintenanceTicketId,
             taskName: taskName,
@@ -2442,7 +2577,9 @@ function saveServiceTask() {
             note: taskNote || null,
             statusCode: 'PENDING', // Mặc định là PENDING
             standardLaborTime: taskStandardLaborTime,
-            actualLaborTime: actualLaborTime
+            actualLaborTime: actualLaborTime,
+            technicianId: primaryTechnicianId, // Giữ lại để backward compatibility
+            displayOrder: taskDisplayOrder
         };
         
         fetch(`${API_BASE_URL}/ServiceTask`, {
@@ -2459,10 +2596,36 @@ function saveServiceTask() {
             btn.prop('disabled', false);
             
             if (data.success) {
-                showAlert('Thêm công việc thành công!', 'success');
-                $('#addServiceTaskModal').modal('hide');
-                loadServiceTasks();
-                updateCostSummary();
+                const createdTaskId = data.data?.id;
+                
+                // ✅ Nếu có chọn technicians, gán cho công việc vừa tạo
+                if (selectedTechnicianIds.length > 0 && createdTaskId) {
+                    return fetch(`${API_BASE_URL}/ServiceTask/${createdTaskId}/technicians`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        },
+                        body: JSON.stringify({
+                            technicianIds: selectedTechnicianIds,
+                            primaryTechnicianId: primaryTechnicianId
+                        })
+                    }).then(response => response.json()).then(assignData => {
+                        if (assignData.success) {
+                            showAlert('Thêm công việc và gán kỹ thuật viên thành công!', 'success');
+                        } else {
+                            showAlert('Thêm công việc thành công, nhưng có lỗi khi gán kỹ thuật viên', 'warning');
+                        }
+                        $('#addServiceTaskModal').modal('hide');
+                        loadServiceTasks();
+                        updateCostSummary();
+                    });
+                } else {
+                    showAlert('Thêm công việc thành công!', 'success');
+                    $('#addServiceTaskModal').modal('hide');
+                    loadServiceTasks();
+                    updateCostSummary();
+                }
             } else {
                 showAlert('Lỗi: ' + (data.message || 'Không thể thêm công việc'), 'danger');
             }
@@ -2497,6 +2660,23 @@ function editServiceTask(taskId) {
             $('#taskNote').val(task.note || '');
             $('#taskStandardLaborTime').val(task.standardLaborTime || '');
             $('#taskActualLaborTime').val(task.actualLaborTime || '');
+            $('#taskDisplayOrder').val(task.displayOrder || '');
+            
+            // Load và set technicians (checkbox)
+            loadTechniciansForTask().then(() => {
+                // Uncheck tất cả trước
+                $('.task-technician-checkbox').prop('checked', false);
+                
+                // Check các technicians đã được gán
+                if (task.technicians && Array.isArray(task.technicians) && task.technicians.length > 0) {
+                    task.technicians.forEach(tech => {
+                        $(`#taskTech_${tech.technicianId}`).prop('checked', true);
+                    });
+                } else if (task.technicianId) {
+                    // Backward compatibility: nếu chỉ có technicianId cũ
+                    $(`#taskTech_${task.technicianId}`).prop('checked', true);
+                }
+            });
             
             // Đổi title và button text
             $('#addServiceTaskModalLabel').text('Chỉnh sửa công việc');
@@ -2511,6 +2691,132 @@ function editServiceTask(taskId) {
     .catch(error => {
         console.error('Error:', error);
         showAlert('Có lỗi xảy ra khi tải thông tin công việc', 'danger');
+    });
+}
+
+function loadTechniciansForTask() {
+    return new Promise((resolve, reject) => {
+        const container = $('#taskTechniciansContainer');
+        
+        // ✅ Lấy danh sách kỹ thuật viên từ maintenanceTicketData.technicians (đã được gán ở thao tác)
+        if (maintenanceTicketData && maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
+            let html = '';
+            maintenanceTicketData.technicians.forEach(tech => {
+                const techName = tech.technicianName || `Kỹ thuật viên #${tech.technicianId}`;
+                const isPrimary = tech.roleInTicket === 'PRIMARY';
+                const primaryBadge = isPrimary ? '<span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>' : '';
+                html += `
+                    <div class="form-check">
+                        <input class="form-check-input task-technician-checkbox" type="checkbox" 
+                               value="${tech.technicianId}" 
+                               id="taskTech_${tech.technicianId}"
+                               ${isPrimary ? 'data-is-primary="true"' : ''}>
+                        <label class="form-check-label" for="taskTech_${tech.technicianId}">
+                            ${techName}${primaryBadge}
+                        </label>
+                    </div>
+                `;
+            });
+            container.html(html);
+            console.log('[loadTechniciansForTask] Loaded', maintenanceTicketData.technicians.length, 'technicians from maintenanceTicketData');
+        } else {
+            // Nếu chưa có kỹ thuật viên nào được gán, hiển thị thông báo
+            container.html('<div class="text-muted text-center py-2"><small>Vui lòng gán kỹ thuật viên ở phần "Thao tác" trước</small></div>');
+            console.warn('[loadTechniciansForTask] No technicians assigned to this ticket yet');
+        }
+        
+        resolve();
+    });
+}
+
+// ✅ Hàm tự động cập nhật TechnicianId cho tất cả ServiceTask hiện có
+function updateAllServiceTasksWithTechnicians(technicianIds, primaryId) {
+    return new Promise((resolve, reject) => {
+        if (!technicianIds || technicianIds.length === 0) {
+            resolve();
+            return;
+        }
+        
+        const token = localStorage.getItem('authToken');
+        
+        // Lấy danh sách tất cả công việc hiện có
+        fetch(`${API_BASE_URL}/ServiceTask/by-ticket/${maintenanceTicketId}`, {
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : '',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            let tasks = [];
+            if (data.success && Array.isArray(data.data)) {
+                tasks = data.data;
+            } else if (Array.isArray(data)) {
+                tasks = data;
+            }
+            
+            if (tasks.length === 0) {
+                console.log('[updateAllServiceTasksWithTechnicians] No tasks to update');
+                resolve();
+                return;
+            }
+            
+            // Cập nhật từng công việc: nếu chưa có TechnicianId, gán primaryId hoặc technicianIds[0]
+            const updatePromises = tasks.map(task => {
+                // Chỉ cập nhật nếu công việc chưa có TechnicianId
+                if (!task.technicianId) {
+                    const technicianIdToAssign = primaryId || technicianIds[0];
+                    
+                    // Load task đầy đủ để update
+                    return fetch(`${API_BASE_URL}/ServiceTask/${task.id}`, {
+                        headers: {
+                            'Authorization': token ? `Bearer ${token}` : '',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(taskData => {
+                        if (taskData.success && taskData.data) {
+                            const fullTask = taskData.data;
+                            const updateData = {
+                                id: fullTask.id,
+                                maintenanceTicketId: fullTask.maintenanceTicketId,
+                                taskName: fullTask.taskName,
+                                description: fullTask.description,
+                                statusCode: fullTask.statusCode,
+                                note: fullTask.note,
+                                serviceCategoryId: fullTask.serviceCategoryId,
+                                standardLaborTime: fullTask.standardLaborTime,
+                                actualLaborTime: fullTask.actualLaborTime,
+                                technicianId: technicianIdToAssign,
+                                displayOrder: fullTask.displayOrder
+                            };
+                            
+                            return fetch(`${API_BASE_URL}/ServiceTask/${task.id}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': token ? `Bearer ${token}` : ''
+                                },
+                                body: JSON.stringify(updateData)
+                            });
+                        }
+                        return Promise.resolve();
+                    });
+                }
+                return Promise.resolve();
+            });
+            
+            return Promise.all(updatePromises);
+        })
+        .then(() => {
+            console.log('[updateAllServiceTasksWithTechnicians] All tasks updated successfully');
+            resolve();
+        })
+        .catch(error => {
+            console.error('[updateAllServiceTasksWithTechnicians] Error:', error);
+            reject(error);
+        });
     });
 }
 

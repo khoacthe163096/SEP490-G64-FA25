@@ -31,6 +31,9 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ServiceTasks
                 .Include(st => st.ServiceCategory)
+                .Include(st => st.Technician) // ✅ Include Technician trực tiếp từ ServiceTask
+                .Include(st => st.ServiceTaskTechnicians) // ✅ Include nhiều kỹ thuật viên
+                    .ThenInclude(stt => stt.Technician)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
@@ -69,6 +72,9 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.ServiceTasks
                 .Include(st => st.ServiceCategory)
+                .Include(st => st.Technician) // ✅ Include Technician trực tiếp từ ServiceTask
+                .Include(st => st.ServiceTaskTechnicians) // ✅ Include nhiều kỹ thuật viên
+                    .ThenInclude(stt => stt.Technician)
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Car)
                         .ThenInclude(c => c!.User)
@@ -77,6 +83,8 @@ namespace BE.vn.fpt.edu.repository
                 .Include(st => st.MaintenanceTicket)
                     .ThenInclude(mt => mt!.Branch)
                 .Where(st => st.MaintenanceTicketId == maintenanceTicketId)
+                .OrderBy(st => st.DisplayOrder) // ✅ Sắp xếp theo DisplayOrder
+                .ThenByDescending(st => st.Id) // Nếu DisplayOrder giống nhau, sắp xếp theo ID
                 .ToListAsync();
         }
 

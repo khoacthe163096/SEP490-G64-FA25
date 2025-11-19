@@ -154,7 +154,7 @@ namespace BE.vn.fpt.edu.controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
                 
-                var result = await _serviceTaskService.UpdateStatusAsync(id, request.StatusCode, userId);
+                var result = await _serviceTaskService.UpdateStatusAsync(id, request.StatusCode, userId, request.CompletionNote);
                 return Ok(new { success = true, data = result, message = "Status updated successfully" });
             }
             catch (ArgumentException ex)
@@ -225,6 +225,31 @@ namespace BE.vn.fpt.edu.controllers
                 {
                     return NotFound(new { success = false, message = "Service task not found" });
                 }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gán kỹ thuật viên cho ServiceTask
+        /// </summary>
+        [HttpPut("{id}/technicians")]
+        public async Task<IActionResult> AssignTechnicians(long id, [FromBody] ServiceTaskAssignTechniciansDto request)
+        {
+            try
+            {
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _serviceTaskService.AssignTechniciansAsync(id, request, userId);
+                return Ok(new { success = true, data = result, message = "Technicians assigned successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {

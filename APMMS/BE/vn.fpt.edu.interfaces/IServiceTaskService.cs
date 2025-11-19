@@ -12,8 +12,9 @@ namespace BE.vn.fpt.edu.interfaces
         Task<List<ServiceTaskListResponseDto>> GetServiceTasksByStatusAsync(string statusCode);
         Task<List<ServiceTaskListResponseDto>> GetServiceTasksByTechnicianIdAsync(long technicianId);
         Task<bool> DeleteServiceTaskAsync(long id);
-        Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode, long? userId = null);
+        Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode, long? userId = null, string? completionNote = null);
         Task<ServiceTaskResponseDto> UpdateLaborTimeAsync(long id, decimal actualLaborTime);
+        Task<ServiceTaskResponseDto> AssignTechniciansAsync(long id, ServiceTaskAssignTechniciansDto request, long? userId = null);
     }
 }
 

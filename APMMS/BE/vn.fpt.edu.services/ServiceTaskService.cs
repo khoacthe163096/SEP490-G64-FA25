@@ -273,7 +273,7 @@ namespace BE.vn.fpt.edu.services
 
 
 
-        public async Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode, long? userId = null)
+        public async Task<ServiceTaskResponseDto> UpdateStatusAsync(long id, string statusCode, long? userId = null, string? completionNote = null)
 
         {
 
@@ -284,6 +284,24 @@ namespace BE.vn.fpt.edu.services
                 throw new ArgumentException("Service task not found");
 
             var oldStatus = serviceTask.StatusCode;
+
+            // ✅ Tự động set StartTime khi chuyển sang IN_PROGRESS
+            if (statusCode == "IN_PROGRESS" && oldStatus != "IN_PROGRESS" && !serviceTask.StartTime.HasValue)
+            {
+                serviceTask.StartTime = DateTime.UtcNow;
+            }
+
+            // ✅ Tự động set EndTime khi chuyển sang DONE hoặc COMPLETED
+            if ((statusCode == "DONE" || statusCode == "COMPLETED") && oldStatus != statusCode && !serviceTask.EndTime.HasValue)
+            {
+                serviceTask.EndTime = DateTime.UtcNow;
+            }
+
+            // ✅ Set CompletionNote nếu có
+            if (!string.IsNullOrWhiteSpace(completionNote))
+            {
+                serviceTask.CompletionNote = completionNote;
+            }
 
             serviceTask.StatusCode = statusCode;
 
@@ -458,7 +476,12 @@ namespace BE.vn.fpt.edu.services
 
                 LaborCost = serviceTask.LaborCost,
 
-
+                // New fields
+                TechnicianId = serviceTask.TechnicianId,
+                StartTime = serviceTask.StartTime,
+                EndTime = serviceTask.EndTime,
+                DisplayOrder = serviceTask.DisplayOrder,
+                CompletionNote = serviceTask.CompletionNote,
 
                 // Navigation properties
 
@@ -472,15 +495,26 @@ namespace BE.vn.fpt.edu.services
 
                     : null,
 
-                TechnicianName = serviceTask.MaintenanceTicket?.Technician != null
-
-                    ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
-
-                    : null,
+                TechnicianName = serviceTask.Technician != null
+                    ? $"{serviceTask.Technician.FirstName} {serviceTask.Technician.LastName}".Trim()
+                    : (serviceTask.MaintenanceTicket?.Technician != null
+                        ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
+                        : null),
 
                 BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,
 
-                ServiceCategoryName = serviceTask.ServiceCategory?.Name
+                ServiceCategoryName = serviceTask.ServiceCategory?.Name,
+                
+                // ✅ Map danh sách nhiều kỹ thuật viên
+                Technicians = serviceTask.ServiceTaskTechnicians?.Select(stt => new ServiceTaskTechnicianDto
+                {
+                    TechnicianId = stt.TechnicianId,
+                    TechnicianName = stt.Technician != null 
+                        ? $"{stt.Technician.FirstName} {stt.Technician.LastName}".Trim() 
+                        : null,
+                    RoleInTask = stt.RoleInTask,
+                    AssignedDate = stt.AssignedDate
+                }).ToList()
 
             };
 
@@ -510,7 +544,12 @@ namespace BE.vn.fpt.edu.services
 
                 LaborCost = serviceTask.LaborCost,
 
-
+                // New fields
+                TechnicianId = serviceTask.TechnicianId,
+                StartTime = serviceTask.StartTime,
+                EndTime = serviceTask.EndTime,
+                DisplayOrder = serviceTask.DisplayOrder,
+                CompletionNote = serviceTask.CompletionNote,
 
                 // Basic info
 
@@ -522,18 +561,88 @@ namespace BE.vn.fpt.edu.services
 
                     : null,
 
-                TechnicianName = serviceTask.MaintenanceTicket?.Technician != null
-
-                    ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
-
-                    : null,
+                TechnicianName = serviceTask.Technician != null
+                    ? $"{serviceTask.Technician.FirstName} {serviceTask.Technician.LastName}".Trim()
+                    : (serviceTask.MaintenanceTicket?.Technician != null
+                        ? $"{serviceTask.MaintenanceTicket.Technician.FirstName} {serviceTask.MaintenanceTicket.Technician.LastName}".Trim()
+                        : null),
 
                 BranchName = serviceTask.MaintenanceTicket?.Branch?.Name,
 
-                ServiceCategoryName = serviceTask.ServiceCategory?.Name
+                ServiceCategoryName = serviceTask.ServiceCategory?.Name,
+                
+                // ✅ Map danh sách nhiều kỹ thuật viên
+                Technicians = serviceTask.ServiceTaskTechnicians?.Select(stt => new ServiceTaskTechnicianDto
+                {
+                    TechnicianId = stt.TechnicianId,
+                    TechnicianName = stt.Technician != null 
+                        ? $"{stt.Technician.FirstName} {stt.Technician.LastName}".Trim() 
+                        : null,
+                    RoleInTask = stt.RoleInTask,
+                    AssignedDate = stt.AssignedDate
+                }).ToList()
 
             };
 
+        }
+
+        /// <summary>
+        /// Gán kỹ thuật viên cho ServiceTask
+        /// </summary>
+        public async Task<ServiceTaskResponseDto> AssignTechniciansAsync(long id, ServiceTaskAssignTechniciansDto request, long? userId = null)
+        {
+            var serviceTask = await _serviceTaskRepository.GetByIdAsync(id);
+            if (serviceTask == null)
+                throw new ArgumentException("Service task not found");
+
+            // Xóa tất cả technicians hiện tại
+            var existingTechnicians = _context.ServiceTaskTechnicians
+                .Where(stt => stt.ServiceTaskId == id)
+                .ToList();
+            _context.ServiceTaskTechnicians.RemoveRange(existingTechnicians);
+
+            // Thêm technicians mới
+            if (request.TechnicianIds != null && request.TechnicianIds.Count > 0)
+            {
+                var newTechnicians = request.TechnicianIds.Select(techId => new ServiceTaskTechnician
+                {
+                    ServiceTaskId = id,
+                    TechnicianId = techId,
+                    AssignedDate = DateTime.UtcNow,
+                    RoleInTask = (request.PrimaryTechnicianId.HasValue && techId == request.PrimaryTechnicianId.Value) 
+                        ? "PRIMARY" 
+                        : "ASSISTANT"
+                }).ToList();
+
+                _context.ServiceTaskTechnicians.AddRange(newTechnicians);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // ✅ Tạo history log
+            if (userId.HasValue)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                var userName = user != null 
+                    ? ($"{user.FirstName} {user.LastName}").Trim() 
+                    : "Unknown";
+                
+                var techNames = request.TechnicianIds?.Select(techId => 
+                {
+                    var tech = _context.Users.Find(techId);
+                    return tech != null ? $"{tech.FirstName} {tech.LastName}".Trim() : $"#{techId}";
+                }).ToList() ?? new List<string>();
+                
+                var techList = string.Join(", ", techNames);
+                await CreateHistoryLogAsync(
+                    userId: userId,
+                    action: "ASSIGN_SERVICE_TASK_TECHNICIANS",
+                    maintenanceTicketId: serviceTask.MaintenanceTicketId,
+                    newData: $"Gán kỹ thuật viên cho công việc '{serviceTask.TaskName ?? "N/A"}': {techList} bởi {userName}"
+                );
+            }
+
+            return await GetServiceTaskByIdAsync(id);
         }
 
         /// <summary>

@@ -27,6 +27,10 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public long? ServiceCategoryId { get; set; } // Tham chiếu đến ServiceCategory (catalog)
         public decimal? StandardLaborTime { get; set; } // Thời gian chuẩn (giờ)
         public decimal? ActualLaborTime { get; set; } // Thời gian thực tế (có thể chỉnh sửa)
+        
+        // New fields
+        public long? TechnicianId { get; set; } // Kỹ thuật viên được gán
+        public int? DisplayOrder { get; set; } // Thứ tự hiển thị
     }
 
     /// <summary>
@@ -57,6 +61,11 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public long? ServiceCategoryId { get; set; }
         public decimal? StandardLaborTime { get; set; }
         public decimal? ActualLaborTime { get; set; }
+        
+        // New fields
+        public long? TechnicianId { get; set; } // Kỹ thuật viên được gán
+        public int? DisplayOrder { get; set; } // Thứ tự hiển thị
+        public string? CompletionNote { get; set; } // Ghi chú khi hoàn thành
     }
 
     /// <summary>
@@ -79,5 +88,19 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         [Required(ErrorMessage = "Status code is required")]
         [StringLength(50, ErrorMessage = "Status code cannot exceed 50 characters")]
         public string StatusCode { get; set; } = string.Empty;
+        
+        [StringLength(500, ErrorMessage = "Completion note cannot exceed 500 characters")]
+        public string? CompletionNote { get; set; } // Ghi chú khi hoàn thành (bắt buộc nếu status = DONE)
+    }
+    
+    /// <summary>
+    /// DTO cho việc gán kỹ thuật viên cho ServiceTask
+    /// </summary>
+    public class ServiceTaskAssignTechniciansDto
+    {
+        [Required(ErrorMessage = "Technician IDs are required")]
+        public List<long> TechnicianIds { get; set; } = new List<long>();
+        
+        public long? PrimaryTechnicianId { get; set; } // Kỹ thuật viên chính (tùy chọn)
     }
 }

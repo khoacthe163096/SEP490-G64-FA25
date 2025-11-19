@@ -18,6 +18,13 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public decimal? ActualLaborTime { get; set; }
         public decimal? LaborCost { get; set; }
 
+        // New fields
+        public long? TechnicianId { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public int? DisplayOrder { get; set; }
+        public string? CompletionNote { get; set; }
+
         // Navigation properties
         public string? MaintenanceTicketDescription { get; set; }
         public string? CarName { get; set; }
@@ -25,6 +32,20 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
         public string? ServiceCategoryName { get; set; }
+        
+        // ✅ Danh sách nhiều kỹ thuật viên
+        public List<ServiceTaskTechnicianDto>? Technicians { get; set; }
+    }
+    
+    /// <summary>
+    /// DTO cho kỹ thuật viên của ServiceTask
+    /// </summary>
+    public class ServiceTaskTechnicianDto
+    {
+        public long TechnicianId { get; set; }
+        public string? TechnicianName { get; set; }
+        public string? RoleInTask { get; set; } // PRIMARY, ASSISTANT
+        public DateTime? AssignedDate { get; set; }
     }
 
     /// <summary>
@@ -45,11 +66,21 @@ namespace BE.vn.fpt.edu.DTOs.ServiceTask
         public decimal? ActualLaborTime { get; set; }
         public decimal? LaborCost { get; set; }
 
+        // New fields
+        public long? TechnicianId { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public int? DisplayOrder { get; set; }
+        public string? CompletionNote { get; set; }
+
         // Basic info
         public string? CarName { get; set; }
         public string? CustomerName { get; set; }
         public string? TechnicianName { get; set; }
         public string? BranchName { get; set; }
         public string? ServiceCategoryName { get; set; }
+        
+        // ✅ Danh sách nhiều kỹ thuật viên
+        public List<ServiceTaskTechnicianDto>? Technicians { get; set; }
     }
 }

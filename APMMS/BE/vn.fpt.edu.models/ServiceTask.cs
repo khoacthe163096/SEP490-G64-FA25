@@ -25,9 +25,23 @@ public partial class ServiceTask
 
     public decimal? LaborCost { get; set; }
 
+    public long? TechnicianId { get; set; }
+
+    public DateTime? StartTime { get; set; }
+
+    public DateTime? EndTime { get; set; }
+
+    public int? DisplayOrder { get; set; }
+
+    public string? CompletionNote { get; set; }
+
     public virtual MaintenanceTicket? MaintenanceTicket { get; set; }
 
     public virtual ServiceCategory? ServiceCategory { get; set; }
 
+    public virtual ICollection<ServiceTaskTechnician> ServiceTaskTechnicians { get; set; } = new List<ServiceTaskTechnician>();
+
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
+
+    public virtual User? Technician { get; set; }
 }

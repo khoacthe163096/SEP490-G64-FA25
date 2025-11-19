@@ -77,6 +77,10 @@ public partial class User
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();
 
+    public virtual ICollection<ServiceTaskTechnician> ServiceTaskTechnicians { get; set; } = new List<ServiceTaskTechnician>();
+
+    public virtual ICollection<ServiceTask> ServiceTasks { get; set; } = new List<ServiceTask>();
+
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();

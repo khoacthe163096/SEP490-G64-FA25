@@ -49,6 +49,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<ServiceTask> ServiceTasks { get; set; }
 
+    public virtual DbSet<ServiceTaskTechnician> ServiceTaskTechnicians { get; set; }
+
     public virtual DbSet<StatusLookup> StatusLookups { get; set; }
 
     public virtual DbSet<TicketComponent> TicketComponents { get; set; }
@@ -72,6 +74,7 @@ public partial class CarMaintenanceDbContext : DbContext
             // Không để trống thì giữ nguyên, nhưng KHÔNG hard-code connection string
         }
     }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Branch>(entity =>
@@ -739,15 +742,24 @@ public partial class CarMaintenanceDbContext : DbContext
 
             entity.ToTable("service_task");
 
+            entity.HasIndex(e => e.DisplayOrder, "IX_service_task_display_order");
+
+            entity.HasIndex(e => e.TechnicianId, "IX_service_task_technician_id");
+
             entity.HasIndex(e => e.MaintenanceTicketId, "IX_service_task_ticket_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ActualLaborTime)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("actual_labor_time");
+            entity.Property(e => e.CompletionNote).HasColumnName("completion_note");
             entity.Property(e => e.Description)
                 .HasMaxLength(255)
                 .HasColumnName("description");
+            entity.Property(e => e.DisplayOrder).HasColumnName("display_order");
+            entity.Property(e => e.EndTime)
+                .HasColumnType("datetime")
+                .HasColumnName("end_time");
             entity.Property(e => e.LaborCost)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("labor_cost");
@@ -759,12 +771,16 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.StandardLaborTime)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("standard_labor_time");
+            entity.Property(e => e.StartTime)
+                .HasColumnType("datetime")
+                .HasColumnName("start_time");
             entity.Property(e => e.StatusCode)
                 .HasMaxLength(50)
                 .HasColumnName("status_code");
             entity.Property(e => e.TaskName)
                 .HasMaxLength(100)
                 .HasColumnName("task_name");
+            entity.Property(e => e.TechnicianId).HasColumnName("technician_id");
 
             entity.HasOne(d => d.MaintenanceTicket).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.MaintenanceTicketId)
@@ -777,6 +793,39 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.ServiceTasks)
                 .HasForeignKey(d => d.StatusCode)
                 .HasConstraintName("FK_service_task_status");
+
+            entity.HasOne(d => d.Technician).WithMany(p => p.ServiceTasks)
+                .HasForeignKey(d => d.TechnicianId)
+                .HasConstraintName("FK_service_task_technician");
+        });
+
+        modelBuilder.Entity<ServiceTaskTechnician>(entity =>
+        {
+            entity.HasKey(e => new { e.ServiceTaskId, e.TechnicianId });
+
+            entity.ToTable("service_task_technician");
+
+            entity.HasIndex(e => e.ServiceTaskId, "IX_service_task_technician_service_task_id");
+
+            entity.HasIndex(e => e.TechnicianId, "IX_service_task_technician_technician_id");
+
+            entity.Property(e => e.ServiceTaskId).HasColumnName("service_task_id");
+            entity.Property(e => e.TechnicianId).HasColumnName("technician_id");
+            entity.Property(e => e.AssignedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("assigned_date");
+            entity.Property(e => e.RoleInTask)
+                .HasMaxLength(100)
+                .HasColumnName("role_in_task");
+
+            entity.HasOne(d => d.ServiceTask).WithMany(p => p.ServiceTaskTechnicians)
+                .HasForeignKey(d => d.ServiceTaskId)
+                .HasConstraintName("FK_service_task_technician_service_task");
+
+            entity.HasOne(d => d.Technician).WithMany(p => p.ServiceTaskTechnicians)
+                .HasForeignKey(d => d.TechnicianId)
+                .HasConstraintName("FK_service_task_technician_technician");
         });
 
         modelBuilder.Entity<StatusLookup>(entity =>

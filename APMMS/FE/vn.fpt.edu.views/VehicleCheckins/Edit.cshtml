@@ -34,7 +34,7 @@
                                     <div class="col-md-3">
                                         <label for="vinNumber" class="form-label small">Số khung (VIN)</label>
                                         <input type="text" class="form-control form-control-sm" id="vinNumber" name="vinNumber">
-                                    </div>
+                                        </div>
                                     <div class="col-md-3">
                                         <label for="vehicleEngineNumber" class="form-label small">Số máy</label>
                                         <input type="text" class="form-control form-control-sm" id="vehicleEngineNumber" name="vehicleEngineNumber">
@@ -42,7 +42,7 @@
                                     <div class="col-md-3">
                                         <label for="carColor" class="form-label small">Màu xe</label>
                                         <input type="text" class="form-control form-control-sm" id="carColor" name="carColor">
-                                    </div>
+                                        </div>
                                     <div class="col-md-3">
                                         <label for="mileage" class="form-label small">Số km</label>
                                         <input type="number" class="form-control form-control-sm" id="mileage" name="mileage" min="0">
@@ -96,7 +96,7 @@
                                 <div id="currentImagesSection" style="display: none;">
                                     <label class="form-label small">Hình ảnh hiện tại</label>
                                     <div id="currentImages" class="row g-2">
-                                        <!-- Current images will be displayed here -->
+                                            <!-- Current images will be displayed here -->
                                     </div>
                                 </div>
                             </div>
@@ -105,18 +105,18 @@
                         <!-- Action Buttons -->
                         <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                             <div class="text-muted small">Vui lòng kiểm tra thông tin trước khi cập nhật</div>
-                            <div class="btn-group">
+                                    <div class="btn-group">
                                 <a href="#" id="backButton" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-arrow-left me-1"></i> 
-                                    Quay lại
-                                </a>
+                                            <i class="fas fa-arrow-left me-1"></i> 
+                                            Quay lại
+                                        </a>
                                 <button type="submit" id="submitBtn" class="btn btn-primary btn-sm">
                                     <span id="submitText">
-                                        <i class="fas fa-save me-1"></i> 
-                                        Cập nhật
+                                            <i class="fas fa-save me-1"></i> 
+                                            Cập nhật
                                     </span>
                                     <span id="submitSpinner" class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
-                                </button>
+                                        </button>
                             </div>
                         </div>
                     </form>
@@ -269,24 +269,24 @@
                                 <i class="fas fa-times"></i>
                             </button>
                             <img src="${imageUrl}" class="img-thumbnail w-100 mb-2" style="height: 120px; object-fit: cover; cursor: pointer;" 
-                                 alt="Hình ${index + 1}"
-                                 onclick="openImageModal('${imageUrl}')"
-                                 title="Click để xem ảnh lớn">
+                                         alt="Hình ${index + 1}"
+                                         onclick="openImageModal('${imageUrl}')"
+                                         title="Click để xem ảnh lớn">
                             <div class="mb-1">
-                                <input type="text" class="form-control form-control-sm image-description-edit" 
+                                        <input type="text" class="form-control form-control-sm image-description-edit" 
                                        placeholder="Mô tả ảnh" 
-                                       value="${description}"
-                                       data-image-id="${imageId}">
-                            </div>
-                            <select class="form-select form-select-sm image-category-edit" data-image-id="${imageId}">
+                                               value="${description}"
+                                               data-image-id="${imageId}">
+                                    </div>
+                                        <select class="form-select form-select-sm image-category-edit" data-image-id="${imageId}">
                                 <option value="">-- Phân loại --</option>
-                                <option value="Exterior" ${category === 'Exterior' ? 'selected' : ''}>Ngoại thất</option>
-                                <option value="Interior" ${category === 'Interior' ? 'selected' : ''}>Nội thất</option>
-                                <option value="Damage" ${category === 'Damage' ? 'selected' : ''}>Hư hỏng</option>
-                                <option value="Engine" ${category === 'Engine' ? 'selected' : ''}>Động cơ</option>
-                                <option value="Tire" ${category === 'Tire' ? 'selected' : ''}>Lốp xe</option>
-                                <option value="Other" ${category === 'Other' ? 'selected' : ''}>Khác</option>
-                            </select>
+                                            <option value="Exterior" ${category === 'Exterior' ? 'selected' : ''}>Ngoại thất</option>
+                                            <option value="Interior" ${category === 'Interior' ? 'selected' : ''}>Nội thất</option>
+                                            <option value="Damage" ${category === 'Damage' ? 'selected' : ''}>Hư hỏng</option>
+                                            <option value="Engine" ${category === 'Engine' ? 'selected' : ''}>Động cơ</option>
+                                            <option value="Tire" ${category === 'Tire' ? 'selected' : ''}>Lốp xe</option>
+                                            <option value="Other" ${category === 'Other' ? 'selected' : ''}>Khác</option>
+                                        </select>
                         </div>
                     </div>
                 `;
