@@ -314,11 +314,6 @@
                         <small class="text-muted">Thời gian ước tính để hoàn thành công việc (giờ)</small>
                     </div>
                     <div class="mb-3">
-                        <label for="taskActualLaborTime" class="form-label">Thời gian thực tế (giờ)</label>
-                        <input type="number" class="form-control" id="taskActualLaborTime" min="0" max="999.99" step="0.01" placeholder="VD: 0.5">
-                        <small class="text-muted">Thời gian thực tế thực hiện công việc. Nếu để trống, sẽ lấy bằng thời gian chuẩn. <strong>Lưu ý:</strong> Phí nhân công được tính dựa trên thời gian chuẩn, không phải thời gian thực tế.</small>
-                    </div>
-                    <div class="mb-3">
                         <label class="form-label">Kỹ thuật viên</label>
                         <div id="taskTechniciansContainer" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
                             <small class="text-muted">Đang tải danh sách...</small>
@@ -326,17 +321,8 @@
                         <small class="text-muted">Chọn một hoặc nhiều kỹ thuật viên đã được gán ở phần "Thao tác"</small>
                     </div>
                     <div class="mb-3">
-                        <label for="taskDisplayOrder" class="form-label">Thứ tự hiển thị</label>
-                        <input type="number" class="form-control" id="taskDisplayOrder" min="0" placeholder="Số càng nhỏ càng hiển thị trước">
-                        <small class="text-muted">Để trống hoặc 0 sẽ hiển thị cuối cùng</small>
-                    </div>
-                    <div class="mb-3">
                         <label for="taskNote" class="form-label">Ghi chú</label>
                         <textarea class="form-control" id="taskNote" rows="2"></textarea>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Lưu ý:</strong> Phí nhân công sẽ được tính tự động = Thời gian chuẩn × Giá giờ công của chi nhánh
                     </div>
                 </form>
             </div>
@@ -477,36 +463,27 @@
     </div>
 </div>
 
-<!-- Edit Labor Time Modal -->
-<div class="modal fade" id="editLaborTimeModal" tabindex="-1" aria-labelledby="editLaborTimeModalLabel" aria-hidden="true">
+<!-- Edit Standard Labor Time Modal -->
+<div class="modal fade" id="editStandardLaborTimeModal" tabindex="-1" aria-labelledby="editStandardLaborTimeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="editLaborTimeModalLabel">Chỉnh sửa thời gian lao động</h5>
+                <h5 class="modal-title" id="editStandardLaborTimeModalLabel">Chỉnh sửa thời gian chuẩn</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editLaborTimeForm">
-                    <input type="hidden" id="editLaborTimeTaskId">
+                <form id="editStandardLaborTimeForm">
+                    <input type="hidden" id="editStandardLaborTimeTaskId">
                     <div class="mb-3">
                         <label for="editStandardLaborTime" class="form-label">Thời gian chuẩn (giờ)</label>
                         <input type="number" class="form-control" id="editStandardLaborTime" min="0" max="999.99" step="0.01">
-                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (từ 0 đến 999.99 giờ)</small>
-                    </div>
-                    <div class="mb-3">
-                        <label for="editActualLaborTime" class="form-label">Thời gian thực tế (giờ) <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="editActualLaborTime" min="0.01" max="999.99" step="0.01" required>
-                        <small class="text-muted">Nhập thời gian thực tế thực hiện công việc (từ 0.01 đến 999.99 giờ)</small>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Lưu ý:</strong> Phí nhân công sẽ được tính tự động = Thời gian chuẩn × Giá giờ công của chi nhánh
+                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (từ 0 đến 999.99 giờ). <span id="standardLaborTimeNote" class="text-warning"></span></small>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="saveLaborTimeBtn">Lưu</button>
+                <button type="button" class="btn btn-primary" id="saveStandardLaborTimeBtn">Lưu</button>
             </div>
         </div>
     </div>
@@ -531,12 +508,40 @@
     </div>
 </div>
 
+<!-- Completion Note Modal -->
+<div class="modal fade" id="completionNoteModal" tabindex="-1" aria-labelledby="completionNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completionNoteModalLabel">Hoàn thành công việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="completionNoteInput" class="form-label">Ghi chú hoàn thành <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="completionNoteInput" rows="4" placeholder="Nhập ghi chú khi hoàn thành công việc..."></textarea>
+                    <small class="text-muted">Vui lòng nhập ghi chú mô tả công việc đã hoàn thành</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" id="submitCompletionNoteBtn">
+                    <i class="fas fa-check me-1"></i>Hoàn thành
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 const API_BASE_URL = '@apiBaseUrl';
 let maintenanceTicketId = @ViewBag.MaintenanceTicketId;
 let maintenanceTicketData = null;
+let currentUserRoleId = null; // Lưu roleId của user hiện tại
+let currentUserId = null; // Lưu userId của user hiện tại
 
 $(document).ready(function() {
+    loadCurrentUserInfo(); // Load thông tin user để kiểm tra quyền
     loadMaintenanceTicketDetails();
     
     // Modal events
@@ -647,18 +652,44 @@ $(document).ready(function() {
     });
     
     // Save labor time
-    $('#saveLaborTimeBtn').on('click', function() {
-        saveLaborTime();
+    $('#saveStandardLaborTimeBtn').on('click', function() {
+        saveStandardLaborTime();
     });
     
-    // Reset labor time modal when closed
-    $('#editLaborTimeModal').on('hidden.bs.modal', function() {
-        $('#editLaborTimeForm')[0].reset();
-        $('#editLaborTimeTaskId').val('');
-        $('#editStandardLaborTime').val('');
-        $('#editActualLaborTime').val('');
+    // Reset standard labor time modal when closed
+    $('#editStandardLaborTimeModal').on('hidden.bs.modal', function() {
+        $('#editStandardLaborTimeForm')[0].reset();
+        $('#editStandardLaborTimeTaskId').val('');
+        $('#editStandardLaborTime').val('').prop('readonly', false).removeClass('bg-light');
+        $('#standardLaborTimeNote').text('');
     });
 });
+
+// Load thông tin user hiện tại để kiểm tra quyền
+function loadCurrentUserInfo() {
+    const token = localStorage.getItem('authToken');
+    
+    // Gọi API Employee/me để lấy thông tin user
+    fetch(`${API_BASE_URL}/Employee/me`, {
+        headers: {
+            'Authorization': token ? `Bearer ${token}` : '',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            currentUserRoleId = data.data.roleId || null;
+            currentUserId = data.data.id || null;
+            console.log('[loadCurrentUserInfo] User RoleId:', currentUserRoleId, 'UserId:', currentUserId);
+        } else {
+            console.warn('[loadCurrentUserInfo] Could not load user info');
+        }
+    })
+    .catch(error => {
+        console.error('[loadCurrentUserInfo] Error:', error);
+    });
+}
 
 function loadMaintenanceTicketDetails() {
     const token = localStorage.getItem('authToken');
@@ -1699,8 +1730,8 @@ function displayServiceTasks(tasks) {
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">Thời gian chuẩn:</small>
                                     <strong>${standardLaborTimeDisplay} giờ</strong>
-                                    ${canEditTask ? `
-                                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian chuẩn">
+                                    ${canEditTask && currentUserRoleId !== 4 ? `
+                                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStandardLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian chuẩn">
                                             <i class="fas fa-edit text-primary"></i>
                                         </button>
                                     ` : ''}
@@ -1708,11 +1739,11 @@ function displayServiceTasks(tasks) {
                                 <div class="col-md-4">
                                     <small class="text-muted d-block">Thời gian thực tế:</small>
                                     <strong class="${actualLaborTime !== (standardLaborTime ?? 0) ? 'text-warning' : ''}">${actualLaborTime.toFixed(2)} giờ</strong>
-                                    ${canEditTask ? `
-                                        <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian thực tế">
-                                            <i class="fas fa-edit text-primary"></i>
-                                        </button>
-                                    ` : ''}
+                                    ${(() => {
+                                        // ✅ Thời gian thực tế chỉ tính tự động, không cho chỉnh sửa
+                                        // Không hiển thị nút chỉnh sửa thời gian thực tế
+                                        return '';
+                                    })()}
                                     ${standardLaborTime !== null && actualLaborTime > (standardLaborTime * 1.5) ? `
                                         <div class="mt-1">
                                             <span class="badge bg-warning"><i class="fas fa-exclamation-triangle me-1"></i>Vượt quá thời gian chuẩn</span>
@@ -1755,30 +1786,72 @@ function displayServiceTasks(tasks) {
     container.html(html);
 }
 
+// Biến lưu taskId và newStatus để dùng trong modal
+let pendingTaskStatusUpdate = null;
+
 function updateTaskStatus(taskId, newStatus) {
-    // ✅ Nếu hoàn thành (DONE), yêu cầu nhập CompletionNote
+    // ✅ Nếu hoàn thành (DONE), yêu cầu nhập CompletionNote qua modal
     if (newStatus === 'DONE' || newStatus === 'COMPLETED') {
-        const completionNote = prompt('Vui lòng nhập ghi chú khi hoàn thành công việc:');
-        if (completionNote === null) {
-            return; // User cancelled
-        }
-        // Nếu user nhập rỗng, vẫn cho phép nhưng cảnh báo
-        if (completionNote.trim() === '') {
-            if (!confirm('Bạn chưa nhập ghi chú. Bạn có muốn tiếp tục không?')) {
-                return;
-            }
-        }
+        // Lưu thông tin để dùng sau khi user nhập note
+        pendingTaskStatusUpdate = { taskId, newStatus };
         
-        updateTaskStatusWithNote(taskId, newStatus, completionNote.trim() || null);
+        // Reset và hiển thị modal
+        $('#completionNoteInput').val('');
+        $('#completionNoteModal').modal('show');
     } else {
         updateTaskStatusWithNote(taskId, newStatus, null);
     }
 }
 
+// Xử lý khi user submit completion note
+$(document).on('click', '#submitCompletionNoteBtn', function() {
+    const completionNote = $('#completionNoteInput').val().trim();
+    
+    if (!completionNote) {
+        showAlert('Vui lòng nhập ghi chú hoàn thành', 'warning');
+        $('#completionNoteInput').focus();
+        return;
+    }
+    
+    if (!pendingTaskStatusUpdate) {
+        showAlert('Có lỗi xảy ra. Vui lòng thử lại.', 'danger');
+        $('#completionNoteModal').modal('hide');
+        return;
+    }
+    
+    // Disable button và hiển thị loading
+    const btn = $(this);
+    const originalHtml = btn.html();
+    btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...');
+    btn.prop('disabled', true);
+    
+    // Gọi API
+    updateTaskStatusWithNote(
+        pendingTaskStatusUpdate.taskId, 
+        pendingTaskStatusUpdate.newStatus, 
+        completionNote
+    ).then(() => {
+        // Đóng modal và reset
+        $('#completionNoteModal').modal('hide');
+        pendingTaskStatusUpdate = null;
+    }).catch(() => {
+        // Giữ modal mở nếu có lỗi
+    }).finally(() => {
+        btn.html(originalHtml);
+        btn.prop('disabled', false);
+    });
+});
+
+// Reset khi đóng modal
+$('#completionNoteModal').on('hidden.bs.modal', function() {
+    $('#completionNoteInput').val('');
+    pendingTaskStatusUpdate = null;
+});
+
 function updateTaskStatusWithNote(taskId, newStatus, completionNote) {
     const token = localStorage.getItem('authToken');
     
-    fetch(`${API_BASE_URL}/ServiceTask/${taskId}/status`, {
+    return fetch(`${API_BASE_URL}/ServiceTask/${taskId}/status`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
@@ -1795,26 +1868,23 @@ function updateTaskStatusWithNote(taskId, newStatus, completionNote) {
             showAlert('Cập nhật trạng thái công việc thành công!', 'success');
             loadServiceTasks(); // Reload danh sách (sẽ tự động cập nhật trạng thái nút "Hoàn thành")
             updateCostSummary(); // Update cost summary
+            return Promise.resolve();
         } else {
             showAlert('Lỗi: ' + (data.message || 'Không thể cập nhật trạng thái'), 'danger');
+            return Promise.reject(new Error(data.message || 'Không thể cập nhật trạng thái'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showAlert('Có lỗi xảy ra khi cập nhật trạng thái', 'danger');
+        return Promise.reject(error);
     });
 }
 
-function openEditLaborTimeModal(taskId) {
+function openEditStandardLaborTimeModal(taskId) {
     const token = localStorage.getItem('authToken');
     
-    // Show loading
-    $('#editLaborTimeTaskId').val(taskId);
-    $('#editStandardLaborTime').val('');
-    $('#editActualLaborTime').val('');
-    $('#editLaborTimeModal').modal('show');
-    
-    // Load task để lấy thông tin hiện tại
+    // Load task để lấy thông tin
     fetch(`${API_BASE_URL}/ServiceTask/${taskId}`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : '',
@@ -1825,26 +1895,33 @@ function openEditLaborTimeModal(taskId) {
     .then(data => {
         if (data.success && data.data) {
             const task = data.data;
+            
             // Set giá trị vào form
+            $('#editStandardLaborTimeTaskId').val(taskId);
             if (task.standardLaborTime !== null && task.standardLaborTime !== undefined) {
                 $('#editStandardLaborTime').val(task.standardLaborTime);
             } else {
                 $('#editStandardLaborTime').val('');
             }
-            if (task.actualLaborTime !== null && task.actualLaborTime !== undefined) {
-                $('#editActualLaborTime').val(task.actualLaborTime);
+            
+            // ✅ Kiểm tra quyền: Nếu là kỹ thuật viên (roleId = 4), disable StandardLaborTime
+            if (currentUserRoleId === 4) {
+                $('#editStandardLaborTime').prop('readonly', true).addClass('bg-light');
+                $('#standardLaborTimeNote').text('(Kỹ thuật viên không được phép chỉnh sửa thời gian chuẩn)');
             } else {
-                $('#editActualLaborTime').val('');
+                $('#editStandardLaborTime').prop('readonly', false).removeClass('bg-light');
+                $('#standardLaborTimeNote').text('');
             }
+            
+            // Mở modal
+            $('#editStandardLaborTimeModal').modal('show');
         } else {
             showAlert('Không thể tải thông tin công việc', 'danger');
-            $('#editLaborTimeModal').modal('hide');
         }
     })
     .catch(error => {
         console.error('Error loading task:', error);
         showAlert('Có lỗi xảy ra khi tải thông tin công việc', 'danger');
-        $('#editLaborTimeModal').modal('hide');
     });
 }
 
@@ -1855,6 +1932,12 @@ function saveLaborTime() {
     
     if (!taskId) {
         showAlert('Không tìm thấy ID công việc', 'warning');
+        return;
+    }
+    
+    // ✅ Kiểm tra nếu ActualLaborTime đã bị disable (đã được tính tự động)
+    if ($('#editActualLaborTime').prop('readonly')) {
+        showAlert('Thời gian thực tế đã được tính tự động từ thời gian bắt đầu/kết thúc, không thể chỉnh sửa!', 'warning');
         return;
     }
     
@@ -1898,6 +1981,21 @@ function saveLaborTime() {
         
         const task = taskData.data;
         
+        // ✅ Kiểm tra nếu thời gian đã được tính tự động (có StartTime và EndTime)
+        if (task.startTime && task.endTime) {
+            btn.html(originalText);
+            btn.prop('disabled', false);
+            showAlert('Thời gian thực tế đã được tính tự động từ thời gian bắt đầu/kết thúc, không thể chỉnh sửa!', 'warning');
+            return;
+        }
+        
+        // ✅ Nếu là kỹ thuật viên, không cho phép thay đổi StandardLaborTime
+        let finalStandardLaborTime = standardLaborTime;
+        if (currentUserRoleId === 4) {
+            // Kỹ thuật viên chỉ được chỉnh ActualLaborTime, giữ nguyên StandardLaborTime
+            finalStandardLaborTime = task.standardLaborTime;
+        }
+        
         // Update task với thông tin mới
         const updateData = {
             id: parseInt(taskId),
@@ -1907,7 +2005,7 @@ function saveLaborTime() {
             statusCode: task.statusCode,
             note: task.note || null,
             serviceCategoryId: task.serviceCategoryId || null,
-            standardLaborTime: standardLaborTime,
+            standardLaborTime: finalStandardLaborTime,
             actualLaborTime: actualLaborTime
         };
         
@@ -2430,7 +2528,7 @@ function saveServiceTask() {
     const taskDescription = $('#taskDescription').val().trim();
     const taskNote = $('#taskNote').val().trim();
     const taskStandardLaborTime = $('#taskStandardLaborTime').val() ? parseFloat($('#taskStandardLaborTime').val()) : null;
-    const taskActualLaborTime = $('#taskActualLaborTime').val() ? parseFloat($('#taskActualLaborTime').val()) : null;
+    // ✅ Thời gian thực tế chỉ tính tự động, không nhập từ form
     
     if (!taskName) {
         showAlert('Vui lòng nhập tên công việc', 'warning');
@@ -2443,13 +2541,7 @@ function saveServiceTask() {
         return;
     }
     
-    if (taskActualLaborTime !== null && (taskActualLaborTime < 0 || taskActualLaborTime > 999.99)) {
-        showAlert('Thời gian thực tế phải từ 0 đến 999.99 giờ', 'warning');
-        return;
-    }
-    
-    // Nếu có StandardLaborTime nhưng không có ActualLaborTime, set ActualLaborTime = StandardLaborTime
-    const actualLaborTime = taskActualLaborTime ?? taskStandardLaborTime;
+    // ✅ Thời gian thực tế chỉ tính tự động, không cần validate từ form
     
     const taskId = $('#taskId').val();
     const isEdit = taskId && taskId !== '';
@@ -2478,6 +2570,7 @@ function saveServiceTask() {
             }
             
             const task = taskData.data;
+            
             // ✅ Lấy danh sách technicians đã chọn (checkbox)
             const selectedTechnicianIds = [];
             $('.task-technician-checkbox:checked').each(function() {
@@ -2487,7 +2580,8 @@ function saveServiceTask() {
                 ? parseInt($('.task-technician-checkbox:checked[data-is-primary="true"]').first().val()) 
                 : (selectedTechnicianIds.length > 0 ? selectedTechnicianIds[0] : null);
             
-            const taskDisplayOrder = $('#taskDisplayOrder').val() ? parseInt($('#taskDisplayOrder').val()) : null;
+            // ✅ Nếu thời gian đã được tính tự động, không gửi actualLaborTime (giữ nguyên giá trị đã tính)
+            const shouldIncludeActualLaborTime = !(task.startTime && task.endTime);
             
             const updateData = {
                 id: parseInt(taskId),
@@ -2498,9 +2592,8 @@ function saveServiceTask() {
                 note: taskNote || null,
                 serviceCategoryId: task.serviceCategoryId || null,
                 standardLaborTime: taskStandardLaborTime,
-                actualLaborTime: actualLaborTime,
-                technicianId: primaryTechnicianId, // Giữ lại để backward compatibility
-                displayOrder: taskDisplayOrder
+                // ✅ Thời gian thực tế chỉ tính tự động, không gửi từ form
+                technicianId: primaryTechnicianId // Giữ lại để backward compatibility
             };
             
             // Gọi API update
@@ -2562,8 +2655,6 @@ function saveServiceTask() {
             ? parseInt($('.task-technician-checkbox:checked[data-is-primary="true"]').first().val()) 
             : (selectedTechnicianIds.length > 0 ? selectedTechnicianIds[0] : null);
         
-        const taskDisplayOrder = $('#taskDisplayOrder').val() ? parseInt($('#taskDisplayOrder').val()) : null;
-        
         const taskData = {
             maintenanceTicketId: maintenanceTicketId,
             taskName: taskName,
@@ -2571,9 +2662,8 @@ function saveServiceTask() {
             note: taskNote || null,
             statusCode: 'PENDING', // Mặc định là PENDING
             standardLaborTime: taskStandardLaborTime,
-            actualLaborTime: actualLaborTime,
-            technicianId: primaryTechnicianId, // Giữ lại để backward compatibility
-            displayOrder: taskDisplayOrder
+            // ✅ Thời gian thực tế chỉ tính tự động, không gửi từ form
+            technicianId: primaryTechnicianId // Giữ lại để backward compatibility
         };
         
         fetch(`${API_BASE_URL}/ServiceTask`, {
@@ -2615,10 +2705,10 @@ function saveServiceTask() {
                         updateCostSummary();
                     });
                 } else {
-                    showAlert('Thêm công việc thành công!', 'success');
-                    $('#addServiceTaskModal').modal('hide');
-                    loadServiceTasks();
-                    updateCostSummary();
+                showAlert('Thêm công việc thành công!', 'success');
+                $('#addServiceTaskModal').modal('hide');
+                loadServiceTasks();
+                updateCostSummary();
                 }
             } else {
                 showAlert('Lỗi: ' + (data.message || 'Không thể thêm công việc'), 'danger');
@@ -2653,8 +2743,6 @@ function editServiceTask(taskId) {
             $('#taskDescription').val(task.description || '');
             $('#taskNote').val(task.note || '');
             $('#taskStandardLaborTime').val(task.standardLaborTime || '');
-            $('#taskActualLaborTime').val(task.actualLaborTime || '');
-            $('#taskDisplayOrder').val(task.displayOrder || '');
             
             // Load và set technicians (checkbox)
             loadTechniciansForTask().then(() => {
@@ -2671,6 +2759,9 @@ function editServiceTask(taskId) {
                     $(`#taskTech_${task.technicianId}`).prop('checked', true);
                 }
             });
+            
+            // Đổi tiêu đề modal
+            $('#addServiceTaskModalLabel').text('Chỉnh sửa công việc');
             
             // Đổi title và button text
             $('#addServiceTaskModalLabel').text('Chỉnh sửa công việc');

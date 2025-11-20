@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FE.vn.fpt.edu.controllers
 {
+    [Route("TypeComponents")]
     public class TypeComponentController : Controller
     {
         private readonly ApiAdapter _api;
@@ -14,7 +15,9 @@ namespace FE.vn.fpt.edu.controllers
             _api = api;
         }
 
-        // GET: /TypeComponent
+        // GET: /TypeComponents
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index(string? search, long? branchId, string? statusCode)
         {
             var query = new List<string>();
@@ -35,25 +38,30 @@ namespace FE.vn.fpt.edu.controllers
                 StatusCode = statusCode
             };
 
-            return View(vm);
+            return View("~/vn.fpt.edu.views/TypeComponents/Index.cshtml", vm);
         }
 
-        // GET: /TypeComponent/Details/5
+        // GET: /TypeComponents/Details/5
+        [HttpGet]
+        [Route("Details/{id}")]
         public async Task<IActionResult> Details(long id)
         {
             var item = await _api.GetAsync<TypeComponentViewModel>($"{BaseEndpoint}/{id}");
             if (item == null) return NotFound();
-            return View(item);
+            return View("~/vn.fpt.edu.views/TypeComponents/Details.cshtml", item);
         }
 
-        // GET: /TypeComponent/Create
+        // GET: /TypeComponents/Create
+        [HttpGet]
+        [Route("Create")]
         public IActionResult Create()
         {
-            return PartialView("_CreateEdit", new TypeComponentViewModel());
+            return View("~/vn.fpt.edu.views/TypeComponents/Create.cshtml", new TypeComponentViewModel());
         }
 
-        // POST: /TypeComponent/Create
+        // POST: /TypeComponents/Create
         [HttpPost]
+        [Route("Create")]
         public async Task<IActionResult> Create(TypeComponentViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -72,16 +80,19 @@ namespace FE.vn.fpt.edu.controllers
             return Json(new { success = true, item = created });
         }
 
-        // GET: /TypeComponent/Edit/5
+        // GET: /TypeComponents/Edit/5
+        [HttpGet]
+        [Route("Edit/{id}")]
         public async Task<IActionResult> Edit(long id)
         {
             var item = await _api.GetAsync<TypeComponentViewModel>($"{BaseEndpoint}/{id}");
             if (item == null) return NotFound();
-            return PartialView("_CreateEdit", item);
+            return View("~/vn.fpt.edu.views/TypeComponents/Edit.cshtml", item);
         }
 
-        // POST: /TypeComponent/Edit/5
+        // POST: /TypeComponents/Edit/5
         [HttpPost]
+        [Route("Edit/{id}")]
         public async Task<IActionResult> Edit(long id, TypeComponentViewModel model)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -101,8 +112,9 @@ namespace FE.vn.fpt.edu.controllers
             return Json(new { success = true });
         }
 
-        // POST: /TypeComponent/ToggleStatus
+        // POST: /TypeComponents/ToggleStatus
         [HttpPost]
+        [Route("ToggleStatus")]
         public async Task<IActionResult> ToggleStatus(long id, string statusCode)
         {
             // BE endpoint: PUT /api/TypeComponent/{id}/status?statusCode=...

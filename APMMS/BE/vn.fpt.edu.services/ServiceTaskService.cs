@@ -289,12 +289,42 @@ namespace BE.vn.fpt.edu.services
             if (statusCode == "IN_PROGRESS" && oldStatus != "IN_PROGRESS" && !serviceTask.StartTime.HasValue)
             {
                 serviceTask.StartTime = DateTime.UtcNow;
+                
+                // ✅ Nếu đây là ServiceTask đầu tiên chuyển sang IN_PROGRESS, set MaintenanceTicket.StartTime
+                if (serviceTask.MaintenanceTicketId.HasValue)
+                {
+                    var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(serviceTask.MaintenanceTicketId.Value);
+                    if (maintenanceTicket != null && !maintenanceTicket.StartTime.HasValue)
+                    {
+                        // Kiểm tra xem có ServiceTask nào khác đã IN_PROGRESS chưa
+                        var allTasks = await _serviceTaskRepository.GetByMaintenanceTicketIdAsync(serviceTask.MaintenanceTicketId.Value);
+                        var hasOtherInProgress = allTasks.Any(t => t.Id != id && t.StatusCode == "IN_PROGRESS");
+                        
+                        // Nếu không có ServiceTask nào khác đã IN_PROGRESS, đây là lần đầu tiên
+                        if (!hasOtherInProgress)
+                        {
+                            maintenanceTicket.StartTime = DateTime.UtcNow;
+                            await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+                        }
+                    }
+                }
             }
 
             // ✅ Tự động set EndTime khi chuyển sang DONE hoặc COMPLETED
             if ((statusCode == "DONE" || statusCode == "COMPLETED") && oldStatus != statusCode && !serviceTask.EndTime.HasValue)
             {
                 serviceTask.EndTime = DateTime.UtcNow;
+                
+                // ✅ Tự động tính ActualLaborTime từ StartTime đến EndTime (tính bằng giờ)
+                if (serviceTask.StartTime.HasValue && serviceTask.EndTime.HasValue)
+                {
+                    var timeSpan = serviceTask.EndTime.Value - serviceTask.StartTime.Value;
+                    // Chuyển đổi từ TimeSpan sang giờ (decimal)
+                    serviceTask.ActualLaborTime = (decimal)timeSpan.TotalHours;
+                    
+                    // Làm tròn đến 2 chữ số thập phân
+                    serviceTask.ActualLaborTime = Math.Round(serviceTask.ActualLaborTime.Value, 2);
+                }
             }
 
             // ✅ Set CompletionNote nếu có
