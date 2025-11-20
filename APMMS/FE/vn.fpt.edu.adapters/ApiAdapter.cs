@@ -177,6 +177,53 @@ namespace FE.vn.fpt.edu.adapters
             }
         }
 
+        public async Task<bool> PatchAsync(string endpoint, object? data = null)
+        {
+            try
+            {
+                var url = $"{_baseUrl}/{endpoint}";
+                Console.WriteLine($"ApiAdapter: Calling PATCH {url}");
+                
+                HttpContent? content = null;
+                if (data != null)
+                {
+                    var json = JsonSerializer.Serialize(data);
+                    content = new StringContent(json, Encoding.UTF8, "application/json");
+                    Console.WriteLine($"ApiAdapter: Request data: {json}");
+                }
+                else
+                {
+                    content = new StringContent("{}", Encoding.UTF8, "application/json");
+                }
+                
+                var request = new HttpRequestMessage(HttpMethod.Patch, url)
+                {
+                    Content = content
+                };
+                
+                // Add authorization if available
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext != null)
+                {
+                    var token = httpContext.Session.GetString("AuthToken") 
+                        ?? httpContext.Request.Cookies["authToken"];
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    }
+                }
+                
+                var response = await _httpClient.SendAsync(request);
+                Console.WriteLine($"ApiAdapter: Response status: {response.StatusCode}");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ApiAdapter: Exception in PatchAsync: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> DeleteAsync(string endpoint)
         {
             try

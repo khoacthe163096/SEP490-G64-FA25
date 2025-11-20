@@ -6,7 +6,7 @@ namespace BE.vn.fpt.edu.interfaces
 {
     public interface ITypeComponentService
     {
-        Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null);
+        Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null);
         Task<ResponseDto?> GetByIdAsync(long id);
         Task<ResponseDto> CreateAsync(RequestDto dto);
         Task<ResponseDto?> UpdateAsync(RequestDto dto);

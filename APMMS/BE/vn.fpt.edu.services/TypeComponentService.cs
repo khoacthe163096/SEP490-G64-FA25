@@ -31,9 +31,9 @@ namespace BE.vn.fpt.edu.services
             await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null)
         {
-            var list = await _repo.GetAllAsync(branchId, statusCode);
+            var list = await _repo.GetAllAsync(branchId, statusCode, search);
             return _mapper.Map<IEnumerable<ResponseDto>>(list);
         }
 

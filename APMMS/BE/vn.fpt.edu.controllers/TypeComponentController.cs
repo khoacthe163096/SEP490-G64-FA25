@@ -19,9 +19,9 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ResponseDto>>> GetAll([FromQuery] long? branchId, [FromQuery] string? statusCode)
+        public async Task<ActionResult<IEnumerable<ResponseDto>>> GetAll([FromQuery] long? branchId, [FromQuery] string? statusCode, [FromQuery] string? search)
         {
-            var list = await _service.GetAllAsync(branchId, statusCode);
+            var list = await _service.GetAllAsync(branchId, statusCode, search);
             return Ok(list);
         }
 

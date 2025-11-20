@@ -6,7 +6,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
 {
     public interface ITypeComponentRepository
     {
-        Task<IEnumerable<TypeComponent>> GetAllAsync(long? branchId = null, string? statusCode = null);
+        Task<IEnumerable<TypeComponent>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null);
         Task<TypeComponent?> GetByIdAsync(long id);
         Task<TypeComponent> AddAsync(TypeComponent entity);
         Task<TypeComponent> UpdateAsync(TypeComponent entity);

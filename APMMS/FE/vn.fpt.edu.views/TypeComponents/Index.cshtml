@@ -61,7 +61,7 @@
                                             <td>@item.Id</td>
                                             <td>@item.Name</td>
                                             <td>@item.Description</td>
-                                            <td>@item.BranchId</td>
+                                            <td>@(item.BranchName ?? item.BranchId?.ToString() ?? "N/A")</td>
                                             <td><span class="badge @statusClass">@statusText</span></td>
                                             <td>
                                                 <a href="@Url.Action("Details", "TypeComponent", new { id = item.Id })" class="btn btn-sm btn-outline-info">
@@ -134,19 +134,12 @@
                 .fail(() => showAlert('Lỗi khi gọi API!', 'danger'));
         });
 
-        // Delete action (need endpoint del if BE sup)
+        // Delete action - Note: DELETE endpoint not implemented in BE yet
+        // For now, use ToggleStatus to disable instead of delete
         function deleteTypeComponent(id) {
-            if (!confirm('Bạn có chắc chắn muốn xóa loại linh kiện này?')) return;
-            $.ajax({
-                url: '@Url.Content("~/api/TypeComponent/")' + id,
-                type: 'DELETE',
-                success: function () {
-                    location.reload();
-                },
-                error: function () {
-                    showAlert('Không thể xóa loại linh kiện!', 'danger');
-                }
-            });
+            if (!confirm('Bạn có chắc chắn muốn vô hiệu hóa loại linh kiện này? (Sử dụng chức năng Toggle Status thay vì xóa)')) return;
+            // TODO: Implement DELETE endpoint in BE if needed, or use ToggleStatus to INACTIVE
+            showAlert('Chức năng xóa chưa được triển khai. Vui lòng sử dụng Toggle Status để vô hiệu hóa.', 'warning');
         }
         function showAlert(message, type = 'info') {
             const alertDiv = document.createElement('div');

@@ -117,8 +117,8 @@ namespace FE.vn.fpt.edu.controllers
         [Route("ToggleStatus")]
         public async Task<IActionResult> ToggleStatus(long id, string statusCode)
         {
-            // BE endpoint: PUT /api/TypeComponent/{id}/status?statusCode=...
-            var ok = await _api.PutAsync($"{BaseEndpoint}/{id}/status?statusCode={statusCode}", new { });
+            // BE endpoint: PATCH /api/TypeComponent/{id}/status?statusCode=...
+            var ok = await _api.PatchAsync($"{BaseEndpoint}/{id}/status?statusCode={statusCode}");
             return Json(new { success = ok });
         }
     }

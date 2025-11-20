@@ -162,7 +162,8 @@ namespace BE.vn.fpt.edu.convert
             .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L));
 
-            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>();
+            CreateMap<TypeComponent, BE.vn.fpt.edu.DTOs.TypeComponent.ResponseDto>()
+                .ForMember(dest => dest.BranchName, opt => opt.MapFrom(src => src.Branch != null ? src.Branch.Name : null));
 
             // VehicleCheckin mappings
             CreateMap<VehicleCheckin, BE.vn.fpt.edu.DTOs.VehicleCheckin.ResponseDto>();
