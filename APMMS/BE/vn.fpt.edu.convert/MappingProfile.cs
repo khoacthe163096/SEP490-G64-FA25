@@ -63,7 +63,16 @@ namespace BE.vn.fpt.edu.convert
                 .ForMember(dest => dest.Dob, opt => opt.MapFrom(src => ParseDobString(src.Dob)));
 
             // Feedback mappings
-            CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>();
+
+            CreateMap<Feedback, BE.vn.fpt.edu.DTOs.Feedback.ResponseDto>()
+     .ForMember(dest => dest.UserName,
+        opt => opt.MapFrom(src =>
+            src.User != null
+                ? $"{src.User.FirstName} {src.User.LastName}".Trim()
+                : null))
+    .ForMember(dest => dest.Image,
+        opt => opt.MapFrom(src => src.User != null ? src.User.Image : null));
+
             CreateMap<BE.vn.fpt.edu.DTOs.Feedback.RequestDto, Feedback>();
 
             // HistoryLog mappings

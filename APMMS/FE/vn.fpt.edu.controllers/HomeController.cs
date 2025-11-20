@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace FE.vn.fpt.edu.controllers
 {
@@ -14,6 +14,7 @@ namespace FE.vn.fpt.edu.controllers
         public IActionResult Index()
         {
             ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+            ViewBag.CurrentUserId = HttpContext.Session.GetString("UserId");
             return View();
         }
     }
