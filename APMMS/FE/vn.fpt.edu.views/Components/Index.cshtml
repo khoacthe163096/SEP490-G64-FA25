@@ -3,15 +3,20 @@
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
 
+@inject IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+}
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Danh sách linh kiện</h4>
-                    <a href="/Components/Create" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createComponentModal">
                         <i class="fas fa-plus"></i> Thêm linh kiện mới
-                    </a>
+                    </button>
                 </div>
                 <div class="card-body">
                     <!-- Search and Filter -->
@@ -46,7 +51,6 @@
                                     <th>Giá</th>
                                     <th>Chi nhánh</th>
                                     <th>Trạng thái</th>
-                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="componentsTableBody">
@@ -71,8 +75,91 @@
     </div>
 </div>
 
+<!-- Modal: Thêm mới linh kiện -->
+<div class="modal fade" id="createComponentModal" tabindex="-1" aria-labelledby="createComponentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="createComponentModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Tạo linh kiện
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createComponentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="createComponentBranchId" name="branchId">
+                    
+                    <div class="row">
+                        <!-- Bên trái: Preview ảnh -->
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold mb-2">Hình ảnh</label>
+                                <div class="border rounded p-3 text-center" style="min-height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                    <div id="imagePreviewContainer" style="width: 100%;">
+                                        <img id="imagePreview" src="" alt="Preview" style="max-width: 100%; max-height: 400px; border-radius: 4px; display: none;">
+                                        <div id="imagePlaceholder" class="text-muted">
+                                            <i class="fas fa-image fa-3x mb-2"></i>
+                                            <p class="mb-0">Chưa có hình ảnh</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <input type="file" class="form-control" id="createComponentImageFile" name="imageFile" accept="image/*">
+                                    <input type="hidden" id="createComponentImageUrl" name="imageUrl">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bên phải: Form nhập liệu -->
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold mb-2">Linh kiện</label>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="createComponentName" class="form-label fw-semibold">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="createComponentName" name="name" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="createComponentCode" class="form-label fw-semibold">Mã</label>
+                                <input type="text" class="form-control" id="createComponentCode" name="code">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="createComponentTypeComponentId" class="form-label fw-semibold">Loại linh kiện <span class="text-danger">*</span></label>
+                                <select class="form-select" id="createComponentTypeComponentId" name="typeComponentId" required>
+                                    <option value="">-- Chọn loại linh kiện --</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="createComponentStatusCode" class="form-label fw-semibold">Trạng thái</label>
+                                <select class="form-select" id="createComponentStatusCode" name="statusCode">
+                                    <option value="ACTIVE">Có sẵn</option>
+                                    <option value="OUT_OF_STOCK">Hết hàng</option>
+                                    <option value="DISCONTINUED">Ngừng sản xuất</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Đóng
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="createComponentSubmitBtn">
+                        <i class="fas fa-save me-1"></i>Tạo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
+        const apiBaseUrl = '@apiBaseUrl';
         let currentPage = 1;
         const pageSize = 10;
         let totalRecords = 0;
@@ -80,6 +167,9 @@
 
         $(document).ready(function() {
             loadComponents();
+            
+            // Setup create component modal
+            setupCreateComponentModal();
 
             // Search với debounce
             let searchTimeout;
@@ -111,7 +201,7 @@
             // Show loading
             $('#componentsTableBody').html(`
                 <tr>
-                    <td colspan="8" class="text-center">
+                    <td colspan="7" class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -135,7 +225,7 @@
                         totalPages = result.totalPages || 1;
                         updatePagination();
                     } else {
-                        $('#componentsTableBody').html('<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                        $('#componentsTableBody').html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
                         totalRecords = 0;
                         totalPages = 0;
                         updatePagination();
@@ -143,7 +233,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading components:', error);
-                    $('#componentsTableBody').html('<tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu: ' + error + '</td></tr>');
+                    $('#componentsTableBody').html('<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu: ' + error + '</td></tr>');
                     totalRecords = 0;
                     totalPages = 0;
                     updatePagination();
@@ -156,7 +246,7 @@
             tbody.empty();
 
             if (!items || items.length === 0) {
-                tbody.html('<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                tbody.html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
                 return;
             }
 
@@ -181,47 +271,15 @@
                 const row = `
                     <tr data-id="${item.id}">
                         <td>${item.code || item.id}</td>
-                        <td>${item.name || ''}</td>
+                        <td><a href="/Components/Details/${item.id}" class="text-decoration-none fw-semibold">${item.name || ''}</a></td>
                         <td>${typeComponentName}</td>
                         <td>${item.quantityStock || 0}</td>
                         <td>${unitPrice}</td>
                         <td>${branchName}</td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <a href="/Components/Details/${item.id}" class="btn btn-sm btn-outline-info">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="/Components/Edit/${item.id}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <button class="btn btn-sm btn-outline-warning toggle-status" data-id="${item.id}" data-status="${item.statusCode}">
-                                <i class="fas fa-toggle-on"></i>
-                            </button>
-                        </td>
                     </tr>
                 `;
                 tbody.append(row);
-            });
-
-            // Bind toggle status event
-            $('.toggle-status').click(function() {
-                const id = $(this).data('id');
-                const current = $(this).data('status');
-                const next = current === 'ACTIVE' ? 'OUT_OF_STOCK' : 'ACTIVE';
-                if (!confirm(`Xác nhận chuyển sang trạng thái "${next}"?`)) return;
-
-                $.post('/Components/ToggleStatus', { id: id, statusCode: next })
-                    .done(function(res) {
-                        if (res.success) {
-                            showAlert('Cập nhật trạng thái thành công!', 'success');
-                            loadComponents();
-                        } else {
-                            showAlert('Không thể cập nhật trạng thái!', 'danger');
-                        }
-                    })
-                    .fail(function() {
-                        showAlert('Lỗi khi gọi API!', 'danger');
-                    });
             });
         }
 
@@ -293,6 +351,357 @@
                     alertDiv.remove();
                 }
             }, 3000);
+        }
+
+        function setupCreateComponentModal() {
+            const modalElement = document.getElementById('createComponentModal');
+            const form = document.getElementById('createComponentForm');
+            
+            // Khi modal sắp mở
+            modalElement.addEventListener('show.bs.modal', function() {
+                // Reset form
+                form.reset();
+                document.getElementById('createComponentBranchId').value = '';
+                document.getElementById('createComponentStatusCode').value = 'ACTIVE';
+                document.getElementById('createComponentTypeComponentId').innerHTML = '<option value="">-- Chọn loại linh kiện --</option>';
+                document.getElementById('createComponentImageUrl').value = '';
+                
+                // Reset image preview
+                document.getElementById('imagePreview').src = '';
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('imagePlaceholder').style.display = 'block';
+                
+                // Reset button
+                const submitBtn = document.getElementById('createComponentSubmitBtn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Tạo';
+            });
+            
+            // Handle image file change
+            document.getElementById('createComponentImageFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    uploadImageToCloudinary(file);
+                } else {
+                    document.getElementById('imagePreview').src = '';
+                    document.getElementById('imagePreview').style.display = 'none';
+                    document.getElementById('imagePlaceholder').style.display = 'block';
+                    document.getElementById('createComponentImageUrl').value = '';
+                }
+            });
+            
+            // Khi modal đã hiển thị hoàn toàn
+            modalElement.addEventListener('shown.bs.modal', function() {
+                // Load branchId và TypeComponents sau khi modal đã hiển thị
+                loadBranchIdForCreateComponent();
+                loadTypeComponentsForCreate();
+            });
+            
+            // Khi modal đã đóng
+            modalElement.addEventListener('hidden.bs.modal', function() {
+                cleanupModalBackdrop();
+            });
+            
+            // Xử lý submit form
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await submitCreateComponent();
+            });
+        }
+
+        async function loadBranchIdForCreateComponent() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('No auth token found');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/Employee/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const employee = data.data;
+                    if (employee.branchId) {
+                        document.getElementById('createComponentBranchId').value = employee.branchId;
+                        console.log('Loaded branchId for create component:', employee.branchId);
+                    }
+                } else {
+                    console.warn('Employee/me API response not successful:', data);
+                }
+            } catch (error) {
+                console.error('Error loading branchId from Employee/me:', error);
+            }
+        }
+
+        async function loadTypeComponentsForCreate() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('No auth token found');
+                return;
+            }
+            
+            try {
+                // Lấy branchId trước
+                let branchId = document.getElementById('createComponentBranchId').value;
+                if (!branchId) {
+                    await loadBranchIdForCreateComponent();
+                    branchId = document.getElementById('createComponentBranchId').value;
+                }
+                
+                // Gọi API TypeComponent với branchId
+                const url = branchId 
+                    ? `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE&branchId=${branchId}`
+                    : `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const select = document.getElementById('createComponentTypeComponentId');
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(function(typeComponent) {
+                        const option = document.createElement('option');
+                        option.value = typeComponent.id;
+                        option.textContent = typeComponent.name || `Type ${typeComponent.id}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Không có loại linh kiện nào';
+                    option.disabled = true;
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Error loading TypeComponents:', error);
+                const select = document.getElementById('createComponentTypeComponentId');
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Lỗi tải danh sách loại linh kiện';
+                option.disabled = true;
+                select.appendChild(option);
+            }
+        }
+
+        async function submitCreateComponent() {
+            const form = document.getElementById('createComponentForm');
+            const submitBtn = document.getElementById('createComponentSubmitBtn');
+            const originalText = submitBtn.innerHTML;
+            
+            // Validate
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            // Get branchId - nếu chưa có thì load lại
+            let branchId = document.getElementById('createComponentBranchId').value;
+            if (!branchId) {
+                await loadBranchIdForCreateComponent();
+                branchId = document.getElementById('createComponentBranchId').value;
+            }
+            
+            if (!branchId) {
+                alert('Không thể xác định chi nhánh. Vui lòng thử lại.');
+                return;
+            }
+            
+            // Disable button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...';
+            
+            try {
+                // Validate name
+                const name = document.getElementById('createComponentName').value.trim();
+                if (!name) {
+                    alert('Vui lòng nhập tên linh kiện');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
+                
+                // Validate typeComponentId
+                const typeComponentIdValue = document.getElementById('createComponentTypeComponentId').value;
+                if (!typeComponentIdValue) {
+                    alert('Vui lòng chọn loại linh kiện');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
+                const typeComponentId = parseInt(typeComponentIdValue);
+                if (isNaN(typeComponentId)) {
+                    alert('Loại linh kiện không hợp lệ');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
+                
+                // Prepare payload - chỉ gửi thông tin danh mục, không có giá và số lượng
+                const payload = {
+                    name: name,
+                    code: document.getElementById('createComponentCode').value.trim() || null,
+                    statusCode: document.getElementById('createComponentStatusCode').value || 'ACTIVE',
+                    imageUrl: document.getElementById('createComponentImageUrl').value.trim() || null,
+                    typeComponentId: typeComponentId,
+                    branchId: parseInt(branchId)
+                };
+                
+                console.log('Creating component with payload:', payload);
+                
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    throw new Error('No auth token found');
+                }
+                
+                // Call BE API
+                const response = await fetch(`${apiBaseUrl}/Component`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    // Log chi tiết lỗi
+                    console.error('Backend error response:', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        data: data
+                    });
+                    
+                    const errorMessage = data.message || data.error || `Lỗi ${response.status}: ${response.statusText}`;
+                    throw new Error(errorMessage);
+                }
+                
+                if (data.success) {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    
+                    // Close modal
+                    const modalElement = document.getElementById('createComponentModal');
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                    
+                    // Cleanup backdrop
+                    setTimeout(() => {
+                        cleanupModalBackdrop();
+                    }, 100);
+                    
+                    // Show success message
+                    showAlert('Tạo linh kiện thành công!', 'success');
+                    
+                    // Reload components list
+                    loadComponents();
+                } else {
+                    throw new Error(data.message || 'Không thể tạo linh kiện');
+                }
+            } catch (error) {
+                console.error('Error creating component:', error);
+                const errorMessage = error.message || 'Có lỗi xảy ra khi tạo linh kiện';
+                showAlert('Lỗi: ' + errorMessage, 'danger');
+                
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        async function uploadImageToCloudinary(file) {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Vui lòng đăng nhập lại');
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Kích thước file không được vượt quá 5MB');
+                document.getElementById('createComponentImageFile').value = '';
+                return;
+            }
+            
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Vui lòng chọn file ảnh');
+                document.getElementById('createComponentImageFile').value = '';
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('imagePlaceholder').style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+            
+            // Upload to Cloudinary
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('folder', 'component-images');
+                
+                const response = await fetch(`${apiBaseUrl}/Image/upload-temp`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data && data.data.url) {
+                    document.getElementById('createComponentImageUrl').value = data.data.url;
+                    console.log('Image uploaded to Cloudinary:', data.data.url);
+                } else {
+                    throw new Error(data.message || 'Không thể upload ảnh');
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Lỗi upload ảnh: ' + error.message);
+                document.getElementById('createComponentImageFile').value = '';
+                document.getElementById('imagePreview').src = '';
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('imagePlaceholder').style.display = 'block';
+                document.getElementById('createComponentImageUrl').value = '';
+            }
+        }
+
+        function cleanupModalBackdrop() {
+            // Remove all modal backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            
+            // Reset body styles
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
     </script>
 }
