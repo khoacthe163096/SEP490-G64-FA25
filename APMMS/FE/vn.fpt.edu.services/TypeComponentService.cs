@@ -1,20 +1,17 @@
-﻿using FE.vn.fpt.edu.adapters;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using FE.vn.fpt.edu.adapters;
 
 namespace FE.vn.fpt.edu.services
 {
-    public class ComponentService
+    public class TypeComponentService
     {
         private readonly ApiAdapter _apiAdapter;
 
-        public ComponentService(ApiAdapter apiAdapter)
+        public TypeComponentService(ApiAdapter apiAdapter)
         {
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null, long? typeComponentId = null)
+        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
         {
             var queryParams = new List<string>
             {
@@ -31,18 +28,15 @@ namespace FE.vn.fpt.edu.services
             if (branchId.HasValue)
                 queryParams.Add($"branchId={branchId.Value}");
 
-            if (typeComponentId.HasValue)
-                queryParams.Add($"typeComponentId={typeComponentId.Value}");
-
             var queryString = string.Join("&", queryParams);
-            return await _apiAdapter.GetAsync<object>($"Component?{queryString}");
+            return await _apiAdapter.GetAsync<object>($"TypeComponent?{queryString}");
         }
 
         public async Task<object?> GetByIdAsync(long id)
         {
             try
             {
-                var result = await _apiAdapter.GetAsync<object>($"Component/{id}");
+                var result = await _apiAdapter.GetAsync<object>($"TypeComponent/{id}");
                 return result;
             }
             catch (Exception ex)
@@ -70,7 +64,7 @@ namespace FE.vn.fpt.edu.services
         {
             try
             {
-                return await _apiAdapter.PatchAsync($"Component/{id}/status?statusCode={statusCode}");
+                return await _apiAdapter.PatchAsync($"TypeComponent/{id}/status?statusCode={statusCode}");
             }
             catch (Exception ex)
             {
@@ -79,11 +73,25 @@ namespace FE.vn.fpt.edu.services
             }
         }
 
+        public async Task<object?> CreateAsync(object data)
+        {
+            try
+            {
+                var result = await _apiAdapter.PostAsync<object>("TypeComponent", data);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
+                return new { success = false, message = "Không thể tạo loại linh kiện", error = ex.Message };
+            }
+        }
+
         public async Task<object?> UpdateAsync(long id, object data)
         {
             try
             {
-                var result = await _apiAdapter.PutAsync<object>($"Component/{id}", data);
+                var result = await _apiAdapter.PutAsync<object>($"TypeComponent/{id}", data);
                 return result;
             }
             catch (Exception ex)
@@ -94,3 +102,4 @@ namespace FE.vn.fpt.edu.services
         }
     }
 }
+

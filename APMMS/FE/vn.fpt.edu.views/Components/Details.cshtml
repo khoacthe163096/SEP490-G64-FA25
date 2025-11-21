@@ -1,0 +1,147 @@
+@{
+    ViewData["Title"] = "Chi tiết linh kiện";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin linh kiện</h5>
+                    <a href="/Components" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="componentDetails" style="display: none;">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">ID</dt>
+                            <dd class="col-sm-8" id="componentId">-</dd>
+
+                            <dt class="col-sm-4">Mã linh kiện</dt>
+                            <dd class="col-sm-8" id="componentCode">-</dd>
+
+                            <dt class="col-sm-4">Tên linh kiện</dt>
+                            <dd class="col-sm-8" id="componentName">-</dd>
+
+                            <dt class="col-sm-4">Loại linh kiện</dt>
+                            <dd class="col-sm-8" id="componentType">-</dd>
+
+                            <dt class="col-sm-4">Số lượng tồn kho</dt>
+                            <dd class="col-sm-8" id="componentQuantity">-</dd>
+
+                            <dt class="col-sm-4">Giá bán</dt>
+                            <dd class="col-sm-8" id="componentUnitPrice">-</dd>
+
+                            <dt class="col-sm-4">Giá mua</dt>
+                            <dd class="col-sm-8" id="componentPurchasePrice">-</dd>
+
+                            <dt class="col-sm-4">Chi nhánh</dt>
+                            <dd class="col-sm-8" id="componentBranch">-</dd>
+
+                            <dt class="col-sm-4">Trạng thái</dt>
+                            <dd class="col-sm-8" id="componentStatus">-</dd>
+
+                            <dt class="col-sm-4">Hình ảnh</dt>
+                            <dd class="col-sm-8" id="componentImage">-</dd>
+                        </dl>
+                    </div>
+                    
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const componentId = getComponentIdFromUrl();
+            if (componentId) {
+                loadComponentDetails(componentId);
+            } else {
+                showError('Không tìm thấy ID linh kiện');
+            }
+        });
+
+        function getComponentIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadComponentDetails(id) {
+            fetch(`/Components/GetDetails/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    
+                    if (data.success && data.data) {
+                        displayComponentDetails(data.data);
+                    } else {
+                        showError('Lỗi khi tải thông tin: ' + (data.message || 'Không có dữ liệu'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    showError('Có lỗi xảy ra khi tải thông tin linh kiện: ' + error.message);
+                });
+        }
+
+        function displayComponentDetails(component) {
+            document.getElementById('componentId').textContent = component.id || '-';
+            document.getElementById('componentCode').textContent = component.code || '-';
+            document.getElementById('componentName').textContent = component.name || '-';
+            document.getElementById('componentType').textContent = component.typeComponentName || '-';
+            document.getElementById('componentQuantity').textContent = component.quantityStock || 0;
+            
+            const unitPrice = component.unitPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice) : '-';
+            document.getElementById('componentUnitPrice').textContent = unitPrice;
+            
+            const purchasePrice = component.purchasePrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.purchasePrice) : '-';
+            document.getElementById('componentPurchasePrice').textContent = purchasePrice;
+            
+            document.getElementById('componentBranch').textContent = component.branchName || component.branchId || '-';
+            
+            let statusBadge = '<span class="badge bg-secondary">Không xác định</span>';
+            if (component.statusCode === 'ACTIVE') {
+                statusBadge = '<span class="badge bg-success">Có sẵn</span>';
+            } else if (component.statusCode === 'OUT_OF_STOCK') {
+                statusBadge = '<span class="badge bg-warning">Hết hàng</span>';
+            } else if (component.statusCode === 'DISCONTINUED') {
+                statusBadge = '<span class="badge bg-danger">Ngừng sản xuất</span>';
+            }
+            document.getElementById('componentStatus').innerHTML = statusBadge;
+            
+            if (component.imageUrl) {
+                document.getElementById('componentImage').innerHTML = `<img src="${component.imageUrl}" class="img-thumbnail" style="max-width: 200px;" />`;
+            } else {
+                document.getElementById('componentImage').textContent = 'Không có hình ảnh';
+            }
+            
+            document.getElementById('componentDetails').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+}
+
+

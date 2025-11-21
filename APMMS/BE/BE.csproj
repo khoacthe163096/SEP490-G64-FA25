@@ -30,6 +30,12 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="vn.fpt.edu.controllers\TypeComponentController.cs">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
   <!-- Project references removed - now monolithic -->
 
 </Project>

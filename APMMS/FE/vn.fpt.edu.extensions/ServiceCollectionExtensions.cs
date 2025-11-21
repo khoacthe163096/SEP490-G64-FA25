@@ -28,6 +28,8 @@ namespace FE.vn.fpt.edu.extensions
             services.AddScoped<ComponentService>();
             services.AddScoped<CarOfAutoOwnerService>();
             services.AddScoped<ServiceScheduleService>();
+            services.AddScoped<TypeComponentService>();
+            services.AddScoped<ServicePackageService>();
 
             return services;
         }

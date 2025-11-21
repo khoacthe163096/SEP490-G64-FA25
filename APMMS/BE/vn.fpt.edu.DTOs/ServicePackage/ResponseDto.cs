@@ -4,6 +4,7 @@ namespace BE.vn.fpt.edu.DTOs.ServicePackage
     {
         public long Id { get; set; }
         public long? BranchId { get; set; }
+        public string? BranchName { get; set; }
         public string? Code { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }

@@ -36,9 +36,9 @@ namespace BE.vn.fpt.edu.services
             await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
         {
-            var list = await _repo.GetAllAsync(branchId, typeComponentId, statusCode, search);
+            var list = await _repo.GetAllAsync(page, pageSize, branchId, typeComponentId, statusCode, search);
             var mapped = _mapper.Map<IEnumerable<ResponseDto>>(list);
             // enrich nested names
             foreach (var dst in mapped)
@@ -51,6 +51,11 @@ namespace BE.vn.fpt.edu.services
                 }
             }
             return mapped;
+        }
+
+        public async Task<int> GetTotalCountAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
+        {
+            return await _repo.GetTotalCountAsync(branchId, typeComponentId, statusCode, search);
         }
 
         public async Task<ResponseDto?> GetByIdAsync(long id)

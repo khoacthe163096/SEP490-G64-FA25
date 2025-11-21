@@ -1,5 +1,4 @@
-﻿@model FE.vn.fpt.edu.viewmodels.TypeComponentViewModel
-@{
+﻿@{
     ViewData["Title"] = "Chi tiết loại linh kiện";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
 }
@@ -10,38 +9,114 @@
             <div class="card shadow-sm mt-3">
                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Thông tin loại linh kiện</h5>
-                    <a href="@Url.Action("Index", "TypeComponent")" class="btn btn-light btn-sm">
-                        <i class="fas fa-arrow-left"></i> Quay lại
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="/TypeComponents" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                        <a href="#" id="editButton" class="btn btn-warning btn-sm" style="display: none;">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">ID</dt>
-                        <dd class="col-sm-8">@Model.Id</dd>
+                    <div id="loadingSpinner" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="typeComponentDetails" style="display: none;">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">ID</dt>
+                            <dd class="col-sm-8" id="typeComponentId">-</dd>
 
-                        <dt class="col-sm-4">Tên loại</dt>
-                        <dd class="col-sm-8">@Model.Name</dd>
+                            <dt class="col-sm-4">Tên loại</dt>
+                            <dd class="col-sm-8" id="typeComponentName">-</dd>
 
-                        <dt class="col-sm-4">Mô tả</dt>
-                        <dd class="col-sm-8">@Model.Description</dd>
+                            <dt class="col-sm-4">Mô tả</dt>
+                            <dd class="col-sm-8" id="typeComponentDescription">-</dd>
 
-                        <dt class="col-sm-4">Chi nhánh</dt>
-                        <dd class="col-sm-8">@Model.BranchId</dd>
+                            <dt class="col-sm-4">Chi nhánh</dt>
+                            <dd class="col-sm-8" id="typeComponentBranch">-</dd>
 
-                        <dt class="col-sm-4">Trạng thái</dt>
-                        <dd class="col-sm-8">
-                            @if (Model.StatusCode == "ACTIVE")
-                            {
-                                <span class="badge bg-success">Hoạt động</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-secondary">Không hoạt động</span>
-                            }
-                        </dd>
-                    </dl>
+                            <dt class="col-sm-4">Trạng thái</dt>
+                            <dd class="col-sm-8" id="typeComponentStatus">-</dd>
+                        </dl>
+                    </div>
+                    
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeComponentId = getTypeComponentIdFromUrl();
+            if (typeComponentId) {
+                loadTypeComponentDetails(typeComponentId);
+            } else {
+                showError('Không tìm thấy ID loại linh kiện');
+            }
+        });
+
+        function getTypeComponentIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadTypeComponentDetails(id) {
+            fetch(`/TypeComponents/GetDetails/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    
+                    if (data.success && data.data) {
+                        displayTypeComponentDetails(data.data);
+                    } else {
+                        showError('Lỗi khi tải thông tin: ' + (data.message || 'Không có dữ liệu'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    showError('Có lỗi xảy ra khi tải thông tin loại linh kiện: ' + error.message);
+                });
+        }
+
+        function displayTypeComponentDetails(typeComponent) {
+            document.getElementById('typeComponentId').textContent = typeComponent.id || '-';
+            document.getElementById('typeComponentName').textContent = typeComponent.name || '-';
+            document.getElementById('typeComponentDescription').textContent = typeComponent.description || 'Không có mô tả';
+            document.getElementById('typeComponentBranch').textContent = typeComponent.branchName || typeComponent.branchId || '-';
+            
+            const statusBadge = typeComponent.statusCode === 'ACTIVE' 
+                ? '<span class="badge bg-success">Hoạt động</span>' 
+                : '<span class="badge bg-secondary">Không hoạt động</span>';
+            document.getElementById('typeComponentStatus').innerHTML = statusBadge;
+            
+            // Hiển thị nút chỉnh sửa và set link
+            if (typeComponent.id) {
+                const editButton = document.getElementById('editButton');
+                editButton.href = `/TypeComponents/Edit/${typeComponent.id}`;
+                editButton.style.display = 'inline-block';
+            }
+            
+            document.getElementById('typeComponentDetails').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+}

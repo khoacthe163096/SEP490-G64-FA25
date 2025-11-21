@@ -33,23 +33,38 @@ namespace BE.vn.fpt.edu.repository
             return await _context.ServicePackages.AnyAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<ServicePackage>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        private IQueryable<ServicePackage> ApplyFilters(IQueryable<ServicePackage> query, long? branchId, string? statusCode, string? search)
         {
-            var q = _context.ServicePackages
-                .Include(sp => sp.Components)
-                .Include(sp => sp.ServicePackageCategories)
-                    .ThenInclude(spc => spc.ServiceCategory)
-                .AsQueryable();
-
-            if (branchId.HasValue) q = q.Where(x => x.BranchId == branchId.Value);
-            if (!string.IsNullOrEmpty(statusCode)) q = q.Where(x => x.StatusCode == statusCode);
+            if (branchId.HasValue) query = query.Where(x => x.BranchId == branchId.Value);
+            if (!string.IsNullOrEmpty(statusCode)) query = query.Where(x => x.StatusCode == statusCode);
             if (!string.IsNullOrEmpty(search))
             {
                 var s = search.Trim().ToLower();
-                q = q.Where(x => (x.Name != null && x.Name.ToLower().Contains(s)) || (x.Code != null && x.Code.ToLower().Contains(s)));
+                query = query.Where(x => (x.Name != null && x.Name.ToLower().Contains(s)) || (x.Code != null && x.Code.ToLower().Contains(s)));
             }
+            return query;
+        }
 
-            return await q.ToListAsync();
+        public async Task<IEnumerable<ServicePackage>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, string? statusCode = null, string? search = null)
+        {
+            var query = _context.ServicePackages
+                .Include(sp => sp.Components)
+                .Include(sp => sp.Branch)
+                .AsQueryable();
+
+            query = ApplyFilters(query, branchId, statusCode, search);
+
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        {
+            var query = _context.ServicePackages.AsQueryable();
+            query = ApplyFilters(query, branchId, statusCode, search);
+            return await query.CountAsync();
         }
 
         public async Task<ServicePackage?> GetByIdAsync(long id)

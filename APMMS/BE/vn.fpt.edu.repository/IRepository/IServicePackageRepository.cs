@@ -4,7 +4,8 @@ namespace BE.vn.fpt.edu.repository.IRepository
 {
     public interface IServicePackageRepository
     {
-        Task<IEnumerable<ServicePackage>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null);
+        Task<IEnumerable<ServicePackage>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, string? statusCode = null, string? search = null);
+        Task<int> GetTotalCountAsync(long? branchId = null, string? statusCode = null, string? search = null);
         Task<ServicePackage?> GetByIdAsync(long id);
         Task<ServicePackage> AddAsync(ServicePackage entity);
         Task<ServicePackage> UpdateAsync(ServicePackage entity);

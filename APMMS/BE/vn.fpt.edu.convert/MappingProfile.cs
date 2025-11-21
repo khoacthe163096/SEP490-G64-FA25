@@ -141,7 +141,8 @@ namespace BE.vn.fpt.edu.convert
              .ForMember(dest => dest.Components, opt => opt.Ignore()); // handle manually in service
 
             CreateMap<ServicePackage, BE.vn.fpt.edu.DTOs.ServicePackage.ResponseDto>()
-                .ForMember(dest => dest.Components, opt => opt.Ignore()); // fill manually
+                .ForMember(dest => dest.Components, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.BranchName, opt => opt.Ignore()); // fill manually
 
             // ServiceSchedule mappings
             CreateMap<ScheduleService, BE.vn.fpt.edu.DTOs.ServiceSchedule.ResponseDto>();

@@ -44,7 +44,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IVehicleCheckinService, VehicleCheckinService>();
             services.AddScoped<IMaintenanceTicketService, MaintenanceTicketService>();
-            // services.AddScoped<IComponentService, ComponentService>(); // Not implemented yet
+            services.AddScoped<IComponentService, ComponentService>();
             services.AddScoped<IServicePackageService, ServicePackageService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IAutoOwnerService, AutoOwnerService>();

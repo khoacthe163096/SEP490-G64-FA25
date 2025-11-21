@@ -63,16 +63,6 @@ builder.Services.AddAutoMapper(typeof(BE.vn.fpt.edu.convert.MappingProfile).Asse
 builder.Services.AddValidators();
 builder.Services.AddBusinessServices();
 
-// explicit registrations for TypeComponent
-builder.Services.AddScoped<BE.vn.fpt.edu.repository.IRepository.ITypeComponentRepository, BE.vn.fpt.edu.repository.TypeComponentRepository>();
-builder.Services.AddScoped<BE.vn.fpt.edu.interfaces.ITypeComponentService, BE.vn.fpt.edu.services.TypeComponentService>();
-// explicit registrations for Component
-builder.Services.AddScoped<BE.vn.fpt.edu.repository.IRepository.IComponentRepository, BE.vn.fpt.edu.repository.ComponentRepository>();
-builder.Services.AddScoped<BE.vn.fpt.edu.interfaces.IComponentService, BE.vn.fpt.edu.services.ComponentService>();
-// explicit registrations for ServicePackage
-builder.Services.AddScoped<BE.vn.fpt.edu.repository.IRepository.IServicePackageRepository, BE.vn.fpt.edu.repository.ServicePackageRepository>();
-builder.Services.AddScoped<BE.vn.fpt.edu.interfaces.IServicePackageService, BE.vn.fpt.edu.services.ServicePackageService>();
-
 
 // Cloudinary Service
 builder.Services.AddSingleton<CloudinaryService>();

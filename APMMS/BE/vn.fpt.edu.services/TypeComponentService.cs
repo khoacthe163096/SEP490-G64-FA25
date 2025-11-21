@@ -31,10 +31,15 @@ namespace BE.vn.fpt.edu.services
             await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        public async Task<List<ResponseDto>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, string? statusCode = null, string? search = null)
         {
-            var list = await _repo.GetAllAsync(branchId, statusCode, search);
-            return _mapper.Map<IEnumerable<ResponseDto>>(list);
+            var list = await _repo.GetAllAsync(page, pageSize, branchId, statusCode, search);
+            return _mapper.Map<List<ResponseDto>>(list);
+        }
+
+        public async Task<int> GetTotalCountAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        {
+            return await _repo.GetTotalCountAsync(branchId, statusCode, search);
         }
 
         public async Task<ResponseDto?> GetByIdAsync(long id)

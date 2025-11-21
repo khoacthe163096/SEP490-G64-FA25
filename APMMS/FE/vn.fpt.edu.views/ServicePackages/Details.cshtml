@@ -1,0 +1,162 @@
+@{
+    ViewData["Title"] = "Chi tiết gói dịch vụ";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Thông tin gói dịch vụ</h5>
+                    <a href="/ServicePackages" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="servicePackageDetails" style="display: none;">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">ID</dt>
+                            <dd class="col-sm-8" id="packageId">-</dd>
+
+                            <dt class="col-sm-4">Mã gói</dt>
+                            <dd class="col-sm-8" id="packageCode">-</dd>
+
+                            <dt class="col-sm-4">Tên gói</dt>
+                            <dd class="col-sm-8" id="packageName">-</dd>
+
+                            <dt class="col-sm-4">Mô tả</dt>
+                            <dd class="col-sm-8" id="packageDescription">-</dd>
+
+                            <dt class="col-sm-4">Giá</dt>
+                            <dd class="col-sm-8" id="packagePrice">-</dd>
+
+                            <dt class="col-sm-4">Chi nhánh</dt>
+                            <dd class="col-sm-8" id="packageBranch">-</dd>
+
+                            <dt class="col-sm-4">Trạng thái</dt>
+                            <dd class="col-sm-8" id="packageStatus">-</dd>
+                        </dl>
+
+                        <hr class="my-4" />
+
+                        <h6 class="mb-3">Danh sách linh kiện trong gói</h6>
+                        <div id="componentsList">
+                            <p class="text-muted">Đang tải...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const packageId = getPackageIdFromUrl();
+            if (packageId) {
+                loadServicePackageDetails(packageId);
+            } else {
+                showError('Không tìm thấy ID gói dịch vụ');
+            }
+        });
+
+        function getPackageIdFromUrl() {
+            const path = window.location.pathname;
+            const segments = path.split('/');
+            return segments[segments.length - 1];
+        }
+
+        function loadServicePackageDetails(id) {
+            fetch(`/ServicePackages/GetDetails/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    
+                    if (data.success && data.data) {
+                        displayServicePackageDetails(data.data);
+                    } else {
+                        showError('Lỗi khi tải thông tin: ' + (data.message || 'Không có dữ liệu'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loadingSpinner').style.display = 'none';
+                    showError('Có lỗi xảy ra khi tải thông tin gói dịch vụ: ' + error.message);
+                });
+        }
+
+        function displayServicePackageDetails(package) {
+            document.getElementById('packageId').textContent = package.id || '-';
+            document.getElementById('packageCode').textContent = package.code || '-';
+            document.getElementById('packageName').textContent = package.name || '-';
+            document.getElementById('packageDescription').textContent = package.description || '-';
+            
+            const price = package.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(package.price) : '-';
+            document.getElementById('packagePrice').textContent = price;
+            
+            document.getElementById('packageBranch').textContent = package.branchName || package.branchId || '-';
+            
+            let statusBadge = '<span class="badge bg-secondary">Không xác định</span>';
+            if (package.statusCode === 'ACTIVE') {
+                statusBadge = '<span class="badge bg-success">Hoạt động</span>';
+            } else if (package.statusCode === 'INACTIVE') {
+                statusBadge = '<span class="badge bg-danger">Không hoạt động</span>';
+            }
+            document.getElementById('packageStatus').innerHTML = statusBadge;
+            
+            // Display components
+            displayComponents(package.components || []);
+            
+            document.getElementById('servicePackageDetails').style.display = 'block';
+        }
+
+        function displayComponents(components) {
+            const componentsList = document.getElementById('componentsList');
+            
+            if (!components || components.length === 0) {
+                componentsList.innerHTML = '<p class="text-muted">Gói dịch vụ này chưa có linh kiện nào.</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
+            html += '<thead class="table-light"><tr><th>Mã</th><th>Tên linh kiện</th><th>Giá</th></tr></thead>';
+            html += '<tbody>';
+            
+            components.forEach(function(component) {
+                const unitPrice = component.unitPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice) : '-';
+                html += `<tr>
+                    <td>${component.code || component.id || '-'}</td>
+                    <td>${component.name || '-'}</td>
+                    <td>${unitPrice}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            html += `<p class="text-muted mt-2"><small>Tổng cộng: ${components.length} linh kiện</small></p>`;
+            
+            componentsList.innerHTML = html;
+        }
+
+        function showError(message) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').style.display = 'block';
+        }
+    </script>
+}
+

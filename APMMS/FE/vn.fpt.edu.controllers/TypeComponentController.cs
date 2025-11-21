@@ -1,5 +1,4 @@
-using FE.vn.fpt.edu.adapters;
-using FE.vn.fpt.edu.viewmodels;
+using FE.vn.fpt.edu.services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FE.vn.fpt.edu.controllers
@@ -7,119 +6,166 @@ namespace FE.vn.fpt.edu.controllers
     [Route("TypeComponents")]
     public class TypeComponentController : Controller
     {
-        private readonly ApiAdapter _api;
-        private const string BaseEndpoint = "TypeComponent";
+        private readonly TypeComponentService _service;
 
-        public TypeComponentController(ApiAdapter api)
+        public TypeComponentController(TypeComponentService service)
         {
-            _api = api;
+            _service = service;
         }
 
-        // GET: /TypeComponents
         [HttpGet]
         [Route("")]
-        public async Task<IActionResult> Index(string? search, long? branchId, string? statusCode)
+        public IActionResult Index()
         {
-            var query = new List<string>();
-            if (!string.IsNullOrWhiteSpace(search)) query.Add($"search={Uri.EscapeDataString(search)}");
-            if (branchId.HasValue) query.Add($"branchId={branchId.Value}");
-            if (!string.IsNullOrWhiteSpace(statusCode)) query.Add($"statusCode={Uri.EscapeDataString(statusCode)}");
-
-            var endpoint = BaseEndpoint;
-            if (query.Any()) endpoint += "?" + string.Join("&", query);
-
-            var items = await _api.GetAsync<List<TypeComponentViewModel>>(endpoint) ?? new List<TypeComponentViewModel>();
-
-            var vm = new TypeComponentIndexViewModel
-            {
-                Items = items,
-                Search = search,
-                BranchId = branchId,
-                StatusCode = statusCode
-            };
-
-            return View("~/vn.fpt.edu.views/TypeComponents/Index.cshtml", vm);
+            return View("~/vn.fpt.edu.views/TypeComponents/Index.cshtml");
         }
 
-        // GET: /TypeComponents/Details/5
         [HttpGet]
-        [Route("Details/{id}")]
-        public async Task<IActionResult> Details(long id)
+        [Route("ListData")]
+        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null)
         {
-            var item = await _api.GetAsync<TypeComponentViewModel>($"{BaseEndpoint}/{id}");
-            if (item == null) return NotFound();
-            return View("~/vn.fpt.edu.views/TypeComponents/Details.cshtml", item);
+            // Lấy branchId của user đang đăng nhập
+            long? branchId = null;
+
+            // Thử lấy từ session trước
+            var branchIdFromSession = HttpContext.Session.GetString("BranchId");
+            if (!string.IsNullOrEmpty(branchIdFromSession) && long.TryParse(branchIdFromSession, out var sessionBranchId))
+            {
+                branchId = sessionBranchId;
+                Console.WriteLine($"[FE TypeComponentController] Got branchId from session: {branchId}");
+            }
+            else
+            {
+                // Thử lấy từ JWT claim
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (long.TryParse(branchIdClaim, out var claimBranchId))
+                {
+                    branchId = claimBranchId;
+                    Console.WriteLine($"[FE TypeComponentController] Got branchId from JWT claim: {branchId}");
+                }
+                else
+                {
+                    Console.WriteLine("[FE TypeComponentController] No branchId in session or JWT claim, trying Employee/me API");
+                    // Nếu không có trong session hoặc claim, lấy từ Employee/me API
+                    try
+                    {
+                        var employeeResponse = await _service.GetEmployeeInfoAsync();
+                        if (employeeResponse != null)
+                        {
+                            // Response format: { success: true, data: { id, branchId, branchName } }
+                            var successProperty = employeeResponse.GetType().GetProperty("success");
+                            var dataProperty = employeeResponse.GetType().GetProperty("data");
+
+                            if (successProperty != null && dataProperty != null)
+                            {
+                                var success = successProperty.GetValue(employeeResponse);
+                                var employeeData = dataProperty.GetValue(employeeResponse);
+
+                                if (success != null && success.ToString() == "True" && employeeData != null)
+                                {
+                                    var branchIdProp = employeeData.GetType().GetProperty("branchId")
+                                        ?? employeeData.GetType().GetProperty("BranchId");
+                                    if (branchIdProp != null)
+                                    {
+                                        var branchIdValue = branchIdProp.GetValue(employeeData);
+                                        if (branchIdValue != null && long.TryParse(branchIdValue.ToString(), out var empBranchId))
+                                        {
+                                            branchId = empBranchId;
+                                            // Lưu vào session để lần sau không cần gọi API
+                                            HttpContext.Session.SetString("BranchId", branchId.Value.ToString());
+                                            Console.WriteLine($"[FE TypeComponentController] Got branchId from Employee/me API: {branchId}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[FE TypeComponentController] Error getting employee info: {ex.Message}");
+                    }
+                }
+            }
+
+            Console.WriteLine($"[FE TypeComponentController] Final branchId: {branchId}, statusCode: {statusCode}");
+            var data = await _service.GetAllAsync(page, pageSize, search, statusCode, branchId);
+            return Json(data);
         }
 
-        // GET: /TypeComponents/Create
         [HttpGet]
         [Route("Create")]
         public IActionResult Create()
         {
-            return View("~/vn.fpt.edu.views/TypeComponents/Create.cshtml", new TypeComponentViewModel());
+            return View("~/vn.fpt.edu.views/TypeComponents/Create.cshtml");
         }
 
-        // POST: /TypeComponents/Create
         [HttpPost]
         [Route("Create")]
-        public async Task<IActionResult> Create(TypeComponentViewModel model)
+        public async Task<IActionResult> Create([FromBody] object data)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var created = await _api.PostAsync<TypeComponentViewModel>(BaseEndpoint, new
+            try
             {
-                Name = model.Name,
-                Description = model.Description,
-                BranchId = model.BranchId,
-                StatusCode = model.StatusCode
-            });
-
-            if (created == null)
-                return Json(new { success = false, message = "Create failed" });
-
-            return Json(new { success = true, item = created });
+                var result = await _service.CreateAsync(data);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
-        // GET: /TypeComponents/Edit/5
         [HttpGet]
         [Route("Edit/{id}")]
-        public async Task<IActionResult> Edit(long id)
+        public IActionResult Edit(int id)
         {
-            var item = await _api.GetAsync<TypeComponentViewModel>($"{BaseEndpoint}/{id}");
-            if (item == null) return NotFound();
-            return View("~/vn.fpt.edu.views/TypeComponents/Edit.cshtml", item);
+            ViewBag.TypeComponentId = id;
+            return View("~/vn.fpt.edu.views/TypeComponents/Edit.cshtml");
         }
 
-        // POST: /TypeComponents/Edit/5
-        [HttpPost]
-        [Route("Edit/{id}")]
-        public async Task<IActionResult> Edit(long id, TypeComponentViewModel model)
+        [HttpGet]
+        [Route("Details/{id}")]
+        public IActionResult Details(int id)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var ok = await _api.PutAsync($"{BaseEndpoint}/{id}", new
-            {
-                Id = id,
-                Name = model.Name,
-                Description = model.Description,
-                BranchId = model.BranchId,
-                StatusCode = model.StatusCode
-            });
-
-            if (!ok)
-                return Json(new { success = false, message = "Update failed" });
-
-            return Json(new { success = true });
+            ViewBag.TypeComponentId = id;
+            return View("~/vn.fpt.edu.views/TypeComponents/Details.cshtml");
         }
 
-        // POST: /TypeComponents/ToggleStatus
+        [HttpGet]
+        [Route("GetDetails/{id}")]
+        public async Task<IActionResult> GetDetails(int id)
+        {
+            var data = await _service.GetByIdAsync(id);
+            return Json(data);
+        }
+
         [HttpPost]
         [Route("ToggleStatus")]
         public async Task<IActionResult> ToggleStatus(long id, string statusCode)
         {
-            // BE endpoint: PATCH /api/TypeComponent/{id}/status?statusCode=...
-            var ok = await _api.PatchAsync($"{BaseEndpoint}/{id}/status?statusCode={statusCode}");
-            return Json(new { success = ok });
+            try
+            {
+                var ok = await _service.ToggleStatusAsync(id, statusCode);
+                return Json(new { success = ok });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("Update/{id}")]
+        public async Task<IActionResult> Update(long id, [FromBody] object data)
+        {
+            try
+            {
+                var result = await _service.UpdateAsync(id, data);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }

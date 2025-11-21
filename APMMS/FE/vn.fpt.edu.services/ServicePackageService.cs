@@ -1,20 +1,20 @@
-﻿using FE.vn.fpt.edu.adapters;
+using FE.vn.fpt.edu.adapters;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace FE.vn.fpt.edu.services
 {
-    public class ComponentService
+    public class ServicePackageService
     {
         private readonly ApiAdapter _apiAdapter;
 
-        public ComponentService(ApiAdapter apiAdapter)
+        public ServicePackageService(ApiAdapter apiAdapter)
         {
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null, long? typeComponentId = null)
+        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
         {
             var queryParams = new List<string>
             {
@@ -31,18 +31,15 @@ namespace FE.vn.fpt.edu.services
             if (branchId.HasValue)
                 queryParams.Add($"branchId={branchId.Value}");
 
-            if (typeComponentId.HasValue)
-                queryParams.Add($"typeComponentId={typeComponentId.Value}");
-
             var queryString = string.Join("&", queryParams);
-            return await _apiAdapter.GetAsync<object>($"Component?{queryString}");
+            return await _apiAdapter.GetAsync<object>($"ServicePackage?{queryString}");
         }
 
         public async Task<object?> GetByIdAsync(long id)
         {
             try
             {
-                var result = await _apiAdapter.GetAsync<object>($"Component/{id}");
+                var result = await _apiAdapter.GetAsync<object>($"ServicePackage/{id}");
                 return result;
             }
             catch (Exception ex)
@@ -70,7 +67,7 @@ namespace FE.vn.fpt.edu.services
         {
             try
             {
-                return await _apiAdapter.PatchAsync($"Component/{id}/status?statusCode={statusCode}");
+                return await _apiAdapter.PatchAsync($"ServicePackage/{id}/status?statusCode={statusCode}");
             }
             catch (Exception ex)
             {
@@ -83,7 +80,7 @@ namespace FE.vn.fpt.edu.services
         {
             try
             {
-                var result = await _apiAdapter.PutAsync<object>($"Component/{id}", data);
+                var result = await _apiAdapter.PutAsync<object>($"ServicePackage/{id}", data);
                 return result;
             }
             catch (Exception ex)
@@ -94,3 +91,5 @@ namespace FE.vn.fpt.edu.services
         }
     }
 }
+
+

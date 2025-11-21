@@ -36,23 +36,39 @@ namespace BE.vn.fpt.edu.repository
             return await _context.Components.AnyAsync(x => x.Id == id);
         }
 
-        public async Task<IEnumerable<Component>> GetAllAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
+        private IQueryable<Component> ApplyFilters(IQueryable<Component> query, long? branchId, long? typeComponentId, string? statusCode, string? search)
         {
-            var q = _context.Components
+            if (branchId.HasValue) query = query.Where(x => x.BranchId == branchId.Value);
+            if (typeComponentId.HasValue) query = query.Where(x => x.TypeComponentId == typeComponentId.Value);
+            if (!string.IsNullOrEmpty(statusCode)) query = query.Where(x => x.StatusCode == statusCode);
+            if (!string.IsNullOrEmpty(search))
+            {
+                var s = search.Trim().ToLower();
+                query = query.Where(x => (x.Name != null && x.Name.ToLower().Contains(s)) || (x.Code != null && x.Code.ToLower().Contains(s)));
+            }
+            return query;
+        }
+
+        public async Task<IEnumerable<Component>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
+        {
+            var query = _context.Components
                 .Include(c => c.TypeComponent)
                 .Include(c => c.Branch)
                 .AsQueryable();
 
-            if (branchId.HasValue) q = q.Where(x => x.BranchId == branchId.Value);
-            if (typeComponentId.HasValue) q = q.Where(x => x.TypeComponentId == typeComponentId.Value);
-            if (!string.IsNullOrEmpty(statusCode)) q = q.Where(x => x.StatusCode == statusCode);
-            if (!string.IsNullOrEmpty(search))
-            {
-                var s = search.Trim().ToLower();
-                q = q.Where(x => (x.Name != null && x.Name.ToLower().Contains(s)) || (x.Code != null && x.Code.ToLower().Contains(s)));
-            }
+            query = ApplyFilters(query, branchId, typeComponentId, statusCode, search);
 
-            return await q.ToListAsync();
+            return await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetTotalCountAsync(long? branchId = null, long? typeComponentId = null, string? statusCode = null, string? search = null)
+        {
+            var query = _context.Components.AsQueryable();
+            query = ApplyFilters(query, branchId, typeComponentId, statusCode, search);
+            return await query.CountAsync();
         }
 
         public async Task<Component?> GetByIdAsync(long id)

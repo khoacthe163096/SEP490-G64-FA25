@@ -48,10 +48,15 @@ namespace BE.vn.fpt.edu.services
             await _repo.DisableEnableAsync(id, statusCode);
         }
 
-        public async Task<IEnumerable<ResponseDto>> GetAllAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        public async Task<IEnumerable<ResponseDto>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, string? statusCode = null, string? search = null)
         {
-            var list = await _repo.GetAllAsync(branchId, statusCode, search);
+            var list = await _repo.GetAllAsync(page, pageSize, branchId, statusCode, search);
             return list.Select(MapToResponse).ToList();
+        }
+
+        public async Task<int> GetTotalCountAsync(long? branchId = null, string? statusCode = null, string? search = null)
+        {
+            return await _repo.GetTotalCountAsync(branchId, statusCode, search);
         }
 
         public async Task<ResponseDto?> GetByIdAsync(long id)
@@ -92,6 +97,7 @@ namespace BE.vn.fpt.edu.services
         private ResponseDto MapToResponse(ServicePackage sp)
         {
             var dto = _mapper.Map<ResponseDto>(sp);
+            dto.BranchName = sp.Branch?.Name;
             dto.Components = sp.Components?.Select(c => new ResponseDto.ComponentSummary
             {
                 Id = c.Id,
