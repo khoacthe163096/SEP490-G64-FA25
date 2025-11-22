@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Chi tiết phiếu nhập kho";
+    Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Chi tiết phiếu nhập kho</h4>
+                    <a href="/StockIns" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="loadingSpinner" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+
+                    <div id="contentArea" style="display: none;">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Mã phiếu:</dt>
+                                    <dd class="col-sm-8" id="code">-</dd>
+
+                                    <dt class="col-sm-4">Mã yêu cầu:</dt>
+                                    <dd class="col-sm-8" id="stockInRequestCode">-</dd>
+
+                                    <dt class="col-sm-4">Chi nhánh:</dt>
+                                    <dd class="col-sm-8" id="branchName">-</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Trạng thái:</dt>
+                                    <dd class="col-sm-8" id="status">-</dd>
+
+                                    <dt class="col-sm-4">Người duyệt:</dt>
+                                    <dd class="col-sm-8" id="approvedByName">-</dd>
+
+                                    <dt class="col-sm-4">Ngày duyệt:</dt>
+                                    <dd class="col-sm-8" id="approvedAt">-</dd>
+
+                                    <dt class="col-sm-4">Ngày tạo:</dt>
+                                    <dd class="col-sm-8" id="createdAt">-</dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Danh sách linh kiện</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Mã linh kiện</th>
+                                            <th>Tên linh kiện</th>
+                                            <th>Số lượng yêu cầu</th>
+                                            <th>Số lượng thực tế</th>
+                                            <th>Giá nhập</th>
+                                            <th>Giá xuất</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailsTableBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2" id="actionButtons">
+                            <!-- Buttons sẽ được thêm bằng JavaScript dựa trên trạng thái -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const urlParts = window.location.pathname.split('/');
+            const id = urlParts[urlParts.length - 1];
+            loadStockInDetails(id);
+        });
+
+        function loadStockInDetails(id) {
+            $.ajax({
+                url: `/StockIns/${id}/Data`,
+                method: 'GET',
+                success: function(result) {
+                    if (result.success && result.data) {
+                        const data = result.data;
+                        populateDetails(data);
+                        $('#loadingSpinner').hide();
+                        $('#contentArea').show();
+                    } else {
+                        $('#loadingSpinner').html('<p class="text-danger">Không tìm thấy dữ liệu</p>');
+                    }
+                },
+                error: function() {
+                    $('#loadingSpinner').html('<p class="text-danger">Lỗi tải dữ liệu</p>');
+                }
+            });
+        }
+
+        function populateDetails(data) {
+            $('#code').text(data.code || data.stockInId || '-');
+            $('#stockInRequestCode').text(data.stockInRequestCode || data.stockInRequestId || '-');
+            $('#branchName').text(data.branchName || '-');
+            
+            let statusClass = 'bg-secondary';
+            let statusText = 'Không xác định';
+            if (data.statusCode === 'PENDING') {
+                statusClass = 'bg-warning';
+                statusText = 'Chờ duyệt';
+            } else if (data.statusCode === 'APPROVED') {
+                statusClass = 'bg-success';
+                statusText = 'Đã duyệt';
+            } else if (data.statusCode === 'COMPLETED') {
+                statusClass = 'bg-info';
+                statusText = 'Hoàn thành';
+            } else if (data.statusCode === 'CANCELLED') {
+                statusClass = 'bg-danger';
+                statusText = 'Đã hủy';
+            }
+            $('#status').html(`<span class="badge ${statusClass}">${statusText}</span>`);
+
+            $('#approvedByName').text(data.approvedByName || '-');
+            $('#approvedAt').text(data.approvedAt ? new Date(data.approvedAt).toLocaleString('vi-VN') : '-');
+            $('#createdAt').text(data.createdAt ? new Date(data.createdAt).toLocaleString('vi-VN') : '-');
+
+            // Render details
+            const tbody = $('#detailsTableBody');
+            tbody.empty();
+            if (data.details && data.details.length > 0) {
+                data.details.forEach(function(detail) {
+                    const importPrice = detail.importPricePerUnit ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.importPricePerUnit) : '-';
+                    const exportPrice = detail.exportPricePerUnit ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(detail.exportPricePerUnit) : '-';
+                    const row = `
+                        <tr>
+                            <td>${detail.componentCode || detail.componentId || '-'}</td>
+                            <td>${detail.componentName || '-'}</td>
+                            <td>${detail.quantity || 0}</td>
+                            <td>${detail.quantityAfterCheck !== null && detail.quantityAfterCheck !== undefined ? detail.quantityAfterCheck : '-'}</td>
+                            <td>${importPrice}</td>
+                            <td>${exportPrice}</td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            } else {
+                tbody.html('<tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>');
+            }
+        }
+    </script>
+}
+
