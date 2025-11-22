@@ -102,13 +102,15 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(mt => mt.TicketComponents)
                 .Include(r => r.MaintenanceTicket)
                     .ThenInclude(mt => mt.ServicePackage)
-                        .ThenInclude(sp => sp.Components) // Load components của package để tính giảm giá
+                        .ThenInclude(sp => sp.ComponentPackages)
+                        .ThenInclude(cp => cp.Component) // Load components của package để tính giảm giá
                 .Include(r => r.Car)
                 .Include(r => r.Branch)
                 .Include(r => r.Accountant)
                 .Include(r => r.StatusCodeNavigation)
                 .Include(r => r.ServicePackage)
-                    .ThenInclude(sp => sp.Components) // Load components của package trong receipt
+                    .ThenInclude(sp => sp.ComponentPackages)
+                        .ThenInclude(cp => cp.Component) // Load components của package trong receipt
                 .AsQueryable();
         }
     }

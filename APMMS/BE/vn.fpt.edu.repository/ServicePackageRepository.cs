@@ -48,7 +48,8 @@ namespace BE.vn.fpt.edu.repository
         public async Task<IEnumerable<ServicePackage>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null, string? statusCode = null, string? search = null)
         {
             var query = _context.ServicePackages
-                .Include(sp => sp.Components)
+                .Include(sp => sp.ComponentPackages)
+                    .ThenInclude(cp => cp.Component)
                 .Include(sp => sp.Branch)
                 .AsQueryable();
 
@@ -70,9 +71,11 @@ namespace BE.vn.fpt.edu.repository
         public async Task<ServicePackage?> GetByIdAsync(long id)
         {
             return await _context.ServicePackages
-                .Include(sp => sp.Components)
+                .Include(sp => sp.ComponentPackages)
+                    .ThenInclude(cp => cp.Component)
                 .Include(sp => sp.ServicePackageCategories)
                     .ThenInclude(spc => spc.ServiceCategory)
+                .Include(sp => sp.Branch)
                 .FirstOrDefaultAsync(sp => sp.Id == id);
         }
 

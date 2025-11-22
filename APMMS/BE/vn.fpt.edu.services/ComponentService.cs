@@ -22,7 +22,27 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
-            var entity = _mapper.Map<Component>(dto);
+            // Validation: MinimumQuantity phải >= 0
+            if (dto.MinimumQuantity.HasValue && dto.MinimumQuantity.Value < 0)
+            {
+                throw new ArgumentException("Số lượng tối thiểu phải lớn hơn hoặc bằng 0");
+            }
+            
+            // Khi tạo Component mới, chỉ khai báo danh mục
+            // Không bao gồm giá và số lượng (chỉ được thêm qua module "Nhập kho")
+            var entity = new Component
+            {
+                Code = dto.Code,
+                Name = dto.Name,
+                ImageUrl = dto.ImageUrl,
+                MinimumQuantity = dto.MinimumQuantity,
+                BranchId = dto.BranchId,
+                TypeComponentId = dto.TypeComponentId,
+                StatusCode = dto.StatusCode ?? "ACTIVE",
+                // UnitPrice, PurchasePrice, QuantityStock sẽ null
+                // Chỉ được cập nhật qua module "Nhập kho"
+            };
+            
             var created = await _repo.AddAsync(entity);
             var response = _mapper.Map<ResponseDto>(created);
             // map nested names if needed
@@ -74,15 +94,23 @@ namespace BE.vn.fpt.edu.services
             var exist = await _repo.GetByIdAsync(dto.Id.Value);
             if (exist == null) return null;
 
+            // Cập nhật thông tin danh mục
             exist.Code = dto.Code;
             exist.Name = dto.Name;
             exist.ImageUrl = dto.ImageUrl;
-            exist.QuantityStock = dto.QuantityStock;
-            exist.UnitPrice = dto.UnitPrice;
-            exist.PurchasePrice = dto.PurchasePrice;
+            exist.MinimumQuantity = dto.MinimumQuantity;
             exist.BranchId = dto.BranchId;
             exist.TypeComponentId = dto.TypeComponentId;
             exist.StatusCode = dto.StatusCode;
+
+            // Giá và số lượng: Chỉ cập nhật nếu có giá trị (từ module "Nhập kho")
+            // Nếu không có giá trị, giữ nguyên giá trị cũ
+            if (dto.QuantityStock.HasValue)
+                exist.QuantityStock = dto.QuantityStock;
+            if (dto.UnitPrice.HasValue)
+                exist.UnitPrice = dto.UnitPrice;
+            if (dto.PurchasePrice.HasValue)
+                exist.PurchasePrice = dto.PurchasePrice;
 
             var updated = await _repo.UpdateAsync(exist);
             var resp = _mapper.Map<ResponseDto>(updated);

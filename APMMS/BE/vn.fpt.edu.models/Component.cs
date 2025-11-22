@@ -25,13 +25,15 @@ public partial class Component
 
     public decimal? PurchasePrice { get; set; }
 
+    public int? MinimumQuantity { get; set; }
+
     public virtual Branch? Branch { get; set; }
+
+    public virtual ICollection<ComponentPackage> ComponentPackages { get; set; } = new List<ComponentPackage>();
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 
     public virtual TypeComponent? TypeComponent { get; set; }
-
-    public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
 }

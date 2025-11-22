@@ -22,6 +22,14 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            // Validation: Package phải có ít nhất 1 component
+            var hasComponents = (dto.Components != null && dto.Components.Any()) || 
+                                (dto.ComponentIds != null && dto.ComponentIds.Any());
+            if (!hasComponents)
+            {
+                throw new ArgumentException("ServicePackage phải có ít nhất 1 component");
+            }
+
             var entity = new ServicePackage
             {
                 BranchId = dto.BranchId,
@@ -32,14 +40,72 @@ namespace BE.vn.fpt.edu.services
                 StatusCode = dto.StatusCode
             };
 
-            // attach components if provided
-            if (dto.ComponentIds != null && dto.ComponentIds.Any())
-            {
-                var comps = await _context.Components.Where(c => dto.ComponentIds.Contains(c.Id)).ToListAsync();
-                entity.Components = comps;
-            }
-
             var created = await _repo.AddAsync(entity);
+            
+            // attach components if provided (sau khi đã có ID)
+            if (dto.Components != null && dto.Components.Any())
+            {
+                // Validation: Components phải tồn tại
+                var componentIds = dto.Components.Select(c => c.ComponentId).ToList();
+                var existingComponents = await _context.Components
+                    .Where(c => componentIds.Contains(c.Id))
+                    .ToListAsync();
+                
+                if (existingComponents.Count != componentIds.Count)
+                {
+                    var foundIds = existingComponents.Select(c => c.Id).ToList();
+                    var notFoundIds = componentIds.Except(foundIds).ToList();
+                    throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
+                }
+                
+                // Validation: Components phải cùng branch với package
+                if (created.BranchId.HasValue)
+                {
+                    var invalidComponents = existingComponents.Where(c => c.BranchId != created.BranchId.Value).ToList();
+                    if (invalidComponents.Any())
+                    {
+                        throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với gói dịch vụ này");
+                    }
+                }
+                
+                // Validation: Price >= 0 (nếu có)
+                if (dto.Price.HasValue && dto.Price.Value < 0)
+                {
+                    throw new ArgumentException("Giá gói dịch vụ phải lớn hơn hoặc bằng 0");
+                }
+                
+                foreach (var comp in dto.Components)
+                {
+                    // Validation: Quantity phải > 0
+                    if (comp.Quantity <= 0)
+                    {
+                        throw new ArgumentException($"Quantity của component {comp.ComponentId} phải lớn hơn 0");
+                    }
+                    
+                    created.ComponentPackages.Add(new ComponentPackage
+                    {
+                        ComponentId = comp.ComponentId,
+                        ServicePackageId = created.Id,
+                        Quantity = comp.Quantity
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+            // Backward compatibility: Nếu dùng ComponentIds (cũ)
+            else if (dto.ComponentIds != null && dto.ComponentIds.Any())
+            {
+                foreach (var componentId in dto.ComponentIds)
+                {
+                    created.ComponentPackages.Add(new ComponentPackage
+                    {
+                        ComponentId = componentId,
+                        ServicePackageId = created.Id,
+                        Quantity = 1 // Default quantity
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+            
             return MapToResponse(created);
         }
 
@@ -79,15 +145,83 @@ namespace BE.vn.fpt.edu.services
             exist.Price = dto.Price;
             exist.StatusCode = dto.StatusCode;
 
-            // update components relationship
-            if (dto.ComponentIds != null)
+            // Validation: Price >= 0 (nếu có)
+            if (dto.Price.HasValue && dto.Price.Value < 0)
             {
-                // load components by ids
-                var comps = await _context.Components.Where(c => dto.ComponentIds.Contains(c.Id)).ToListAsync();
-                // replace collection
-                exist.Components.Clear();
-                foreach (var c in comps)
-                    exist.Components.Add(c);
+                throw new ArgumentException("Giá gói dịch vụ phải lớn hơn hoặc bằng 0");
+            }
+            
+            // update components relationship
+            if (dto.Components != null && dto.Components.Any())
+            {
+                // Validation: Components phải tồn tại
+                var componentIds = dto.Components.Select(c => c.ComponentId).ToList();
+                var existingComponents = await _context.Components
+                    .Where(c => componentIds.Contains(c.Id))
+                    .ToListAsync();
+                
+                if (existingComponents.Count != componentIds.Count)
+                {
+                    var foundIds = existingComponents.Select(c => c.Id).ToList();
+                    var notFoundIds = componentIds.Except(foundIds).ToList();
+                    throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
+                }
+                
+                // Validation: Components phải cùng branch với package
+                if (exist.BranchId.HasValue)
+                {
+                    var invalidComponents = existingComponents.Where(c => c.BranchId != exist.BranchId.Value).ToList();
+                    if (invalidComponents.Any())
+                    {
+                        throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với gói dịch vụ này");
+                    }
+                }
+                
+                // Validation: Quantity phải > 0 cho mỗi component
+                foreach (var comp in dto.Components)
+                {
+                    if (comp.Quantity <= 0)
+                    {
+                        throw new ArgumentException($"Quantity của component {comp.ComponentId} phải lớn hơn 0");
+                    }
+                }
+                
+                // Remove existing ComponentPackages
+                var existingComponentPackages = await _context.ComponentPackages
+                    .Where(cp => cp.ServicePackageId == exist.Id)
+                    .ToListAsync();
+                _context.ComponentPackages.RemoveRange(existingComponentPackages);
+                
+                // Add new ComponentPackages với Quantity từ DTO
+                foreach (var comp in dto.Components)
+                {
+                    exist.ComponentPackages.Add(new ComponentPackage
+                    {
+                        ComponentId = comp.ComponentId,
+                        ServicePackageId = exist.Id,
+                        Quantity = comp.Quantity
+                    });
+                }
+            }
+            // Backward compatibility: Nếu dùng ComponentIds (cũ)
+            else if (dto.ComponentIds != null && dto.ComponentIds.Any())
+            {
+                // Remove existing ComponentPackages
+                var existingComponentPackages = await _context.ComponentPackages
+                    .Where(cp => cp.ServicePackageId == exist.Id)
+                    .ToListAsync();
+                _context.ComponentPackages.RemoveRange(existingComponentPackages);
+                
+                // Add new ComponentPackages với Quantity mặc định = 1
+                foreach (var componentId in dto.ComponentIds)
+                {
+                    exist.ComponentPackages.Add(new ComponentPackage
+                    {
+                        ComponentId = componentId,
+                        ServicePackageId = exist.Id,
+                        Quantity = 1 // Default quantity
+                    });
+                }
             }
 
             var updated = await _repo.UpdateAsync(exist);
@@ -98,12 +232,15 @@ namespace BE.vn.fpt.edu.services
         {
             var dto = _mapper.Map<ResponseDto>(sp);
             dto.BranchName = sp.Branch?.Name;
-            dto.Components = sp.Components?.Select(c => new ResponseDto.ComponentSummary
+            dto.Components = sp.ComponentPackages?.Select(cp => new ResponseDto.ComponentSummary
             {
-                Id = c.Id,
-                Code = c.Code,
-                Name = c.Name,
-                UnitPrice = c.UnitPrice
+                Id = cp.Component.Id,
+                Code = cp.Component.Code,
+                Name = cp.Component.Name,
+                UnitPrice = cp.Component.UnitPrice,
+                QuantityStock = cp.Component.QuantityStock,
+                ImageUrl = cp.Component.ImageUrl,
+                Quantity = cp.Quantity // Lấy từ bảng trung gian
             }).ToList();
             
             // ❌ ĐÃ LOẠI BỎ: Map ServiceCategories

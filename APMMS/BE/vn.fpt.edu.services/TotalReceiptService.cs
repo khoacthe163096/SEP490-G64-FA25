@@ -39,7 +39,8 @@ namespace BE.vn.fpt.edu.services
                 .Include(mt => mt.ServiceTasks)
                 .Include(mt => mt.TicketComponents)
                 .Include(mt => mt.ServicePackage)
-                    .ThenInclude(sp => sp.Components) // Load components của package để so sánh
+                    .ThenInclude(sp => sp.ComponentPackages)
+                        .ThenInclude(cp => cp.Component) // Load components của package để so sánh
                 .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
             if (maintenanceTicket == null)
@@ -197,7 +198,8 @@ namespace BE.vn.fpt.edu.services
                     .Include(mt => mt.ServiceTasks)
                     .Include(mt => mt.TicketComponents)
                     .Include(mt => mt.ServicePackage)
-                        .ThenInclude(sp => sp.Components) // Load components của package để so sánh
+                        .ThenInclude(sp => sp.ComponentPackages)
+                            .ThenInclude(cp => cp.Component) // Load components của package để so sánh
                     .FirstOrDefaultAsync(mt => mt.Id == dto.MaintenanceTicketId.Value);
 
                 if (newMaintenanceTicket == null)
@@ -260,7 +262,8 @@ namespace BE.vn.fpt.edu.services
                     .Include(mt => mt.ServiceTasks)
                     .Include(mt => mt.TicketComponents)
                     .Include(mt => mt.ServicePackage)
-                        .ThenInclude(sp => sp.Components) // Load components của package để so sánh
+                        .ThenInclude(sp => sp.ComponentPackages)
+                            .ThenInclude(cp => cp.Component) // Load components của package để so sánh
                     .FirstOrDefaultAsync(mt => mt.Id == existing.MaintenanceTicketId.Value);
             }
 
@@ -386,7 +389,11 @@ namespace BE.vn.fpt.edu.services
                 // Load Components của ServicePackage
                 if (entity.ServicePackage != null)
                 {
-                    _context.Entry(entity.ServicePackage).Collection(sp => sp.Components).Load();
+                    _context.Entry(entity.ServicePackage).Collection(sp => sp.ComponentPackages).Load();
+                    foreach (var cp in entity.ServicePackage.ComponentPackages)
+                    {
+                        _context.Entry(cp).Reference(cp => cp.Component).Load();
+                    }
                 }
             }
             
@@ -401,7 +408,11 @@ namespace BE.vn.fpt.edu.services
                     _context.Entry(ticket).Reference(t => t.ServicePackage).Load();
                     if (ticket.ServicePackage != null)
                     {
-                        _context.Entry(ticket.ServicePackage).Collection(sp => sp.Components).Load();
+                        _context.Entry(ticket.ServicePackage).Collection(sp => sp.ComponentPackages).Load();
+                        foreach (var cp in ticket.ServicePackage.ComponentPackages)
+                        {
+                            _context.Entry(cp).Reference(cp => cp.Component).Load();
+                        }
                     }
                 }
                 
@@ -619,8 +630,8 @@ namespace BE.vn.fpt.edu.services
             if (maintenanceTicket.ServicePackage == null) return 0m;
 
             // Lấy danh sách ComponentId thuộc gói dịch vụ
-            var packageComponentIds = maintenanceTicket.ServicePackage.Components?
-                .Select(c => c.Id)
+            var packageComponentIds = maintenanceTicket.ServicePackage.ComponentPackages?
+                .Select(cp => cp.ComponentId)
                 .ToHashSet() ?? new HashSet<long>();
 
             if (!packageComponentIds.Any()) return 0m;

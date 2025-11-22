@@ -113,6 +113,7 @@
     <script>
         let allComponents = [];
         let selectedComponentIds = [];
+        let componentQuantities = {}; // Map componentId -> quantity
 
         document.addEventListener('DOMContentLoaded', function() {
             const packageId = getPackageIdFromUrl();
@@ -174,9 +175,13 @@
             document.getElementById('BranchName').value = package.branchName || package.branchId || '';
             document.getElementById('StatusCode').value = package.statusCode || 'ACTIVE';
             
-            // Store selected component IDs
+            // Store selected component IDs and quantities
             if (package.components && package.components.length > 0) {
                 selectedComponentIds = package.components.map(c => c.id);
+                // Store quantities from package
+                package.components.forEach(c => {
+                    componentQuantities[c.id] = c.quantity || 1; // Default to 1 if not provided
+                });
             }
             
             document.getElementById('editForm').style.display = 'block';
@@ -192,15 +197,20 @@
             componentsLoading.style.display = 'block';
             componentsList.innerHTML = '<p class="text-muted text-center">Đang tải...</p>';
 
-            // KHÔNG truyền branchId vào query - để backend tự động lọc theo branchId của user đang đăng nhập
-            // Backend sẽ tự lấy branchId từ session/JWT claim và chỉ trả về linh kiện của branch đó
-            fetch(`/Components/ListData?page=1&pageSize=1000&statusCode=ACTIVE`)
+            // Filter components theo branchId của package (không phải user)
+            // Đảm bảo chỉ hiển thị components thuộc cùng branch với package
+            const branchId = document.getElementById('BranchId').value;
+            const url = branchId 
+                ? `/Components/ListData?page=1&pageSize=1000&statusCode=ACTIVE&branchId=${branchId}`
+                : `/Components/ListData?page=1&pageSize=1000&statusCode=ACTIVE`;
+            
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     componentsLoading.style.display = 'none';
                     
                     if (data.success && data.data) {
-                        // Backend đã tự động lọc theo branchId của user đang đăng nhập
+                        // Chỉ hiển thị components thuộc cùng branch với package
                         allComponents = data.data;
                         renderComponents();
                     } else {
@@ -235,13 +245,19 @@
                     filtered.forEach(function(component) {
                         const isChecked = selectedComponentIds.includes(component.id);
                         const unitPrice = component.unitPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice) : '-';
+                        const quantity = componentQuantities[component.id] || 1;
                         
-                        html += `<div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" value="${component.id}" id="component_${component.id}" ${isChecked ? 'checked' : ''} onchange="toggleComponent(${component.id})">
-                            <label class="form-check-label" for="component_${component.id}">
+                        html += `<div class="form-check mb-2 d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" value="${component.id}" id="component_${component.id}" ${isChecked ? 'checked' : ''} onchange="toggleComponent(${component.id})">
+                            <label class="form-check-label flex-grow-1" for="component_${component.id}">
                                 <strong>${component.code || component.id}</strong> - ${component.name || '-'} 
                                 <small class="text-muted">(${unitPrice})</small>
                             </label>
+                            <input type="number" class="form-control form-control-sm ms-2" id="quantity_${component.id}" 
+                                   value="${quantity}" min="1" style="width: 80px;" 
+                                   ${!isChecked ? 'disabled' : ''} 
+                                   onchange="updateComponentQuantity(${component.id}, this.value)"
+                                   placeholder="Số lượng">
                         </div>`;
                     });
                 }
@@ -252,10 +268,22 @@
 
         function toggleComponent(componentId) {
             const index = selectedComponentIds.indexOf(componentId);
+            const quantityInput = document.getElementById(`quantity_${componentId}`);
+            
             if (index > -1) {
                 selectedComponentIds.splice(index, 1);
+                if (quantityInput) {
+                    quantityInput.disabled = true;
+                }
             } else {
                 selectedComponentIds.push(componentId);
+                if (!componentQuantities[componentId]) {
+                    componentQuantities[componentId] = 1;
+                }
+                if (quantityInput) {
+                    quantityInput.disabled = false;
+                    quantityInput.value = componentQuantities[componentId];
+                }
             }
         }
 
@@ -263,8 +291,25 @@
             renderComponents();
         }
 
+        function updateComponentQuantity(componentId, quantity) {
+            const qty = parseInt(quantity) || 1;
+            if (qty < 1) {
+                alert('Số lượng phải lớn hơn 0');
+                document.getElementById(`quantity_${componentId}`).value = componentQuantities[componentId] || 1;
+                return;
+            }
+            componentQuantities[componentId] = qty;
+        }
+
         function updateServicePackage() {
             const id = document.getElementById('Id').value;
+            
+            // Build Components array with Quantity
+            const components = selectedComponentIds.map(componentId => ({
+                componentId: componentId,
+                quantity: componentQuantities[componentId] || 1
+            }));
+            
             const payload = {
                 Id: parseInt(id),
                 Code: document.getElementById('Code').value,
@@ -273,7 +318,7 @@
                 Price: parseFloat(document.getElementById('Price').value) || 0,
                 BranchId: document.getElementById('BranchId').value ? parseInt(document.getElementById('BranchId').value) : null,
                 StatusCode: document.getElementById('StatusCode').value,
-                ComponentIds: selectedComponentIds
+                Components: components.length > 0 ? components : null
             };
 
             // Disable submit button

@@ -21,6 +21,8 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<Component> Components { get; set; }
 
+    public virtual DbSet<ComponentPackage> ComponentPackages { get; set; }
+
     public virtual DbSet<CustomerGuest> CustomerGuests { get; set; }
 
     public virtual DbSet<Feedback> Feedbacks { get; set; }
@@ -170,6 +172,7 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.ImageUrl)
                 .HasMaxLength(255)
                 .HasColumnName("image_url");
+            entity.Property(e => e.MinimumQuantity).HasColumnName("minimum_quantity");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
@@ -198,25 +201,29 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.TypeComponent).WithMany(p => p.Components)
                 .HasForeignKey(d => d.TypeComponentId)
                 .HasConstraintName("FK__component__type___6E01572D");
+        });
 
-            entity.HasMany(d => d.ServicePackages).WithMany(p => p.Components)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ComponentPackage",
-                    r => r.HasOne<ServicePackage>().WithMany()
-                        .HasForeignKey("ServicePackageId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__component__servi__6FE99F9F"),
-                    l => l.HasOne<Component>().WithMany()
-                        .HasForeignKey("ComponentId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__component__compo__6EF57B66"),
-                    j =>
-                    {
-                        j.HasKey("ComponentId", "ServicePackageId").HasName("PK__componen__C7D9836BCB3A01AF");
-                        j.ToTable("component_package");
-                        j.IndexerProperty<long>("ComponentId").HasColumnName("component_id");
-                        j.IndexerProperty<long>("ServicePackageId").HasColumnName("service_package_id");
-                    });
+        modelBuilder.Entity<ComponentPackage>(entity =>
+        {
+            entity.HasKey(e => new { e.ComponentId, e.ServicePackageId }).HasName("PK__componen__C7D9836BCB3A01AF");
+
+            entity.ToTable("component_package");
+
+            entity.Property(e => e.ComponentId).HasColumnName("component_id");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
+            entity.Property(e => e.Quantity)
+                .HasDefaultValue(1)
+                .HasColumnName("quantity");
+
+            entity.HasOne(d => d.Component).WithMany(p => p.ComponentPackages)
+                .HasForeignKey(d => d.ComponentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__component__compo__6EF57B66");
+
+            entity.HasOne(d => d.ServicePackage).WithMany(p => p.ComponentPackages)
+                .HasForeignKey(d => d.ServicePackageId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__component__servi__6FE99F9F");
         });
 
         modelBuilder.Entity<CustomerGuest>(entity =>

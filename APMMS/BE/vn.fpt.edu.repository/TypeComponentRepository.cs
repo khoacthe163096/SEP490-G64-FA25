@@ -75,7 +75,9 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<TypeComponent?> GetByIdAsync(long id)
         {
-            return await _context.TypeComponents.FindAsync(id);
+            return await _context.TypeComponents
+                .Include(tc => tc.Branch)
+                .FirstOrDefaultAsync(tc => tc.Id == id);
         }
 
         public async Task<TypeComponent> UpdateAsync(TypeComponent entity)

@@ -9,6 +9,7 @@ namespace BE.vn.fpt.edu.DTOs.Component
         public decimal? UnitPrice { get; set; }
         public decimal? PurchasePrice { get; set; }
         public int? QuantityStock { get; set; }
+        public int? MinimumQuantity { get; set; } // Số lượng tối thiểu để cảnh báo
         public long? BranchId { get; set; }
         public long? TypeComponentId { get; set; }
         public string? StatusCode { get; set; }

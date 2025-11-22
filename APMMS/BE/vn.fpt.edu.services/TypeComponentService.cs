@@ -1,21 +1,25 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
+using Microsoft.EntityFrameworkCore;
 
 namespace BE.vn.fpt.edu.services
 {
     public class TypeComponentService : ITypeComponentService
     {
         private readonly ITypeComponentRepository _repo;
+        private readonly CarMaintenanceDbContext _context;
         private readonly IMapper _mapper;
 
-        public TypeComponentService(ITypeComponentRepository repo, IMapper mapper)
+        public TypeComponentService(ITypeComponentRepository repo, CarMaintenanceDbContext context, IMapper mapper)
         {
             _repo = repo;
+            _context = context;
             _mapper = mapper;
         }
 
@@ -59,6 +63,40 @@ namespace BE.vn.fpt.edu.services
             exist.Description = dto.Description;
             exist.BranchId = dto.BranchId;
             exist.StatusCode = dto.StatusCode;
+
+            // Nếu có ComponentIds, thêm các components vào TypeComponent này
+            if (dto.ComponentIds != null && dto.ComponentIds.Any())
+            {
+                // Validation: ComponentIds phải tồn tại
+                var components = await _context.Components
+                    .Where(c => dto.ComponentIds.Contains(c.Id))
+                    .ToListAsync();
+                
+                if (components.Count != dto.ComponentIds.Count)
+                {
+                    var foundIds = components.Select(c => c.Id).ToList();
+                    var notFoundIds = dto.ComponentIds.Except(foundIds).ToList();
+                    throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
+                }
+                
+                // Validation: Components phải cùng branch với TypeComponent
+                if (exist.BranchId.HasValue)
+                {
+                    var invalidComponents = components.Where(c => c.BranchId != exist.BranchId.Value).ToList();
+                    if (invalidComponents.Any())
+                    {
+                        throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với loại linh kiện này");
+                    }
+                }
+
+                foreach (var component in components)
+                {
+                    // Cập nhật TypeComponentId của component
+                    component.TypeComponentId = exist.Id;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
 
             var updated = await _repo.UpdateAsync(exist);
             return _mapper.Map<ResponseDto>(updated);

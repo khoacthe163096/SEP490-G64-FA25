@@ -134,6 +134,12 @@
                             </div>
                             
                             <div class="mb-3">
+                                <label for="createComponentMinimumQuantity" class="form-label fw-semibold">Số lượng tối thiểu</label>
+                                <input type="number" class="form-control" id="createComponentMinimumQuantity" name="minimumQuantity" min="0" value="0">
+                                <small class="form-text text-muted">Hệ thống sẽ cảnh báo "Sắp hết hàng" khi số lượng tồn kho ≤ số lượng tối thiểu</small>
+                            </div>
+                            
+                            <div class="mb-3">
                                 <label for="createComponentStatusCode" class="form-label fw-semibold">Trạng thái</label>
                                 <select class="form-select" id="createComponentStatusCode" name="statusCode">
                                     <option value="ACTIVE">Có sẵn</option>
@@ -267,13 +273,26 @@
                 const branchName = item.branchName || item.branchId || 'N/A';
                 const typeComponentName = item.typeComponentName || 'N/A';
                 const unitPrice = item.unitPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.unitPrice) : 'N/A';
+                
+                // Kiểm tra cảnh báo "Sắp hết hàng"
+                const quantityStock = item.quantityStock || 0;
+                const minimumQuantity = item.minimumQuantity || 0;
+                const isLowStock = minimumQuantity > 0 && quantityStock <= minimumQuantity;
+                const quantityDisplay = isLowStock 
+                    ? `<span class="text-warning fw-bold" title="Sắp hết hàng (Tồn kho: ${quantityStock}, Tối thiểu: ${minimumQuantity})">
+                        ${quantityStock} <i class="fas fa-exclamation-triangle"></i>
+                       </span>`
+                    : quantityStock;
 
                 const row = `
-                    <tr data-id="${item.id}">
+                    <tr data-id="${item.id}" ${isLowStock ? 'style="background-color: #fff3cd;"' : ''}>
                         <td>${item.code || item.id}</td>
-                        <td><a href="/Components/Details/${item.id}" class="text-decoration-none fw-semibold">${item.name || ''}</a></td>
+                        <td>
+                            <a href="/Components/Details/${item.id}" class="text-decoration-none fw-semibold">${item.name || ''}</a>
+                            ${isLowStock ? '<span class="badge bg-warning text-dark ms-2" title="Sắp hết hàng">Sắp hết hàng</span>' : ''}
+                        </td>
                         <td>${typeComponentName}</td>
-                        <td>${item.quantityStock || 0}</td>
+                        <td>${quantityDisplay}</td>
                         <td>${unitPrice}</td>
                         <td>${branchName}</td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
@@ -554,13 +573,25 @@
                 }
                 
                 // Prepare payload - chỉ gửi thông tin danh mục, không có giá và số lượng
+                const minimumQuantity = document.getElementById('createComponentMinimumQuantity').value 
+                    ? parseInt(document.getElementById('createComponentMinimumQuantity').value) 
+                    : null;
+                
+                if (minimumQuantity !== null && minimumQuantity < 0) {
+                    alert('Số lượng tối thiểu phải lớn hơn hoặc bằng 0');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                    return;
+                }
+                
                 const payload = {
                     name: name,
                     code: document.getElementById('createComponentCode').value.trim() || null,
                     statusCode: document.getElementById('createComponentStatusCode').value || 'ACTIVE',
                     imageUrl: document.getElementById('createComponentImageUrl').value.trim() || null,
                     typeComponentId: typeComponentId,
-                    branchId: parseInt(branchId)
+                    branchId: parseInt(branchId),
+                    minimumQuantity: minimumQuantity
                 };
                 
                 console.log('Creating component with payload:', payload);

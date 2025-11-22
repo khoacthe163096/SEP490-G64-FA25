@@ -138,7 +138,7 @@ namespace BE.vn.fpt.edu.convert
             CreateMap<BE.vn.fpt.edu.DTOs.ServicePackage.RequestDto, ServicePackage>()
              .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
              .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L))
-             .ForMember(dest => dest.Components, opt => opt.Ignore()); // handle manually in service
+             .ForMember(dest => dest.ComponentPackages, opt => opt.Ignore()); // handle manually in service
 
             CreateMap<ServicePackage, BE.vn.fpt.edu.DTOs.ServicePackage.ResponseDto>()
                 .ForMember(dest => dest.Components, opt => opt.Ignore()) // fill manually

@@ -21,6 +21,8 @@ public partial class ServicePackage
 
     public virtual Branch? Branch { get; set; }
 
+    public virtual ICollection<ComponentPackage> ComponentPackages { get; set; } = new List<ComponentPackage>();
+
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
     public virtual ICollection<ServicePackageCategory> ServicePackageCategories { get; set; } = new List<ServicePackageCategory>();
@@ -28,6 +30,4 @@ public partial class ServicePackage
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
-
-    public virtual ICollection<Component> Components { get; set; } = new List<Component>();
 }
