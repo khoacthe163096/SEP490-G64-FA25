@@ -41,7 +41,8 @@ namespace FE.vn.fpt.edu.services
                         UserId = (int)(backendResponse.Data.UserId ?? 0),
                         Username = backendResponse.Data.Username,
                         Role = backendResponse.Data.RoleName,
-                        RoleId = (int)(backendResponse.Data.RoleId ?? 0)
+                        RoleId = (int)(backendResponse.Data.RoleId ?? 0),
+                        BranchId = backendResponse.Data.BranchId
                     };
                     
                     Console.WriteLine($"AuthService: Mapped result - Success: {result.Success}, RoleId: {result.RoleId}");

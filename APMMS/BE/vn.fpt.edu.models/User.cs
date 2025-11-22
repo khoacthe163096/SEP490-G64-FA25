@@ -83,5 +83,15 @@ public partial class User
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
+    public virtual ICollection<StockIn> StockInApprovedByNavigations { get; set; } = new List<StockIn>();
+
+    public virtual ICollection<StockIn> StockInCreatedByNavigations { get; set; } = new List<StockIn>();
+
+    public virtual ICollection<StockIn> StockInLastModifiedByNavigations { get; set; } = new List<StockIn>();
+
+    public virtual ICollection<StockInRequest> StockInRequests { get; set; } = new List<StockInRequest>();
+
+    public virtual ICollection<StockInRequest> StockInRequestLastModifiedByNavigations { get; set; } = new List<StockInRequest>();
+
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();
 }

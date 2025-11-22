@@ -44,12 +44,24 @@ namespace FE.vn.fpt.edu.controllers
                     var roleId = result.RoleId;
                     HttpContext.Session.SetString("RoleId", roleId.ToString());
                     
-                    Console.WriteLine($"Login successful for user: {request.Username}, Role: {roleId}, UserId: {result.UserId}");
+                    // Store BranchId in session if available
+                    if (result.BranchId.HasValue)
+                    {
+                        HttpContext.Session.SetString("BranchId", result.BranchId.Value.ToString());
+                        Console.WriteLine($"Login: Saved BranchId to session: {result.BranchId.Value}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Login: BranchId not available in response");
+                    }
+                    
+                    Console.WriteLine($"Login successful for user: {request.Username}, Role: {roleId}, UserId: {result.UserId}, BranchId: {result.BranchId}");
                     return Json(new { 
                         success = true, 
                         token = result.Token,
                         userId = result.UserId,
                         roleId = roleId,
+                        branchId = result.BranchId,
                         redirectTo = result.RedirectTo ?? GetRedirectUrl(roleId)
                     });
                 }

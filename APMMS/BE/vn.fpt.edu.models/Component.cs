@@ -33,6 +33,10 @@ public partial class Component
 
     public virtual StatusLookup? StatusCodeNavigation { get; set; }
 
+    public virtual ICollection<StockInDetail> StockInDetails { get; set; } = new List<StockInDetail>();
+
+    public virtual ICollection<StockInRequestDetail> StockInRequestDetails { get; set; } = new List<StockInRequestDetail>();
+
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 
     public virtual TypeComponent? TypeComponent { get; set; }

@@ -52,7 +52,8 @@ namespace BE.vn.fpt.edu.services
                 UserId = user.Id,
                 Username = user.Username,
                 RoleName = user.Role?.Name,
-                RoleId = user.RoleId
+                RoleId = user.RoleId,
+                BranchId = user.BranchId
             };
         }
 
@@ -140,7 +141,8 @@ namespace BE.vn.fpt.edu.services
                 UserId = user.Id,
                 Username = user.Username,
                 RoleName = user.Role?.Name,
-                RoleId = user.RoleId
+                RoleId = user.RoleId,
+                BranchId = user.BranchId
             };
         }
 

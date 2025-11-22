@@ -17,6 +17,8 @@ using BE.vn.fpt.edu.DTOs.TotalReceipt;
 using BE.vn.fpt.edu.DTOs.TypeComponent;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
 using BE.vn.fpt.edu.DTOs.Branch;
+using BE.vn.fpt.edu.DTOs.StockInRequest;
+using BE.vn.fpt.edu.DTOs.StockIn;
 using System.Linq;
 
 namespace BE.vn.fpt.edu.convert
@@ -178,6 +180,34 @@ namespace BE.vn.fpt.edu.convert
             // Branch mappings
             CreateMap<Branch, BranchResponseDto>();
             CreateMap<BranchRequestDto, Branch>();
+
+            // StockInRequest mappings
+            CreateMap<StockInRequestRequestDto, StockInRequest>()
+                .ForMember(dest => dest.Id, opt => opt.Condition(src => src.StockInRequestId.HasValue))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.StockInRequestId ?? 0L))
+                .ForMember(dest => dest.StockInRequestDetails, opt => opt.Ignore()); // handle manually in service
+
+            CreateMap<StockInRequest, StockInRequestResponseDto>()
+                .ForMember(dest => dest.StockInRequestId, opt => opt.MapFrom(src => src.Id)) // Map Id to StockInRequestId
+                .ForMember(dest => dest.Details, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.BranchName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.StatusName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.CreatedByName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.LastModifiedByName, opt => opt.Ignore()); // fill manually
+
+            // StockIn mappings
+            CreateMap<StockInRequestDto, StockIn>()
+                .ForMember(dest => dest.Id, opt => opt.Condition(src => src.Id.HasValue))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id ?? 0L))
+                .ForMember(dest => dest.StockInDetails, opt => opt.Ignore()); // handle manually in service
+
+            CreateMap<StockIn, StockInResponseDto>()
+                .ForMember(dest => dest.Details, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.StockInRequestCode, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.StatusName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.CreatedByName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.ApprovedByName, opt => opt.Ignore()) // fill manually
+                .ForMember(dest => dest.LastModifiedByName, opt => opt.Ignore()); // fill manually
 
         }
 

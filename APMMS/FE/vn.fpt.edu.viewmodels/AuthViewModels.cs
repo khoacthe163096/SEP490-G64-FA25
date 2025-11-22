@@ -38,6 +38,7 @@ namespace FE.vn.fpt.edu.viewmodels
         public string? Username { get; set; }
         public string? Role { get; set; }
         public int RoleId { get; set; }
+        public long? BranchId { get; set; }
         public string? RedirectTo { get; set; }
         public string? Error { get; set; }
     }
@@ -58,6 +59,7 @@ namespace FE.vn.fpt.edu.viewmodels
         public string? Username { get; set; }
         public string? RoleName { get; set; }
         public long? RoleId { get; set; }
+        public long? BranchId { get; set; }
     }
 
     public class RegisterResponseModel

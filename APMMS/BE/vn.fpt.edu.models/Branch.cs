@@ -29,6 +29,8 @@ public partial class Branch
 
     public virtual ICollection<ServicePackage> ServicePackages { get; set; } = new List<ServicePackage>();
 
+    public virtual ICollection<StockInRequest> StockInRequests { get; set; } = new List<StockInRequest>();
+
     public virtual ICollection<TicketComponent> TicketComponents { get; set; } = new List<TicketComponent>();
 
     public virtual ICollection<TotalReceipt> TotalReceipts { get; set; } = new List<TotalReceipt>();

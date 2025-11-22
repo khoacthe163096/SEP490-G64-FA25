@@ -55,6 +55,14 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<StatusLookup> StatusLookups { get; set; }
 
+    public virtual DbSet<StockIn> StockIns { get; set; }
+
+    public virtual DbSet<StockInDetail> StockInDetails { get; set; }
+
+    public virtual DbSet<StockInRequest> StockInRequests { get; set; }
+
+    public virtual DbSet<StockInRequestDetail> StockInRequestDetails { get; set; }
+
     public virtual DbSet<TicketComponent> TicketComponents { get; set; }
 
     public virtual DbSet<TotalReceipt> TotalReceipts { get; set; }
@@ -850,6 +858,195 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
+        });
+
+        modelBuilder.Entity<StockIn>(entity =>
+        {
+            entity.ToTable("stock_in");
+
+            entity.HasIndex(e => e.ApprovedBy, "IX_stock_in_approved_by");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_stock_in_created_at");
+
+            entity.HasIndex(e => e.StatusCode, "IX_stock_in_status_code");
+
+            entity.HasIndex(e => e.StockInRequestId, "IX_stock_in_stock_in_request_id");
+
+            entity.HasIndex(e => e.StockInRequestId, "UQ_stock_in_request_id").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ApprovedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("approved_at");
+            entity.Property(e => e.ApprovedBy).HasColumnName("approved_by");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.LastModifiedBy).HasColumnName("last_modified_by");
+            entity.Property(e => e.LastModifiedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("last_modified_date");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasDefaultValue("PENDING")
+                .HasColumnName("status_code");
+            entity.Property(e => e.StockInRequestId).HasColumnName("stock_in_request_id");
+
+            entity.HasOne(d => d.ApprovedByNavigation).WithMany(p => p.StockInApprovedByNavigations)
+                .HasForeignKey(d => d.ApprovedBy)
+                .HasConstraintName("FK_stock_in_approved_by");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.StockInCreatedByNavigations)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_stock_in_created_by");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.StockInLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_stock_in_last_modified_by");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.StockIns)
+                .HasForeignKey(d => d.StatusCode)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_status");
+
+            entity.HasOne(d => d.StockInRequest).WithOne(p => p.StockIn)
+                .HasForeignKey<StockIn>(d => d.StockInRequestId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_request");
+        });
+
+        modelBuilder.Entity<StockInDetail>(entity =>
+        {
+            entity.ToTable("stock_in_detail");
+
+            entity.HasIndex(e => e.ComponentId, "IX_stock_in_detail_component_id");
+
+            entity.HasIndex(e => e.StockInId, "IX_stock_in_detail_stock_in_id");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ComponentCode)
+                .HasMaxLength(50)
+                .HasColumnName("component_code");
+            entity.Property(e => e.ComponentId).HasColumnName("component_id");
+            entity.Property(e => e.ComponentName)
+                .HasMaxLength(200)
+                .HasColumnName("component_name");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.ExportPricePerUnit)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("export_price_per_unit");
+            entity.Property(e => e.ImportPricePerUnit)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("import_price_per_unit");
+            entity.Property(e => e.LastModifiedBy).HasColumnName("last_modified_by");
+            entity.Property(e => e.LastModifiedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("last_modified_date");
+            entity.Property(e => e.MinQuantity).HasColumnName("min_quantity");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.QuantityAfterCheck).HasColumnName("quantity_after_check");
+            entity.Property(e => e.StockInId).HasColumnName("stock_in_id");
+            entity.Property(e => e.TypeComponent)
+                .HasMaxLength(200)
+                .HasColumnName("type_component");
+            entity.Property(e => e.Vat)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("vat");
+
+            entity.HasOne(d => d.Component).WithMany(p => p.StockInDetails)
+                .HasForeignKey(d => d.ComponentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_detail_component");
+
+            entity.HasOne(d => d.StockIn).WithMany(p => p.StockInDetails)
+                .HasForeignKey(d => d.StockInId)
+                .HasConstraintName("FK_stock_in_detail_stock_in");
+        });
+
+        modelBuilder.Entity<StockInRequest>(entity =>
+        {
+            entity.ToTable("stock_in_request");
+
+            entity.HasIndex(e => e.BranchId, "IX_stock_in_request_branch_id");
+
+            entity.HasIndex(e => e.CreatedAt, "IX_stock_in_request_created_at");
+
+            entity.HasIndex(e => e.CreatedBy, "IX_stock_in_request_created_by");
+
+            entity.HasIndex(e => e.StatusCode, "IX_stock_in_request_status_code");
+
+            entity.HasIndex(e => e.Code, "UQ_stock_in_request_code").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BranchId).HasColumnName("branch_id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(50)
+                .HasColumnName("code");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.CreatedBy).HasColumnName("created_by");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .HasColumnName("description");
+            entity.Property(e => e.LastModifiedBy).HasColumnName("last_modified_by");
+            entity.Property(e => e.LastModifiedDate)
+                .HasColumnType("datetime")
+                .HasColumnName("last_modified_date");
+            entity.Property(e => e.Note)
+                .HasMaxLength(500)
+                .HasColumnName("note");
+            entity.Property(e => e.StatusCode)
+                .HasMaxLength(50)
+                .HasDefaultValue("PENDING")
+                .HasColumnName("status_code");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.StockInRequests)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_request_branch");
+
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.StockInRequests)
+                .HasForeignKey(d => d.CreatedBy)
+                .HasConstraintName("FK_stock_in_request_created_by");
+
+            entity.HasOne(d => d.LastModifiedByNavigation).WithMany(p => p.StockInRequestLastModifiedByNavigations)
+                .HasForeignKey(d => d.LastModifiedBy)
+                .HasConstraintName("FK_stock_in_request_last_modified_by");
+
+            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.StockInRequests)
+                .HasForeignKey(d => d.StatusCode)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_request_status");
+        });
+
+        modelBuilder.Entity<StockInRequestDetail>(entity =>
+        {
+            entity.HasKey(e => new { e.StockInRequestId, e.ComponentId });
+
+            entity.ToTable("stock_in_request_detail");
+
+            entity.HasIndex(e => e.ComponentId, "IX_stock_in_request_detail_component_id");
+
+            entity.Property(e => e.StockInRequestId).HasColumnName("stock_in_request_id");
+            entity.Property(e => e.ComponentId).HasColumnName("component_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+
+            entity.HasOne(d => d.Component).WithMany(p => p.StockInRequestDetails)
+                .HasForeignKey(d => d.ComponentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_stock_in_request_detail_component");
+
+            entity.HasOne(d => d.StockInRequest).WithMany(p => p.StockInRequestDetails)
+                .HasForeignKey(d => d.StockInRequestId)
+                .HasConstraintName("FK_stock_in_request_detail_request");
         });
 
         modelBuilder.Entity<TicketComponent>(entity =>

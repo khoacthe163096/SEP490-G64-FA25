@@ -45,7 +45,8 @@ namespace BE.vn.fpt.edu.controllers
                     result.UserId,
                     result.Username,
                     result.RoleName,
-                    result.RoleId
+                    result.RoleId,
+                    result.BranchId
                 }
             };
 
@@ -138,7 +139,8 @@ namespace BE.vn.fpt.edu.controllers
                     result.UserId,
                     result.Username,
                     result.RoleName,
-                    result.RoleId
+                    result.RoleId,
+                    result.BranchId
                 }
             });
         }

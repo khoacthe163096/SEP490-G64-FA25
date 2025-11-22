@@ -12,6 +12,7 @@ namespace BE.vn.fpt.edu.DTOs.Auth
         public string? Username { get; set; }
         public string? RoleName { get; set; }
         public long? RoleId { get; set; }
+        public long? BranchId { get; set; }
     }
 
     /// <summary>

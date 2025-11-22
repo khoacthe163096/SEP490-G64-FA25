@@ -30,6 +30,8 @@ namespace FE.vn.fpt.edu.extensions
             services.AddScoped<ServiceScheduleService>();
             services.AddScoped<TypeComponentService>();
             services.AddScoped<ServicePackageService>();
+            services.AddScoped<StockInRequestService>();
+            services.AddScoped<StockInService>();
 
             return services;
         }
