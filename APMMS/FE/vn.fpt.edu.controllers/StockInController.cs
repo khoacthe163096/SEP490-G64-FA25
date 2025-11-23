@@ -1,5 +1,7 @@
 using FE.vn.fpt.edu.services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http.Headers;
 
 namespace FE.vn.fpt.edu.controllers
 {
@@ -7,10 +9,12 @@ namespace FE.vn.fpt.edu.controllers
     public class StockInController : Controller
     {
         private readonly StockInService _service;
+        private readonly IConfiguration _configuration;
 
-        public StockInController(StockInService service)
+        public StockInController(StockInService service, IConfiguration configuration)
         {
             _service = service;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -46,10 +50,37 @@ namespace FE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
-        [Route("Create")]
-        public IActionResult Create()
+        [Route("Template")]
+        public async Task<IActionResult> DownloadTemplate()
         {
-            return View("~/vn.fpt.edu.views/StockIns/Create.cshtml");
+            try
+            {
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+                var httpClient = new HttpClient();
+                var token = HttpContext.Session.GetString("AuthToken") 
+                    ?? HttpContext.Request.Cookies["authToken"];
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/StockIn/template");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsByteArrayAsync();
+                    var contentDisposition = response.Content.Headers.ContentDisposition;
+                    var fileName = contentDisposition?.FileName?.Trim('"') 
+                        ?? $"Mau_Phieu_Nhap_Kho_{DateTime.Now:yyyyMMdd}.xlsx";
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+                return BadRequest("Không thể tải file mẫu");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi: {ex.Message}");
+            }
         }
 
         [HttpGet]
@@ -70,12 +101,53 @@ namespace FE.vn.fpt.edu.controllers
         [Route("{id}/Data")]
         public async Task<IActionResult> GetData(long id)
         {
-            var result = await _service.GetByIdAsync(id);
+            try
+            {
+                // Gọi trực tiếp backend API thay vì qua service để tránh double wrapping
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+                var httpClient = new HttpClient();
+                var token = HttpContext.Session.GetString("AuthToken") 
+                    ?? HttpContext.Request.Cookies["authToken"];
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/StockIn/{id}");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var response = await httpClient.SendAsync(request);
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return Content(content, "application/json");
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return StatusCode((int)response.StatusCode, Content(errorContent, "application/json"));
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Route("Upload")]
+        public async Task<IActionResult> Upload(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return Json(new { success = false, message = "Vui lòng chọn file Excel" });
+            }
+
+            var result = await _service.UploadAsync(file);
             return Json(result);
         }
 
         [HttpPost]
-        [Route("")]
+        [Route("Create")]
         public async Task<IActionResult> Create([FromBody] object data)
         {
             var result = await _service.CreateAsync(data);

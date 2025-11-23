@@ -315,5 +315,59 @@ namespace FE.vn.fpt.edu.adapters
                 return false;
             }
         }
+
+        public async Task<T?> UploadFileAsync<T>(string endpoint, IFormFile file)
+        {
+            try
+            {
+                var url = $"{_baseUrl}/{endpoint}";
+                Console.WriteLine($"ApiAdapter: Calling POST {url} (file upload)");
+
+                using var content = new MultipartFormDataContent();
+                using var fileStream = file.OpenReadStream();
+                var streamContent = new StreamContent(fileStream);
+                streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+                content.Add(streamContent, "file", file.FileName);
+
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = content
+                };
+
+                // Add authorization
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext != null)
+                {
+                    var token = httpContext.Session.GetString("AuthToken")
+                        ?? httpContext.Request.Cookies["authToken"];
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                        Console.WriteLine($"ApiAdapter: Added Authorization header for file upload");
+                    }
+                }
+
+                var response = await _httpClient.SendAsync(request);
+                Console.WriteLine($"ApiAdapter: Upload response status: {response.StatusCode}");
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"ApiAdapter: Upload response content: {responseContent}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new HttpRequestException($"Upload failed with status {response.StatusCode}: {responseContent}");
+                }
+
+                return JsonSerializer.Deserialize<T>(responseContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ApiAdapter: Exception in UploadFileAsync: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

@@ -124,77 +124,45 @@
                                     <input type="hidden" id="editComponentBranchId" name="branchId">
                                     
                                     <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <label for="editComponentName" class="form-label fw-semibold">Tên <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="editComponentName" name="name" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="editComponentCode" class="form-label fw-semibold">Mã</label>
-                                            <input type="text" class="form-control" id="editComponentCode" name="code">
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <label for="editComponentTypeComponentId" class="form-label fw-semibold">Loại linh kiện <span class="text-danger">*</span></label>
-                                            <select class="form-select" id="editComponentTypeComponentId" name="typeComponentId" required>
-                                                <option value="">-- Chọn loại linh kiện --</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="editComponentStatusCode" class="form-label fw-semibold">Trạng thái</label>
-                                            <select class="form-select" id="editComponentStatusCode" name="statusCode">
-                                                <option value="ACTIVE">Có sẵn</option>
-                                                <option value="OUT_OF_STOCK">Hết hàng</option>
-                                                <option value="DISCONTINUED">Ngừng sản xuất</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <div class="d-flex align-items-center">
-                                                <label for="editComponentPurchasePrice" class="form-label fw-semibold mb-0 me-3" style="min-width: 120px;">Giá nhập</label>
-                                                <input type="number" class="form-control" id="editComponentPurchasePrice" name="purchasePrice" step="0.01" min="0">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="d-flex align-items-center">
-                                                <label for="editComponentUnitPrice" class="form-label fw-semibold mb-0 me-3" style="min-width: 120px;">Giá xuất <span class="text-danger">*</span></label>
-                                                <input type="number" class="form-control" id="editComponentUnitPrice" name="unitPrice" step="0.01" min="0" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <div class="d-flex align-items-center">
-                                                <label for="editComponentQuantityStock" class="form-label fw-semibold mb-0 me-3" style="min-width: 120px;">Số lượng tồn kho</label>
-                                                <input type="number" class="form-control" id="editComponentQuantityStock" name="quantityStock" min="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-3">
-                                        <div class="col-12">
-                                            <div class="d-flex align-items-center">
-                                                <label for="editComponentImageFile" class="form-label fw-semibold mb-0 me-3" style="min-width: 120px;">Hình ảnh</label>
-                                                <input type="file" class="form-control" id="editComponentImageFile" name="imageFile" accept="image/*">
+                                        <label class="col-md-4 col-lg-3 col-form-label fw-semibold">Hình ảnh</label>
+                                        <div class="col-md-8 col-lg-9">
+                                            <div class="pt-2">
+                                                <input type="file" id="editComponentImageFile" name="imageFile" accept="image/*" style="display: none;">
                                                 <input type="hidden" id="editComponentImageUrl" name="imageUrl">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row mb-3" id="editImagePreviewRow" style="display: none;">
-                                        <div class="col-12">
-                                            <div class="d-flex align-items-center">
-                                                <label class="form-label fw-semibold mb-0 me-3" style="min-width: 120px;">Xem trước</label>
-                                                <div class="flex-grow-1">
+                                                <label for="editComponentImageFile" class="btn btn-primary btn-sm me-2">
+                                                    <i class="fa fa-upload me-1"></i> Tải lên
+                                                </label>
+                                                <button type="button" class="btn btn-danger btn-sm" onclick="clearEditImage()">
+                                                    <i class="fa fa-trash me-1"></i> Xóa
+                                                </button>
+                                                <div id="editImagePreviewContainer" class="mt-2" style="display: none;">
                                                     <img id="editImagePreview" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
                                                 </div>
                                             </div>
                                         </div>
-                    </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <label class="col-md-4 col-lg-3 col-form-label fw-semibold">Tên <span class="text-danger">*</span></label>
+                                        <div class="col-md-8 col-lg-9">
+                                            <input type="text" class="form-control" id="editComponentName" name="name" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <label class="col-md-4 col-lg-3 col-form-label fw-semibold">Mã</label>
+                                        <div class="col-md-8 col-lg-9">
+                                            <input type="text" class="form-control" id="editComponentCode" name="code">
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <label class="col-md-4 col-lg-3 col-form-label fw-semibold">Số lượng tối thiểu</label>
+                                        <div class="col-md-8 col-lg-9">
+                                            <input type="number" class="form-control" id="editComponentMinimumQuantity" name="minimumQuantity" min="0" value="0">
+                                        </div>
+                                    </div>
+                                    
                     
                                     <div class="d-flex justify-content-end gap-2 mt-4">
                                         <button type="button" class="btn btn-secondary" id="cancelEditBtn">
@@ -371,92 +339,64 @@
         }
 
         function populateEditForm(component) {
-            document.getElementById('editComponentId').value = component.id || '';
-            document.getElementById('editComponentBranchId').value = component.branchId || '';
-            document.getElementById('editComponentName').value = component.name || '';
-            document.getElementById('editComponentCode').value = component.code || '';
-            document.getElementById('editComponentTypeComponentId').value = component.typeComponentId || '';
-            document.getElementById('editComponentStatusCode').value = component.statusCode || 'ACTIVE';
-            document.getElementById('editComponentPurchasePrice').value = component.purchasePrice || '';
-            document.getElementById('editComponentUnitPrice').value = component.unitPrice || '';
-            document.getElementById('editComponentQuantityStock').value = component.quantityStock || 0;
-            document.getElementById('editComponentImageUrl').value = component.imageUrl || '';
+            const editComponentId = document.getElementById('editComponentId');
+            const editComponentBranchId = document.getElementById('editComponentBranchId');
+            const editComponentName = document.getElementById('editComponentName');
+            const editComponentCode = document.getElementById('editComponentCode');
+            const editComponentMinimumQuantity = document.getElementById('editComponentMinimumQuantity');
+            const editComponentImageUrl = document.getElementById('editComponentImageUrl');
+            const editImagePreview = document.getElementById('editImagePreview');
+            const editImagePreviewContainer = document.getElementById('editImagePreviewContainer');
+            const settingsLoading = document.getElementById('settingsLoading');
+            const settingsContent = document.getElementById('settingsContent');
             
-            if (component.imageUrl) {
-                document.getElementById('editImagePreview').src = component.imageUrl;
-                document.getElementById('editImagePreviewRow').style.display = 'block';
+            if (editComponentId) editComponentId.value = component.id || '';
+            if (editComponentBranchId) editComponentBranchId.value = component.branchId || '';
+            if (editComponentName) editComponentName.value = component.name || '';
+            if (editComponentCode) editComponentCode.value = component.code || '';
+            if (editComponentMinimumQuantity) editComponentMinimumQuantity.value = component.minimumQuantity || 0;
+            if (editComponentImageUrl) editComponentImageUrl.value = component.imageUrl || '';
+            
+            if (component.imageUrl && editImagePreview && editImagePreviewContainer) {
+                editImagePreview.src = component.imageUrl;
+                editImagePreviewContainer.style.display = 'block';
+            } else if (editImagePreviewContainer) {
+                editImagePreviewContainer.style.display = 'none';
             }
-            
-            // Load TypeComponents for dropdown
-            loadTypeComponentsForEdit();
             
             // Show settings content
-            document.getElementById('settingsLoading').style.display = 'none';
-            document.getElementById('settingsContent').style.display = 'block';
+            if (settingsLoading) settingsLoading.style.display = 'none';
+            if (settingsContent) settingsContent.style.display = 'block';
         }
 
-        async function loadTypeComponentsForEdit() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                console.warn('No auth token found');
-                return;
-            }
-            
-            try {
-                const branchId = document.getElementById('editComponentBranchId').value;
-                const url = branchId 
-                    ? `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE&branchId=${branchId}`
-                    : `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE`;
-                
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                const select = document.getElementById('editComponentTypeComponentId');
-                
-                // Clear existing options except the first one
-                const firstOption = select.querySelector('option[value=""]');
-                select.innerHTML = '';
-                if (firstOption) {
-                    select.appendChild(firstOption);
-                }
-                
-                if (data.success && data.data && data.data.length > 0) {
-                    data.data.forEach(function(typeComponent) {
-                        const option = document.createElement('option');
-                        option.value = typeComponent.id;
-                        option.textContent = typeComponent.name || `Type ${typeComponent.id}`;
-                        select.appendChild(option);
-                    });
-                    
-                    // Set selected value
-                    select.value = currentComponentData?.typeComponentId || '';
-                }
-            } catch (error) {
-                console.error('Error loading TypeComponents:', error);
-            }
+        function clearEditImage() {
+            document.getElementById('editComponentImageFile').value = '';
+            document.getElementById('editComponentImageUrl').value = '';
+            document.getElementById('editImagePreviewContainer').style.display = 'none';
         }
 
         function setupEditForm() {
             const form = document.getElementById('editComponentForm');
-            const imageFileInput = document.getElementById('editComponentImageFile');
+            if (!form) {
+                console.warn('editComponentForm not found');
+                return;
+            }
             
-            // Handle image file change
-            imageFileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    uploadImageToCloudinary(file);
-                } else {
-                    document.getElementById('editImagePreviewRow').style.display = 'none';
-                }
-            });
+            const imageFileInput = document.getElementById('editComponentImageFile');
+            if (imageFileInput) {
+                // Handle image file change
+                imageFileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        uploadImageToCloudinary(file);
+                    } else {
+                        const previewContainer = document.getElementById('editImagePreviewContainer');
+                        if (previewContainer) {
+                            previewContainer.style.display = 'none';
+                        }
+                    }
+                });
+            }
             
             // Handle form submit
             form.addEventListener('submit', async function(e) {
@@ -465,11 +405,14 @@
             });
             
             // Handle cancel button
-            document.getElementById('cancelEditBtn').addEventListener('click', function() {
-                if (currentComponentData) {
-                    populateEditForm(currentComponentData);
-                }
-            });
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    if (currentComponentData) {
+                        populateEditForm(currentComponentData);
+                    }
+                });
+            }
         }
 
         async function uploadImageToCloudinary(file) {
@@ -497,7 +440,7 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('editImagePreview').src = e.target.result;
-                document.getElementById('editImagePreviewRow').style.display = 'block';
+                document.getElementById('editImagePreviewContainer').style.display = 'block';
             };
             reader.readAsDataURL(file);
             
@@ -527,7 +470,7 @@
                 console.error('Error uploading image:', error);
                 alert('Lỗi upload ảnh: ' + error.message);
                 document.getElementById('editComponentImageFile').value = '';
-                document.getElementById('editImagePreviewRow').style.display = 'none';
+                document.getElementById('editImagePreviewContainer').style.display = 'none';
                 document.getElementById('editComponentImageUrl').value = '';
             }
         }
@@ -556,11 +499,7 @@
                 const payload = {
                     name: document.getElementById('editComponentName').value.trim(),
                     code: document.getElementById('editComponentCode').value.trim() || null,
-                    typeComponentId: parseInt(document.getElementById('editComponentTypeComponentId').value),
-                    statusCode: document.getElementById('editComponentStatusCode').value || 'ACTIVE',
-                    purchasePrice: document.getElementById('editComponentPurchasePrice').value ? parseFloat(document.getElementById('editComponentPurchasePrice').value) : null,
-                    unitPrice: parseFloat(document.getElementById('editComponentUnitPrice').value) || null,
-                    quantityStock: parseInt(document.getElementById('editComponentQuantityStock').value) || 0,
+                    minimumQuantity: parseInt(document.getElementById('editComponentMinimumQuantity').value) || 0,
                     imageUrl: document.getElementById('editComponentImageUrl').value.trim() || null,
                     branchId: parseInt(document.getElementById('editComponentBranchId').value) || null
                 };

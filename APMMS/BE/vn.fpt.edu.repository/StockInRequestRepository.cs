@@ -64,6 +64,16 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(x => x.Code == code);
         }
 
+        public async Task<StockInRequest?> GetByCodeAndStatusAsync(string code, string statusCode)
+        {
+            return await _context.StockInRequests
+                .Include(sir => sir.Branch)
+                .Include(sir => sir.StatusCodeNavigation)
+                .Include(sir => sir.StockInRequestDetails)
+                    .ThenInclude(d => d.Component)
+                .FirstOrDefaultAsync(x => x.Code == code && x.StatusCode == statusCode);
+        }
+
         public async Task<IEnumerable<StockInRequest>> GetByStatusAsync(string statusCode)
         {
             return await _context.StockInRequests

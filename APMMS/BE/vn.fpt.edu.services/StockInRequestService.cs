@@ -44,15 +44,8 @@ namespace BE.vn.fpt.edu.services
             if (dto.Details == null || !dto.Details.Any())
                 throw new ArgumentException("Yêu cầu nhập kho phải có ít nhất một linh kiện");
 
-            // Generate code if not provided
-            if (string.IsNullOrEmpty(dto.Code))
-            {
-                dto.Code = await GenerateUniqueCodeAsync();
-            }
-            else if (await _repo.CodeExistsAsync(dto.Code))
-            {
-                throw new ArgumentException($"Mã yêu cầu nhập kho '{dto.Code}' đã tồn tại");
-            }
+            // Luôn tự động tạo mã (không cho phép người dùng nhập)
+            dto.Code = await GenerateUniqueCodeAsync();
 
             // Validate BranchId
             if (dto.BranchId <= 0)
@@ -307,12 +300,14 @@ namespace BE.vn.fpt.edu.services
 
         private async Task<string> GenerateUniqueCodeAsync()
         {
-            string prefix = "YCK";
+            // Format: {prefix}{Date}{counter} = 12 ký tự
+            // Prefix: "YC" (2 ký tự) + Date: yyMMdd (6 ký tự) + Counter: D4 (4 ký tự) = 12 ký tự
+            string prefix = "YC";
             string code;
             int counter = 1;
             do
             {
-                code = $"{prefix}{DateTime.Now:yyyyMMdd}{counter:D4}";
+                code = $"{prefix}{DateTime.Now:yyMMdd}{counter:D4}";
                 counter++;
             } while (await _repo.CodeExistsAsync(code) && counter < 10000);
 

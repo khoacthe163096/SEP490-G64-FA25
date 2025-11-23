@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.DTOs.StockIn;
+using OfficeOpenXml;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -73,6 +75,88 @@ namespace BE.vn.fpt.edu.controllers
             }
         }
 
+        [HttpGet("template")]
+        public ActionResult DownloadTemplate()
+        {
+            try
+            {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                
+                using var package = new ExcelPackage();
+                var worksheet = package.Workbook.Worksheets.Add("Phiếu nhập kho");
+
+                // Mã yêu cầu (row 1) - Format theo hình ảnh người dùng
+                worksheet.Cells[1, 1].Value = "Mã yêu cầu: YC2501150001"; // Example - người dùng sẽ thay đổi
+                worksheet.Cells[1, 1].Style.Font.Bold = true;
+                worksheet.Cells[1, 1].Style.Font.Size = 12;
+
+                // Column headers (row 2) - Format theo hình ảnh người dùng
+                worksheet.Cells[2, 1].Value = "STT";
+                worksheet.Cells[2, 2].Value = "Mã linh kiện";
+                worksheet.Cells[2, 3].Value = "Tên linh kiện";
+                worksheet.Cells[2, 4].Value = "Loại";
+                worksheet.Cells[2, 5].Value = "Số lượng yêu cầu";
+                worksheet.Cells[2, 6].Value = "Số lượng thực tế";
+                worksheet.Cells[2, 7].Value = "Giá nhập";
+                worksheet.Cells[2, 8].Value = "Giá xuất";
+
+                // Style header row
+                using (var range = worksheet.Cells[2, 1, 2, 8])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    range.Style.Border.BorderAround(OfficeOpenXml.Style.ExcelBorderStyle.Thin);
+                }
+
+                // Không có dữ liệu mẫu - người dùng sẽ điền dữ liệu thực tế từ dòng 3
+
+                // Auto fit columns
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+
+                var fileName = $"Mau_Phieu_Nhap_Kho_{DateTime.Now:yyyyMMdd}.xlsx";
+                return File(stream.ToArray(), 
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi tạo file mẫu", error = ex.Message });
+            }
+        }
+
+        [HttpPost("upload")]
+        public async Task<ActionResult> UploadExcel(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest(new { success = false, message = "Vui lòng chọn file Excel" });
+                }
+
+                if (!file.FileName.EndsWith(".xlsx") && !file.FileName.EndsWith(".xls"))
+                {
+                    return BadRequest(new { success = false, message = "File phải là định dạng Excel (.xlsx hoặc .xls)" });
+                }
+
+                var result = await _service.UploadExcelAsync(file);
+                return Ok(new { success = true, data = result, message = "Đọc file Excel thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult> Create([FromBody] StockInRequestDto dto)
         {
@@ -93,9 +177,36 @@ namespace BE.vn.fpt.edu.controllers
             {
                 return BadRequest(new { success = false, message = ex.Message });
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+            {
+                // Xử lý lỗi database constraint
+                var innerException = ex.InnerException?.Message ?? ex.Message;
+                string errorMessage = "Lỗi khi lưu dữ liệu vào database";
+                
+                if (innerException.Contains("FOREIGN KEY") || innerException.Contains("foreign key"))
+                {
+                    errorMessage = "Yêu cầu nhập kho không tồn tại hoặc không hợp lệ. Vui lòng kiểm tra mã yêu cầu: " + (dto.StockInRequestCode ?? "");
+                }
+                else if (innerException.Contains("UNIQUE") || innerException.Contains("unique"))
+                {
+                    errorMessage = "Dữ liệu đã tồn tại trong hệ thống";
+                }
+                else if (innerException.Contains("NOT NULL") || innerException.Contains("not null"))
+                {
+                    errorMessage = "Thiếu thông tin bắt buộc";
+                }
+                
+                return BadRequest(new { success = false, message = errorMessage, error = innerException });
+            }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+                // Log lỗi chi tiết
+                var innerException = ex.InnerException?.Message ?? "";
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Lỗi hệ thống: " + ex.Message,
+                    error = innerException
+                });
             }
         }
 

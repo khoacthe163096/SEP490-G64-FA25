@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BE.vn.fpt.edu.DTOs.StockIn;
+using Microsoft.AspNetCore.Http;
 
 namespace BE.vn.fpt.edu.interfaces
 {
     public interface IStockInService
     {
+        Task<StockInUploadResponseDto> UploadExcelAsync(IFormFile file);
         Task<StockInResponseDto> CreateFromRequestAsync(StockInRequestDto dto, long userId);
         Task<StockInResponseDto> UpdateAsync(StockInRequestDto dto, long userId);
         Task<StockInResponseDto> GetByIdAsync(long id);

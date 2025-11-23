@@ -76,7 +76,7 @@
 
 <!-- Modal tạo loại linh kiện mới -->
 <div class="modal fade" id="createTypeComponentModal" tabindex="-1" aria-labelledby="createTypeComponentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="createTypeComponentModalLabel">
@@ -86,27 +86,113 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="createTypeComponentForm">
-                    <div class="mb-3">
-                        <label for="createName" class="form-label">Tên loại linh kiện <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createName" name="Name" required />
+                <!-- Tabs Navigation -->
+                <ul class="nav nav-tabs nav-tabs-bordered mb-3" id="createTypeComponentTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="create-info-tab" data-bs-toggle="tab" data-bs-target="#create-info" type="button" role="tab">
+                            Loại linh kiện
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="create-add-component-tab" data-bs-toggle="tab" data-bs-target="#create-add-component" type="button" role="tab">
+                            Thêm linh kiện
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="create-preview-tab" data-bs-toggle="tab" data-bs-target="#create-preview" type="button" role="tab">
+                            Chi tiết mô phỏng
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tabs Content -->
+                <div class="tab-content" id="createTypeComponentTabContent">
+                    <!-- Tab 1: Thông tin -->
+                    <div class="tab-pane fade show active" id="create-info" role="tabpanel">
+                        <form id="createTypeComponentForm">
+                            <div class="mb-3">
+                                <label for="createName" class="form-label">Tên loại linh kiện <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="createName" name="Name" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="createDescription" class="form-label">Mô tả</label>
+                                <textarea class="form-control" id="createDescription" name="Description" rows="3"></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="createStatusCode" class="form-label">Trạng thái</label>
+                                <select class="form-select" id="createStatusCode" name="StatusCode">
+                                    <option value="ACTIVE" selected>Hoạt động</option>
+                                    <option value="INACTIVE">Không hoạt động</option>
+                                </select>
+                            </div>
+
+                            <input type="hidden" id="createBranchId" name="BranchId" />
+                        </form>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="createDescription" class="form-label">Mô tả</label>
-                        <textarea class="form-control" id="createDescription" name="Description" rows="3"></textarea>
+                    <!-- Tab 2: Thêm linh kiện -->
+                    <div class="tab-pane fade" id="create-add-component" role="tabpanel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0 fw-bold">Danh sách linh kiện có sẵn</h6>
+                            <input type="text" class="form-control" id="createSearchAvailableComponents" placeholder="Tìm kiếm linh kiện" style="width: 250px;">
+                        </div>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;">STT</th>
+                                        <th>Mã</th>
+                                        <th>Tên linh kiện</th>
+                                        <th>Hình ảnh</th>
+                                        <th style="width: 100px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="createAvailableComponentsTableBody">
+                                    <!-- Available components will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="createAvailableComponentsLoading" class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                        <div id="createAvailableComponentsEmpty" class="text-center text-muted py-3" style="display: none;">
+                            <p class="mb-0">Không có linh kiện nào để thêm.</p>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="createStatusCode" class="form-label">Trạng thái</label>
-                        <select class="form-select" id="createStatusCode" name="StatusCode">
-                            <option value="ACTIVE" selected>Hoạt động</option>
-                            <option value="INACTIVE">Không hoạt động</option>
-                        </select>
-                    </div>
+                    <!-- Tab 3: Chi tiết mô phỏng -->
+                    <div class="tab-pane fade" id="create-preview" role="tabpanel">
+                        <h6 class="mb-3 fw-bold">Thông tin loại linh kiện</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tên loại linh kiện</label>
+                            <input type="text" class="form-control" id="createPreviewName" readonly />
+                        </div>
 
-                    <input type="hidden" id="createBranchId" name="BranchId" />
-                </form>
+                        <h6 class="mb-3 fw-bold mt-4">Danh sách linh kiện đã chọn</h6>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;">STT</th>
+                                        <th>Mã</th>
+                                        <th>Tên linh kiện</th>
+                                        <th>Hình ảnh</th>
+                                        <th style="width: 100px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="createSelectedComponentsTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Chưa có linh kiện nào được chọn</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -176,6 +262,10 @@
             // Đơn giản hóa: chỉ đăng ký event một lần, không cần off
             const modalElement = document.getElementById('createTypeComponentModal');
             if (modalElement) {
+                // Biến lưu trữ component khi tạo TypeComponent
+                window.createSelectedComponents = [];
+                window.createAvailableComponents = [];
+
                 // Khi modal sắp mở - chỉ reset form, KHÔNG gọi API (để modal hiển thị ngay)
                 modalElement.addEventListener('show.bs.modal', function() {
                     // Reset form ngay lập tức
@@ -184,13 +274,47 @@
                     document.getElementById('createBranchId').value = '';
                     document.getElementById('createStatusCode').value = 'ACTIVE';
                     
+                    // Reset component lists
+                    window.createSelectedComponents = [];
+                    window.createAvailableComponents = [];
+                    renderCreateSelectedComponents();
+                    $('#createAvailableComponentsTableBody').html('<tr><td colspan="5" class="text-center text-muted">Chưa tải dữ liệu</td></tr>');
+                    $('#createPreviewName').val('');
+                    
                     // Reset button
                     const submitBtn = document.querySelector('#createTypeComponentModal .btn-primary[onclick="submitCreateTypeComponent()"]');
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Lưu';
                     }
+                    
+                    // Reset to first tab
+                    const firstTab = document.querySelector('#createTypeComponentTabs button[data-bs-target="#create-info"]');
+                    if (firstTab) {
+                        firstTab.click();
+                    }
                 }, { once: false });
+                
+                // Load components when "Thêm linh kiện" tab is shown
+                const addComponentTab = document.getElementById('create-add-component-tab');
+                if (addComponentTab) {
+                    addComponentTab.addEventListener('shown.bs.tab', function() {
+                        loadCreateAvailableComponents();
+                    });
+                }
+                
+                // Update preview when "Chi tiết mô phỏng" tab is shown
+                const previewTab = document.getElementById('create-preview-tab');
+                if (previewTab) {
+                    previewTab.addEventListener('shown.bs.tab', function() {
+                        updateCreatePreview();
+                    });
+                }
+                
+                // Search in available components
+                $('#createSearchAvailableComponents').on('input', function() {
+                    filterCreateAvailableComponents();
+                });
                 
                 // Khi modal đã hiển thị HOÀN TOÀN - mới gọi API (không block modal)
                 modalElement.addEventListener('shown.bs.modal', function() {
@@ -545,6 +669,162 @@
             }
         }
 
+        // Load danh sách component có sẵn để thêm vào TypeComponent
+        function loadCreateAvailableComponents() {
+            $('#createAvailableComponentsLoading').show();
+            $('#createAvailableComponentsEmpty').hide();
+            $('#createAvailableComponentsTableBody').html('');
+            
+            $.ajax({
+                url: '/Components/ListData',
+                method: 'GET',
+                data: {
+                    page: 1,
+                    pageSize: 1000,
+                    statusCode: 'ACTIVE'
+                },
+                success: function(result) {
+                    $('#createAvailableComponentsLoading').hide();
+                    if (result.success && result.data) {
+                        // Lọc ra các component chưa được chọn
+                        const selectedIds = window.createSelectedComponents.map(c => c.id);
+                        window.createAvailableComponents = result.data.filter(c => !selectedIds.includes(c.id));
+                        renderCreateAvailableComponents();
+                    } else {
+                        $('#createAvailableComponentsTableBody').html('<tr><td colspan="5" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#createAvailableComponentsLoading').hide();
+                    $('#createAvailableComponentsTableBody').html('<tr><td colspan="5" class="text-center text-danger">Lỗi tải dữ liệu</td></tr>');
+                }
+            });
+        }
+
+        function filterCreateAvailableComponents() {
+            const searchTerm = $('#createSearchAvailableComponents').val().toLowerCase();
+            const filtered = window.createAvailableComponents.filter(c => {
+                const code = (c.code || '').toLowerCase();
+                const name = (c.name || '').toLowerCase();
+                return code.includes(searchTerm) || name.includes(searchTerm);
+            });
+            renderCreateAvailableComponents(filtered);
+        }
+
+        function renderCreateAvailableComponents(components = null) {
+            const tbody = $('#createAvailableComponentsTableBody');
+            tbody.empty();
+            
+            const componentsToShow = components || window.createAvailableComponents;
+            
+            if (!componentsToShow || componentsToShow.length === 0) {
+                tbody.html('<tr><td colspan="5" class="text-center text-muted">Không có linh kiện nào để thêm</td></tr>');
+                return;
+            }
+            
+            componentsToShow.forEach(function(component, index) {
+                const imageUrl = component.imageUrl || '';
+                const imageHtml = imageUrl 
+                    ? `<img src="${imageUrl}" alt="${component.name}" style="max-width: 50px; max-height: 50px; border-radius: 4px;">`
+                    : '<i class="fas fa-image text-muted"></i>';
+                
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${component.code || '-'}</td>
+                        <td>${component.name || '-'}</td>
+                        <td class="text-center">${imageHtml}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="addComponentToCreate(${component.id}, '${(component.code || '').replace(/'/g, "\\'")}', '${(component.name || '').replace(/'/g, "\\'")}', '${(imageUrl || '').replace(/'/g, "\\'")}')">
+                                <i class="fas fa-plus"></i> Thêm
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function addComponentToCreate(componentId, componentCode, componentName, imageUrl) {
+            // Kiểm tra xem đã có chưa
+            if (window.createSelectedComponents.some(c => c.id === componentId)) {
+                return;
+            }
+            
+            // Thêm vào danh sách đã chọn
+            window.createSelectedComponents.push({
+                id: componentId,
+                code: componentCode,
+                name: componentName,
+                imageUrl: imageUrl
+            });
+            
+            // Xóa khỏi danh sách có sẵn
+            window.createAvailableComponents = window.createAvailableComponents.filter(c => c.id !== componentId);
+            
+            // Render lại cả 2 bảng
+            renderCreateAvailableComponents();
+            renderCreateSelectedComponents();
+        }
+
+        function removeComponentFromCreate(componentId) {
+            // Tìm component để thêm lại vào danh sách có sẵn
+            const component = window.createSelectedComponents.find(c => c.id === componentId);
+            if (component) {
+                // Thêm lại vào danh sách có sẵn
+                window.createAvailableComponents.push({
+                    id: component.id,
+                    code: component.code,
+                    name: component.name,
+                    imageUrl: component.imageUrl
+                });
+            }
+            
+            // Xóa khỏi danh sách đã chọn
+            window.createSelectedComponents = window.createSelectedComponents.filter(c => c.id !== componentId);
+            
+            // Render lại cả 2 bảng
+            renderCreateAvailableComponents();
+            renderCreateSelectedComponents();
+        }
+
+        function renderCreateSelectedComponents() {
+            const tbody = $('#createSelectedComponentsTableBody');
+            tbody.empty();
+            
+            if (!window.createSelectedComponents || window.createSelectedComponents.length === 0) {
+                tbody.html('<tr><td colspan="5" class="text-center text-muted">Chưa có linh kiện nào được chọn</td></tr>');
+                return;
+            }
+            
+            window.createSelectedComponents.forEach(function(component, index) {
+                const imageHtml = component.imageUrl 
+                    ? `<img src="${component.imageUrl}" alt="${component.name}" style="max-width: 50px; max-height: 50px; border-radius: 4px;">`
+                    : '<i class="fas fa-image text-muted"></i>';
+                
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${component.code || '-'}</td>
+                        <td>${component.name || '-'}</td>
+                        <td class="text-center">${imageHtml}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeComponentFromCreate(${component.id})">
+                                <i class="fas fa-times"></i> Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function updateCreatePreview() {
+            const name = $('#createName').val();
+            $('#createPreviewName').val(name || '');
+            renderCreateSelectedComponents();
+        }
+
         async function submitCreateTypeComponent() {
             const form = document.getElementById('createTypeComponentForm');
             if (!form.checkValidity()) {
@@ -583,11 +863,15 @@
                 }
             }
 
+            // Lấy danh sách ComponentIds từ các component đã chọn
+            const componentIds = window.createSelectedComponents.map(c => c.id);
+            
             const payload = {
                 Name: document.getElementById('createName').value,
                 Description: document.getElementById('createDescription').value,
                 StatusCode: document.getElementById('createStatusCode').value,
-                BranchId: branchIdValue ? parseInt(branchIdValue) : null
+                BranchId: branchIdValue ? parseInt(branchIdValue) : null,
+                ComponentIds: componentIds.length > 0 ? componentIds : null
             };
             
             console.log('Submitting payload:', payload);

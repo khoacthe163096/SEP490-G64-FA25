@@ -17,8 +17,8 @@
                     <form id="createStockInRequestForm">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="code" class="form-label">Mã yêu cầu <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="code" name="code" required>
+                                <label for="code" class="form-label">Mã yêu cầu</label>
+                                <input type="text" class="form-control" id="code" name="code" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label for="description" class="form-label">Mô tả</label>
@@ -186,7 +186,24 @@
                 e.preventDefault();
                 createStockInRequest();
             });
+
+            // Tạo mã preview ngay khi load trang
+            generatePreviewCode();
         });
+
+        // Function tạo mã preview (theo format backend: YC + yyMMdd + 0001)
+        function generatePreviewCode() {
+            const prefix = "YC";
+            const now = new Date();
+            const year = now.getFullYear().toString().substring(2); // Lấy 2 số cuối của năm
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateStr = year + month + day; // yyMMdd
+            const counter = "0001"; // Counter mặc định
+            
+            const previewCode = prefix + dateStr + counter;
+            $('#code').val(previewCode);
+        }
 
         function loadAvailableComponents() {
             $.ajax({
@@ -291,8 +308,9 @@
             const originalText = submitBtn.html();
             submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang tạo...');
 
+            // Không gửi code, để backend tự động tạo mã 12 ký tự
             const formData = {
-                code: $('#code').val(),
+                code: '', // Để trống, backend sẽ tự động tạo
                 description: $('#description').val(),
                 note: $('#note').val(),
                 details: selectedComponents.map(sc => ({

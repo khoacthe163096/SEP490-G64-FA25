@@ -6,7 +6,7 @@ public class StockInRequestRequestDto
 {
     public long? StockInRequestId { get; set; }
     
-    [Required(ErrorMessage = "Mã yêu cầu nhập kho là bắt buộc")]
+    // Code sẽ được tự động tạo bởi backend, không cần Required
     public string Code { get; set; } = string.Empty;
     
     [Required(ErrorMessage = "Chi nhánh là bắt buộc")]

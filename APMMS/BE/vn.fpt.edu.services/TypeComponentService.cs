@@ -27,6 +27,41 @@ namespace BE.vn.fpt.edu.services
         {
             var entity = _mapper.Map<TypeComponent>(dto);
             var created = await _repo.AddAsync(entity);
+            
+            // Nếu có ComponentIds, thêm các components vào TypeComponent này
+            if (dto.ComponentIds != null && dto.ComponentIds.Any())
+            {
+                // Validation: ComponentIds phải tồn tại
+                var components = await _context.Components
+                    .Where(c => dto.ComponentIds.Contains(c.Id))
+                    .ToListAsync();
+                
+                if (components.Count != dto.ComponentIds.Count)
+                {
+                    var foundIds = components.Select(c => c.Id).ToList();
+                    var notFoundIds = dto.ComponentIds.Except(foundIds).ToList();
+                    throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
+                }
+                
+                // Validation: Components phải cùng branch với TypeComponent
+                if (created.BranchId.HasValue)
+                {
+                    var invalidComponents = components.Where(c => c.BranchId != created.BranchId.Value).ToList();
+                    if (invalidComponents.Any())
+                    {
+                        throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với loại linh kiện này");
+                    }
+                }
+
+                foreach (var component in components)
+                {
+                    // Cập nhật TypeComponentId của component
+                    component.TypeComponentId = created.Id;
+                }
+                
+                await _context.SaveChangesAsync();
+            }
+            
             return _mapper.Map<ResponseDto>(created);
         }
 
@@ -64,35 +99,56 @@ namespace BE.vn.fpt.edu.services
             exist.BranchId = dto.BranchId;
             exist.StatusCode = dto.StatusCode;
 
-            // Nếu có ComponentIds, thêm các components vào TypeComponent này
-            if (dto.ComponentIds != null && dto.ComponentIds.Any())
+            // Xử lý ComponentIds: thêm/xóa components khỏi TypeComponent này
+            if (dto.ComponentIds != null)
             {
-                // Validation: ComponentIds phải tồn tại
-                var components = await _context.Components
-                    .Where(c => dto.ComponentIds.Contains(c.Id))
+                // Lấy danh sách components hiện tại thuộc TypeComponent này
+                var currentComponents = await _context.Components
+                    .Where(c => c.TypeComponentId == exist.Id)
                     .ToListAsync();
                 
-                if (components.Count != dto.ComponentIds.Count)
+                var currentComponentIds = currentComponents.Select(c => c.Id).ToHashSet();
+                var newComponentIds = dto.ComponentIds.ToHashSet();
+                
+                // Xóa các components không còn trong danh sách mới
+                var componentsToRemove = currentComponents
+                    .Where(c => !newComponentIds.Contains(c.Id))
+                    .ToList();
+                foreach (var component in componentsToRemove)
                 {
-                    var foundIds = components.Select(c => c.Id).ToList();
-                    var notFoundIds = dto.ComponentIds.Except(foundIds).ToList();
-                    throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
+                    component.TypeComponentId = null;
                 }
                 
-                // Validation: Components phải cùng branch với TypeComponent
-                if (exist.BranchId.HasValue)
+                // Thêm các components mới vào TypeComponent này
+                if (newComponentIds.Any())
                 {
-                    var invalidComponents = components.Where(c => c.BranchId != exist.BranchId.Value).ToList();
-                    if (invalidComponents.Any())
+                    // Validation: ComponentIds phải tồn tại
+                    var componentsToAdd = await _context.Components
+                        .Where(c => newComponentIds.Contains(c.Id))
+                        .ToListAsync();
+                    
+                    if (componentsToAdd.Count != newComponentIds.Count)
                     {
-                        throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với loại linh kiện này");
+                        var foundIds = componentsToAdd.Select(c => c.Id).ToHashSet();
+                        var notFoundIds = newComponentIds.Except(foundIds).ToList();
+                        throw new ArgumentException($"Không tìm thấy components với IDs: {string.Join(", ", notFoundIds)}");
                     }
-                }
+                    
+                    // Validation: Components phải cùng branch với TypeComponent
+                    if (exist.BranchId.HasValue)
+                    {
+                        var invalidComponents = componentsToAdd.Where(c => c.BranchId != exist.BranchId.Value).ToList();
+                        if (invalidComponents.Any())
+                        {
+                            throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với loại linh kiện này");
+                        }
+                    }
 
-                foreach (var component in components)
-                {
-                    // Cập nhật TypeComponentId của component
-                    component.TypeComponentId = exist.Id;
+                    // Cập nhật TypeComponentId cho các components mới
+                    foreach (var component in componentsToAdd)
+                    {
+                        component.TypeComponentId = exist.Id;
+                    }
                 }
                 
                 await _context.SaveChangesAsync();

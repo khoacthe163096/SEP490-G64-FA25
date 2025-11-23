@@ -79,6 +79,17 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
+        public async Task<Component?> GetByCodeAsync(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+                return null;
+            
+            return await _context.Components
+                .Include(c => c.TypeComponent)
+                .Include(c => c.Branch)
+                .FirstOrDefaultAsync(c => c.Code != null && c.Code.ToLower() == code.ToLower());
+        }
+
         public async Task<Component> UpdateAsync(Component entity)
         {
             _context.Components.Update(entity);

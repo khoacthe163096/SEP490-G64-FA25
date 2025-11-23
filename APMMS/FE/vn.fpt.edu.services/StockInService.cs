@@ -1,4 +1,5 @@
 using FE.vn.fpt.edu.adapters;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -144,6 +145,20 @@ namespace FE.vn.fpt.edu.services
             {
                 Console.WriteLine($"Error in GetByStatusAsync: {ex.Message}");
                 return new { success = false, message = "Không thể tải dữ liệu", error = ex.Message };
+            }
+        }
+
+        public async Task<object?> UploadAsync(IFormFile file)
+        {
+            try
+            {
+                var result = await _apiAdapter.UploadFileAsync<object>("StockIn/upload", file);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in UploadAsync: {ex.Message}");
+                return new { success = false, message = "Không thể upload file Excel", error = ex.Message };
             }
         }
     }

@@ -3,8 +3,10 @@ namespace BE.vn.fpt.edu.DTOs.StockIn;
 public class StockInResponseDto
 {
     public long Id { get; set; }
+    public string Code { get; set; } = string.Empty; // Mã phiếu nhập kho
     public long StockInRequestId { get; set; }
     public string StockInRequestCode { get; set; } = string.Empty;
+    public string? BranchName { get; set; }
     public string StatusCode { get; set; } = string.Empty;
     public string? StatusName { get; set; }
     public long? ApprovedBy { get; set; }
