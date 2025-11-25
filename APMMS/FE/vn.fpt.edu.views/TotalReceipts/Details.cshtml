@@ -335,6 +335,12 @@
                             <div class="fw-semibold text-uppercase small text-muted">Ghi chú</div>
                             <div id="detailNote" class="text-muted fst-italic">Không có ghi chú</div>
                         </div>
+                        <div class="col-md-6" id="servicePackageInfoRow" style="display: none;">
+                            <div class="fw-semibold text-uppercase small text-muted">Gói dịch vụ</div>
+                            <div id="detailServicePackage">
+                                <span class="badge bg-info" id="detailServicePackageName">-</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -730,6 +736,16 @@
             } else {
                 $('#detailNote').text('Không có ghi chú');
                 $('#noteInput').val('');
+            }
+            
+            // Hiển thị thông tin gói dịch vụ
+            const servicePackageName = getValue('ServicePackageName', 'servicePackageName');
+            const servicePackageId = getValue('ServicePackageId', 'servicePackageId');
+            if (servicePackageId && servicePackageName) {
+                $('#detailServicePackageName').text(servicePackageName);
+                $('#servicePackageInfoRow').show();
+            } else {
+                $('#servicePackageInfoRow').hide();
             }
         }
 

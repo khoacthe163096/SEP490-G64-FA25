@@ -21,6 +21,9 @@ namespace BE.vn.fpt.edu.DTOs.TicketComponent
 
         [Range(0, double.MaxValue, ErrorMessage = "Unit price must be greater than or equal to 0")]
         public decimal? UnitPrice { get; set; }
+        
+        // ✅ Đánh dấu phụ tùng từ gói dịch vụ (chỉ dùng khi tạo từ ApplyServicePackage)
+        public long? ServicePackageId { get; set; }
     }
 }
 

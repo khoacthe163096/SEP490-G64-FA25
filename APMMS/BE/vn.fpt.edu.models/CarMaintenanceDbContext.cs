@@ -1070,6 +1070,7 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.TicketComponents)
                 .HasForeignKey(d => d.BranchId)

@@ -37,6 +37,11 @@
                                 <i class="fas fa-filter"></i> Lọc
                             </button>
                         </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-warning" id="batchUpdateStatusBtn" style="display: none;">
+                                <i class="fas fa-edit"></i> Cập nhật trạng thái (<span id="selectedCount">0</span>)
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Table -->
@@ -44,11 +49,14 @@
                         <table class="table table-striped table-hover align-middle">
                             <thead class="table-dark">
                                 <tr>
+                                    <th style="width: 50px;">
+                                        <input type="checkbox" id="selectAllCheckbox" title="Chọn tất cả">
+                                    </th>
                                     <th>Mã</th>
                                     <th>Tên linh kiện</th>
-                                    <th>Loại</th>
                                     <th>Số lượng</th>
-                                    <th>Giá</th>
+                                    <th>Giá nhập</th>
+                                    <th>Giá xuất</th>
                                     <th>Chi nhánh</th>
                                     <th>Trạng thái</th>
                                 </tr>
@@ -163,6 +171,39 @@
     </div>
 </div>
 
+<!-- Modal: Cập nhật trạng thái hàng loạt -->
+<div class="modal fade" id="batchUpdateStatusModal" tabindex="-1" aria-labelledby="batchUpdateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title fw-bold" id="batchUpdateStatusModalLabel">
+                    <i class="fas fa-edit me-2"></i>Cập nhật trạng thái
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn đã chọn <strong id="batchUpdateCount">0</strong> linh kiện. Chọn trạng thái mới:</p>
+                <div class="mb-3">
+                    <label for="batchStatusSelect" class="form-label fw-semibold">Trạng thái mới</label>
+                    <select class="form-select" id="batchStatusSelect">
+                        <option value="ACTIVE">Có sẵn</option>
+                        <option value="OUT_OF_STOCK">Hết hàng</option>
+                        <option value="DISCONTINUED">Ngừng sản xuất</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Hủy
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmBatchUpdateBtn">
+                    <i class="fas fa-save me-1"></i>Cập nhật
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const apiBaseUrl = '@apiBaseUrl';
@@ -198,7 +239,124 @@
                 currentPage = 1;
                 loadComponents();
             });
+            
+            // Batch update status button
+            $('#batchUpdateStatusBtn').click(function() {
+                const selectedIds = getSelectedComponentIds();
+                if (selectedIds.length === 0) {
+                    showAlert('Vui lòng chọn ít nhất một linh kiện', 'warning');
+                    return;
+                }
+                $('#batchUpdateCount').text(selectedIds.length);
+                const modal = new bootstrap.Modal(document.getElementById('batchUpdateStatusModal'));
+                modal.show();
+            });
+            
+            // Confirm batch update
+            $('#confirmBatchUpdateBtn').click(function() {
+                performBatchUpdateStatus();
+            });
+            
+            // Select all checkbox
+            $('#selectAllCheckbox').change(function() {
+                const isChecked = $(this).is(':checked');
+                $('.component-checkbox').prop('checked', isChecked);
+                updateSelectedCount();
+            });
         });
+        
+        function attachCheckboxHandlers() {
+            // Individual checkbox change
+            $(document).off('change', '.component-checkbox').on('change', '.component-checkbox', function() {
+                updateSelectedCount();
+                // Update select all checkbox state
+                const totalCheckboxes = $('.component-checkbox').length;
+                const checkedCheckboxes = $('.component-checkbox:checked').length;
+                $('#selectAllCheckbox').prop('checked', totalCheckboxes > 0 && totalCheckboxes === checkedCheckboxes);
+            });
+        }
+        
+        function getSelectedComponentIds() {
+            const selectedIds = [];
+            $('.component-checkbox:checked').each(function() {
+                selectedIds.push(parseInt($(this).val()));
+            });
+            return selectedIds;
+        }
+        
+        function updateSelectedCount() {
+            const count = $('.component-checkbox:checked').length;
+            $('#selectedCount').text(count);
+            if (count > 0) {
+                $('#batchUpdateStatusBtn').show();
+            } else {
+                $('#batchUpdateStatusBtn').hide();
+            }
+        }
+        
+        function performBatchUpdateStatus() {
+            const selectedIds = getSelectedComponentIds();
+            if (selectedIds.length === 0) {
+                showAlert('Vui lòng chọn ít nhất một linh kiện', 'warning');
+                return;
+            }
+            
+            const newStatusCode = $('#batchStatusSelect').val();
+            if (!newStatusCode) {
+                showAlert('Vui lòng chọn trạng thái mới', 'warning');
+                return;
+            }
+            
+            const confirmBtn = $('#confirmBatchUpdateBtn');
+            const originalText = confirmBtn.html();
+            confirmBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Đang cập nhật...');
+            
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showAlert('Vui lòng đăng nhập lại', 'danger');
+                confirmBtn.prop('disabled', false).html(originalText);
+                return;
+            }
+            
+            $.ajax({
+                url: `${apiBaseUrl}/Component/batch-update-status`,
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                data: JSON.stringify({
+                    componentIds: selectedIds,
+                    statusCode: newStatusCode
+                }),
+                success: function(result) {
+                    if (result.success) {
+                        showAlert(`Đã cập nhật trạng thái cho ${selectedIds.length} linh kiện thành công!`, 'success');
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('batchUpdateStatusModal'));
+                        if (modal) {
+                            modal.hide();
+                        }
+                        // Uncheck all
+                        $('.component-checkbox').prop('checked', false);
+                        $('#selectAllCheckbox').prop('checked', false);
+                        updateSelectedCount();
+                        // Reload components
+                        loadComponents();
+                    } else {
+                        showAlert(result.message || 'Không thể cập nhật trạng thái', 'danger');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error updating status:', error);
+                    const errorMessage = xhr.responseJSON?.message || error || 'Có lỗi xảy ra khi cập nhật trạng thái';
+                    showAlert('Lỗi: ' + errorMessage, 'danger');
+                },
+                complete: function() {
+                    confirmBtn.prop('disabled', false).html(originalText);
+                }
+            });
+        }
 
         function loadComponents() {
             const search = $('#searchInput').val();
@@ -207,7 +365,7 @@
             // Show loading
             $('#componentsTableBody').html(`
                 <tr>
-                    <td colspan="7" class="text-center">
+                    <td colspan="8" class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -231,7 +389,7 @@
                         totalPages = result.totalPages || 1;
                         updatePagination();
                     } else {
-                        $('#componentsTableBody').html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                        $('#componentsTableBody').html('<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>');
                         totalRecords = 0;
                         totalPages = 0;
                         updatePagination();
@@ -239,7 +397,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading components:', error);
-                    $('#componentsTableBody').html('<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu: ' + error + '</td></tr>');
+                    $('#componentsTableBody').html('<tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu: ' + error + '</td></tr>');
                     totalRecords = 0;
                     totalPages = 0;
                     updatePagination();
@@ -252,7 +410,7 @@
             tbody.empty();
 
             if (!items || items.length === 0) {
-                tbody.html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                tbody.html('<tr><td colspan="8" class="text-center text-muted">Không có dữ liệu</td></tr>');
                 return;
             }
 
@@ -271,7 +429,7 @@
                 }
 
                 const branchName = item.branchName || item.branchId || 'N/A';
-                const typeComponentName = item.typeComponentName || 'N/A';
+                const purchasePrice = item.purchasePrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.purchasePrice) : 'N/A';
                 const unitPrice = item.unitPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.unitPrice) : 'N/A';
                 
                 // Kiểm tra cảnh báo "Sắp hết hàng"
@@ -286,13 +444,16 @@
 
                 const row = `
                     <tr data-id="${item.id}" ${isLowStock ? 'style="background-color: #fff3cd;"' : ''}>
+                        <td>
+                            <input type="checkbox" class="component-checkbox" value="${item.id}">
+                        </td>
                         <td>${item.code || item.id}</td>
                         <td>
                             <a href="/Components/Details/${item.id}" class="text-decoration-none fw-semibold">${item.name || ''}</a>
                             ${isLowStock ? '<span class="badge bg-warning text-dark ms-2" title="Sắp hết hàng">Sắp hết hàng</span>' : ''}
                         </td>
-                        <td>${typeComponentName}</td>
                         <td>${quantityDisplay}</td>
+                        <td>${purchasePrice}</td>
                         <td>${unitPrice}</td>
                         <td>${branchName}</td>
                         <td><span class="badge ${statusClass}">${statusText}</span></td>
@@ -300,6 +461,9 @@
                 `;
                 tbody.append(row);
             });
+            
+            // Attach checkbox event handlers
+            attachCheckboxHandlers();
         }
 
         function updatePagination() {

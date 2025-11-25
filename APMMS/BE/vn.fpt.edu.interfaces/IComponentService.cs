@@ -12,5 +12,6 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CreateAsync(RequestDto dto);
         Task<ResponseDto?> UpdateAsync(RequestDto dto);
         Task DisableEnableAsync(long id, string statusCode);
+        Task<int> BatchUpdateStatusAsync(List<long> componentIds, string statusCode);
     }
 }

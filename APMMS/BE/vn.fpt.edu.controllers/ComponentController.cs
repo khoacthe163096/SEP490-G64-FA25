@@ -128,5 +128,39 @@ namespace BE.vn.fpt.edu.controllers
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
             }
         }
+
+        [HttpPut("batch-update-status")]
+        public async Task<IActionResult> BatchUpdateStatus([FromBody] BatchUpdateStatusDto dto)
+        {
+            try
+            {
+                if (dto == null || dto.ComponentIds == null || dto.ComponentIds.Count == 0)
+                {
+                    return BadRequest(new { success = false, message = "Danh sách linh kiện không được rỗng" });
+                }
+
+                if (string.IsNullOrWhiteSpace(dto.StatusCode))
+                {
+                    return BadRequest(new { success = false, message = "Trạng thái không được rỗng" });
+                }
+
+                var updatedCount = await _service.BatchUpdateStatusAsync(dto.ComponentIds, dto.StatusCode);
+                return Ok(new { success = true, message = $"Đã cập nhật trạng thái cho {updatedCount} linh kiện", updatedCount = updatedCount });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+    }
+
+    public class BatchUpdateStatusDto
+    {
+        public List<long> ComponentIds { get; set; } = new List<long>();
+        public string StatusCode { get; set; } = string.Empty;
     }
 }

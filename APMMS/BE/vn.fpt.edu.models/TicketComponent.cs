@@ -19,6 +19,9 @@ public partial class TicketComponent
 
     public long? BranchId { get; set; }
 
+    // ✅ Đánh dấu phụ tùng từ gói dịch vụ (null = thêm thủ công)
+    public long? ServicePackageId { get; set; }
+
     public virtual Branch? Branch { get; set; }
 
     public virtual Component? Component { get; set; }

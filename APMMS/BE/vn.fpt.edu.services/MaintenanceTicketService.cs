@@ -141,8 +141,10 @@ namespace BE.vn.fpt.edu.services
             }
 
             var createdTicket = await _maintenanceTicketRepository.CreateAsync(maintenanceTicket);
-
-            return _mapper.Map<ResponseDto>(createdTicket);
+            
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullCreatedTicket = await _maintenanceTicketRepository.GetByIdAsync(createdTicket.Id);
+            return MapToResponseWithServicePackage(fullCreatedTicket);
 
         }
 
@@ -469,9 +471,9 @@ namespace BE.vn.fpt.edu.services
 
             }
 
-
-
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -489,35 +491,8 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            var response = _mapper.Map<ResponseDto>(maintenanceTicket);
-
-
-            
-            // Thêm danh sách kỹ thuật viên
-
-            if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
-
-            {
-
-                response.Technicians = maintenanceTicket.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
-
-                {
-
-                    TechnicianId = mtt.TechnicianId,
-
-                    TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
-
-                    RoleInTicket = mtt.RoleInTicket,
-
-                    AssignedDate = mtt.AssignedDate
-
-                }).ToList();
-
-            }
-
-
-            
-            return response;
+            // ✅ Sử dụng helper method để map đầy đủ thông tin
+            return MapToResponseWithServicePackage(maintenanceTicket);
 
         }
 
@@ -633,9 +608,9 @@ namespace BE.vn.fpt.edu.services
 
             );
 
-
-            
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -658,8 +633,10 @@ namespace BE.vn.fpt.edu.services
             maintenanceTicket.StatusCode = "ASSIGNED";
 
             var updatedTicket = await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
-
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -807,7 +784,7 @@ namespace BE.vn.fpt.edu.services
 
             // ✅ Chuyển trạng thái: 
 
-            // - Nếu có kỹ thuật viên và đang PENDING → IN_PROGRESS
+            // - Nếu có kỹ thuật viên và đang PENDING → ASSIGNED (KHÔNG tự động chuyển IN_PROGRESS)
 
             // - Nếu không còn kỹ thuật viên và đang IN_PROGRESS/ASSIGNED → PENDING
 
@@ -819,7 +796,7 @@ namespace BE.vn.fpt.edu.services
 
                 {
 
-                    maintenanceTicket.StatusCode = "IN_PROGRESS";
+                    maintenanceTicket.StatusCode = "ASSIGNED"; // ✅ Sửa: Chuyển sang ASSIGNED thay vì IN_PROGRESS
 
                 }
 
@@ -920,6 +897,11 @@ namespace BE.vn.fpt.edu.services
                 }).ToList();
 
             }
+
+            // ✅ Map thông tin Service Package
+            response.ServicePackageId = refreshed?.ServicePackageId;
+            response.ServicePackagePrice = refreshed?.ServicePackagePrice;
+            response.ServicePackageName = refreshed?.ServicePackage?.Name;
 
             return response;
 
@@ -1079,6 +1061,11 @@ namespace BE.vn.fpt.edu.services
 
             }
 
+            // ✅ Map thông tin Service Package
+            response.ServicePackageId = refreshed?.ServicePackageId;
+            response.ServicePackagePrice = refreshed?.ServicePackagePrice;
+            response.ServicePackageName = refreshed?.ServicePackage?.Name;
+
             return response;
 
         }
@@ -1095,7 +1082,15 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Maintenance ticket not found");
 
+            // ✅ VALIDATION: Chỉ cho phép bắt đầu khi phiếu ở trạng thái ASSIGNED
+            if (maintenanceTicket.StatusCode != "ASSIGNED")
+                throw new ArgumentException($"Không thể bắt đầu bảo dưỡng khi phiếu ở trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể bắt đầu khi phiếu ở trạng thái ASSIGNED.");
 
+            // ✅ VALIDATION: Phải có ít nhất 1 kỹ thuật viên
+            var hasTechnicians = (maintenanceTicket.TechnicianId.HasValue && maintenanceTicket.TechnicianId.Value > 0) ||
+                                (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Any());
+            if (!hasTechnicians)
+                throw new ArgumentException("Không thể bắt đầu bảo dưỡng khi chưa gán kỹ thuật viên.");
 
             var oldStatus = maintenanceTicket.StatusCode;
 
@@ -1151,9 +1146,9 @@ namespace BE.vn.fpt.edu.services
 
             );
 
-
-            
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -1219,7 +1214,71 @@ namespace BE.vn.fpt.edu.services
 
             }
 
-
+            // ✅ VALIDATION: Kiểm tra TicketComponents (nếu có Service Package hoặc đã thêm components)
+            // Nếu có Service Package hoặc đã có components trong phiếu, phải có ít nhất 1 component được ghi nhận
+            if (maintenanceTicket.ServicePackageId.HasValue)
+            {
+                // ✅ Load TicketComponents từ database để đảm bảo có dữ liệu mới nhất
+                var ticketComponents = await _context.TicketComponents
+                    .Include(tc => tc.Component)
+                    .Where(tc => tc.MaintenanceTicketId == id)
+                    .ToListAsync();
+                
+                if (!ticketComponents.Any())
+                {
+                    throw new ArgumentException("Không thể hoàn thành phiếu. Phiếu có gói dịch vụ nhưng chưa có linh kiện nào được thêm vào.");
+                }
+                
+                // Kiểm tra tất cả components phải có số lượng thực tế sử dụng > 0
+                // Sử dụng ActualQuantity thay vì QuantityUsed (theo model TicketComponent)
+                var invalidComponents = ticketComponents
+                    .Where(tc => !tc.ActualQuantity.HasValue || tc.ActualQuantity.Value <= 0)
+                    .ToList();
+                
+                if (invalidComponents.Any())
+                {
+                    var componentNames = invalidComponents
+                        .Select(tc => tc.Component?.Name ?? $"Component ID: {tc.ComponentId}")
+                        .Take(5)
+                        .ToList();
+                    
+                    var message = $"Không thể hoàn thành phiếu. Có {invalidComponents.Count} linh kiện chưa được ghi nhận số lượng thực tế sử dụng: {string.Join(", ", componentNames)}";
+                    if (invalidComponents.Count > 5)
+                        message += $" và {invalidComponents.Count - 5} linh kiện khác.";
+                    
+                    throw new ArgumentException(message);
+                }
+            }
+            else
+            {
+                // ✅ Nếu không có ServicePackage, kiểm tra xem có TicketComponents được thêm thủ công không
+                var ticketComponents = await _context.TicketComponents
+                    .Include(tc => tc.Component)
+                    .Where(tc => tc.MaintenanceTicketId == id)
+                    .ToListAsync();
+                
+                if (ticketComponents.Any())
+                {
+                    // Nếu có components được thêm thủ công, phải có số lượng thực tế > 0
+                    var invalidComponents = ticketComponents
+                        .Where(tc => !tc.ActualQuantity.HasValue || tc.ActualQuantity.Value <= 0)
+                        .ToList();
+                    
+                    if (invalidComponents.Any())
+                    {
+                        var componentNames = invalidComponents
+                            .Select(tc => tc.Component?.Name ?? $"Component ID: {tc.ComponentId}")
+                            .Take(5)
+                            .ToList();
+                        
+                        var message = $"Không thể hoàn thành phiếu. Có {invalidComponents.Count} linh kiện chưa được ghi nhận số lượng thực tế sử dụng: {string.Join(", ", componentNames)}";
+                        if (invalidComponents.Count > 5)
+                            message += $" và {invalidComponents.Count - 5} linh kiện khác.";
+                        
+                        throw new ArgumentException(message);
+                    }
+                }
+            }
 
             // Lưu trạng thái cũ để ghi log
 
@@ -1278,7 +1337,9 @@ namespace BE.vn.fpt.edu.services
                 // Ignore failures when auto-creating receipt; optionally log if needed
             }
 
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -1352,7 +1413,9 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            // ✅ Load lại với ServicePackage để map đầy đủ
+            var fullUpdatedTicket = await _maintenanceTicketRepository.GetByIdAsync(updatedTicket.Id);
+            return MapToResponseWithServicePackage(fullUpdatedTicket);
 
         }
 
@@ -1512,11 +1575,16 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            // Get existing components in ticket
-
+            // ✅ Lấy danh sách phụ tùng hiện có trong phiếu (KHÔNG XÓA, CHỈ THÊM)
             var existingComponents = await _ticketComponentService.GetByMaintenanceTicketIdAsync(id);
 
-            var existingComponentIds = existingComponents.Select(c => c.ComponentId).ToHashSet();
+            // ✅ Tạo HashSet để kiểm tra nhanh phụ tùng đã tồn tại
+            var existingComponentIds = existingComponents
+                .Select(c => c.ComponentId)
+                .ToHashSet();
+
+            // ✅ Lưu số lượng phụ tùng ban đầu để đảm bảo không bị mất
+            var initialComponentCount = existingComponents.Count();
 
 
 
@@ -1528,8 +1596,7 @@ namespace BE.vn.fpt.edu.services
 
 
 
-            // Add components from package to ticket
-
+            // ✅ CHỈ THÊM phụ tùng từ gói vào phiếu, KHÔNG XÓA phụ tùng hiện có
             var addedComponents = new List<string>();
 
             var skippedComponents = new List<string>();
@@ -1540,8 +1607,7 @@ namespace BE.vn.fpt.edu.services
 
             {
 
-                // Skip if component already exists in ticket
-
+                // ✅ Bỏ qua nếu phụ tùng đã tồn tại trong phiếu (giữ nguyên phụ tùng hiện có)
                 if (existingComponentIds.Contains(packageComponent.Id))
 
                 {
@@ -1570,7 +1636,9 @@ namespace BE.vn.fpt.edu.services
 
                         Quantity = 1, // Default quantity = 1
 
-                        UnitPrice = packageComponent.UnitPrice
+                        UnitPrice = packageComponent.UnitPrice,
+                        
+                        ServicePackageId = servicePackageId // ✅ Đánh dấu phụ tùng từ gói dịch vụ
 
                     };
 
@@ -1606,6 +1674,15 @@ namespace BE.vn.fpt.edu.services
             
 
 
+            // ✅ Đảm bảo không có phụ tùng nào bị xóa
+            var finalComponents = await _ticketComponentService.GetByMaintenanceTicketIdAsync(id);
+            var finalComponentCount = finalComponents.Count();
+            
+            if (finalComponentCount < initialComponentCount)
+            {
+                throw new InvalidOperationException($"Lỗi: Số lượng phụ tùng giảm từ {initialComponentCount} xuống {finalComponentCount}. Phụ tùng hiện có không được phép bị xóa khi áp dụng gói dịch vụ.");
+            }
+
             var logMessage = $"Áp dụng gói dịch vụ '{servicePackage.Name}' bởi {consulterName}. ";
 
             if (addedComponents.Any())
@@ -1614,7 +1691,9 @@ namespace BE.vn.fpt.edu.services
 
             if (skippedComponents.Any())
 
-                logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại): {string.Join(", ", skippedComponents)}.";
+                logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại, giữ nguyên): {string.Join(", ", skippedComponents)}.";
+            
+            logMessage += $" Tổng số phụ tùng: {initialComponentCount} → {finalComponentCount}.";
 
 
 
@@ -1657,11 +1736,38 @@ namespace BE.vn.fpt.edu.services
 
             var updatedTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
 
-            return _mapper.Map<ResponseDto>(updatedTicket);
+            return MapToResponseWithServicePackage(updatedTicket);
 
         }
 
 
+
+        /// <summary>
+        /// ✅ Helper method để map ServicePackage info vào ResponseDto
+        /// </summary>
+        private ResponseDto MapToResponseWithServicePackage(MaintenanceTicket maintenanceTicket)
+        {
+            var response = _mapper.Map<ResponseDto>(maintenanceTicket);
+            
+            // ✅ Map thông tin Service Package
+            response.ServicePackageId = maintenanceTicket.ServicePackageId;
+            response.ServicePackagePrice = maintenanceTicket.ServicePackagePrice;
+            response.ServicePackageName = maintenanceTicket.ServicePackage?.Name;
+            
+            // ✅ Map danh sách kỹ thuật viên
+            if (maintenanceTicket.MaintenanceTicketTechnicians != null && maintenanceTicket.MaintenanceTicketTechnicians.Count > 0)
+            {
+                response.Technicians = maintenanceTicket.MaintenanceTicketTechnicians.Select(mtt => new TechnicianInfoDto
+                {
+                    TechnicianId = mtt.TechnicianId,
+                    TechnicianName = mtt.Technician != null ? ($"{mtt.Technician.FirstName} {mtt.Technician.LastName}").Trim() : null,
+                    RoleInTicket = mtt.RoleInTicket,
+                    AssignedDate = mtt.AssignedDate
+                }).ToList();
+            }
+            
+            return response;
+        }
 
         /// <summary>
 

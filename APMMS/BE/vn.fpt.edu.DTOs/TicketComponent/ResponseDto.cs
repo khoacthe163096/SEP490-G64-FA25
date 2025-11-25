@@ -15,6 +15,10 @@ namespace BE.vn.fpt.edu.DTOs.TicketComponent
         public string? ComponentCode { get; set; }
         public string? ComponentImageUrl { get; set; }
         public string? TypeComponentName { get; set; }
+        
+        // ✅ Đánh dấu phụ tùng từ gói dịch vụ
+        public long? ServicePackageId { get; set; }
+        public bool IsFromServicePackage => ServicePackageId.HasValue;
     }
 }
 

@@ -135,7 +135,7 @@
                         Chi tiết Phiếu Bảo Dưỡng
                     </h4>
                     <div>
-                        <a href="/MaintenanceTickets" class="btn btn-secondary">
+                        <a href="/MaintenanceTickets" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i>
                             Quay lại
                         </a>
@@ -182,7 +182,7 @@
                                 <i class="fas fa-tasks me-2"></i>
                                 Danh sách công việc
                             </h5>
-                            <button class="btn btn-sm btn-primary" id="addServiceTaskBtn">
+                            <button class="btn btn-sm btn-outline-primary" id="addServiceTaskBtn">
                                 <i class="fas fa-plus me-1"></i>
                                 Thêm công việc
                             </button>
@@ -202,11 +202,11 @@
                                 Phụ tùng sử dụng
                             </h5>
                             <div>
-                                <button class="btn btn-sm btn-info me-2" id="applyServicePackageBtn" style="display: none;" title="Áp dụng gói dịch vụ">
+                                <button class="btn btn-sm btn-outline-primary me-2" id="applyServicePackageBtn" style="display: none;" title="Áp dụng gói dịch vụ">
                                     <i class="fas fa-box me-1"></i>
                                     Áp dụng gói dịch vụ
                                 </button>
-                                <button class="btn btn-sm btn-primary" id="addComponentBtn" style="display: none;">
+                                <button class="btn btn-sm btn-outline-primary" id="addComponentBtn" style="display: none;">
                                 <i class="fas fa-plus me-1"></i>
                                 Thêm phụ tùng
                             </button>
@@ -214,11 +214,11 @@
                         </div>
                         <div class="card-body">
                             <!-- Service Package Info -->
-                            <div id="servicePackageInfo" class="alert alert-info mb-3" style="display: none;">
+                            <div id="servicePackageInfo" class="alert alert-light border mb-3" style="display: none;">
                                 <i class="fas fa-box me-2"></i>
                                 <strong>Gói dịch vụ đã áp dụng:</strong> 
                                 <span id="servicePackageNameDisplay"></span>
-                                <span class="text-muted ms-2" id="servicePackagePriceDisplay"></span>
+                                <span class="text-dark ms-2" id="servicePackagePriceDisplay"></span>
                             </div>
                             <div id="componentsList">
                                 <!-- Components will be loaded here -->
@@ -311,14 +311,14 @@
                     <div class="mb-3">
                         <label for="taskStandardLaborTime" class="form-label">Thời gian chuẩn (giờ)</label>
                         <input type="number" class="form-control" id="taskStandardLaborTime" min="0" max="999.99" step="0.01" placeholder="VD: 0.5">
-                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (giờ)</small>
+                        <small class="text-dark">Thời gian ước tính để hoàn thành công việc (giờ)</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Kỹ thuật viên</label>
                         <div id="taskTechniciansContainer" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                            <small class="text-muted">Đang tải danh sách...</small>
+                            <small class="text-dark">Đang tải danh sách...</small>
                         </div>
-                        <small class="text-muted">Chọn một hoặc nhiều kỹ thuật viên đã được gán ở phần "Thao tác"</small>
+                        <small class="text-dark">Chọn một hoặc nhiều kỹ thuật viên đã được gán ở phần "Thao tác"</small>
                     </div>
                     <div class="mb-3">
                         <label for="taskNote" class="form-label">Ghi chú</label>
@@ -357,8 +357,8 @@
                     </div>
                     <div class="mb-3">
                         <label for="componentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
-                        <input type="number" class="form-control" id="componentUnitPrice" min="0" step="1000">
-                        <small class="text-muted">Đơn giá sẽ tự động điền từ thông tin phụ tùng, bạn có thể chỉnh sửa nếu cần</small>
+                        <input type="number" class="form-control" id="componentUnitPrice" min="0" step="1000" readonly>
+                        <small class="text-dark">Đơn giá tự động lấy từ giá xuất trong kho. Nếu cần giảm giá, vui lòng sử dụng phần giảm giá trong hóa đơn.</small>
                     </div>
                 </form>
             </div>
@@ -391,17 +391,17 @@
                     <div class="mb-3">
                         <label for="editComponentQuantity" class="form-label">Số lượng ban đầu <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="editComponentQuantity" min="1" required>
-                        <small class="text-muted">Số lượng phụ tùng đã lấy từ kho</small>
+                        <small class="text-dark">Số lượng phụ tùng đã lấy từ kho</small>
                     </div>
                     <div class="mb-3">
                         <label for="editComponentActualQuantity" class="form-label">Số lượng thực tế sử dụng</label>
                         <input type="number" class="form-control" id="editComponentActualQuantity" min="0" step="0.01">
-                        <small class="text-muted">Số lượng thực tế đã sử dụng (có thể nhập số thập phân, ví dụ: 0.8). Nếu để trống, sẽ lấy bằng số lượng ban đầu. Chi phí sẽ được tính dựa trên số lượng thực tế.</small>
+                        <small class="text-dark">Số lượng thực tế đã sử dụng (có thể nhập số thập phân, ví dụ: 0.8). Nếu để trống, sẽ lấy bằng số lượng ban đầu. Chi phí sẽ được tính dựa trên số lượng thực tế.</small>
                     </div>
                     <div class="mb-3">
                         <label for="editComponentUnitPrice" class="form-label">Đơn giá (VNĐ)</label>
-                        <input type="number" class="form-control" id="editComponentUnitPrice" min="0" step="1000">
-                        <small class="text-muted">Đơn giá sẽ tự động điền từ thông tin phụ tùng, bạn có thể chỉnh sửa nếu cần</small>
+                        <input type="number" class="form-control" id="editComponentUnitPrice" min="0" step="1000" readonly>
+                        <small class="text-dark">Đơn giá tự động lấy từ giá xuất trong kho. Nếu cần giảm giá, vui lòng sử dụng phần giảm giá trong hóa đơn.</small>
                     </div>
                 </form>
             </div>
@@ -477,7 +477,7 @@
                     <div class="mb-3">
                         <label for="editStandardLaborTime" class="form-label">Thời gian chuẩn (giờ)</label>
                         <input type="number" class="form-control" id="editStandardLaborTime" min="0" max="999.99" step="0.01">
-                        <small class="text-muted">Thời gian ước tính để hoàn thành công việc (từ 0 đến 999.99 giờ). <span id="standardLaborTimeNote" class="text-warning"></span></small>
+                        <small class="text-dark">Thời gian ước tính để hoàn thành công việc (từ 0 đến 999.99 giờ). <span id="standardLaborTimeNote" class="text-warning"></span></small>
                     </div>
                 </form>
             </div>
@@ -520,7 +520,7 @@
                 <div class="mb-3">
                     <label for="completionNoteInput" class="form-label">Ghi chú hoàn thành <span class="text-danger">*</span></label>
                     <textarea class="form-control" id="completionNoteInput" rows="4" placeholder="Nhập ghi chú khi hoàn thành công việc..."></textarea>
-                    <small class="text-muted">Vui lòng nhập ghi chú mô tả công việc đã hoàn thành</small>
+                    <small class="text-dark">Vui lòng nhập ghi chú mô tả công việc đã hoàn thành</small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -887,21 +887,21 @@ async function displayBasicInfo(data) {
         const formattedValue = raw ? displayValue : escapeHtml(String(displayValue));
         return `
             <div class="info-row d-flex flex-column flex-sm-row align-items-sm-start mb-2">
-                <span class="info-label text-muted text-sm-end me-sm-3">${escapeHtml(label)}</span>
+                <span class="info-label text-dark text-sm-end me-sm-3">${escapeHtml(label)}</span>
                 <span class="info-value flex-grow-1 text-start ${valueClass}">${formattedValue}</span>
             </div>
         `;
     };
 
-    let techniciansHtml = '<div class="text-muted">Chưa gán</div>';
+    let techniciansHtml = '<div class="text-dark">Chưa gán</div>';
     if (data.technicians && data.technicians.length > 0) {
         const techItems = data.technicians.map(t => {
                     const roleBadge = t.roleInTicket === 'PRIMARY' 
-                        ? '<span class="badge bg-success ms-1">Chính</span>' 
-                        : '<span class="badge bg-info ms-1">Phụ</span>';
+                        ? '<span class="badge bg-warning text-dark ms-1">Chính</span>' 
+                        : '<span class="badge bg-light text-dark ms-1">Phụ</span>';
                     const canRemove = data.statusCode === 'PENDING' || data.statusCode === 'IN_PROGRESS' || data.statusCode === 'ASSIGNED';
                     const removeBtn = canRemove 
-                ? `<button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
+                ? `<button type="button" class="btn btn-sm btn-link text-dark p-0" onclick="removeSingleTechnician(${data.id}, ${t.technicianId})" title="Xóa kỹ thuật viên">
                             <i class="fas fa-times"></i>
                            </button>`
                         : '';
@@ -925,7 +925,7 @@ async function displayBasicInfo(data) {
 
     const descriptionHtml = data.description
         ? escapeHtml(data.description).replace(/\n/g, '<br>')
-        : '<span class="text-muted">Không có mô tả</span>';
+        : '<span class="text-dark">Không có mô tả</span>';
 
     const codeValue = data.code || `MTK-${data.id}`;
 
@@ -1000,7 +1000,7 @@ function displayCheckinInfo(data) {
             </div>
         `);
     } else {
-        checkinInfo.html('<p class="text-muted">Không có thông tin check-in</p>');
+        checkinInfo.html('<p class="text-dark">Không có thông tin check-in</p>');
     }
 }
 
@@ -1046,11 +1046,11 @@ function displayStatusAndActions(data) {
     // Progress bar
     const progress = getProgressPercentage(data.statusCode);
     progressBar.html(`
-        <div class="progress">
-            <div class="progress-bar" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
-                ${progress}%
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-primary" role="progressbar" style="width: ${progress}%" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
             </div>
         </div>
+        <small class="text-dark d-block mt-1">${progress}% hoàn thành</small>
     `);
     
     // Action buttons
@@ -1060,12 +1060,12 @@ function displayStatusAndActions(data) {
     switch(data.statusCode) {
         case 'PENDING':
             buttons = `
-                <button class="btn btn-info mb-2" id="assignTechnicianBtn">
+                <button class="btn btn-outline-primary mb-2" id="assignTechnicianBtn">
                     <i class="fas fa-user-plus me-1"></i>
                     Gán kỹ thuật viên
                 </button>
                 ${canCancel ? `
-                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                <button class="btn btn-outline-danger" onclick="cancelMaintenanceTicket(${data.id})">
                     <i class="fas fa-times-circle me-1"></i>
                     Hủy phiếu
                 </button>
@@ -1074,12 +1074,12 @@ function displayStatusAndActions(data) {
             break;
         case 'ASSIGNED':
             buttons = `
-                <button class="btn btn-warning mb-2" onclick="startMaintenance(${data.id})">
+                <button class="btn btn-outline-primary mb-2" onclick="startMaintenance(${data.id})">
                     <i class="fas fa-play me-1"></i>
                     Bắt đầu bảo dưỡng
                 </button>
                 ${canCancel ? `
-                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                <button class="btn btn-outline-danger" onclick="cancelMaintenanceTicket(${data.id})">
                     <i class="fas fa-times-circle me-1"></i>
                     Hủy phiếu
                 </button>
@@ -1090,16 +1090,16 @@ function displayStatusAndActions(data) {
             // Kiểm tra xem có công việc nào chưa hoàn thành không
             // Sẽ được cập nhật sau khi loadServiceTasks()
             buttons = `
-                <button class="btn btn-info mb-2" onclick="openAssignTechniciansModal()">
+                <button class="btn btn-outline-primary mb-2" onclick="openAssignTechniciansModal()">
                     <i class="fas fa-user-plus me-1"></i>
                     Thêm kỹ thuật viên
                 </button>
-                <button class="btn btn-success mb-2" id="completeMaintenanceBtn" onclick="completeMaintenance(${data.id})">
+                <button class="btn btn-outline-success mb-2" id="completeMaintenanceBtn" onclick="completeMaintenance(${data.id})">
                     <i class="fas fa-check me-1"></i>
                     Hoàn thành
                 </button>
                 ${canCancel ? `
-                <button class="btn btn-danger" onclick="cancelMaintenanceTicket(${data.id})">
+                <button class="btn btn-outline-danger" onclick="cancelMaintenanceTicket(${data.id})">
                     <i class="fas fa-times-circle me-1"></i>
                     Hủy phiếu
                 </button>
@@ -1108,7 +1108,7 @@ function displayStatusAndActions(data) {
             break;
         case 'COMPLETED':
             buttons = `
-                <button class="btn btn-secondary" disabled>
+                <button class="btn btn-outline-success" disabled style="opacity: 0.7;">
                     <i class="fas fa-check-circle me-1"></i>
                     Đã hoàn thành
                 </button>
@@ -1116,7 +1116,7 @@ function displayStatusAndActions(data) {
             break;
         case 'CANCELLED':
             buttons = `
-                <button class="btn btn-danger" disabled>
+                <button class="btn btn-outline-danger" disabled style="opacity: 0.7;">
                     <i class="fas fa-times-circle me-1"></i>
                     Đã hủy
                 </button>
@@ -1133,16 +1133,16 @@ function openAssignTechniciansModal() {
     <div class="modal fade" id="assignTechniciansModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header">
             <h5 class="modal-title">
               <i class="fas fa-user-plus me-2"></i>
               ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? `
-            <div class="alert alert-info mb-3">
+            <div class="alert alert-light border mb-3">
               <i class="fas fa-info-circle me-1"></i>
               <strong>Danh sách hiện tại:</strong> ${maintenanceTicketData.technicians.map(t => t.technicianName).join(', ')}
               <br><small>Bạn có thể thêm kỹ thuật viên mới hoặc bỏ chọn để xóa người không còn tham gia.</small>
@@ -1153,14 +1153,14 @@ function openAssignTechniciansModal() {
                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                 <input type="text" class="form-control" id="assignTechSearch" placeholder="Tìm kỹ thuật viên theo tên hoặc mã nhân viên...">
               </div>
-              <small class="text-muted">Gõ để lọc nhanh.</small>
+              <small class="text-dark">Gõ để lọc nhanh.</small>
             </div>
             <div class="mb-3 d-flex justify-content-between align-items-center">
               <div class="d-flex gap-2">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllTechBtn">
                   <i class="fas fa-check-double me-1"></i>Chọn tất cả
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllTechBtn">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="deselectAllTechBtn">
                   <i class="fas fa-times me-1"></i>Bỏ chọn tất cả
                 </button>
               </div>
@@ -1170,12 +1170,12 @@ function openAssignTechniciansModal() {
             </div>
             <div class="mb-3">
               <label class="form-label">
-                <i class="fas fa-star text-warning me-1"></i>Chọn kỹ thuật viên chính
+                <i class="fas fa-star text-dark me-1"></i>Chọn kỹ thuật viên chính
               </label>
               <select id="primaryTechSelect" class="form-select">
                 <option value="">-- Chưa chọn --</option>
               </select>
-              <small class="text-muted">Kỹ thuật viên chính sẽ được tự động chọn nếu bạn chọn checkbox đầu tiên</small>
+              <small class="text-dark">Kỹ thuật viên chính sẽ được tự động chọn nếu bạn chọn checkbox đầu tiên</small>
             </div>
             <div id="assignTechContainer" class="row g-2" style="max-height: 400px; overflow-y: auto;"></div>
           </div>
@@ -1272,7 +1272,7 @@ function openAssignTechniciansModal() {
           container.empty();
           
           if (!listToRender || listToRender.length === 0) {
-            container.html('<div class="text-center text-muted py-5"><i class="fas fa-user-slash fa-3x mb-3"></i><p>Không có kỹ thuật viên phù hợp</p></div>');
+            container.html('<div class="text-center text-dark py-5"><i class="fas fa-user-slash fa-3x mb-3"></i><p>Không có kỹ thuật viên phù hợp</p></div>');
             updateSelectedCount();
             return;
           }
@@ -1295,7 +1295,7 @@ function openAssignTechniciansModal() {
           listToRender.forEach(emp => {
             const isChecked = checkedIds.includes(emp.id);
             const isPrimary = currentPrimaryId === emp.id;
-            const highlightClass = isPrimary ? 'border-warning bg-warning bg-opacity-10' : '';
+            const highlightClass = isPrimary ? 'border-secondary bg-light' : '';
             const primaryBadge = isPrimary ? '<span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>' : '';
             
             // Highlight search query
@@ -1313,7 +1313,7 @@ function openAssignTechniciansModal() {
                   <input class="form-check-input assign-tech-checkbox" type="checkbox" value="${emp.id}" id="assign_${emp.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer; pointer-events: auto;">
                   <label class="form-check-label w-100" for="assign_${emp.id}" style="cursor: pointer; pointer-events: auto;">
                     <strong>${displayName}</strong>${primaryBadge}
-                    <br><small class="text-muted">Mã nhân viên: ${displayCode}</small>
+                    <br><small class="text-dark">Mã nhân viên: ${displayCode}</small>
                   </label>
                 </div>
               </div>
@@ -1370,13 +1370,13 @@ function openAssignTechniciansModal() {
           // Cập nhật highlight cho card
           const card = $(this).closest('.tech-card');
           if (currentPrimaryId === techId) {
-            card.addClass('border-warning bg-warning bg-opacity-10');
+            card.addClass('border-secondary bg-light');
             card.find('label strong').html(function() {
               const text = $(this).text().replace(/\s*\(Chính\)\s*$/, '');
               return text + ' <span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>';
             });
           } else {
-            card.removeClass('border-warning bg-warning bg-opacity-10');
+            card.removeClass('border-secondary bg-light');
             card.find('label strong').html(function() {
               return $(this).text().replace(/\s*\(Chính\)\s*$/, '');
             });
@@ -1521,7 +1521,7 @@ function displayTimeline(data) {
             title: 'Tạo phiếu bảo dưỡng',
             description: 'Phiếu bảo dưỡng được tạo',
             icon: 'fas fa-plus-circle',
-            color: 'primary'
+            color: 'secondary'
         });
     }
     
@@ -1531,7 +1531,7 @@ function displayTimeline(data) {
             title: 'Gán kỹ thuật viên',
             description: `Gán cho ${data.technicianName}`,
             icon: 'fas fa-user-plus',
-            color: 'info'
+            color: 'secondary'
         });
     }
     
@@ -1541,7 +1541,7 @@ function displayTimeline(data) {
             title: 'Bắt đầu bảo dưỡng',
             description: 'Bắt đầu thực hiện bảo dưỡng',
             icon: 'fas fa-play',
-            color: 'warning'
+            color: 'secondary'
         });
     }
     
@@ -1551,7 +1551,7 @@ function displayTimeline(data) {
             title: 'Hoàn thành bảo dưỡng',
             description: 'Bảo dưỡng đã hoàn thành',
             icon: 'fas fa-check-circle',
-            color: 'success'
+            color: 'secondary'
         });
     }
     
@@ -1561,7 +1561,7 @@ function displayTimeline(data) {
             title: 'Hủy phiếu bảo dưỡng',
             description: 'Phiếu bảo dưỡng đã được hủy',
             icon: 'fas fa-times-circle',
-            color: 'danger'
+            color: 'secondary'
         });
     }
     
@@ -1569,7 +1569,7 @@ function displayTimeline(data) {
     events.sort((a, b) => a.date - b.date);
     
     if (events.length === 0) {
-        timeline.html('<p class="text-muted">Chưa có hoạt động nào</p>');
+        timeline.html('<p class="text-dark">Chưa có hoạt động nào</p>');
         return;
     }
     
@@ -1579,14 +1579,14 @@ function displayTimeline(data) {
                 timelineHtml += `
                     <div class="d-flex ${!isLast ? 'mb-3' : ''}">
                         <div class="flex-shrink-0">
-                    <div class="bg-${event.color} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                         <i class="${event.icon}"></i>
                             </div>
                         </div>
                         <div class="flex-grow-1 ms-3">
                     <h6 class="mb-1">${event.title}</h6>
-                    <p class="mb-1 text-muted">${event.description}</p>
-                    <small class="text-muted">${formatVietnamDateTime(event.date)}</small>
+                    <p class="mb-1 text-dark">${event.description}</p>
+                    <small class="text-dark">${formatVietnamDateTime(event.date)}</small>
                         </div>
                     </div>
                     ${!isLast ? '<hr class="my-2">' : ''}
@@ -1603,22 +1603,22 @@ function displayCostSummary(data, componentTotal = 0, laborCostTotal = 0) {
     costSummary.html(`
         <div class="text-center mb-3">
             <h4 class="text-primary">${formatCurrency(estimatedCost)}</h4>
-            <p class="text-muted mb-0">Tổng chi phí ước tính</p>
+            <p class="text-dark mb-0">Tổng chi phí ước tính</p>
         </div>
         <hr>
         <div class="mb-2">
             <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted small">Tổng phụ tùng:</span>
+                <span class="text-dark small">Tổng phụ tùng:</span>
                 <strong>${formatCurrency(componentTotal)}</strong>
             </div>
             <div class="d-flex justify-content-between mb-2">
-                <span class="text-muted small">Tổng phí nhân công:</span>
+                <span class="text-dark small">Tổng phí nhân công:</span>
                 <strong class="text-success">${formatCurrency(laborCostTotal)}</strong>
             </div>
         </div>
         <hr>
         <div class="text-center">
-            <small class="text-muted">Chi phí sẽ được cập nhật tự động khi thêm/sửa phụ tùng hoặc công việc</small>
+            <small class="text-dark">Chi phí sẽ được cập nhật tự động khi thêm/sửa phụ tùng hoặc công việc</small>
         </div>
     `);
 }
@@ -1638,7 +1638,7 @@ function loadServiceTasks() {
                 displayServiceTasks(data.data || []);
             } else {
                 console.error('Error loading service tasks:', data.message);
-                $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
+                $('#serviceTasksList').html('<p class="text-dark text-danger">Lỗi tải danh sách công việc</p>');
             }
             // Update cost summary after loading service tasks
             // This ensures labor cost is included in the summary
@@ -1646,7 +1646,7 @@ function loadServiceTasks() {
         })
         .catch(error => {
             console.error('Error loading service tasks:', error);
-            $('#serviceTasksList').html('<p class="text-muted text-danger">Lỗi tải danh sách công việc</p>');
+            $('#serviceTasksList').html('<p class="text-dark text-danger">Lỗi tải danh sách công việc</p>');
             // Still try to update cost summary even if service tasks fail
             updateCostSummary();
         });
@@ -1656,7 +1656,7 @@ function displayServiceTasks(tasks) {
     const container = $('#serviceTasksList');
     
     if (!tasks || tasks.length === 0) {
-        container.html('<p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa có công việc nào</p>');
+        container.html('<p class="text-dark text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa có công việc nào</p>');
         // Nếu không có công việc nào, vẫn cho phép hoàn thành phiếu
         updateCompleteButtonState([]);
         return;
@@ -1689,26 +1689,26 @@ function displayServiceTasks(tasks) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <h6 class="mb-1 fw-bold">${escapeHtml(task.taskName || 'N/A')}</h6>
-                            ${task.description ? `<p class="mb-1 text-muted small">${escapeHtml(task.description)}</p>` : ''}
-                            ${task.note ? `<div class="mt-2"><small class="text-info"><i class="fas fa-sticky-note me-1"></i>${escapeHtml(task.note)}</small></div>` : ''}
-                            ${task.completionNote ? `<div class="mt-2"><small class="text-success"><i class="fas fa-check-circle me-1"></i><strong>Ghi chú hoàn thành:</strong> ${escapeHtml(task.completionNote)}</small></div>` : ''}
+                            ${task.description ? `<p class="mb-1 text-dark small">${escapeHtml(task.description)}</p>` : ''}
+                            ${task.note ? `<div class="mt-2"><small class="text-dark"><i class="fas fa-sticky-note me-1"></i>${escapeHtml(task.note)}</small></div>` : ''}
+                            ${task.completionNote ? `<div class="mt-2"><small class="text-dark"><i class="fas fa-check-circle me-1"></i><strong>Ghi chú hoàn thành:</strong> ${escapeHtml(task.completionNote)}</small></div>` : ''}
                             
                             <!-- Technician Info -->
                             ${task.technicians && task.technicians.length > 0 ? `
                                 <div class="mt-2">
-                                    <small class="text-muted d-block">Kỹ thuật viên:</small>
+                                    <small class="text-dark d-block">Kỹ thuật viên:</small>
                                     <div>
                                         ${task.technicians.map(tech => {
                                             const roleBadge = tech.roleInTask === 'PRIMARY' 
                                                 ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-star me-1"></i>Chính</span>' 
                                                 : '';
-                                            return `<span class="badge bg-secondary me-1"><i class="fas fa-user-tie me-1"></i>${escapeHtml(tech.technicianName || 'N/A')}${roleBadge}</span>`;
+                                            return `<span class="badge bg-light text-dark me-1"><i class="fas fa-user-tie me-1"></i>${escapeHtml(tech.technicianName || 'N/A')}${roleBadge}</span>`;
                                         }).join('')}
                                     </div>
                                 </div>
                             ` : (task.technicianName ? `
                                 <div class="mt-2">
-                                    <small class="text-muted d-block">Kỹ thuật viên:</small>
+                                    <small class="text-dark d-block">Kỹ thuật viên:</small>
                                     <strong><i class="fas fa-user-tie me-1"></i>${escapeHtml(task.technicianName)}</strong>
                                 </div>
                             ` : '')}
@@ -1716,29 +1716,29 @@ function displayServiceTasks(tasks) {
                             <!-- Time Info -->
                             ${task.startTime ? `
                                 <div class="mt-1">
-                                    <small class="text-muted">Bắt đầu: ${formatVietnamDateTime(task.startTime)}</small>
+                                    <small class="text-dark">Bắt đầu: ${formatVietnamDateTime(task.startTime)}</small>
                                 </div>
                             ` : ''}
                             ${task.endTime ? `
                                 <div class="mt-1">
-                                    <small class="text-muted">Kết thúc: ${formatVietnamDateTime(task.endTime)}</small>
+                                    <small class="text-dark">Kết thúc: ${formatVietnamDateTime(task.endTime)}</small>
                                 </div>
                             ` : ''}
                             
                             <!-- Labor Cost Information -->
                             <div class="mt-2 row g-2">
                                 <div class="col-md-4">
-                                    <small class="text-muted d-block">Thời gian chuẩn:</small>
+                                    <small class="text-dark d-block">Thời gian chuẩn:</small>
                                     <strong>${standardLaborTimeDisplay} giờ</strong>
                                     ${canEditTask && currentUserRoleId !== 4 ? `
                                         <button class="btn btn-sm btn-link p-0 ms-1" onclick="openEditStandardLaborTimeModal(${task.id})" title="Chỉnh sửa thời gian chuẩn">
-                                            <i class="fas fa-edit text-primary"></i>
+                                            <i class="fas fa-edit text-dark"></i>
                                         </button>
                                     ` : ''}
                                 </div>
                                 <div class="col-md-4">
-                                    <small class="text-muted d-block">Thời gian thực tế:</small>
-                                    <strong class="${actualLaborTime !== (standardLaborTime ?? 0) ? 'text-warning' : ''}">${actualLaborTime.toFixed(2)} giờ</strong>
+                                    <small class="text-dark d-block">Thời gian thực tế:</small>
+                                    <strong>${actualLaborTime.toFixed(2)} giờ</strong>
                                     ${(() => {
                                         // ✅ Thời gian thực tế chỉ tính tự động, không cho chỉnh sửa
                                         // Không hiển thị nút chỉnh sửa thời gian thực tế
@@ -1746,33 +1746,33 @@ function displayServiceTasks(tasks) {
                                     })()}
                                     ${standardLaborTime !== null && actualLaborTime > (standardLaborTime * 1.5) ? `
                                         <div class="mt-1">
-                                            <span class="badge bg-warning"><i class="fas fa-exclamation-triangle me-1"></i>Vượt quá thời gian chuẩn</span>
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Vượt quá thời gian chuẩn</span>
                                         </div>
                                     ` : ''}
                                 </div>
                                 <div class="col-md-4">
-                                    <small class="text-muted d-block">Phí nhân công:</small>
-                                    <strong class="text-success">${formatCurrency(laborCost)}</strong>
+                                    <small class="text-dark d-block">Phí nhân công:</small>
+                                    <strong>${formatCurrency(laborCost)}</strong>
                                 </div>
                             </div>
                         </div>
                         <div class="ms-3 text-end">
                             ${statusBadge}
                             ${canEditTask ? `
-                                <button class="btn btn-sm btn-warning mt-2 me-1" onclick="editServiceTask(${task.id})" title="Chỉnh sửa">
+                                <button class="btn btn-link text-dark p-1 me-1" onclick="editServiceTask(${task.id})" title="Chỉnh sửa" style="font-size: 0.875rem;">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger mt-2 me-1" onclick="deleteServiceTask(${task.id})" title="Xóa">
+                                <button class="btn btn-link text-dark p-1 me-1" onclick="deleteServiceTask(${task.id})" title="Xóa" style="font-size: 0.875rem;">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : ''}
                             ${task.statusCode === 'PENDING' ? `
-                                <button class="btn btn-sm btn-primary mt-2" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')" title="Bắt đầu">
+                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')" title="Bắt đầu">
                                     <i class="fas fa-play"></i>
                                 </button>
                             ` : ''}
                             ${task.statusCode === 'IN_PROGRESS' ? `
-                                <button class="btn btn-sm btn-success mt-2" onclick="updateTaskStatus(${task.id}, 'DONE')" title="Hoàn thành">
+                                <button class="btn btn-sm btn-outline-success mt-2" onclick="updateTaskStatus(${task.id}, 'DONE')" title="Hoàn thành">
                                     <i class="fas fa-check"></i>
                                 </button>
                             ` : ''}
@@ -2049,13 +2049,8 @@ function escapeHtml(text) {
 }
 
 function getTaskBorderColor(statusCode) {
-    const colorMap = {
-        'PENDING': 'border-warning',
-        'IN_PROGRESS': 'border-primary',
-        'DONE': 'border-success',
-        'CANCELLED': 'border-danger'
-    };
-    return colorMap[statusCode] || 'border-secondary';
+    // ✅ Đơn giản hóa: chỉ dùng border-secondary cho tất cả
+    return 'border-secondary';
 }
 
 function loadComponents() {
@@ -2082,7 +2077,7 @@ function loadComponents() {
         })
         .catch(error => {
             console.error('Error loading components:', error);
-            $('#componentsList').html('<p class="text-muted text-center py-3 text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
+            $('#componentsList').html('<p class="text-dark text-center py-3 text-danger">Lỗi tải danh sách phụ tùng: ' + error.message + '</p>');
             // Still try to update cost summary even if components fail
             updateCostSummary();
         });
@@ -2092,7 +2087,7 @@ function displayComponents(components) {
     const container = $('#componentsList');
     
     if (!components || components.length === 0) {
-        container.html('<p class="text-muted text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa sử dụng phụ tùng nào</p>');
+        container.html('<p class="text-dark text-center py-3"><i class="fas fa-inbox me-2"></i>Chưa sử dụng phụ tùng nào</p>');
         return;
     }
     
@@ -2105,7 +2100,7 @@ function displayComponents(components) {
         totalCost += total;
         const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
         const quantityDisplay = component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity
-            ? `<span>${component.quantity}</span> <small class="text-muted">→</small> <strong class="text-warning">${actualQuantity}</strong>`
+            ? `<span>${component.quantity}</span> <small class="text-dark">→</small> <strong class="text-warning">${actualQuantity}</strong>`
             : `<span>${component.quantity}</span>`;
         html += `
             <tr>
@@ -2114,24 +2109,28 @@ function displayComponents(components) {
                         ${component.componentImageUrl ? `<img src="${component.componentImageUrl}" alt="${component.componentName || ''}" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` : ''}
                         <div>
                             <strong>${escapeHtml(component.componentName || 'N/A')}</strong>
-                            ${component.componentCode ? `<br><small class="text-muted">Mã: ${escapeHtml(component.componentCode)}</small>` : ''}
+                            ${component.isFromServicePackage || component.servicePackageId ? '<span class="badge bg-info text-dark ms-2"><i class="fas fa-box me-1"></i>Từ gói dịch vụ</span>' : ''}
+                            ${component.componentCode ? `<br><small class="text-dark">Mã: ${escapeHtml(component.componentCode)}</small>` : ''}
                         </div>
                     </div>
                 </td>
                 <td>${escapeHtml(component.typeComponentName || '-')}</td>
                 <td>${component.quantity}</td>
-                <td>${actualQuantity.toFixed(2)}${component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity ? ' <span class="badge bg-warning">Đã điều chỉnh</span>' : ''}</td>
+                <td>${actualQuantity.toFixed(2)}${component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity ? ' <span class="badge bg-info text-dark">Đã điều chỉnh</span>' : ''}</td>
                 <td>${formatCurrency(component.unitPrice || 0)}</td>
                 <td><strong>${formatCurrency(total)}</strong></td>
                 <td>
                     ${canEdit ? `
-                        <button class="btn btn-sm btn-warning me-1" onclick="editComponent(${component.id})" title="Chỉnh sửa">
+                        <button class="btn btn-link text-dark p-1 me-1" onclick="editComponent(${component.id})" title="Chỉnh sửa" style="font-size: 0.875rem;">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteComponent(${component.id})" title="Xóa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    ` : '<span class="text-muted">-</span>'}
+                        ${component.isFromServicePackage || component.servicePackageId ? 
+                            '<button class="btn btn-link text-dark p-1" disabled title="Không thể xóa phụ tùng từ gói dịch vụ" style="font-size: 0.875rem; cursor: not-allowed; opacity: 0.5;"><i class="fas fa-trash"></i></button>' :
+                            `<button class="btn btn-link text-dark p-1" onclick="deleteComponent(${component.id})" title="Xóa" style="font-size: 0.875rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>`
+                        }
+                    ` : '<span class="text-dark">-</span>'}
                 </td>
             </tr>
         `;
@@ -2194,25 +2193,25 @@ function formatVietnamDateTime(dateInput) {
 
 function getStatusBadge(statusCode) {
     const statusMap = {
-        'PENDING': { class: 'bg-warning', text: 'Chờ xử lý' },
-        'ASSIGNED': { class: 'bg-info', text: 'Đã gán' },
-        'IN_PROGRESS': { class: 'bg-primary', text: 'Đang thực hiện' },
-        'COMPLETED': { class: 'bg-success', text: 'Hoàn thành' },
-        'CANCELLED': { class: 'bg-danger', text: 'Đã hủy' }
+        'PENDING': { text: 'Chờ xử lý', class: 'bg-info' },
+        'ASSIGNED': { text: 'Đã gán', class: 'bg-primary' },
+        'IN_PROGRESS': { text: 'Đang thực hiện', class: 'bg-primary' },
+        'COMPLETED': { text: 'Hoàn thành', class: 'bg-success' },
+        'CANCELLED': { text: 'Đã hủy', class: 'bg-danger' }
     };
     
-    const status = statusMap[statusCode] || { class: 'bg-secondary', text: statusCode };
+    const status = statusMap[statusCode] || { text: statusCode, class: 'bg-light text-dark' };
     return `<span class="badge ${status.class} fs-6">${status.text}</span>`;
 }
 
 function getPriorityBadge(priority) {
     const priorityMap = {
-        'NORMAL': { class: 'bg-secondary', text: 'Bình thường' },
-        'HIGH': { class: 'bg-warning', text: 'Cao' },
-        'URGENT': { class: 'bg-danger', text: 'Khẩn cấp' }
+        'NORMAL': { text: 'Bình thường', class: 'bg-light text-dark' },
+        'HIGH': { text: 'Cao', class: 'bg-warning text-dark' },
+        'URGENT': { text: 'Khẩn cấp', class: 'bg-danger' }
     };
     
-    const priorityInfo = priorityMap[priority] || { class: 'bg-secondary', text: priority };
+    const priorityInfo = priorityMap[priority] || { text: priority, class: 'bg-light text-dark' };
     return `<span class="badge ${priorityInfo.class}">${priorityInfo.text}</span>`;
 }
 
@@ -2230,12 +2229,12 @@ function getProgressPercentage(statusCode) {
 
 function getTaskStatusBadge(statusCode) {
     const statusMap = {
-        'PENDING': { class: 'bg-warning', text: 'Chờ' },
-        'IN_PROGRESS': { class: 'bg-primary', text: 'Đang làm' },
-        'DONE': { class: 'bg-success', text: 'Xong' }
+        'PENDING': { text: 'Chờ', class: 'bg-info' },
+        'IN_PROGRESS': { text: 'Đang làm', class: 'bg-primary' },
+        'DONE': { text: 'Xong', class: 'bg-success' }
     };
     
-    const status = statusMap[statusCode] || { class: 'bg-secondary', text: statusCode };
+    const status = statusMap[statusCode] || { text: statusCode, class: 'bg-light text-dark' };
     return `<span class="badge ${status.class}">${status.text}</span>`;
 }
 
@@ -2806,7 +2805,7 @@ function loadTechniciansForTask() {
             console.log('[loadTechniciansForTask] Loaded', maintenanceTicketData.technicians.length, 'technicians from maintenanceTicketData');
         } else {
             // Nếu chưa có kỹ thuật viên nào được gán, hiển thị thông báo
-            container.html('<div class="text-muted text-center py-2"><small>Vui lòng gán kỹ thuật viên ở phần "Thao tác" trước</small></div>');
+            container.html('<div class="text-dark text-center py-2"><small>Vui lòng gán kỹ thuật viên ở phần "Thao tác" trước</small></div>');
             console.warn('[loadTechniciansForTask] No technicians assigned to this ticket yet');
         }
         
@@ -3099,7 +3098,13 @@ function deleteComponent(componentId) {
                     'Authorization': token ? `Bearer ${token}` : ''
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Không thể xóa phụ tùng');
+                }
+                return data;
+            })
             .then(data => {
                 if (data.success) {
                     showAlert('Xóa phụ tùng thành công!', 'success');
@@ -3111,7 +3116,7 @@ function deleteComponent(componentId) {
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('Có lỗi xảy ra khi xóa phụ tùng', 'danger');
+                showAlert('Lỗi: ' + (error.message || 'Không thể xóa phụ tùng từ gói dịch vụ'), 'danger');
             });
         }
     );
@@ -3125,20 +3130,25 @@ function loadComponentsForAdd() {
         return;
     }
     
-    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE`, {
+    // ✅ Sửa: Thêm pageSize lớn để lấy tất cả components
+    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE&page=1&pageSize=1000`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : ''
         }
     })
     .then(response => response.json())
-    .then(components => {
+    .then(result => {
+        // ✅ Sửa: Xử lý đúng format response {success: true, data: [...]}
+        const components = (result.success && result.data && Array.isArray(result.data)) ? result.data : [];
         const select = $('#componentSelect');
         select.empty();
         select.append('<option value="">-- Chọn phụ tùng --</option>');
-        if (components && Array.isArray(components)) {
+        if (components.length > 0) {
             components.forEach(comp => {
                 select.append(`<option value="${comp.id}" data-price="${comp.unitPrice || 0}">${comp.name} - ${formatCurrency(comp.unitPrice || 0)}</option>`);
             });
+        } else {
+            select.append('<option value="" disabled>Không có phụ tùng nào</option>');
         }
     })
     .catch(error => {
@@ -3157,20 +3167,25 @@ function loadComponentsForEdit() {
         return;
     }
     
-    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE`, {
+    // ✅ Sửa: Thêm pageSize lớn để lấy tất cả components
+    fetch(`${API_BASE_URL}/Component?branchId=${branchId}&statusCode=ACTIVE&page=1&pageSize=1000`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : ''
         }
     })
     .then(response => response.json())
-    .then(components => {
+    .then(result => {
+        // ✅ Sửa: Xử lý đúng format response {success: true, data: [...]}
+        const components = (result.success && result.data && Array.isArray(result.data)) ? result.data : [];
         const select = $('#editComponentSelect');
         select.empty();
         select.append('<option value="">-- Chọn phụ tùng --</option>');
-        if (components && Array.isArray(components)) {
+        if (components.length > 0) {
             components.forEach(comp => {
                 select.append(`<option value="${comp.id}" data-price="${comp.unitPrice || 0}">${comp.name} - ${formatCurrency(comp.unitPrice || 0)}</option>`);
             });
+        } else {
+            select.append('<option value="" disabled>Không có phụ tùng nào</option>');
         }
             resolve();
     })
@@ -3231,14 +3246,16 @@ function loadServicePackages() {
         return;
     }
     
-    fetch(`${API_BASE_URL}/ServicePackage?branchId=${branchId}&statusCode=ACTIVE`, {
+    // ✅ Sửa: Thêm pageSize lớn để lấy tất cả service packages
+    fetch(`${API_BASE_URL}/ServicePackage?branchId=${branchId}&statusCode=ACTIVE&page=1&pageSize=1000`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : ''
         }
     })
     .then(response => response.json())
-    .then(packages => {
-        allServicePackages = packages && Array.isArray(packages) ? packages : [];
+    .then(result => {
+        // ✅ Sửa: Xử lý đúng format response {success: true, data: [...]}
+        allServicePackages = (result.success && result.data && Array.isArray(result.data)) ? result.data : [];
         displayServicePackages(allServicePackages);
     })
     .catch(error => {
@@ -3252,7 +3269,7 @@ function displayServicePackages(packages) {
     const tbody = $('#servicePackageTableBody');
     
     if (!packages || packages.length === 0) {
-        tbody.html('<tr><td colspan="6" class="text-center text-muted">Không có gói dịch vụ nào</td></tr>');
+        tbody.html('<tr><td colspan="6" class="text-center text-dark">Không có gói dịch vụ nào</td></tr>');
         return;
     }
     
@@ -3272,7 +3289,7 @@ function displayServicePackages(packages) {
                 <td>${escapeHtml(pkg.name || '-')}</td>
                 <td>${price}</td>
                 <td>${componentCount} phụ tùng</td>
-                <td><small class="text-muted">${escapeHtml((pkg.description || '-').substring(0, 50))}${pkg.description && pkg.description.length > 50 ? '...' : ''}</small></td>
+                <td><small class="text-dark">${escapeHtml((pkg.description || '-').substring(0, 50))}${pkg.description && pkg.description.length > 50 ? '...' : ''}</small></td>
             </tr>
         `);
         
@@ -3304,7 +3321,7 @@ function displaySelectedServicePackage(packageData) {
     
     const componentList = packageData.components && Array.isArray(packageData.components) 
         ? packageData.components.map(c => `- ${c.name} (${formatCurrency(c.unitPrice || 0)})`).join('<br>')
-        : '<p class="text-muted mb-0">Không có phụ tùng</p>';
+        : '<p class="text-dark mb-0">Không có phụ tùng</p>';
     
     // Calculate component total
     const componentTotal = packageData.components && Array.isArray(packageData.components)
@@ -3404,12 +3421,12 @@ function openActivityHistoryModal() {
     <div class="modal fade" id="activityHistoryModal" tabindex="-1">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header">
             <h5 class="modal-title">
               <i class="fas fa-history me-2"></i>
               Lịch sử hoạt động chi tiết
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div id="activityHistoryContent">
@@ -3417,7 +3434,7 @@ function openActivityHistoryModal() {
                 <div class="spinner-border text-primary" role="status">
                   <span class="visually-hidden">Đang tải...</span>
                 </div>
-                <p class="mt-3 text-muted">Đang tải lịch sử hoạt động...</p>
+                <p class="mt-3 text-dark">Đang tải lịch sử hoạt động...</p>
               </div>
             </div>
           </div>
@@ -3465,7 +3482,7 @@ function loadActivityHistory() {
             content.html(`
                 <div class="text-center py-5">
                     <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                    <p class="text-muted">Không có dữ liệu lịch sử hoạt động</p>
+                    <p class="text-dark">Không có dữ liệu lịch sử hoạt động</p>
                 </div>
             `);
         }
@@ -3491,8 +3508,8 @@ function displayActivityHistory(historyLogs) {
     if (!historyLogs || historyLogs.length === 0) {
         content.html(`
             <div class="text-center py-5">
-                <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                <p class="text-muted">Chưa có hoạt động nào</p>
+                <i class="fas fa-history fa-3x text-dark mb-3"></i>
+                <p class="text-dark">Chưa có hoạt động nào</p>
             </div>
         `);
         return;
@@ -3528,7 +3545,7 @@ function displayActivityHistory(historyLogs) {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <h6 class="mb-0 fw-bold">${actionInfo.title}</h6>
-                                    <small class="text-muted">${dateStr}</small>
+                                    <small class="text-dark">${dateStr}</small>
                                 </div>
                                 <div class="mb-2">
                                     <span class="badge bg-light text-dark">
@@ -3538,7 +3555,7 @@ function displayActivityHistory(historyLogs) {
                                 </div>
                                 ${log.newData ? `
                                     <div class="mt-2">
-                                        <small class="text-muted d-block mb-1">Chi tiết:</small>
+                                        <small class="text-dark d-block mb-1">Chi tiết:</small>
                                         <div class="bg-light p-2 rounded">
                                             <pre class="mb-0" style="white-space: pre-wrap; font-size: 0.85rem;">${escapeHtml(log.newData)}</pre>
                                         </div>

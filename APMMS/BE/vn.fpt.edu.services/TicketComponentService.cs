@@ -62,8 +62,17 @@ namespace BE.vn.fpt.edu.services
             if (existing != null)
                 throw new ArgumentException("Component already added to this ticket");
 
-            // Use component's unit price if not provided
-            var unitPrice = dto.UnitPrice ?? component.UnitPrice ?? 0;
+            // ✅ QUY TRÌNH: Giá trong phiếu PHẢI theo giá xuất (UnitPrice) trong kho - KHÔNG cho phép chỉnh
+            // Giảm giá sẽ được áp dụng ở hóa đơn (TotalReceipt.DiscountAmount), không chỉnh giá từng component
+            
+            // Luôn lấy giá xuất từ Component, bỏ qua UnitPrice từ DTO (nếu có)
+            var unitPrice = component.UnitPrice ?? 0;
+            
+            // ✅ VALIDATION: Không cho phép chỉnh giá trong phiếu
+            if (dto.UnitPrice.HasValue && component.UnitPrice.HasValue && dto.UnitPrice.Value != component.UnitPrice.Value)
+            {
+                throw new ArgumentException($"Không được phép chỉnh đơn giá trong phiếu bảo dưỡng. Giá phải theo giá xuất trong kho: {component.UnitPrice.Value:N0} ₫. Nếu cần giảm giá, vui lòng sử dụng phần giảm giá trong hóa đơn.");
+            }
 
             // ✅ Trừ số lượng tồn kho
             if (component.QuantityStock.HasValue)
@@ -81,7 +90,8 @@ namespace BE.vn.fpt.edu.services
                 BranchId = ticket.BranchId, // ✅ Tự động set BranchId từ MaintenanceTicket
                 Quantity = dto.Quantity,
                 ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity, // Nếu không có ActualQuantity thì lấy bằng Quantity
-                UnitPrice = unitPrice
+                UnitPrice = unitPrice,
+                ServicePackageId = dto.ServicePackageId // ✅ Đánh dấu phụ tùng từ gói dịch vụ
             };
 
             var created = await _repository.AddAsync(entity);
@@ -169,11 +179,20 @@ namespace BE.vn.fpt.edu.services
                 component = await _context.Components.FindAsync(dto.ComponentId);
             }
 
-            // Use component's unit price if not provided
-            if (!dto.UnitPrice.HasValue)
+            // ✅ QUY TRÌNH: Giá trong phiếu PHẢI theo giá xuất (UnitPrice) trong kho - KHÔNG cho phép chỉnh
+            // Giảm giá sẽ được áp dụng ở hóa đơn (TotalReceipt.DiscountAmount), không chỉnh giá từng component
+            
+            // Luôn lấy giá xuất từ Component
+            var defaultUnitPrice = component?.UnitPrice ?? 0;
+            
+            // ✅ VALIDATION: Không cho phép chỉnh giá trong phiếu
+            if (dto.UnitPrice.HasValue && component != null && component.UnitPrice.HasValue && dto.UnitPrice.Value != component.UnitPrice.Value)
             {
-                dto.UnitPrice = component?.UnitPrice ?? 0;
+                throw new ArgumentException($"Không được phép chỉnh đơn giá trong phiếu bảo dưỡng. Giá phải theo giá xuất trong kho: {component.UnitPrice.Value:N0} ₫. Nếu cần giảm giá, vui lòng sử dụng phần giảm giá trong hóa đơn.");
             }
+            
+            // Luôn dùng giá xuất từ Component
+            dto.UnitPrice = defaultUnitPrice;
 
             // ✅ VALIDATION: Kiểm tra số lượng tồn kho (nếu thay đổi component hoặc quantity)
             if (component != null && (existing.ComponentId != dto.ComponentId || existing.Quantity != dto.Quantity))
@@ -254,6 +273,10 @@ namespace BE.vn.fpt.edu.services
                 if (ticket.StatusCode == "COMPLETED" || ticket.StatusCode == "CANCELLED")
                     throw new ArgumentException("Không thể xóa component trong phiếu đã hoàn thành hoặc đã hủy");
             }
+            
+            // ✅ VALIDATION: Không cho phép xóa phụ tùng từ gói dịch vụ
+            if (entity.ServicePackageId.HasValue)
+                throw new ArgumentException("Không thể xóa phụ tùng từ gói dịch vụ. Nếu muốn xóa, vui lòng xóa toàn bộ gói dịch vụ khỏi phiếu bảo dưỡng.");
 
             // ✅ Hoàn trả component về tồn kho
             var component = await _context.Components.FindAsync(entity.ComponentId);
@@ -348,6 +371,7 @@ namespace BE.vn.fpt.edu.services
                 Id = entity.Id,
                 MaintenanceTicketId = entity.MaintenanceTicketId ?? 0,
                 ComponentId = entity.ComponentId ?? 0,
+                ServicePackageId = entity.ServicePackageId, // ✅ Map ServicePackageId
                 Quantity = entity.Quantity,
                 ActualQuantity = entity.ActualQuantity,
                 UnitPrice = entity.UnitPrice,

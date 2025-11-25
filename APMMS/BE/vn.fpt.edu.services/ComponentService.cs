@@ -118,5 +118,42 @@ namespace BE.vn.fpt.edu.services
             resp.BranchName = updated.Branch?.Name;
             return resp;
         }
+
+        public async Task<int> BatchUpdateStatusAsync(List<long> componentIds, string statusCode)
+        {
+            if (componentIds == null || componentIds.Count == 0)
+            {
+                throw new ArgumentException("Danh sách linh kiện không được rỗng");
+            }
+
+            if (string.IsNullOrWhiteSpace(statusCode))
+            {
+                throw new ArgumentException("Trạng thái không được rỗng");
+            }
+
+            // Validate status code
+            var validStatusCodes = new[] { "ACTIVE", "OUT_OF_STOCK", "DISCONTINUED" };
+            if (!Array.Exists(validStatusCodes, s => s.Equals(statusCode, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new ArgumentException($"Trạng thái không hợp lệ: {statusCode}");
+            }
+
+            int updatedCount = 0;
+            foreach (var id in componentIds)
+            {
+                try
+                {
+                    await _repo.DisableEnableAsync(id, statusCode);
+                    updatedCount++;
+                }
+                catch (Exception ex)
+                {
+                    // Log error but continue with other items
+                    Console.WriteLine($"Error updating component {id}: {ex.Message}");
+                }
+            }
+
+            return updatedCount;
+        }
     }
 }
