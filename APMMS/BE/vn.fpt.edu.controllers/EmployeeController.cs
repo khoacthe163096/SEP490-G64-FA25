@@ -30,7 +30,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager,Admin")] // Admin & Branch Manager đều xem được danh sách
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -45,16 +45,29 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager,Admin")] // Admin & Branch Manager đều xem được chi tiết
         public async Task<IActionResult> GetById(long id)
         {
             var employee = await _employeeService.GetByIdAsync(id);
             if (employee == null) return NotFound(new { success = false, message = "Employee not found" });
+
+            // Nếu là Branch Manager thì chỉ xem được nhân viên trong chi nhánh của mình
+            var roleIdClaim = User.FindFirst("RoleId")?.Value;
+            var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
+            if (roleId == 2) // Branch Manager
+            {
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var branchId) || employee.BranchId != branchId)
+                {
+                    return Forbid("Bạn không có quyền xem thông tin nhân viên thuộc chi nhánh khác.");
+                }
+            }
+
             return Ok(employee);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh mới được tạo nhân viên
         public async Task<IActionResult> Create([FromBody] EmployeeRequestDto dto)
         {
             try
@@ -69,19 +82,13 @@ namespace BE.vn.fpt.edu.controllers
                     return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
                 }
 
-                // Get RoleId from JWT claims
-                var roleIdClaim = User.FindFirst("RoleId")?.Value;
-                var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
-                
-                // If logged in as Branch Manager (roleId = 2), auto-set branchId from JWT
-                if (roleId == 2 && (dto.BranchId == null || dto.BranchId == 0))
+                // Chỉ cho phép tạo nhân viên trong chi nhánh của Giám đốc đang đăng nhập
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var branchId))
                 {
-                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                    if (long.TryParse(branchIdClaim, out var branchId))
-                    {
-                        dto.BranchId = branchId;
-                    }
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
                 }
+                dto.BranchId = branchId;
                 
                 // Get current user ID from JWT claims for audit log
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -109,7 +116,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh mới được sửa nhân viên
         public async Task<IActionResult> Update(long id, [FromBody] EmployeeRequestDto dto)
         {
             try
@@ -123,6 +130,27 @@ namespace BE.vn.fpt.edu.controllers
                         .ToList();
                     return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
                 }
+
+                // Lấy BranchId của Giám đốc từ JWT, chỉ cho phép sửa nhân viên trong chi nhánh của mình
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var managerBranchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+                }
+
+                // Kiểm tra nhân viên thuộc chi nhánh nào
+                var existing = await _employeeService.GetByIdAsync(id);
+                if (existing == null)
+                {
+                    return NotFound(new { success = false, message = "Employee not found" });
+                }
+                if (existing.BranchId != managerBranchId)
+                {
+                    return Forbid("Bạn chỉ được phép chỉnh sửa nhân viên thuộc chi nhánh của mình.");
+                }
+
+                // Cố định BranchId về chi nhánh của Giám đốc
+                dto.BranchId = managerBranchId;
 
                 // Get current user ID from JWT claims for audit log
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -150,9 +178,27 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh mới được soft-delete
         public async Task<IActionResult> Delete(long id)
         {
+            // Lấy BranchId của Giám đốc
+            var branchIdClaim = User.FindFirst("BranchId")?.Value;
+            if (!long.TryParse(branchIdClaim, out var managerBranchId))
+            {
+                return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+            }
+
+            // Kiểm tra nhân viên thuộc chi nhánh nào
+            var existing = await _employeeService.GetByIdAsync(id);
+            if (existing == null)
+            {
+                return NotFound(new { success = false, message = "Employee not found" });
+            }
+            if (existing.BranchId != managerBranchId)
+            {
+                return Forbid("Bạn chỉ được phép xoá nhân viên thuộc chi nhánh của mình.");
+            }
+
             var success = await _employeeService.DeleteAsync(id);
             if (!success) return NotFound();
             return Ok(new { message = "Employee deleted successfully (soft delete)." });
@@ -193,11 +239,29 @@ namespace BE.vn.fpt.edu.controllers
         /// ✅ Cập nhật Status của Employee (ACTIVE hoặc INACTIVE)
         /// </summary>
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh được đổi trạng thái nhân viên
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] EmployeeUpdateStatusDto request)
         {
             try
             {
+                // Lấy BranchId của Giám đốc
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var managerBranchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+                }
+
+                // Kiểm tra nhân viên thuộc chi nhánh nào
+                var existing = await _employeeService.GetByIdAsync(id);
+                if (existing == null)
+                {
+                    return NotFound(new { success = false, message = "Employee not found" });
+                }
+                if (existing.BranchId != managerBranchId)
+                {
+                    return Forbid("Bạn chỉ được phép cập nhật trạng thái nhân viên thuộc chi nhánh của mình.");
+                }
+
                 var result = await _employeeService.UpdateStatusAsync(id, request.StatusCode);
                 return Ok(new { success = true, data = result, message = "Status updated successfully" });
             }
@@ -222,7 +286,7 @@ namespace BE.vn.fpt.edu.controllers
         /// Upload avatar image to Cloudinary for employee (cho phép Admin/Branch Manager upload ảnh cho employee theo ID)
         /// </summary>
         [HttpPost("{id}/upload-avatar")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh được cập nhật avatar cho nhân viên
         public async Task<IActionResult> UploadAvatar(long id, IFormFile file)
         {
             try
@@ -246,11 +310,22 @@ namespace BE.vn.fpt.edu.controllers
                     return BadRequest(new { success = false, message = "Kích thước file không được vượt quá 5MB" });
                 }
 
-                // Kiểm tra employee có tồn tại không
+                // Lấy BranchId của Giám đốc
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var managerBranchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+                }
+
+                // Kiểm tra employee có tồn tại và thuộc chi nhánh của Giám đốc không
                 var user = await _dbContext.Users.FindAsync(id);
                 if (user == null)
                 {
                     return NotFound(new { success = false, message = "Employee not found" });
+                }
+                if (user.BranchId != managerBranchId)
+                {
+                    return Forbid("Bạn chỉ được phép cập nhật ảnh cho nhân viên thuộc chi nhánh của mình.");
                 }
 
                 // Upload to Cloudinary (isAvatar = true để crop thành hình vuông)

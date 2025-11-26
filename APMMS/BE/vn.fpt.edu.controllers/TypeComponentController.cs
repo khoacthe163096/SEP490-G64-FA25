@@ -182,6 +182,11 @@ namespace BE.vn.fpt.edu.controllers
                 var created = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(Get), new { id = created.Id }, new { success = true, data = created, message = "TypeComponent created successfully" });
             }
+            catch (ArgumentException ex)
+            {
+                // Lỗi nghiệp vụ (ví dụ linh kiện đã thuộc loại khác)
+                return BadRequest(new { success = false, message = ex.Message });
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"[TypeComponentController.Create] Exception: {ex.Message}");
@@ -199,6 +204,11 @@ namespace BE.vn.fpt.edu.controllers
                 var updated = await _service.UpdateAsync(dto);
                 if (updated == null) return NotFound(new { success = false, message = "TypeComponent not found" });
                 return Ok(new { success = true, data = updated, message = "TypeComponent updated successfully" });
+            }
+            catch (ArgumentException ex)
+            {
+                // Lỗi nghiệp vụ (ví dụ linh kiện đã thuộc loại khác)
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {

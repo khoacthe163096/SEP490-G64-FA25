@@ -53,6 +53,18 @@ namespace BE.vn.fpt.edu.services
                     }
                 }
 
+                // Validation bổ sung: linh kiện không được thuộc loại linh kiện khác
+                var componentsInOtherTypes = components
+                    .Where(c => c.TypeComponentId.HasValue)
+                    .ToList();
+                if (componentsInOtherTypes.Any())
+                {
+                    var conflictCodes = componentsInOtherTypes
+                        .Select(c => !string.IsNullOrWhiteSpace(c.Code) ? c.Code! : c.Id.ToString())
+                        .ToList();
+                    throw new ArgumentException($"Các linh kiện {string.Join(", ", conflictCodes)} đã thuộc loại linh kiện khác. Vui lòng bỏ chọn các linh kiện này trước khi tạo loại linh kiện mới.");
+                }
+
                 foreach (var component in components)
                 {
                     // Cập nhật TypeComponentId của component
@@ -142,6 +154,18 @@ namespace BE.vn.fpt.edu.services
                         {
                             throw new ArgumentException($"Các components {string.Join(", ", invalidComponents.Select(c => c.Id))} không thuộc cùng chi nhánh với loại linh kiện này");
                         }
+                    }
+
+                    // Validation bổ sung: linh kiện không được thuộc loại linh kiện khác
+                    var componentsInOtherTypes = componentsToAdd
+                        .Where(c => c.TypeComponentId.HasValue && c.TypeComponentId.Value != exist.Id)
+                        .ToList();
+                    if (componentsInOtherTypes.Any())
+                    {
+                        var conflictCodes = componentsInOtherTypes
+                            .Select(c => !string.IsNullOrWhiteSpace(c.Code) ? c.Code! : c.Id.ToString())
+                            .ToList();
+                        throw new ArgumentException($"Các linh kiện {string.Join(", ", conflictCodes)} đã thuộc loại linh kiện khác. Vui lòng bỏ chọn các linh kiện này trước khi cập nhật.");
                     }
 
                     // Cập nhật TypeComponentId cho các components mới

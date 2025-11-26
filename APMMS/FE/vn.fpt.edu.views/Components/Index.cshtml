@@ -95,7 +95,6 @@
             </div>
             <form id="createComponentForm">
                 <div class="modal-body">
-                    <input type="hidden" id="createComponentBranchId" name="branchId">
                     
                     <div class="row">
                         <!-- Bên trái: Preview ảnh -->
@@ -544,7 +543,6 @@
             modalElement.addEventListener('show.bs.modal', function() {
                 // Reset form
                 form.reset();
-                document.getElementById('createComponentBranchId').value = '';
                 document.getElementById('createComponentStatusCode').value = 'ACTIVE';
                 document.getElementById('createComponentTypeComponentId').innerHTML = '<option value="">-- Chọn loại linh kiện --</option>';
                 document.getElementById('createComponentImageUrl').value = '';
@@ -575,8 +573,7 @@
             
             // Khi modal đã hiển thị hoàn toàn
             modalElement.addEventListener('shown.bs.modal', function() {
-                // Load branchId và TypeComponents sau khi modal đã hiển thị
-                loadBranchIdForCreateComponent();
+                // Load TypeComponents sau khi modal đã hiển thị
                 loadTypeComponentsForCreate();
             });
             
@@ -592,39 +589,6 @@
             });
         }
 
-        async function loadBranchIdForCreateComponent() {
-            const token = localStorage.getItem('authToken');
-            if (!token) {
-                console.warn('No auth token found');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${apiBaseUrl}/Employee/me`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                if (data.success && data.data) {
-                    const employee = data.data;
-                    if (employee.branchId) {
-                        document.getElementById('createComponentBranchId').value = employee.branchId;
-                        console.log('Loaded branchId for create component:', employee.branchId);
-                    }
-                } else {
-                    console.warn('Employee/me API response not successful:', data);
-                }
-            } catch (error) {
-                console.error('Error loading branchId from Employee/me:', error);
-            }
-        }
-
         async function loadTypeComponentsForCreate() {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -633,17 +597,7 @@
             }
             
             try {
-                // Lấy branchId trước
-                let branchId = document.getElementById('createComponentBranchId').value;
-                if (!branchId) {
-                    await loadBranchIdForCreateComponent();
-                    branchId = document.getElementById('createComponentBranchId').value;
-                }
-                
-                // Gọi API TypeComponent với branchId
-                const url = branchId 
-                    ? `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE&branchId=${branchId}`
-                    : `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE`;
+                const url = `${apiBaseUrl}/TypeComponent?page=1&pageSize=1000&statusCode=ACTIVE`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -691,18 +645,6 @@
             // Validate
             if (!form.checkValidity()) {
                 form.reportValidity();
-                return;
-            }
-            
-            // Get branchId - nếu chưa có thì load lại
-            let branchId = document.getElementById('createComponentBranchId').value;
-            if (!branchId) {
-                await loadBranchIdForCreateComponent();
-                branchId = document.getElementById('createComponentBranchId').value;
-            }
-            
-            if (!branchId) {
-                alert('Không thể xác định chi nhánh. Vui lòng thử lại.');
                 return;
             }
             
@@ -754,7 +696,6 @@
                     statusCode: document.getElementById('createComponentStatusCode').value || 'ACTIVE',
                     imageUrl: document.getElementById('createComponentImageUrl').value.trim() || null,
                     typeComponentId: typeComponentId,
-                    branchId: parseInt(branchId),
                     minimumQuantity: minimumQuantity
                 };
                 

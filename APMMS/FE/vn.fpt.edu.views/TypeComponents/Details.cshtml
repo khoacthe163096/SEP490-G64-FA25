@@ -334,6 +334,20 @@
         .card {
             border: 1px solid #e9ecef;
         }
+
+        .btn-add-component {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 600;
+            background-color: #fff;
+        }
+
+        .btn-add-component i {
+            font-size: 0.85rem;
+        }
     </style>
     <script>
         const apiBaseUrl = '@apiBaseUrl';
@@ -463,11 +477,18 @@
         }
         
         function populateEditForm(typeComponent) {
-            document.getElementById('editTypeComponentId').value = typeComponent.id || '';
-            document.getElementById('editTypeComponentBranchId').value = typeComponent.branchId || '';
-            document.getElementById('editTypeComponentName').value = typeComponent.name || '';
-            document.getElementById('editTypeComponentDescription').value = typeComponent.description || '';
-            document.getElementById('editTypeComponentStatusCode').value = typeComponent.statusCode || 'ACTIVE';
+            const idInput = document.getElementById('editTypeComponentId');
+            const branchInput = document.getElementById('editTypeComponentBranchId');
+            const nameInput = document.getElementById('editTypeComponentName');
+            const descInput = document.getElementById('editTypeComponentDescription');
+            const statusSelect = document.getElementById('editTypeComponentStatusCode');
+
+            if (idInput) idInput.value = typeComponent.id || '';
+            if (branchInput) branchInput.value = typeComponent.branchId || '';
+            if (nameInput) nameInput.value = typeComponent.name || '';
+            // Màn hình hiện tại không có ô nhập mô tả, nên chỉ set nếu tồn tại
+            if (descInput) descInput.value = typeComponent.description || '';
+            if (statusSelect) statusSelect.value = typeComponent.statusCode || 'ACTIVE';
             
             // Reset component lists
             window.editSelectedComponents = [];
@@ -569,8 +590,8 @@
                         <td>${component.name || '-'}</td>
                         <td class="text-center">${imageHtml}</td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-primary" onclick="addComponentToEdit(${component.id}, '${(component.code || '').replace(/'/g, "\\'")}', '${(component.name || '').replace(/'/g, "\\'")}', '${(imageUrl || '').replace(/'/g, "\\'")}')">
-                                <i class="fas fa-plus"></i> Thêm
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-add-component" onclick="addComponentToEdit(${component.id}, '${(component.code || '').replace(/'/g, "\\'")}', '${(component.name || '').replace(/'/g, "\\'")}', '${(imageUrl || '').replace(/'/g, "\\'")}')">
+                                <i class="fas fa-plus"></i><span>Thêm</span>
                             </button>
                         </td>
                     </tr>
@@ -785,13 +806,25 @@
                 
                 // Get selected components từ danh sách đã chọn
                 const componentIds = window.editSelectedComponents.map(c => c.id);
-                
+
+                const nameInput = document.getElementById('editTypeComponentName');
+                const descInput = document.getElementById('editTypeComponentDescription');
+                const statusSelect = document.getElementById('editTypeComponentStatusCode');
+                const branchInput = document.getElementById('editTypeComponentBranchId');
+
+                const name = nameInput ? nameInput.value.trim() : (currentTypeComponentData?.name || '');
+                const description = descInput
+                    ? (descInput.value.trim() || null)
+                    : (currentTypeComponentData?.description || null);
+                const statusCode = statusSelect ? (statusSelect.value || 'ACTIVE') : (currentTypeComponentData?.statusCode || 'ACTIVE');
+                const branchId = branchInput ? (parseInt(branchInput.value) || null) : (currentTypeComponentData?.branchId || null);
+
                 // Prepare payload
                 const payload = {
-                    name: document.getElementById('editTypeComponentName').value.trim(),
-                    description: document.getElementById('editTypeComponentDescription').value.trim() || null,
-                    statusCode: document.getElementById('editTypeComponentStatusCode').value || 'ACTIVE',
-                    branchId: parseInt(document.getElementById('editTypeComponentBranchId').value) || null,
+                    name: name,
+                    description: description,
+                    statusCode: statusCode,
+                    branchId: branchId,
                     componentIds: componentIds.length > 0 ? componentIds : null
                 };
                 
@@ -836,6 +869,8 @@
                     if (modal) {
                         modal.hide();
                     }
+                    // Dọn backdrop còn sót để tránh màn hình xám
+                    cleanupModalBackdrop();
                     
                     // Show success message
                     showAlert('Cập nhật loại linh kiện thành công!', 'success');
@@ -849,11 +884,25 @@
                 console.error('Error updating TypeComponent:', error);
                 const errorMessage = error.message || 'Có lỗi xảy ra khi cập nhật loại linh kiện';
                 showAlert('Lỗi: ' + errorMessage, 'danger');
-                
+
+                // Dọn backdrop + reset trạng thái body để không bị màn hình xám
+                cleanupModalBackdrop();
+
                 // Reset button
                 updateBtn.disabled = false;
                 updateBtn.innerHTML = originalText;
             }
+        }
+
+        function cleanupModalBackdrop() {
+            // Xóa mọi backdrop còn sót
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset trạng thái body
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
         }
         
         function showAlert(message, type = 'info') {

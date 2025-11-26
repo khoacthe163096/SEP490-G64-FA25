@@ -90,6 +90,14 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var branchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng" });
+                }
+
+                dto.BranchId = branchId;
+
                 var created = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(Get), new { id = created.Id }, new { success = true, data = created, message = "Component created successfully" });
             }
@@ -105,6 +113,15 @@ namespace BE.vn.fpt.edu.controllers
             try
             {
                 dto.Id = id;
+
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var branchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng" });
+                }
+
+                dto.BranchId = branchId;
+
                 var updated = await _service.UpdateAsync(dto);
                 if (updated == null) return NotFound(new { success = false, message = "Component not found" });
                 return Ok(new { success = true, data = updated, message = "Component updated successfully" });

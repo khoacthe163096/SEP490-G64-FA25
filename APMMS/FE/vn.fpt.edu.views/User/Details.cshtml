@@ -870,7 +870,19 @@
         }
 
         function loadUserDetails(id) {
-            fetch(`${API_BASE_URL}/AutoOwner/${id}`)
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                showError('Vui lòng đăng nhập lại để xem thông tin khách hàng.');
+                return;
+            }
+
+            fetch(`${API_BASE_URL}/AutoOwner/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);

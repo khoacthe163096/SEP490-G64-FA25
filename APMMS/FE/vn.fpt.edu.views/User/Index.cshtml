@@ -10,7 +10,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Danh sách người dùng</h4>
-                    <a href="/Users/Create" class="btn btn-primary">
+                    <a href="/Users/Create" class="btn btn-primary" id="btnCreateUser">
                         <i class="fas fa-plus"></i> Thêm người dùng
                     </a>
                 </div>
@@ -18,7 +18,7 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3 align-items-center">
                         <div class="col-md-6 d-flex gap-2 align-items-center">
-                            <button class="btn btn-secondary btn-sm" onclick="editSelectedStatus()">
+                            <button class="btn btn-secondary btn-sm" id="btnEditUserStatus" onclick="editSelectedStatus()">
                                 <i class="fas fa-edit"></i> Sửa trạng thái
                             </button>
                             <select class="form-select" id="statusFilter" style="width: 180px;">
@@ -78,6 +78,7 @@
         const selectedUsers = new Set();
 
         document.addEventListener('DOMContentLoaded', function() {
+            applyRoleBasedUiForUsers();
             loadUsers();
             
             // Search functionality
@@ -92,6 +93,30 @@
         });
 
         const API_BASE_URL = '@apiBaseUrl';
+
+        // Ẩn/hiện nút theo role: Admin (1) & Branch Manager (2) chỉ xem, Consulter (6) được sửa
+        function applyRoleBasedUiForUsers() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.RoleId;
+                const roleName = (userInfo.roleName || userInfo.role || '').toString().toUpperCase();
+
+                const isConsulter = roleId === 6 || roleName === 'CONSULTER';
+
+                const btnCreate = document.getElementById('btnCreateUser');
+                const btnEditStatus = document.getElementById('btnEditUserStatus');
+
+                if (!isConsulter) {
+                    if (btnCreate) btnCreate.style.display = 'none';
+                    if (btnEditStatus) btnEditStatus.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error applying role-based UI for users:', error);
+            }
+        }
         
         function loadUsers() {
             const search = document.getElementById('searchInput').value;
@@ -108,7 +133,20 @@
                 </tr>
             `;
 
-            fetch(`${API_BASE_URL}/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=7`)
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.error('No auth token found when loading users');
+                showAlert('Vui lòng đăng nhập lại để xem danh sách khách hàng.', 'danger');
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Không thể tải dữ liệu</td></tr>';
+                return;
+            }
+
+            fetch(`${API_BASE_URL}/AutoOwner?page=${currentPage}&pageSize=${pageSize}&search=${encodeURIComponent(search || '')}&status=${encodeURIComponent(status || '')}&role=7`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
                 .then(async response => {
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}: ${response.statusText}` }));

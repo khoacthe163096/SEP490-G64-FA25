@@ -14,10 +14,10 @@
                     <!-- Search and Filter -->
                     <div class="row mb-3 align-items-center">
                         <div class="col-md-6 d-flex gap-2 align-items-center">
-                            <a href="/Employees/Create" class="btn btn-primary btn-sm">
+                            <a href="/Employees/Create" class="btn btn-primary btn-sm" id="btnCreateEmployee">
                                 <i class="fas fa-plus"></i> Thêm mới
                             </a>
-                            <button class="btn btn-secondary btn-sm" onclick="editSelectedStatus()">
+                            <button class="btn btn-secondary btn-sm" id="btnEditStatus" onclick="editSelectedStatus()">
                                 <i class="fas fa-edit"></i> Sửa trạng thái
                             </button>
                             <select class="form-select" id="statusFilter" style="width: 180px;">
@@ -186,14 +186,21 @@
                 
                 // Role Admin thường có roleId = 1 (cần kiểm tra lại trong hệ thống)
                 // Hoặc có thể check roleName
-                const roleName = userInfo.roleName || userInfo.role || '';
-                const isAdmin = roleId === 1 || roleName.toUpperCase() === 'ADMIN';
+                const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                const upperRoleName = roleName.toUpperCase();
+                const isAdmin = roleId === 1 || upperRoleName === 'ADMIN';
 
                 if (isAdmin) {
                     // Hiển thị branch filter
                     document.getElementById('branchFilter').style.display = 'block';
                     // Load danh sách chi nhánh
                     await loadBranches();
+
+                    // Ẩn các nút thao tác (Admin chỉ được xem)
+                    const btnCreate = document.getElementById('btnCreateEmployee');
+                    const btnEditStatus = document.getElementById('btnEditStatus');
+                    if (btnCreate) btnCreate.style.display = 'none';
+                    if (btnEditStatus) btnEditStatus.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error checking user role:', error);

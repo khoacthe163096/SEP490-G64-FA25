@@ -11,6 +11,7 @@ namespace BE.vn.fpt.edu.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Yêu cầu đăng nhập cho tất cả endpoint quản lý khách hàng
     public class AutoOwnerController : ControllerBase
     {
         private readonly IAutoOwnerService _service;
@@ -25,6 +26,7 @@ namespace BE.vn.fpt.edu.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Branch Manager,Admin,Consulter")]
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
@@ -67,6 +69,7 @@ namespace BE.vn.fpt.edu.Controllers
         }
 
         [HttpGet("{id:long}")]
+        [Authorize(Roles = "Branch Manager,Admin,Consulter")]
         public async Task<IActionResult> GetById(long id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -76,6 +79,7 @@ namespace BE.vn.fpt.edu.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Consulter")]
         public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {
             try
@@ -90,6 +94,7 @@ namespace BE.vn.fpt.edu.Controllers
         }
 
         [HttpPut("{id:long}")]
+        [Authorize(Roles = "Consulter")]
         public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
         {
             try
@@ -107,7 +112,7 @@ namespace BE.vn.fpt.edu.Controllers
         /// ✅ Cập nhật Status của AutoOwner (ACTIVE hoặc INACTIVE)
         /// </summary>
         [HttpPut("{id}/status")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Consulter")]
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusRequest request)
         {
             try
@@ -129,7 +134,7 @@ namespace BE.vn.fpt.edu.Controllers
         /// Upload avatar image to Cloudinary for AutoOwner (cho phép Admin/Branch Manager upload ảnh cho customer theo ID)
         /// </summary>
         [HttpPost("{id}/upload-avatar")]
-        [Authorize(Roles = "Branch Manager,Admin")]
+        [Authorize(Roles = "Consulter")]
         public async Task<IActionResult> UploadAvatar(long id, IFormFile file)
         {
             try

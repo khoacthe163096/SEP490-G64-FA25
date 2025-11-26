@@ -22,12 +22,25 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            if (!dto.BranchId.HasValue)
+            {
+                throw new ArgumentException("BranchId is required");
+            }
+
             // Validation: Package phải có ít nhất 1 component
             var hasComponents = (dto.Components != null && dto.Components.Any()) || 
                                 (dto.ComponentIds != null && dto.ComponentIds.Any());
             if (!hasComponents)
             {
                 throw new ArgumentException("ServicePackage phải có ít nhất 1 component");
+            }
+
+            // Validation: StatusCode nếu có thì phải hợp lệ
+            var validStatusCodes = new[] { "ACTIVE", "INACTIVE" };
+            if (!string.IsNullOrWhiteSpace(dto.StatusCode) &&
+                !validStatusCodes.Contains(dto.StatusCode))
+            {
+                throw new ArgumentException($"Trạng thái gói dịch vụ không hợp lệ: {dto.StatusCode}");
             }
 
             var entity = new ServicePackage
@@ -45,8 +58,14 @@ namespace BE.vn.fpt.edu.services
             // attach components if provided (sau khi đã có ID)
             if (dto.Components != null && dto.Components.Any())
             {
+                // Gom các dòng có cùng ComponentId (tránh tạo trùng)
+                var componentInfos = dto.Components
+                    .GroupBy(c => c.ComponentId)
+                    .Select(g => new { ComponentId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                    .ToList();
+
                 // Validation: Components phải tồn tại
-                var componentIds = dto.Components.Select(c => c.ComponentId).ToList();
+                var componentIds = componentInfos.Select(c => c.ComponentId).ToList();
                 var existingComponents = await _context.Components
                     .Where(c => componentIds.Contains(c.Id))
                     .ToListAsync();
@@ -74,7 +93,7 @@ namespace BE.vn.fpt.edu.services
                     throw new ArgumentException("Giá gói dịch vụ phải lớn hơn hoặc bằng 0");
                 }
                 
-                foreach (var comp in dto.Components)
+                foreach (var comp in componentInfos)
                 {
                     // Validation: Quantity phải > 0
                     if (comp.Quantity <= 0)
@@ -94,7 +113,7 @@ namespace BE.vn.fpt.edu.services
             // Backward compatibility: Nếu dùng ComponentIds (cũ)
             else if (dto.ComponentIds != null && dto.ComponentIds.Any())
             {
-                foreach (var componentId in dto.ComponentIds)
+                foreach (var componentId in dto.ComponentIds.Distinct())
                 {
                     created.ComponentPackages.Add(new ComponentPackage
                     {
@@ -138,7 +157,24 @@ namespace BE.vn.fpt.edu.services
             var exist = await _repo.GetByIdAsync(dto.Id.Value);
             if (exist == null) return null;
 
-            exist.BranchId = dto.BranchId;
+            // Không cho phép thay đổi BranchId nếu đã có
+            if (exist.BranchId.HasValue && dto.BranchId.HasValue && exist.BranchId.Value != dto.BranchId.Value)
+            {
+                throw new ArgumentException("Không thể thay đổi chi nhánh của gói dịch vụ hiện tại");
+            }
+
+            // Validation: StatusCode nếu có thì phải hợp lệ
+            var validStatusCodes = new[] { "ACTIVE", "INACTIVE" };
+            if (!string.IsNullOrWhiteSpace(dto.StatusCode) &&
+                !validStatusCodes.Contains(dto.StatusCode))
+            {
+                throw new ArgumentException($"Trạng thái gói dịch vụ không hợp lệ: {dto.StatusCode}");
+            }
+
+            if (dto.BranchId.HasValue)
+            {
+                exist.BranchId = dto.BranchId;
+            }
             exist.Code = dto.Code;
             exist.Name = dto.Name;
             exist.Description = dto.Description;
@@ -154,8 +190,14 @@ namespace BE.vn.fpt.edu.services
             // update components relationship
             if (dto.Components != null && dto.Components.Any())
             {
+                // Gom các dòng có cùng ComponentId
+                var componentInfos = dto.Components
+                    .GroupBy(c => c.ComponentId)
+                    .Select(g => new { ComponentId = g.Key, Quantity = g.Sum(x => x.Quantity) })
+                    .ToList();
+
                 // Validation: Components phải tồn tại
-                var componentIds = dto.Components.Select(c => c.ComponentId).ToList();
+                var componentIds = componentInfos.Select(c => c.ComponentId).ToList();
                 var existingComponents = await _context.Components
                     .Where(c => componentIds.Contains(c.Id))
                     .ToListAsync();
@@ -178,7 +220,7 @@ namespace BE.vn.fpt.edu.services
                 }
                 
                 // Validation: Quantity phải > 0 cho mỗi component
-                foreach (var comp in dto.Components)
+                foreach (var comp in componentInfos)
                 {
                     if (comp.Quantity <= 0)
                     {
@@ -192,8 +234,8 @@ namespace BE.vn.fpt.edu.services
                     .ToListAsync();
                 _context.ComponentPackages.RemoveRange(existingComponentPackages);
                 
-                // Add new ComponentPackages với Quantity từ DTO
-                foreach (var comp in dto.Components)
+                // Add new ComponentPackages với Quantity từ DTO đã gom
+                foreach (var comp in componentInfos)
                 {
                     exist.ComponentPackages.Add(new ComponentPackage
                     {
@@ -213,7 +255,7 @@ namespace BE.vn.fpt.edu.services
                 _context.ComponentPackages.RemoveRange(existingComponentPackages);
                 
                 // Add new ComponentPackages với Quantity mặc định = 1
-                foreach (var componentId in dto.ComponentIds)
+                foreach (var componentId in dto.ComponentIds.Distinct())
                 {
                     exist.ComponentPackages.Add(new ComponentPackage
                     {

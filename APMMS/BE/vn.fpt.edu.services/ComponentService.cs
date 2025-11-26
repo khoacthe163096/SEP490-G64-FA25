@@ -22,6 +22,11 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            if (!dto.BranchId.HasValue)
+            {
+                throw new ArgumentException("BranchId is required");
+            }
+
             // Validation: MinimumQuantity phải >= 0
             if (dto.MinimumQuantity.HasValue && dto.MinimumQuantity.Value < 0)
             {
@@ -94,23 +99,24 @@ namespace BE.vn.fpt.edu.services
             var exist = await _repo.GetByIdAsync(dto.Id.Value);
             if (exist == null) return null;
 
+            if (exist.BranchId.HasValue && dto.BranchId.HasValue && exist.BranchId.Value != dto.BranchId.Value)
+            {
+                throw new UnauthorizedAccessException("Bạn không có quyền cập nhật linh kiện thuộc chi nhánh khác");
+            }
+
+            // Không cho phép cập nhật tồn kho/giá qua endpoint metadata
+            if (dto.QuantityStock.HasValue || dto.UnitPrice.HasValue || dto.PurchasePrice.HasValue)
+            {
+                throw new ArgumentException("Không thể cập nhật tồn kho hoặc giá qua API cập nhật thông tin linh kiện.");
+            }
+
             // Cập nhật thông tin danh mục
             exist.Code = dto.Code;
             exist.Name = dto.Name;
             exist.ImageUrl = dto.ImageUrl;
             exist.MinimumQuantity = dto.MinimumQuantity;
-            exist.BranchId = dto.BranchId;
             exist.TypeComponentId = dto.TypeComponentId;
             exist.StatusCode = dto.StatusCode;
-
-            // Giá và số lượng: Chỉ cập nhật nếu có giá trị (từ module "Nhập kho")
-            // Nếu không có giá trị, giữ nguyên giá trị cũ
-            if (dto.QuantityStock.HasValue)
-                exist.QuantityStock = dto.QuantityStock;
-            if (dto.UnitPrice.HasValue)
-                exist.UnitPrice = dto.UnitPrice;
-            if (dto.PurchasePrice.HasValue)
-                exist.PurchasePrice = dto.PurchasePrice;
 
             var updated = await _repo.UpdateAsync(exist);
             var resp = _mapper.Map<ResponseDto>(updated);

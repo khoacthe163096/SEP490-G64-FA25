@@ -121,7 +121,6 @@
                                 <h5 class="mb-4 fw-bold" style="font-size: 1.2rem; color: #212529;">Chỉnh sửa thông tin</h5>
                                 <form id="editComponentForm">
                                     <input type="hidden" id="editComponentId" name="id">
-                                    <input type="hidden" id="editComponentBranchId" name="branchId">
                                     
                                     <div class="row mb-3">
                                         <label class="col-md-4 col-lg-3 col-form-label fw-semibold">Hình ảnh</label>
@@ -340,7 +339,6 @@
 
         function populateEditForm(component) {
             const editComponentId = document.getElementById('editComponentId');
-            const editComponentBranchId = document.getElementById('editComponentBranchId');
             const editComponentName = document.getElementById('editComponentName');
             const editComponentCode = document.getElementById('editComponentCode');
             const editComponentMinimumQuantity = document.getElementById('editComponentMinimumQuantity');
@@ -351,7 +349,6 @@
             const settingsContent = document.getElementById('settingsContent');
             
             if (editComponentId) editComponentId.value = component.id || '';
-            if (editComponentBranchId) editComponentBranchId.value = component.branchId || '';
             if (editComponentName) editComponentName.value = component.name || '';
             if (editComponentCode) editComponentCode.value = component.code || '';
             if (editComponentMinimumQuantity) editComponentMinimumQuantity.value = component.minimumQuantity || 0;
@@ -500,8 +497,7 @@
                     name: document.getElementById('editComponentName').value.trim(),
                     code: document.getElementById('editComponentCode').value.trim() || null,
                     minimumQuantity: parseInt(document.getElementById('editComponentMinimumQuantity').value) || 0,
-                    imageUrl: document.getElementById('editComponentImageUrl').value.trim() || null,
-                    branchId: parseInt(document.getElementById('editComponentBranchId').value) || null
+                    imageUrl: document.getElementById('editComponentImageUrl').value.trim() || null
                 };
                 
                 console.log('Updating component with payload:', payload);
