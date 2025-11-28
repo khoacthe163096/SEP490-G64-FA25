@@ -120,8 +120,6 @@ function initializeAuth() {
 
         if ($(this).find('#username').length > 0) {
             handleLogin();
-        } else {
-            handleRegister();
         }
         return false;
     });
@@ -275,61 +273,6 @@ function decodeUserIdFromToken(token) {
     }
 }
 
-async function handleRegister() {
-    const fullName = $('#regFullName').val();
-    const email = $('#regEmail').val();
-    const phone = $('#regPhone').val();
-    const username = $('#regUsername').val();
-    const password = $('#regPassword').val();
-    const confirmPassword = $('#regConfirmPassword').val();
-    const agreeTerms = $('#agreeTerms').is(':checked');
-
-    if (!fullName || !email || !phone || !username || !password || !confirmPassword) {
-        showAlert('Vui lòng nhập đầy đủ thông tin', 'warning');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showAlert('Mật khẩu xác nhận không khớp', 'warning');
-        return;
-    }
-
-    if (!agreeTerms) {
-        showAlert('Vui lòng đồng ý với điều khoản sử dụng', 'warning');
-        return;
-    }
-
-    const registerBtn = $('.btn-register');
-    const originalText = registerBtn.html();
-    registerBtn.html('<i class="fas fa-spinner fa-spin"></i> Đang đăng ký...');
-    registerBtn.prop('disabled', true);
-
-    try {
-        const response = await fetch('/Auth/Register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fullName, email, phone, username, password })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            showAlert('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
-            $('#registerModal').modal('hide');
-            $('#loginModal').modal('show');
-            $('#username').val(username);
-        } else {
-            showAlert(result.error || 'Đăng ký thất bại', 'danger');
-        }
-    } catch (error) {
-        console.error('Register error:', error);
-        showAlert('Lỗi kết nối đến server', 'danger');
-    } finally {
-        registerBtn.html(originalText);
-        registerBtn.prop('disabled', false);
-    }
-}
-
 async function handleLogout() {
     try {
         await fetch('/Auth/Logout', {
@@ -403,13 +346,7 @@ function getRoleName(roleId) {
     }
 }
 
-function showRegisterModal() {
-    $('#loginModal').modal('hide');
-    $('#registerModal').modal('show');
-}
-
 function showLoginModal() {
-    $('#registerModal').modal('hide');
     $('#loginModal').modal('show');
 }
 
@@ -452,5 +389,4 @@ function initializeFloatingTab() {
 }
 
 // Expose helpers globally when needed elsewhere
-window.showRegisterModal = showRegisterModal;
 window.showLoginModal = showLoginModal;

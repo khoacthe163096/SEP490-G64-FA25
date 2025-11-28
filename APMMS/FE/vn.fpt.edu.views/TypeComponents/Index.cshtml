@@ -31,6 +31,11 @@
                             </select>
                         </div>
                         <div class="col-md-2">
+                            <select class="form-select" id="branchFilter" style="display: none;">
+                                <option value="">Chọn chi nhánh</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <button class="btn btn-outline-secondary" id="filterBtn">
                                 <i class="fas fa-filter"></i> Lọc
                             </button>
@@ -45,7 +50,7 @@
                                     <th style="width: 40px;">
                                         <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
                                     </th>
-                                    <th>Mã loại</th>
+                                    <th>STT</th>
                                     <th>Tên loại</th>
                                     <th>Mô tả</th>
                                     <th>Chi nhánh</th>
@@ -257,6 +262,9 @@
         let selectedTypeComponents = new Set();
 
         $(document).ready(function() {
+            // Kiểm tra role và hiển thị branch filter nếu là Admin
+            checkUserRoleAndShowBranchFilter();
+            
             loadTypeComponents();
             
             // Đơn giản hóa: chỉ đăng ký event một lần, không cần off
@@ -370,6 +378,12 @@
                 loadTypeComponents();
             });
 
+            // Branch filter change
+            $('#branchFilter').on('change', function() {
+                currentPage = 1;
+                loadTypeComponents();
+            });
+
             // Enter key trong search
             $('#searchInput').on('keypress', function(e) {
                 if (e.which === 13) {
@@ -379,9 +393,64 @@
             });
         });
 
+        async function checkUserRoleAndShowBranchFilter() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                const upperRoleName = roleName.toUpperCase();
+                const isAdmin = roleId === 1 || upperRoleName === 'ADMIN';
+
+                if (isAdmin) {
+                    // Hiển thị branch filter
+                    document.getElementById('branchFilter').style.display = 'block';
+                    // Load danh sách chi nhánh
+                    await loadBranches();
+                }
+            } catch (error) {
+                console.error('Error checking user role:', error);
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const apiBaseUrl = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
+                const response = await fetch(`${apiBaseUrl}/Branch`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const branches = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                    
+                    const branchFilter = document.getElementById('branchFilter');
+                    branchFilter.innerHTML = '<option value="">Chọn chi nhánh</option>';
+                    
+                    branches.forEach(branch => {
+                        const branchId = branch.id || branch.Id;
+                        const branchName = branch.name || branch.Name || 'N/A';
+                        const option = document.createElement('option');
+                        option.value = branchId;
+                        option.textContent = branchName;
+                        branchFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
+
         function loadTypeComponents() {
             const search = $('#searchInput').val();
             const status = $('#statusFilter').val();
+            const branch = $('#branchFilter').val();
 
             // Show loading
             $('#typeComponentsTableBody').html(`
@@ -394,15 +463,22 @@
                 </tr>
             `);
 
+            const requestData = {
+                page: currentPage,
+                pageSize: pageSize,
+                search: search,
+                statusCode: status
+            };
+
+            // Thêm branchId nếu có
+            if (branch) {
+                requestData.branchId = branch;
+            }
+
             $.ajax({
                 url: '/TypeComponents/ListData',
                 method: 'GET',
-                data: {
-                    page: currentPage,
-                    pageSize: pageSize,
-                    search: search,
-                    statusCode: status
-                },
+                data: requestData,
                 success: function(result) {
                     if (result.success && result.data) {
                         renderTable(result.data);
@@ -435,12 +511,15 @@
                 return;
             }
 
-            items.forEach(function(item) {
+            items.forEach(function(item, index) {
                 const statusClass = item.statusCode === 'ACTIVE' ? 'bg-success' : 'bg-secondary';
                 const statusText = item.statusCode === 'ACTIVE' ? 'Hoạt động' : 'Không hoạt động';
                 const branchName = item.branchName || item.branchId || 'N/A';
                 const typeName = item.name || '';
                 const isChecked = selectedTypeComponents.has(item.id);
+                
+                // Tính số thứ tự (STT) dựa trên trang hiện tại
+                const stt = (currentPage - 1) * pageSize + index + 1;
                 
                 // Tên loại linh kiện có link đến trang Details
                 const nameLink = `<a href="/TypeComponents/Details/${item.id}" class="text-decoration-none fw-bold text-primary" style="cursor: pointer;">${typeName}</a>`;
@@ -450,7 +529,7 @@
                         <td>
                             <input type="checkbox" class="typecomponent-checkbox" value="${item.id}" onchange="toggleTypeComponentSelection(${item.id})" ${isChecked ? 'checked' : ''}>
                         </td>
-                        <td>${item.id}</td>
+                        <td>${stt}</td>
                         <td>${nameLink}</td>
                         <td>${item.description || ''}</td>
                         <td>${branchName}</td>

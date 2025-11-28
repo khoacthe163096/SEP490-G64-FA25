@@ -140,6 +140,41 @@
         background-color: #fff;
     }
     
+    .password-guideline {
+        font-size: 0.9rem;
+        color: #6c757d;
+        border-left: 3px solid #e0e0e0;
+        padding-left: 12px;
+        margin-bottom: 1.25rem;
+    }
+
+    .password-toggle-btn {
+        border: 1px solid #ced4da;
+        border-left: none;
+        background: #f8f9fa;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 46px;
+    }
+
+    .password-toggle-btn i {
+        font-size: 0.95rem;
+    }
+
+    .password-toggle-btn:focus,
+    .password-toggle-btn:hover {
+        background: #f1f3f5;
+        color: #495057;
+        box-shadow: none;
+    }
+
+    .password-toggle-btn + .form-control,
+    .input-group .form-control:focus {
+        box-shadow: none;
+    }
+    
     .btn-save {
         background: #007bff;
         border: none;
@@ -197,6 +232,13 @@
                                             data-bs-target="#edit" type="button" role="tab" 
                                             aria-controls="edit" aria-selected="false">
                                         <i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="password-tab" data-bs-toggle="tab"
+                                            data-bs-target="#password" type="button" role="tab"
+                                            aria-controls="password" aria-selected="false">
+                                        <i class="fas fa-key me-2"></i>Đổi mật khẩu
                                     </button>
                                 </li>
                             </ul>
@@ -334,6 +376,59 @@
                                         </div>
                                     </form>
                                 </div>
+
+                                <!-- Change Password Tab -->
+                                <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                                    <p class="password-guideline">
+                                        Mật khẩu mới phải có tối thiểu 9 ký tự, chứa ít nhất 1 chữ hoa và 1 chữ số.
+                                    </p>
+                                    <form id="changePasswordForm" class="mt-3">
+                                        <div class="mb-3">
+                                            <label for="currentPassword" class="form-label">
+                                                <i class="fas fa-lock me-2"></i>Mật khẩu hiện tại
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="currentPassword"
+                                                       placeholder="Nhập mật khẩu hiện tại" required>
+                                                <button class="btn password-toggle-btn" type="button"
+                                                        onclick="togglePasswordVisibility('currentPassword', this)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newPassword" class="form-label">
+                                                <i class="fas fa-shield-alt me-2"></i>Mật khẩu mới
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="newPassword"
+                                                       placeholder="Nhập mật khẩu mới" required minlength="9">
+                                                <button class="btn password-toggle-btn" type="button"
+                                                        onclick="togglePasswordVisibility('newPassword', this)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="confirmPassword" class="form-label">
+                                                <i class="fas fa-check-double me-2"></i>Xác nhận mật khẩu mới
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="confirmPassword"
+                                                       placeholder="Nhập lại mật khẩu mới" required minlength="9">
+                                                <button class="btn password-toggle-btn" type="button"
+                                                        onclick="togglePasswordVisibility('confirmPassword', this)">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <button type="submit" class="btn btn-primary" id="changePasswordSubmit">
+                                                <i class="fas fa-key me-1"></i>Cập nhật mật khẩu
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -377,7 +472,8 @@
 
 @section Scripts {
     <script>
-        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7173/api")';
+        const API_BASE_URL = '@(ViewBag.ApiBaseUrl ?? "https://localhost:7102/api")';
+        const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*\d).{9,}$/;
         let currentEmployee = null;
         let originalFormData = null;
 
@@ -387,6 +483,13 @@
             
             // Load employee details using my-profile endpoint (userId từ token)
             loadEmployeeDetails();
+
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            if (changePasswordForm) {
+                changePasswordForm.addEventListener('submit', handleChangePasswordSubmit);
+            }
+
+            setupPasswordValidationMessages();
         });
         
         function initializeImagePreview() {
@@ -441,6 +544,29 @@
                     }
                 });
             }
+        }
+
+        function setupPasswordValidationMessages() {
+            const passwordFieldIds = ['newPassword', 'confirmPassword'];
+
+            passwordFieldIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+
+                input.addEventListener('invalid', function () {
+                    if (input.validity.valueMissing) {
+                        input.setCustomValidity('Vui lòng nhập mật khẩu');
+                    } else if (input.validity.tooShort) {
+                        input.setCustomValidity('Mật khẩu phải có ít nhất 9 ký tự');
+                    } else {
+                        input.setCustomValidity('');
+                    }
+                });
+
+                input.addEventListener('input', function () {
+                    input.setCustomValidity('');
+                });
+            });
         }
 
         function loadEmployeeDetails() {
@@ -987,6 +1113,104 @@
                     console.error('Error:', error);
                     showError('Có lỗi xảy ra khi cập nhật thông tin: ' + error.message);
                 });
+            }
+        }
+
+        async function handleChangePasswordSubmit(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword')?.value.trim();
+            const newPassword = document.getElementById('newPassword')?.value.trim();
+            const confirmPassword = document.getElementById('confirmPassword')?.value.trim();
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showAlert('Vui lòng nhập đầy đủ thông tin mật khẩu', 'warning');
+                return;
+            }
+
+            if (newPassword.length < 9) {
+                showAlert('Mật khẩu mới phải có ít nhất 9 ký tự', 'warning');
+                return;
+            }
+
+            if (!PASSWORD_REGEX.test(newPassword)) {
+                showAlert('Mật khẩu mới phải có chữ hoa và chữ số', 'warning');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showAlert('Mật khẩu xác nhận không khớp', 'warning');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showAlert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'danger');
+                return;
+            }
+
+            const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+            const userId = userInfo.userId || userInfo.id || (currentEmployee ? (currentEmployee.userId || currentEmployee.id) : null);
+
+            if (!userId) {
+                showAlert('Không tìm thấy thông tin tài khoản. Vui lòng đăng nhập lại.', 'danger');
+                return;
+            }
+
+            const submitBtn = document.getElementById('changePasswordSubmit');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang cập nhật...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/Auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        oldPassword: currentPassword,
+                        newPassword: newPassword
+                    })
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok || !data || data.success === false) {
+                    const message = (data && (data.message || data.error)) || 'Không thể đổi mật khẩu. Vui lòng thử lại.';
+                    throw new Error(message);
+                }
+
+                showAlert(data.message || 'Đổi mật khẩu thành công!', 'success');
+                document.getElementById('changePasswordForm').reset();
+            } catch (error) {
+                console.error('Change password error:', error);
+                showAlert(error.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.', 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        }
+
+        function togglePasswordVisibility(inputId, buttonEl) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            const icon = buttonEl.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (icon) {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            } else {
+                input.type = 'password';
+                if (icon) {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
             }
         }
 

@@ -50,6 +50,29 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ServiceTaskResponseDto> CreateServiceTaskAsync(ServiceTaskRequestDto request, long? userId = null)
         {
+            // ✅ VALIDATION: Kiểm tra trạng thái MaintenanceTicket - không cho thêm công việc nếu phiếu đã hoàn thành
+            var ticket = await _maintenanceTicketRepository.GetByIdAsync(request.MaintenanceTicketId);
+            if (ticket?.StatusCode == "COMPLETED" || ticket?.StatusCode == "CANCELLED")
+            {
+                throw new InvalidOperationException("Không thể thêm công việc sau khi phiếu đã hoàn thành hoặc đã hủy");
+            }
+            
+            // ✅ VALIDATION: Kiểm tra kỹ thuật viên có được gán vào phiếu không (nếu có TechnicianId)
+            if (request.TechnicianId.HasValue)
+            {
+                var isAssigned = ticket?.TechnicianId == request.TechnicianId.Value;
+                if (!isAssigned && ticket?.MaintenanceTicketTechnicians != null)
+                {
+                    isAssigned = ticket.MaintenanceTicketTechnicians.Any(t => t.TechnicianId == request.TechnicianId.Value);
+                }
+                
+                if (!isAssigned)
+                {
+                    throw new InvalidOperationException(
+                        "Kỹ thuật viên phải được gán vào phiếu bảo dưỡng trước khi được gán vào công việc");
+                }
+            }
+            
             var serviceTask = _mapper.Map<ServiceTask>(request);           
             // Tính LaborCost nếu có StandardLaborTime và Branch.LaborRate
 
@@ -137,10 +160,33 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Service task not found");
 
+            // ✅ VALIDATION: Kiểm tra trạng thái MaintenanceTicket - không cho sửa công việc nếu phiếu đã hoàn thành
+            var ticket = await _maintenanceTicketRepository.GetByIdAsync(existingTask.MaintenanceTicketId ?? 0);
+            if (ticket?.StatusCode == "COMPLETED" || ticket?.StatusCode == "CANCELLED")
+            {
+                throw new InvalidOperationException("Không thể sửa công việc sau khi phiếu đã hoàn thành hoặc đã hủy");
+            }
+
             // ✅ VALIDATION: Không cho phép sửa công việc đã hoàn thành
             if (existingTask.StatusCode == "DONE" || existingTask.StatusCode == "COMPLETED")
             {
                 throw new ArgumentException("Không thể sửa công việc đã hoàn thành");
+            }
+
+            // ✅ VALIDATION: Kiểm tra kỹ thuật viên có được gán vào phiếu không (nếu có TechnicianId mới)
+            if (request.TechnicianId.HasValue && request.TechnicianId.Value != existingTask.TechnicianId)
+            {
+                var isAssigned = ticket?.TechnicianId == request.TechnicianId.Value;
+                if (!isAssigned && ticket?.MaintenanceTicketTechnicians != null)
+                {
+                    isAssigned = ticket.MaintenanceTicketTechnicians.Any(t => t.TechnicianId == request.TechnicianId.Value);
+                }
+                
+                if (!isAssigned)
+                {
+                    throw new InvalidOperationException(
+                        "Kỹ thuật viên phải được gán vào phiếu bảo dưỡng trước khi được gán vào công việc");
+                }
             }
 
             _mapper.Map(request, existingTask);
@@ -169,11 +215,70 @@ namespace BE.vn.fpt.edu.services
 
             }
 
+            // ✅ CẢNH BÁO: Khi thời gian thực tế vượt quá thời gian chuẩn nhiều (> 1.5 lần)
+            if (existingTask.StandardLaborTime.HasValue && existingTask.ActualLaborTime.HasValue && 
+                existingTask.StandardLaborTime.Value > 0)
+            {
+                var ratio = existingTask.ActualLaborTime.Value / existingTask.StandardLaborTime.Value;
+                if (ratio > 1.5m)
+                {
+                    // Thêm cảnh báo vào Note nếu chưa có
+                    var warningMessage = $"[CẢNH BÁO] Thời gian thực tế ({existingTask.ActualLaborTime.Value:F2}h) vượt quá thời gian chuẩn ({existingTask.StandardLaborTime.Value:F2}h) {(ratio * 100):F0}%. ";
+                    if (string.IsNullOrWhiteSpace(existingTask.Note))
+                    {
+                        existingTask.Note = warningMessage;
+                    }
+                    else if (!existingTask.Note.Contains("[CẢNH BÁO]"))
+                    {
+                        existingTask.Note = warningMessage + "\n" + existingTask.Note;
+                    }
+                }
+            }
+
             
 
+            // ✅ Ghi log chi tiết khi cập nhật công việc
+            var oldTaskName = existingTask.TaskName;
+            var oldStatus = existingTask.StatusCode;
+            var oldStandardTime = existingTask.StandardLaborTime;
+            var oldActualTime = existingTask.ActualLaborTime;
+            var oldTechnicianId = existingTask.TechnicianId;
+            
             var updatedTask = await _serviceTaskRepository.UpdateAsync(existingTask);
 
+            // ✅ Tạo history log chi tiết khi cập nhật
+            var changes = new List<string>();
+            if (oldTaskName != request.TaskName)
+            {
+                changes.Add($"Tên: '{oldTaskName}' → '{request.TaskName}'");
+            }
+            if (oldStatus != request.StatusCode && !string.IsNullOrEmpty(request.StatusCode))
+            {
+                changes.Add($"Trạng thái: {oldStatus} → {request.StatusCode}");
+            }
+            if (oldStandardTime != request.StandardLaborTime)
+            {
+                changes.Add($"Thời gian chuẩn: {oldStandardTime} → {request.StandardLaborTime}");
+            }
+            if (oldActualTime != request.ActualLaborTime)
+            {
+                changes.Add($"Thời gian thực tế: {oldActualTime} → {request.ActualLaborTime}");
+            }
+            if (oldTechnicianId != request.TechnicianId)
+            {
+                changes.Add($"Kỹ thuật viên: {oldTechnicianId} → {request.TechnicianId}");
+            }
             
+            if (changes.Any())
+            {
+                await CreateHistoryLogAsync(
+                    userId: null, // Có thể thêm userId parameter nếu cần
+                    action: "UPDATE_SERVICE_TASK",
+                    maintenanceTicketId: existingTask.MaintenanceTicketId,
+                    oldData: $"Công việc '{oldTaskName}': {string.Join("; ", changes)}",
+                    newData: $"Đã cập nhật công việc '{request.TaskName}'"
+                );
+            }
 
             // Cập nhật TotalEstimatedCost của MaintenanceTicket
             await UpdateMaintenanceTicketTotalCost(existingTask.MaintenanceTicketId ?? 0);         
@@ -243,15 +348,37 @@ namespace BE.vn.fpt.edu.services
 
                 return false;
 
+            // ✅ VALIDATION: Kiểm tra trạng thái MaintenanceTicket - không cho xóa công việc nếu phiếu đã hoàn thành
+            var ticket = await _maintenanceTicketRepository.GetByIdAsync(serviceTask.MaintenanceTicketId ?? 0);
+            if (ticket?.StatusCode == "COMPLETED" || ticket?.StatusCode == "CANCELLED")
+            {
+                throw new InvalidOperationException("Không thể xóa công việc sau khi phiếu đã hoàn thành hoặc đã hủy");
+            }
+
             // ✅ VALIDATION: Không cho phép xóa công việc đã hoàn thành
             if (serviceTask.StatusCode == "DONE" || serviceTask.StatusCode == "COMPLETED")
             {
                 throw new ArgumentException("Không thể xóa công việc đã hoàn thành");
-            }          
+            }
+
+            // ✅ Ghi log chi tiết trước khi xóa
+            var deleteDetails = $"Xóa công việc '{serviceTask.TaskName}' - Trạng thái: {serviceTask.StatusCode}, Thời gian chuẩn: {serviceTask.StandardLaborTime}h, Thời gian thực tế: {serviceTask.ActualLaborTime}h";          
 
             var maintenanceTicketId = serviceTask.MaintenanceTicketId ?? 0;
 
             var result = await _serviceTaskRepository.DeleteAsync(id);
+            
+            // ✅ Tạo history log chi tiết khi xóa
+            if (result)
+            {
+                await CreateHistoryLogAsync(
+                    userId: null, // Có thể thêm userId parameter nếu cần
+                    action: "DELETE_SERVICE_TASK",
+                    maintenanceTicketId: maintenanceTicketId,
+                    oldData: deleteDetails,
+                    newData: "Đã xóa công việc khỏi phiếu bảo dưỡng"
+                );
+            }
 
             
 
@@ -277,7 +404,7 @@ namespace BE.vn.fpt.edu.services
 
         {
 
-            var serviceTask = await _serviceTaskRepository.GetByIdAsync(id);
+            var serviceTask = await _serviceTaskRepository.GetByIdWithDetailsAsync(id);
 
             if (serviceTask == null)
 
@@ -313,10 +440,36 @@ namespace BE.vn.fpt.edu.services
             // ✅ Tự động set EndTime khi chuyển sang DONE hoặc COMPLETED
             if ((statusCode == "DONE" || statusCode == "COMPLETED") && oldStatus != statusCode && !serviceTask.EndTime.HasValue)
             {
+                // ✅ VALIDATION: Không cho phép hoàn thành công việc nếu chưa có kỹ thuật viên được gán
+                var hasTechnician = serviceTask.TechnicianId.HasValue;
+                if (!hasTechnician)
+                {
+                    // Kiểm tra ServiceTaskTechnicians (đã được load từ GetByIdWithDetailsAsync)
+                    hasTechnician = serviceTask.ServiceTaskTechnicians != null && 
+                                   serviceTask.ServiceTaskTechnicians.Any();
+                }
+                
+                if (!hasTechnician)
+                {
+                    throw new InvalidOperationException(
+                        "Không thể hoàn thành công việc khi chưa có kỹ thuật viên được gán");
+                }
+                
                 serviceTask.EndTime = DateTime.UtcNow;
                 
-                // ✅ Tự động tính ActualLaborTime từ StartTime đến EndTime (tính bằng giờ)
+                // ✅ VALIDATION: Thời gian kết thúc phải sau thời gian bắt đầu
                 if (serviceTask.StartTime.HasValue && serviceTask.EndTime.HasValue)
+                {
+                    if (serviceTask.EndTime.Value < serviceTask.StartTime.Value)
+                    {
+                        throw new ArgumentException("Thời gian kết thúc phải sau thời gian bắt đầu");
+                    }
+                }
+                
+                // ✅ CHỈ tính ActualLaborTime tự động nếu CHƯA CÓ giá trị (làm gợi ý)
+                // Lý do: Nhân viên có thể về nhà giữa chừng, thời gian thực tế làm việc 
+                // không phải là EndTime - StartTime (có thể bỏ qua giờ nghỉ, giờ về nhà)
+                if (serviceTask.StartTime.HasValue && serviceTask.EndTime.HasValue && !serviceTask.ActualLaborTime.HasValue)
                 {
                     var timeSpan = serviceTask.EndTime.Value - serviceTask.StartTime.Value;
                     // Chuyển đổi từ TimeSpan sang giờ (decimal)
@@ -324,6 +477,8 @@ namespace BE.vn.fpt.edu.services
                     
                     // Làm tròn đến 2 chữ số thập phân
                     serviceTask.ActualLaborTime = Math.Round(serviceTask.ActualLaborTime.Value, 2);
+                    
+                    // Lưu ý: Đây chỉ là gợi ý, nhân viên/quản lý có thể sửa lại thủ công
                 }
             }
 
@@ -331,6 +486,37 @@ namespace BE.vn.fpt.edu.services
             if (!string.IsNullOrWhiteSpace(completionNote))
             {
                 serviceTask.CompletionNote = completionNote;
+            }
+
+            // ✅ CẢNH BÁO: Khi thời gian thực tế vượt quá thời gian chuẩn nhiều (> 1.5 lần)
+            if (serviceTask.StandardLaborTime.HasValue && serviceTask.ActualLaborTime.HasValue && 
+                serviceTask.StandardLaborTime.Value > 0)
+            {
+                var ratio = serviceTask.ActualLaborTime.Value / serviceTask.StandardLaborTime.Value;
+                if (ratio > 1.5m)
+                {
+                    // Thêm cảnh báo vào CompletionNote nếu chưa có
+                    var warningMessage = $"[CẢNH BÁO] Thời gian thực tế ({serviceTask.ActualLaborTime.Value:F2}h) vượt quá thời gian chuẩn ({serviceTask.StandardLaborTime.Value:F2}h) {(ratio * 100):F0}%. ";
+                    if (string.IsNullOrWhiteSpace(serviceTask.CompletionNote))
+                    {
+                        serviceTask.CompletionNote = warningMessage;
+                    }
+                    else if (!serviceTask.CompletionNote.Contains("[CẢNH BÁO]"))
+                    {
+                        serviceTask.CompletionNote = warningMessage + "\n" + serviceTask.CompletionNote;
+                    }
+                    
+                    // Ghi log cảnh báo
+                    if (userId.HasValue)
+                    {
+                        await CreateHistoryLogAsync(
+                            userId: userId,
+                            action: "WARNING_LABOR_TIME_EXCEEDED",
+                            maintenanceTicketId: serviceTask.MaintenanceTicketId,
+                            newData: $"Cảnh báo: Công việc '{serviceTask.TaskName}' có thời gian thực tế vượt quá chuẩn {(ratio * 100):F0}%"
+                        );
+                    }
+                }
             }
 
             serviceTask.StatusCode = statusCode;
@@ -395,7 +581,21 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Service task not found");
 
-
+            // ✅ CẢNH BÁO: Khi thời gian thực tế vượt quá thời gian chuẩn nhiều (> 1.5 lần)
+            if (serviceTask.StandardLaborTime.HasValue && serviceTask.StandardLaborTime.Value > 0)
+            {
+                var ratio = actualLaborTime / serviceTask.StandardLaborTime.Value;
+                if (ratio > 1.5m)
+                {
+                    // Ghi log cảnh báo
+                    await CreateHistoryLogAsync(
+                        userId: null,
+                        action: "WARNING_LABOR_TIME_EXCEEDED",
+                        maintenanceTicketId: serviceTask.MaintenanceTicketId,
+                        newData: $"Cảnh báo: Công việc '{serviceTask.TaskName}' có thời gian thực tế ({actualLaborTime:F2}h) vượt quá chuẩn ({serviceTask.StandardLaborTime.Value:F2}h) {(ratio * 100):F0}%"
+                    );
+                }
+            }
 
             serviceTask.ActualLaborTime = actualLaborTime;
 
@@ -621,9 +821,55 @@ namespace BE.vn.fpt.edu.services
         /// </summary>
         public async Task<ServiceTaskResponseDto> AssignTechniciansAsync(long id, ServiceTaskAssignTechniciansDto request, long? userId = null)
         {
-            var serviceTask = await _serviceTaskRepository.GetByIdAsync(id);
+            var serviceTask = await _serviceTaskRepository.GetByIdWithDetailsAsync(id);
             if (serviceTask == null)
                 throw new ArgumentException("Service task not found");
+
+            // ✅ VALIDATION: Kiểm tra kỹ thuật viên có được gán vào phiếu không
+            var ticket = await _maintenanceTicketRepository.GetByIdAsync(serviceTask.MaintenanceTicketId ?? 0);
+            if (ticket == null)
+                throw new ArgumentException("Maintenance ticket not found");
+
+            if (request.TechnicianIds != null && request.TechnicianIds.Count > 0)
+            {
+                foreach (var technicianId in request.TechnicianIds)
+                {
+                    var isAssigned = ticket.TechnicianId == technicianId;
+                    if (!isAssigned && ticket.MaintenanceTicketTechnicians != null)
+                    {
+                        isAssigned = ticket.MaintenanceTicketTechnicians.Any(t => t.TechnicianId == technicianId);
+                    }
+                    
+                    if (!isAssigned)
+                    {
+                        throw new InvalidOperationException(
+                            $"Kỹ thuật viên (ID: {technicianId}) phải được gán vào phiếu bảo dưỡng trước khi được gán vào công việc");
+                    }
+                }
+            }
+            
+            // Nếu có PrimaryTechnicianId, cũng cần kiểm tra
+            if (request.PrimaryTechnicianId.HasValue)
+            {
+                var primaryId = request.PrimaryTechnicianId.Value;
+                var isAssigned = ticket.TechnicianId == primaryId;
+                if (!isAssigned && ticket.MaintenanceTicketTechnicians != null)
+                {
+                    isAssigned = ticket.MaintenanceTicketTechnicians.Any(t => t.TechnicianId == primaryId);
+                }
+                
+                if (!isAssigned)
+                {
+                    throw new InvalidOperationException(
+                        $"Kỹ thuật viên chính (ID: {primaryId}) phải được gán vào phiếu bảo dưỡng trước khi được gán vào công việc");
+                }
+                
+                // PrimaryTechnicianId phải nằm trong danh sách TechnicianIds
+                if (request.TechnicianIds == null || !request.TechnicianIds.Contains(primaryId))
+                {
+                    throw new ArgumentException("Kỹ thuật viên chính phải nằm trong danh sách kỹ thuật viên được gán");
+                }
+            }
 
             // Xóa tất cả technicians hiện tại
             var existingTechnicians = _context.ServiceTaskTechnicians

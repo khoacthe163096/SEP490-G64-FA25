@@ -66,10 +66,10 @@ namespace BE.vn.fpt.edu.repository
             var query = _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Branch)
-                .Where(u => u.RoleId >= 3 && u.RoleId <= 6 && (u.IsDelete == false || u.IsDelete == null));
+                .Where(u => u.RoleId >= 2 && u.RoleId <= 6 && (u.IsDelete == false || u.IsDelete == null));
 
             // Filter theo role
-            if (roleId.HasValue && roleId.Value >= 3 && roleId.Value <= 6)
+            if (roleId.HasValue && roleId.Value >= 2 && roleId.Value <= 6)
             {
                 query = query.Where(u => u.RoleId == roleId.Value);
             }
@@ -118,10 +118,10 @@ namespace BE.vn.fpt.edu.repository
         public async Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null, long? branchId = null)
         {
             var query = _context.Users
-                .Where(u => u.RoleId >= 3 && u.RoleId <= 6 && (u.IsDelete == false || u.IsDelete == null));
+                .Where(u => u.RoleId >= 2 && u.RoleId <= 6 && (u.IsDelete == false || u.IsDelete == null));
 
             // Filter theo role
-            if (roleId.HasValue && roleId.Value >= 3 && roleId.Value <= 6)
+            if (roleId.HasValue && roleId.Value >= 2 && roleId.Value <= 6)
             {
                 query = query.Where(u => u.RoleId == roleId.Value);
             }

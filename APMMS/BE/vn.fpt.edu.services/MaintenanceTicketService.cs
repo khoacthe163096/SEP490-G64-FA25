@@ -1154,7 +1154,7 @@ namespace BE.vn.fpt.edu.services
 
 
 
-        public async Task<ResponseDto> CompleteMaintenanceAsync(long id)
+        public async Task<ResponseDto> CompleteMaintenanceAsync(long id, long? userId = null)
 
         {
 
@@ -1164,7 +1164,26 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Maintenance ticket not found");
 
-
+            // ✅ VALIDATION: Kiểm tra quyền - chỉ quản lý/tư vấn viên/Admin mới được hoàn thành phiếu
+            // RoleId: 1=Admin, 2=Branch Manager, 6=Consulter
+            // Kỹ thuật viên (RoleId=4) KHÔNG được phép hoàn thành phiếu
+            if (userId.HasValue)
+            {
+                var user = await _context.Users
+                    .Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.Id == userId.Value);
+                
+                if (user != null && user.RoleId.HasValue)
+                {
+                    var roleId = user.RoleId.Value;
+                    // Chỉ cho phép Admin (1), Branch Manager (2), Consulter (6)
+                    if (roleId != 1 && roleId != 2 && roleId != 6)
+                    {
+                        throw new UnauthorizedAccessException(
+                            "Chỉ quản lý, tư vấn viên hoặc Admin mới được phép hoàn thành phiếu bảo dưỡng. Kỹ thuật viên không có quyền này.");
+                    }
+                }
+            }
 
             // ✅ VALIDATION: Chỉ cho phép hoàn thành khi phiếu đang ở trạng thái IN_PROGRESS
 

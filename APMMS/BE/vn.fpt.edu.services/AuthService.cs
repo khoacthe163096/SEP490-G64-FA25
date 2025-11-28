@@ -5,6 +5,7 @@ using BE.vn.fpt.edu.models;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -12,11 +13,15 @@ namespace BE.vn.fpt.edu.services
     {
         private readonly IUserRepository _userRepository;
         private readonly JwtService _jwtService;
+        private readonly EmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(IUserRepository userRepository, JwtService jwtService)
+        public AuthService(IUserRepository userRepository, JwtService jwtService, EmailService emailService, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<LoginResponseDto> LoginAsync(LoginDto loginDto)
@@ -28,7 +33,7 @@ namespace BE.vn.fpt.edu.services
                 return new LoginResponseDto
                 {
                     Success = false,
-                    Message = "Invalid username or password"
+                    Message = "Tên đăng nhập hoặc mật khẩu không đúng"
                 };
             }
 
@@ -47,47 +52,13 @@ namespace BE.vn.fpt.edu.services
             return new LoginResponseDto
             {
                 Success = true,
-                Message = "Login successful",
+                Message = "Đăng nhập thành công",
                 Token = token,
                 UserId = user.Id,
                 Username = user.Username,
                 RoleName = user.Role?.Name,
                 RoleId = user.RoleId,
                 BranchId = user.BranchId
-            };
-        }
-
-        public async Task<RegisterResponseDto> RegisterAsync(RegisterDto registerDto)
-        {
-            if (await _userRepository.UsernameExistsAsync(registerDto.Username))
-                return new RegisterResponseDto { Success = false, Message = "Username already exists" };
-
-            if (await _userRepository.EmailExistsAsync(registerDto.Email))
-                return new RegisterResponseDto { Success = false, Message = "Email already exists" };
-
-            var user = new User
-            {
-                Username = registerDto.Username,
-                Password = HashPassword(registerDto.Password),
-                Email = registerDto.Email,
-                FirstName = registerDto.FirstName,
-                LastName = registerDto.LastName,
-                Phone = registerDto.Phone,
-                RoleId = registerDto.RoleId ?? 2,
-                StatusCode = "ACTIVE",
-                IsDelete = false,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            await _userRepository.AddAsync(user);
-            await _userRepository.SaveChangesAsync();
-
-            return new RegisterResponseDto
-            {
-                Success = true,
-                Message = "Registration successful",
-                UserId = user.Id,
-                Username = user.Username
             };
         }
 
@@ -111,15 +82,15 @@ namespace BE.vn.fpt.edu.services
         {
             var principal = _jwtService.ValidateToken(token);
             if (principal == null)
-                return new LoginResponseDto { Success = false, Message = "Invalid token" };
+                return new LoginResponseDto { Success = false, Message = "Token không hợp lệ" };
 
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
-                return new LoginResponseDto { Success = false, Message = "Invalid token" };
+                return new LoginResponseDto { Success = false, Message = "Token không hợp lệ" };
 
             var user = await _userRepository.GetByIdAsync(long.Parse(userId));
             if (user == null)
-                return new LoginResponseDto { Success = false, Message = "User not found" };
+                return new LoginResponseDto { Success = false, Message = "Không tìm thấy người dùng" };
 
             // ✅ Check if account is inactive
             if (user.IsDelete == true || user.StatusCode == "INACTIVE")
@@ -136,7 +107,7 @@ namespace BE.vn.fpt.edu.services
             return new LoginResponseDto
             {
                 Success = true,
-                Message = "Token refreshed successfully",
+                Message = "Làm mới token thành công",
                 Token = newToken,
                 UserId = user.Id,
                 Username = user.Username,
@@ -167,7 +138,7 @@ namespace BE.vn.fpt.edu.services
                 return new ChangePasswordResponseDto
                 {
                     Success = false,
-                    Message = "User not found"
+                    Message = "Không tìm thấy người dùng"
                 };
             }
 
@@ -176,7 +147,7 @@ namespace BE.vn.fpt.edu.services
                 return new ChangePasswordResponseDto
                 {
                     Success = false,
-                    Message = "Old password is incorrect"
+                    Message = "Mật khẩu hiện tại không đúng"
                 };
             }
 
@@ -186,9 +157,116 @@ namespace BE.vn.fpt.edu.services
             return new ChangePasswordResponseDto
             {
                 Success = true,
-                Message = "Password changed successfully"
+                Message = "Đổi mật khẩu thành công"
             };
         }
 
+        public async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            // Tìm user theo email hoặc username
+            User? user = null;
+            
+            if (dto.EmailOrUsername.Contains("@"))
+            {
+                // Nếu có @ thì tìm theo email
+                user = await _userRepository.GetByEmailAsync(dto.EmailOrUsername);
+            }
+            else
+            {
+                // Nếu không có @ thì tìm theo username
+                user = await _userRepository.GetByUsernameAsync(dto.EmailOrUsername);
+            }
+
+            // Luôn trả về success để không tiết lộ thông tin user tồn tại hay không
+            if (user == null || string.IsNullOrEmpty(user.Email))
+            {
+                return new ForgotPasswordResponseDto
+                {
+                    Success = true,
+                    Message = "Nếu email/username tồn tại trong hệ thống, bạn sẽ nhận được email hướng dẫn đặt lại mật khẩu."
+                };
+            }
+
+            // Kiểm tra tài khoản có bị vô hiệu hóa không
+            if (user.IsDelete == true || user.StatusCode == "INACTIVE")
+            {
+                return new ForgotPasswordResponseDto
+                {
+                    Success = false,
+                    Message = "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
+                };
+            }
+
+            // Tạo reset token
+            var resetToken = GenerateResetToken();
+            user.ResetKey = resetToken;
+            user.ResetDate = DateTime.UtcNow.AddHours(24); // Token hết hạn sau 24 giờ
+            await _userRepository.UpdateAsync(user);
+
+            // Tạo reset URL
+            var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost:7173";
+            var resetUrl = $"{baseUrl}/Auth/ResetPassword?token={resetToken}";
+
+            // Gửi email
+            var emailSent = await _emailService.SendPasswordResetEmailAsync(
+                user.Email,
+                user.Username,
+                resetToken,
+                resetUrl
+            );
+
+            if (!emailSent)
+            {
+                return new ForgotPasswordResponseDto
+                {
+                    Success = false,
+                    Message = "Không thể gửi email. Vui lòng thử lại sau."
+                };
+            }
+
+            return new ForgotPasswordResponseDto
+            {
+                Success = true,
+                Message = "Email hướng dẫn đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn."
+            };
+        }
+
+        public async Task<ResetPasswordResponseDto> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            // Tìm user theo reset token
+            var user = await _userRepository.GetByResetTokenAsync(dto.Token);
+
+            if (user == null)
+            {
+                return new ResetPasswordResponseDto
+                {
+                    Success = false,
+                    Message = "Token không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới."
+                };
+            }
+
+            // Cập nhật mật khẩu
+            user.Password = HashPassword(dto.NewPassword);
+            user.ResetKey = null; // Xóa token sau khi đã sử dụng
+            user.ResetDate = null;
+            await _userRepository.UpdateAsync(user);
+
+            return new ResetPasswordResponseDto
+            {
+                Success = true,
+                Message = "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập với mật khẩu mới."
+            };
+        }
+
+        private string GenerateResetToken()
+        {
+            // Tạo token ngẫu nhiên 32 ký tự
+            var randomBytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return Convert.ToBase64String(randomBytes).Replace("+", "-").Replace("/", "_").Replace("=", "");
+        }
     }
 }

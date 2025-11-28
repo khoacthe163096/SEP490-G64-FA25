@@ -40,6 +40,24 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(u => u.Id == id && (u.IsDelete == false || u.IsDelete == null));
         }
 
+        public async Task<User?> GetByEmailAsync(string email)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsDelete != true);
+        }
+
+        public async Task<User?> GetByResetTokenAsync(string resetToken)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => 
+                    u.ResetKey == resetToken && 
+                    u.ResetDate.HasValue && 
+                    u.ResetDate.Value > DateTime.UtcNow &&
+                    u.IsDelete != true);
+        }
+
         public async Task<bool> UsernameExistsAsync(string username)
         {
             return await _context.Users.AnyAsync(u => u.Username == username);

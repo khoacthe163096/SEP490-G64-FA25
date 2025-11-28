@@ -201,7 +201,7 @@ namespace BE.vn.fpt.edu.services
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] User not found or no branchId. userId={userId}");
+                    System.Diagnostics.Debug.WriteLine($"[VehicleCheckinService] Không tìm thấy người dùng hoặc thiếu branchId. userId={userId}");
                 }
             }
 

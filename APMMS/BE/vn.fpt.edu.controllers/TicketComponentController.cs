@@ -85,7 +85,11 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _service.UpdateAsync(id, dto);
+                // Lấy userId từ JWT token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _service.UpdateAsync(id, dto, userId);
                 if (result == null)
                     return NotFound(new { success = false, message = "Ticket component not found" });
                 return Ok(new { success = true, data = result, message = "Component updated successfully" });

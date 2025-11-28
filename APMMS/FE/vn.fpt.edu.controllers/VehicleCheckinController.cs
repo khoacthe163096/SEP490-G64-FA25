@@ -112,6 +112,21 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Create")]
         public IActionResult Create()
         {
+            // Kiểm tra quyền: chỉ Consulter mới được tạo check-in
+            var roleId = HttpContext.Session.GetString("RoleId");
+            if (string.IsNullOrEmpty(roleId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập để truy cập trang này.";
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var roleIdInt = int.Parse(roleId);
+            if (roleIdInt != 6) // Chỉ Consulter (RoleId = 6) mới được tạo check-in
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền truy cập trang này. Chỉ Consulter mới được phép tạo check-in.";
+                return RedirectToAction("Index", "VehicleCheckins");
+            }
+
 			return View("~/vn.fpt.edu.views/VehicleCheckins/Create.cshtml");
         }
 
@@ -119,6 +134,21 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Edit/{id}")]
         public IActionResult Edit(int id)
         {
+            // Kiểm tra quyền: chỉ Consulter mới được sửa check-in
+            var roleId = HttpContext.Session.GetString("RoleId");
+            if (string.IsNullOrEmpty(roleId))
+            {
+                TempData["ErrorMessage"] = "Vui lòng đăng nhập để truy cập trang này.";
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var roleIdInt = int.Parse(roleId);
+            if (roleIdInt != 6) // Chỉ Consulter (RoleId = 6) mới được sửa check-in
+            {
+                TempData["ErrorMessage"] = "Bạn không có quyền truy cập trang này. Chỉ Consulter mới được phép sửa check-in.";
+                return RedirectToAction("Index", "VehicleCheckins");
+            }
+
             ViewBag.CheckinId = id;
 			return View("~/vn.fpt.edu.views/VehicleCheckins/Edit.cshtml");
         }
@@ -143,6 +173,19 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Update/{id}")]
         public async Task<IActionResult> Update(int id)
         {
+            // Kiểm tra quyền: chỉ Consulter mới được cập nhật check-in
+            var roleId = HttpContext.Session.GetString("RoleId");
+            if (string.IsNullOrEmpty(roleId))
+            {
+                return Json(new { success = false, message = "Vui lòng đăng nhập để thực hiện thao tác này." });
+            }
+
+            var roleIdInt = int.Parse(roleId);
+            if (roleIdInt != 6) // Chỉ Consulter (RoleId = 6) mới được cập nhật check-in
+            {
+                return Json(new { success = false, message = "Bạn không có quyền thực hiện thao tác này. Chỉ Consulter mới được phép cập nhật check-in." });
+            }
+
             try
             {
                 // Lấy dữ liệu thật từ form

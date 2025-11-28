@@ -79,11 +79,6 @@ namespace FE.vn.fpt.edu.services
             }
         }
 
-        public async Task<RegisterResponseModel?> RegisterAsync(RegisterRequestModel request)
-        {
-            return await _apiAdapter.PostAsync<RegisterResponseModel>("auth/register", request);
-        }
-
         public string? GetStoredToken()
         {
             // This would typically get the token from a secure storage

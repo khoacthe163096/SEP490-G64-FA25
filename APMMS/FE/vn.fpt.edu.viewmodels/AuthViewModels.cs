@@ -12,22 +12,6 @@ namespace FE.vn.fpt.edu.viewmodels
         public string Password { get; set; } = string.Empty;
     }
 
-    public class RegisterRequestModel
-    {
-        [Required]
-        public string Username { get; set; } = string.Empty;
-        
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-        
-        [Required]
-        public string Password { get; set; } = string.Empty;
-        
-        [Required]
-        public string ConfirmPassword { get; set; } = string.Empty;
-    }
-
     // Response Models
     public class LoginResponseModel
     {
@@ -62,10 +46,4 @@ namespace FE.vn.fpt.edu.viewmodels
         public long? BranchId { get; set; }
     }
 
-    public class RegisterResponseModel
-    {
-        public bool Success { get; set; }
-        public string? Message { get; set; }
-        public string? Error { get; set; }
-    }
 }

@@ -54,36 +54,6 @@ namespace BE.vn.fpt.edu.controllers
         }
 
 
-        [HttpPost("register")]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 400)]
-        [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 500)]
-        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
-        {
-            var result = await _authService.RegisterAsync(registerDto);
-
-            if (!result.Success)
-            {
-                return BadRequest(new AuthResponseWrapperDto<object>
-                {
-                    Success = false,
-                    Message = result.Message
-                });
-            }
-
-            return Ok(new AuthResponseWrapperDto<object>
-            {
-                Success = true,
-                Message = result.Message,
-                Data = new
-                {
-                    result.UserId,
-                    result.Username
-                }
-            });
-        }
-
-
         [Authorize]
         [HttpPost("logout")]
         [ProducesResponseType(typeof(AuthResponseWrapperDto<object>), 200)]
@@ -159,7 +129,7 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(new AuthResponseWrapperDto<object>
             {
                 Success = true,
-                Message = isValid ? "Token is valid" : "Token is invalid",
+                Message = isValid ? "Token hợp lệ" : "Token không hợp lệ",
                 Data = new { isValid }
             });
         }
@@ -171,6 +141,32 @@ namespace BE.vn.fpt.edu.controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
         {
             var result = await _authService.ChangePasswordAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("forgot-password")]
+        [ProducesResponseType(typeof(ForgotPasswordResponseDto), 200)]
+        [ProducesResponseType(typeof(ForgotPasswordResponseDto), 400)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            var result = await _authService.ForgotPasswordAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpPost("reset-password")]
+        [ProducesResponseType(typeof(ResetPasswordResponseDto), 200)]
+        [ProducesResponseType(typeof(ResetPasswordResponseDto), 400)]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
             if (!result.Success)
             {
                 return BadRequest(result);

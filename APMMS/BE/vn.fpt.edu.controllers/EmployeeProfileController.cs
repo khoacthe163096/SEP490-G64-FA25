@@ -33,13 +33,13 @@ namespace BE.vn.fpt.edu.controllers
                 
                 if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
                 {
-                    return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
+                    return Unauthorized(new { success = false, message = "Token không hợp lệ: không tìm thấy UserId" });
                 }
 
                 var employee = await _profileService.GetMyProfileAsync(userId);
                 if (employee == null)
                 {
-                    return NotFound(new { success = false, message = "User not found" });
+                    return NotFound(new { success = false, message = "Không tìm thấy người dùng" });
                 }
 
                 return Ok(employee);
@@ -85,7 +85,7 @@ namespace BE.vn.fpt.edu.controllers
                 
                 if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
                 {
-                    return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
+                    return Unauthorized(new { success = false, message = "Token không hợp lệ: không tìm thấy UserId" });
                 }
 
                 var result = await _profileService.UpdateMyProfileAsync(userId, dto);
@@ -120,7 +120,7 @@ namespace BE.vn.fpt.edu.controllers
                 
                 if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
                 {
-                    return Unauthorized(new { success = false, message = "Invalid token: UserId not found" });
+                    return Unauthorized(new { success = false, message = "Token không hợp lệ: không tìm thấy UserId" });
                 }
 
                 var imageUrl = await _profileService.UploadAvatarAsync(userId, file);

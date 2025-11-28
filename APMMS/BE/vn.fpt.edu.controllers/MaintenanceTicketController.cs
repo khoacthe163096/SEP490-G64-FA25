@@ -14,11 +14,16 @@ namespace BE.vn.fpt.edu.controllers
     {
         private readonly IMaintenanceTicketService _maintenanceTicketService;
         private readonly IMapper _mapper;
+        private readonly IReportService _reportService;
 
-        public MaintenanceTicketController(IMaintenanceTicketService maintenanceTicketService, IMapper mapper)
+        public MaintenanceTicketController(
+            IMaintenanceTicketService maintenanceTicketService, 
+            IMapper mapper,
+            IReportService reportService)
         {
             _maintenanceTicketService = maintenanceTicketService;
             _mapper = mapper;
+            _reportService = reportService;
         }
 
         /// <summary>
@@ -322,8 +327,16 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                var result = await _maintenanceTicketService.CompleteMaintenanceAsync(id);
+                // Lấy userId từ claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                long? userId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+                
+                var result = await _maintenanceTicketService.CompleteMaintenanceAsync(id, userId);
                 return Ok(new { success = true, data = result, message = "Maintenance completed successfully" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
             }
             catch (ArgumentException ex)
             {
@@ -370,6 +383,30 @@ namespace BE.vn.fpt.edu.controllers
             catch (ArgumentException ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Export PDF báo cáo chi tiết phiếu bảo dưỡng
+        /// </summary>
+        [HttpGet("{id}/export-pdf")]
+        public async Task<IActionResult> ExportPdf(long id)
+        {
+            try
+            {
+                var pdfBytes = await _reportService.GenerateMaintenanceTicketPdfAsync(id);
+                var ticket = await _maintenanceTicketService.GetMaintenanceTicketByIdAsync(id);
+                var fileName = $"PhieuBaoDuong_{(ticket?.Code ?? id.ToString())}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {

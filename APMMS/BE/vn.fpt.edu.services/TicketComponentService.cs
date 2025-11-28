@@ -139,7 +139,7 @@ namespace BE.vn.fpt.edu.services
             return entities.Select(MapToResponse);
         }
 
-        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto)
+        public async Task<ResponseDto?> UpdateAsync(long id, RequestDto dto, long? userId = null)
         {
             var existing = await _repository.GetByIdAsync(id);
             if (existing == null) return null;
@@ -239,9 +239,54 @@ namespace BE.vn.fpt.edu.services
             }
 
             existing.ComponentId = dto.ComponentId;
-            existing.Quantity = dto.Quantity;
+            
+            // ✅ XỬ LÝ: Nếu số lượng thực tế > số lượng đã lấy, tự động cập nhật và trừ thêm từ kho
+            if (dto.ActualQuantity.HasValue && dto.ActualQuantity.Value > dto.Quantity)
+            {
+                var additionalNeeded = dto.ActualQuantity.Value - dto.Quantity;
+                var componentForUpdate = await _context.Components.FindAsync(existing.ComponentId);
+                
+                if (componentForUpdate == null)
+                    throw new ArgumentException("Component not found");
+                
+                // Kiểm tra tồn kho còn đủ không (convert decimal sang int)
+                var additionalNeededInt = (int)Math.Ceiling(additionalNeeded);
+                if (!componentForUpdate.QuantityStock.HasValue || componentForUpdate.QuantityStock.Value < additionalNeededInt)
+                {
+                    throw new ArgumentException(
+                        $"Không đủ số lượng trong kho. Cần thêm: {additionalNeededInt}, Tồn kho: {componentForUpdate.QuantityStock ?? 0}");
+                }
+                
+                // Tự động cập nhật Quantity = ActualQuantity (convert decimal sang int) và trừ thêm từ kho
+                existing.Quantity = (int)Math.Ceiling(dto.ActualQuantity.Value);
+                componentForUpdate.QuantityStock = (componentForUpdate.QuantityStock ?? 0) - additionalNeededInt;
+                if (componentForUpdate.QuantityStock < 0)
+                    componentForUpdate.QuantityStock = 0;
+                _context.Components.Update(componentForUpdate);
+                
+                // Ghi log: "Đã lấy thêm X phụ tùng vì dùng nhiều hơn dự kiến"
+                if (userId.HasValue)
+                {
+                    var user = await _context.Users.FindAsync(userId.Value);
+                    var userName = user != null 
+                        ? ($"{user.FirstName} {user.LastName}").Trim() 
+                        : "Unknown";
+                    
+                    await CreateHistoryLogAsync(
+                        userId: userId,
+                        action: "UPDATE_COMPONENT_QUANTITY",
+                        maintenanceTicketId: existing.MaintenanceTicketId,
+                        newData: $"Đã lấy thêm {additionalNeededInt} phụ tùng '{componentForUpdate.Name}' (tổng: {existing.Quantity}) bởi {userName}"
+                    );
+                }
+            }
+            else
+            {
+                existing.Quantity = dto.Quantity;
+            }
+            
             // Cập nhật ActualQuantity: nếu có giá trị thì dùng, nếu null thì set bằng Quantity
-            existing.ActualQuantity = dto.ActualQuantity ?? (decimal?)dto.Quantity;
+            existing.ActualQuantity = dto.ActualQuantity ?? (decimal?)existing.Quantity;
             existing.UnitPrice = dto.UnitPrice;
             // ✅ BranchId không thay đổi khi update (luôn theo MaintenanceTicket)
             // Đảm bảo BranchId luôn được set từ MaintenanceTicket (trường hợp data cũ có thể chưa có)
@@ -250,10 +295,56 @@ namespace BE.vn.fpt.edu.services
                 existing.BranchId = ticket.BranchId;
             }
 
+            // ✅ Ghi log chi tiết khi cập nhật phụ tùng
+            var oldQuantity = existing.Quantity;
+            var oldActualQuantity = existing.ActualQuantity;
+            var oldUnitPrice = existing.UnitPrice;
+            
             var updated = await _repository.UpdateAsync(existing);
             
             // Cập nhật TotalEstimatedCost của MaintenanceTicket
             await UpdateMaintenanceTicketTotalCost(existing.MaintenanceTicketId ?? 0);
+            
+            // ✅ Tạo history log chi tiết khi cập nhật
+            if (userId.HasValue && updated != null)
+            {
+                var user = await _context.Users.FindAsync(userId.Value);
+                var userName = user != null 
+                    ? ($"{user.FirstName} {user.LastName}").Trim() 
+                    : "Unknown";
+                
+                var componentForLog = await _context.Components.FindAsync(updated.ComponentId);
+                var componentName = componentForLog?.Name ?? "N/A";
+                
+                var changes = new List<string>();
+                
+                if (oldQuantity != updated.Quantity)
+                {
+                    changes.Add($"Số lượng: {oldQuantity} → {updated.Quantity}");
+                }
+                
+                if (oldActualQuantity != updated.ActualQuantity)
+                {
+                    changes.Add($"Số lượng thực tế: {oldActualQuantity} → {updated.ActualQuantity}");
+                }
+                
+                if (oldUnitPrice != updated.UnitPrice)
+                {
+                    changes.Add($"Đơn giá: {oldUnitPrice:N0} ₫ → {updated.UnitPrice:N0} ₫");
+                }
+                
+                var changeDetails = changes.Any() 
+                    ? string.Join("; ", changes)
+                    : "Không có thay đổi";
+                
+                await CreateHistoryLogAsync(
+                    userId: userId,
+                    action: "UPDATE_COMPONENT",
+                    maintenanceTicketId: updated.MaintenanceTicketId,
+                    oldData: $"Phụ tùng '{componentName}': Số lượng={oldQuantity}, Số lượng thực tế={oldActualQuantity}, Đơn giá={oldUnitPrice:N0} ₫",
+                    newData: $"Cập nhật phụ tùng '{componentName}': {changeDetails} bởi {userName}"
+                );
+            }
             
             return updated != null ? MapToResponse(updated) : null;
         }
@@ -278,24 +369,41 @@ namespace BE.vn.fpt.edu.services
             if (entity.ServicePackageId.HasValue)
                 throw new ArgumentException("Không thể xóa phụ tùng từ gói dịch vụ. Nếu muốn xóa, vui lòng xóa toàn bộ gói dịch vụ khỏi phiếu bảo dưỡng.");
 
+            // ✅ Ghi log chi tiết trước khi xóa
+            var componentForDelete = await _context.Components.FindAsync(entity.ComponentId);
+            var componentName = componentForDelete?.Name ?? "N/A";
+            var componentCode = componentForDelete?.Code ?? "N/A";
+            
             // ✅ Hoàn trả component về tồn kho
-            var component = await _context.Components.FindAsync(entity.ComponentId);
-            if (component != null && component.QuantityStock.HasValue)
+            if (componentForDelete != null && componentForDelete.QuantityStock.HasValue)
             {
                 // Hoàn trả số lượng đã lấy (dùng Quantity, không phải ActualQuantity vì có thể đã dùng rồi)
                 // Hoặc có thể hoàn trả ActualQuantity nếu chưa dùng hết
                 // Ở đây hoàn trả Quantity để đơn giản
-                component.QuantityStock += entity.Quantity;
-                _context.Components.Update(component);
+                componentForDelete.QuantityStock += entity.Quantity;
+                _context.Components.Update(componentForDelete);
             }
             
             var maintenanceTicketId = entity.MaintenanceTicketId ?? 0;
+            
+            // ✅ Ghi log chi tiết trước khi xóa
+            var deleteDetails = $"Xóa phụ tùng '{componentName}' (Mã: {componentCode}) - Số lượng: {entity.Quantity}, Số lượng thực tế: {entity.ActualQuantity}, Đơn giá: {entity.UnitPrice:N0} ₫";
+            
             var result = await _repository.DeleteAsync(id);
             
             if (result)
             {
                 // Cập nhật TotalEstimatedCost của MaintenanceTicket
                 await UpdateMaintenanceTicketTotalCost(maintenanceTicketId);
+                
+                // ✅ Tạo history log chi tiết khi xóa
+                await CreateHistoryLogAsync(
+                    userId: null, // Có thể lấy từ ticket nếu cần
+                    action: "DELETE_COMPONENT",
+                    maintenanceTicketId: maintenanceTicketId,
+                    oldData: deleteDetails,
+                    newData: "Đã xóa phụ tùng khỏi phiếu bảo dưỡng"
+                );
             }
             
             return result;

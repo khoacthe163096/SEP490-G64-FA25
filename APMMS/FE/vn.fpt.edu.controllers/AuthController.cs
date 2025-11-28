@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using FE.vn.fpt.edu.services;
 using FE.vn.fpt.edu.viewmodels;
+using Microsoft.Extensions.Configuration;
 
 namespace FE.vn.fpt.edu.controllers
 {
@@ -9,10 +10,12 @@ namespace FE.vn.fpt.edu.controllers
     public class AuthController : Controller
     {
         private readonly AuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, IConfiguration configuration)
         {
             _authService = authService;
+            _configuration = configuration;
         }
 
         [HttpGet]
@@ -55,7 +58,7 @@ namespace FE.vn.fpt.edu.controllers
                         Console.WriteLine("Login: BranchId not available in response");
                     }
                     
-                    Console.WriteLine($"Login successful for user: {request.Username}, Role: {roleId}, UserId: {result.UserId}, BranchId: {result.BranchId}");
+                    Console.WriteLine($"Đăng nhập thành công - user: {request.Username}, Role: {roleId}, UserId: {result.UserId}, BranchId: {result.BranchId}");
                     return Json(new { 
                         success = true, 
                         token = result.Token,
@@ -183,6 +186,22 @@ namespace FE.vn.fpt.edu.controllers
                 branchId = branchId,
                 userId = HttpContext.Session.GetString("UserId")
             });
+        }
+
+        [HttpGet]
+        [Route("ForgotPassword")]
+        public IActionResult ForgotPassword()
+        {
+            ViewBag.ApiBaseUrl = _configuration?["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+            return View();
+        }
+
+        [HttpGet]
+        [Route("ResetPassword")]
+        public IActionResult ResetPassword()
+        {
+            ViewBag.ApiBaseUrl = _configuration?["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
+            return View();
         }
     }
 }

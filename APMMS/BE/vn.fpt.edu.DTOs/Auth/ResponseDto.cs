@@ -41,4 +41,22 @@ namespace BE.vn.fpt.edu.DTOs.Auth
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// DTO cho Forgot Password Response
+    /// </summary>
+    public class ForgotPasswordResponseDto
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO cho Reset Password Response
+    /// </summary>
+    public class ResetPasswordResponseDto
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
 }

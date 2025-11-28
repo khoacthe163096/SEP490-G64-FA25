@@ -160,7 +160,7 @@ namespace BE.vn.fpt.edu.controllers
                         }
                         else
                         {
-                            Console.WriteLine($"[StockInRequestController.Create] ❌ User not found in database with Id: {userId}");
+                            Console.WriteLine($"[StockInRequestController.Create] ❌ Không tìm thấy người dùng trong database, Id: {userId}");
                         }
                     }
                     catch (Exception ex)

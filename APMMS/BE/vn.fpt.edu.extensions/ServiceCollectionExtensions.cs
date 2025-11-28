@@ -43,6 +43,7 @@ namespace BE.vn.fpt.edu.extensions
             services.AddScoped<IStockInRepository, StockInRepository>();
 
             // Add Services
+            services.AddScoped<EmailService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IVehicleCheckinService, VehicleCheckinService>();
             services.AddScoped<IMaintenanceTicketService, MaintenanceTicketService>();

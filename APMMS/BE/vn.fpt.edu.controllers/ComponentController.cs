@@ -35,19 +35,28 @@ namespace BE.vn.fpt.edu.controllers
                     userId = parsedUserId;
                 }
 
-                // LUÔN lấy BranchId từ JWT claim của user đang đăng nhập để đảm bảo chỉ hiển thị linh kiện của branch đó
-                // Bỏ qua branchId từ query parameter để tránh user có thể xem linh kiện của branch khác
-                var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                if (long.TryParse(branchIdClaim, out var claimBranchId))
+                // Kiểm tra nếu user là Admin
+                var roleIdClaim = User.FindFirst("RoleId")?.Value;
+                var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
+                var isAdmin = roleId == 1;
+
+                // Nếu là Admin và có branchId từ query parameter, dùng nó (cho phép Admin filter theo chi nhánh)
+                // Nếu là Admin và không có branchId từ query, không filter (hiển thị tất cả) - giữ nguyên null
+                if (!isAdmin)
                 {
-                    branchId = claimBranchId;
+                    // Nếu không phải Admin, LUÔN lấy BranchId từ JWT claim để đảm bảo chỉ hiển thị linh kiện của branch đó
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    {
+                        branchId = claimBranchId;
+                    }
+                    else
+                    {
+                        // Nếu không có branchId trong JWT, không trả về dữ liệu
+                        branchId = -1; // Sẽ không có linh kiện nào có branchId = -1
+                    }
                 }
-                // Nếu không có branchId trong JWT, không trả về dữ liệu (hoặc có thể throw exception tùy yêu cầu)
-                // Để đảm bảo an toàn, nếu không có branchId thì set branchId = -1 để không trả về gì
-                if (!branchId.HasValue)
-                {
-                    branchId = -1; // Sẽ không có linh kiện nào có branchId = -1
-                }
+                // Nếu là Admin: giữ nguyên branchId từ query (null = hiển thị tất cả, có giá trị = filter theo chi nhánh)
 
                 var result = await _service.GetAllAsync(page, pageSize, branchId, typeComponentId, statusCode, search);
                 var totalCount = await _service.GetTotalCountAsync(branchId, typeComponentId, statusCode, search);

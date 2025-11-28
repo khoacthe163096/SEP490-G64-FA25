@@ -40,7 +40,7 @@ namespace BE.vn.fpt.edu.services
         {
             var user = await _userRepository.GetByIdWithIncludesAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Không tìm thấy người dùng");
 
             // Không cho phép employee thay đổi roleId, branchId, statusCode, code, password, username của chính mình
             // Chỉ cho phép cập nhật thông tin cá nhân
@@ -103,7 +103,7 @@ namespace BE.vn.fpt.edu.services
 
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
-                throw new KeyNotFoundException("User not found");
+                throw new KeyNotFoundException("Không tìm thấy người dùng");
 
             // Upload to Cloudinary (isAvatar = true để crop thành hình vuông)
             var imageUrl = await _cloudinaryService.UploadImageAsync(file, "user-avatars", isAvatar: true);

@@ -142,7 +142,7 @@ namespace BE.vn.fpt.edu.controllers
                             }
                             else
                             {
-                                Console.WriteLine($"[TypeComponentController.Create] ❌ User not found in database with Id: {userId}");
+                                Console.WriteLine($"[TypeComponentController.Create] ❌ Không tìm thấy người dùng trong database, Id: {userId}");
                             }
                         }
                         catch (Exception ex)

@@ -25,7 +25,17 @@ namespace BE.vn.fpt.edu.services
         public async Task<IEnumerable<BranchResponseDto>> GetAllAsync()
         {
             var branches = await _branchRepository.GetAllAsync();
-            return branches.Select(b => _mapper.Map<BranchResponseDto>(b));
+
+            // Map kèm thông tin giám đốc cho từng chi nhánh để hiển thị ở danh sách
+            var result = new List<BranchResponseDto>();
+            foreach (var branch in branches)
+            {
+                var dto = _mapper.Map<BranchResponseDto>(branch);
+                dto.Director = await GetDirectorAsync(branch.Id);
+                result.Add(dto);
+            }
+
+            return result;
         }
 
         public async Task<BranchResponseDto?> GetByIdAsync(long id)

@@ -10,7 +10,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Danh sách check-in xe</h4>
-                    <a href="/VehicleCheckins/Create" class="btn btn-primary">
+                    <a href="/VehicleCheckins/Create" class="btn btn-primary" id="btnCreateCheckin" style="display: none;">
                         <i class="fas fa-plus"></i> Check-in xe mới
                     </a>
                 </div>
@@ -25,6 +25,11 @@
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="PENDING">Chờ xử lý</option>
                                 <option value="CONFIRMED">Đã xác nhận</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="branchFilter" style="display: none;">
+                                <option value="">Chọn chi nhánh</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -46,7 +51,6 @@
                                     <th>Loại xe</th>
                                     <th>Trạng thái</th>
                                     <th>Ngày check-in</th>
-                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="checkinsTableBody">
@@ -80,8 +84,14 @@
         let filteredCheckins = []; // Lưu checkins sau khi filter
         let totalRecords = 0;
         let currentUserBranchId = null; // Lưu branchId của người dùng đăng nhập
+        let isAdminUser = false; // Lưu trạng thái Admin
 
         $(document).ready(function() {
+            // Kiểm tra role và hiển thị branch filter nếu là Admin
+            checkUserRoleAndShowBranchFilter();
+            // Kiểm tra role và hiển thị nút tạo check-in nếu là Consulter
+            applyRoleBasedUiForCheckins();
+            
             // Load branchId của người dùng trước, sau đó mới load checkins
             loadUserBranchId().then(() => {
             loadCheckins();
@@ -110,7 +120,93 @@
                 currentPage = 1;
                 applyFilters();
             });
+
+            // Branch filter change - reload data from API if Admin
+            $('#branchFilter').on('change', function() {
+                currentPage = 1;
+                if (isAdminUser) {
+                    // Admin: reload từ API với branchId mới
+                    loadCheckins();
+                } else {
+                    // Không phải Admin: chỉ filter client-side
+                    applyFilters();
+                }
+            });
         });
+
+        async function checkUserRoleAndShowBranchFilter() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                const upperRoleName = roleName.toUpperCase();
+                isAdminUser = roleId === 1 || upperRoleName === 'ADMIN';
+
+                if (isAdminUser) {
+                    // Hiển thị branch filter
+                    document.getElementById('branchFilter').style.display = 'block';
+                    // Load danh sách chi nhánh
+                    await loadBranches();
+                }
+            } catch (error) {
+                console.error('Error checking user role:', error);
+            }
+        }
+
+        function applyRoleBasedUiForCheckins() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                const upperRoleName = roleName.toUpperCase();
+                const isConsulter = roleId === 6 || upperRoleName === 'CONSULTER';
+
+                // Chỉ Consulter mới thấy nút "Check-in xe mới"
+                const btnCreate = document.getElementById('btnCreateCheckin');
+                if (btnCreate) {
+                    btnCreate.style.display = isConsulter ? 'block' : 'none';
+                }
+            } catch (error) {
+                console.error('Error applying role-based UI:', error);
+            }
+        }
+
+        async function loadBranches() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/Branch`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    const branches = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+                    
+                    const branchFilter = document.getElementById('branchFilter');
+                    branchFilter.innerHTML = '<option value="">Chọn chi nhánh</option>';
+                    
+                    branches.forEach(branch => {
+                        const branchId = branch.id || branch.Id;
+                        const branchName = branch.name || branch.Name || 'N/A';
+                        const option = document.createElement('option');
+                        option.value = branchId;
+                        option.textContent = branchName;
+                        branchFilter.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+            }
+        }
 
         // Hàm lấy branchId của người dùng đăng nhập
         function loadUserBranchId() {
@@ -166,14 +262,17 @@
         function loadCheckins() {
             const token = localStorage.getItem('authToken');
             
-            // Load tất cả checkins với pageSize lớn (client-side pagination)
-            // Tương tự như ServiceSchedules và MaintenanceTickets
-            const url = `${API_BASE_URL}/VehicleCheckin?page=1&pageSize=500`;
+            // Lấy branchId từ filter nếu là Admin
+            const selectedBranchId = $('#branchFilter').val();
+            let url = `${API_BASE_URL}/VehicleCheckin?page=1&pageSize=500`;
+            if (selectedBranchId) {
+                url += `&branchId=${selectedBranchId}`;
+            }
 
             // Show loading
             $('#checkinsTableBody').html(`
                 <tr>
-                    <td colspan="7" class="text-center">
+                    <td colspan="6" class="text-center">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -207,7 +306,7 @@
             })
             .catch(error => {
                 console.error('Error loading checkins:', error);
-                $('#checkinsTableBody').html('<tr><td colspan="7" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
+                $('#checkinsTableBody').html('<tr><td colspan="6" class="text-center text-danger">Lỗi tải dữ liệu: ' + error.message + '</td></tr>');
                 allCheckins = [];
                 filteredCheckins = [];
                 totalRecords = 0;
@@ -220,17 +319,32 @@
             const search = $('#searchInput').val().trim().toLowerCase();
             const fromDate = $('#fromDateFilter').val();
             const toDate = $('#toDateFilter').val();
+            const selectedBranchId = $('#branchFilter').val();
 
             // Bắt đầu với tất cả checkins
             filteredCheckins = [...allCheckins];
 
-            // Filter by branchId của người dùng đăng nhập
-            if (currentUserBranchId) {
-                filteredCheckins = filteredCheckins.filter(c => {
-                    // So sánh branchId (có thể là số hoặc chuỗi)
-                    const checkinBranchId = c.branchId ? String(c.branchId) : null;
-                    return checkinBranchId === currentUserBranchId;
-                });
+            // Filter by branchId
+            // Nếu Admin chọn chi nhánh, filter theo chi nhánh đó
+            // Nếu Admin không chọn chi nhánh, không filter (hiển thị tất cả)
+            // Nếu không phải Admin, filter theo branchId của user đăng nhập
+            if (isAdminUser) {
+                // Admin: chỉ filter nếu chọn chi nhánh
+                if (selectedBranchId) {
+                    filteredCheckins = filteredCheckins.filter(c => {
+                        const checkinBranchId = c.branchId ? String(c.branchId) : null;
+                        return checkinBranchId === String(selectedBranchId);
+                    });
+                }
+                // Nếu Admin không chọn chi nhánh, không filter (giữ tất cả)
+            } else {
+                // Không phải Admin: filter theo branchId của user đăng nhập
+                if (currentUserBranchId) {
+                    filteredCheckins = filteredCheckins.filter(c => {
+                        const checkinBranchId = c.branchId ? String(c.branchId) : null;
+                        return checkinBranchId === currentUserBranchId;
+                    });
+                }
             }
 
             // Filter by status
@@ -297,7 +411,7 @@
             tbody.empty();
 
             if (!checkins || checkins.length === 0) {
-                tbody.html('<tr><td colspan="7" class="text-center text-muted">Không có dữ liệu</td></tr>');
+                tbody.html('<tr><td colspan="6" class="text-center text-muted">Không có dữ liệu</td></tr>');
                 return;
             }
 
@@ -305,35 +419,33 @@
                 const statusBadge = getStatusBadge(checkin.statusCode);
                 const createdAt = checkin.createdAt ? new Date(checkin.createdAt).toLocaleString('vi-VN') : '-';
                 
-                const confirmButton = checkin.statusCode === 'PENDING' 
-                    ? `<button class="btn btn-sm btn-success" onclick="confirmCheckin(${checkin.id})" title="Xác nhận">
-                            <i class="fas fa-check"></i>
-                       </button>`
-                    : '';
-                
-                const createMaintenanceButton = checkin.statusCode === 'CONFIRMED'
-                    ? `<button class="btn btn-sm btn-primary" onclick="createMaintenanceTicket(${checkin.id})" title="Tạo phiếu bảo dưỡng">
-                            <i class="fas fa-wrench"></i>
-                       </button>`
-                    : '';
+                // Chỉ Consulter mới thấy các nút sửa/xác nhận
+                const userInfoStr = localStorage.getItem('userInfo');
+                let isConsulter = false;
+                try {
+                    if (userInfoStr) {
+                        const userInfo = JSON.parse(userInfoStr);
+                        const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                        const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                        const upperRoleName = roleName.toUpperCase();
+                        isConsulter = roleId === 6 || upperRoleName === 'CONSULTER';
+                    }
+                } catch (e) {
+                    console.error('Error checking role:', e);
+                }
 
                 tbody.append(`
                     <tr>
-                        <td><strong>${checkin.code || 'VCI-' + checkin.id}</strong></td>
+                        <td>
+                            <a href="/VehicleCheckins/Details/${checkin.id}" class="text-decoration-none">
+                                <strong>${checkin.code || 'VCI-' + checkin.id}</strong>
+                            </a>
+                        </td>
                         <td><strong>${checkin.licensePlate || '-'}</strong></td>
                         <td>${checkin.customerName || '-'}</td>
                         <td><span class="badge bg-info">${checkin.carName || '-'}</span></td>
                         <td>${statusBadge}</td>
                         <td>${createdAt}</td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="/VehicleCheckins/Details/${checkin.id}" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                ${confirmButton}
-                                ${createMaintenanceButton}
-                            </div>
-                        </td>
                     </tr>
                 `);
             });
@@ -557,7 +669,11 @@
             }
             
             // Get form values
-            const serviceCategoryId = $('#modalServiceCategoryId').val() || null;
+            const serviceCategoryIdValue = $('#modalServiceCategoryId').val();
+            // Đảm bảo serviceCategoryId là null nếu không chọn, hoặc là number nếu có chọn
+            const serviceCategoryId = (serviceCategoryIdValue && serviceCategoryIdValue.trim() !== '') 
+                ? parseInt(serviceCategoryIdValue) 
+                : null;
             const priorityLevel = $('#modalPriorityLevel').val() || 'NORMAL';
             const description = $('#modalDescription').val() || 'Tạo từ vehicle check-in';
             

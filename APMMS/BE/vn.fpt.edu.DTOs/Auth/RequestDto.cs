@@ -43,7 +43,35 @@ namespace BE.vn.fpt.edu.DTOs.Auth
         public string OldPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "New password is required")]
-        [MinLength(6, ErrorMessage = "New password must be at least 6 characters")]
+        [MinLength(9, ErrorMessage = "New password must be at least 9 characters")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d).{9,}$", ErrorMessage = "New password must include at least one uppercase letter and one number")]
         public string NewPassword { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO cho Forgot Password
+    /// </summary>
+    public class ForgotPasswordDto
+    {
+        [Required(ErrorMessage = "Email or Username is required")]
+        public string EmailOrUsername { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// DTO cho Reset Password
+    /// </summary>
+    public class ResetPasswordDto
+    {
+        [Required(ErrorMessage = "Token is required")]
+        public string Token { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "New password is required")]
+        [MinLength(9, ErrorMessage = "New password must be at least 9 characters")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d).{9,}$", ErrorMessage = "New password must include at least one uppercase letter and one number")]
+        public string NewPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Confirm password is required")]
+        [Compare("NewPassword", ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

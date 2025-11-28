@@ -34,11 +34,12 @@
                                     <th>Số điện thoại</th>
                                     <th>Địa chỉ</th>
                                     <th>Giá công lao động</th>
+                                    <th>Giám đốc</th>
                                 </tr>
                             </thead>
                             <tbody id="branchesTableBody">
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">
+                                    <td colspan="6" class="text-center text-muted">
                                         <i class="fas fa-spinner fa-spin me-2"></i>Đang tải dữ liệu...
                                     </td>
                                 </tr>
@@ -214,7 +215,7 @@
             const emptyState = document.getElementById('emptyState');
             
             if (!branches || branches.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Không có chi nhánh nào</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Không có chi nhánh nào</td></tr>';
                 emptyState.style.display = 'block';
                 return;
             }
@@ -225,9 +226,19 @@
                 const laborRate = branch.laborRate ? 
                     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(branch.laborRate) : 
                     'N/A';
+
+                // Lấy tên giám đốc (nếu có)
+                let directorName = 'Chưa có giám đốc';
+                if (branch.director) {
+                    const d = branch.director;
+                    const firstName = d.firstName || d.FirstName || '';
+                    const lastName = d.lastName || d.LastName || '';
+                    const fullName = `${firstName} ${lastName}`.trim();
+                    directorName = fullName || d.username || d.Username || 'N/A';
+                }
                 
                 return `
-                    <tr style="cursor: pointer;">
+                    <tr>
                         <td>${index + 1}</td>
                         <td>
                             <a href="/Branches/Details/${branch.id}" style="text-decoration: none; color: inherit; font-weight: bold; color: #0d6efd;" 
@@ -239,6 +250,7 @@
                         <td>${escapeHtml(branch.phone || 'N/A')}</td>
                         <td>${escapeHtml(branch.address || 'N/A')}</td>
                         <td>${laborRate}</td>
+                        <td>${escapeHtml(directorName)}</td>
                     </tr>
                 `;
             }).join('');

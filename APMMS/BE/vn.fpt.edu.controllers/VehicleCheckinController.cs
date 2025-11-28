@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using BE.vn.fpt.edu.DTOs.VehicleCheckin;
 using BE.vn.fpt.edu.interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -24,6 +25,7 @@ namespace vn.fpt.edu.controllers
         /// T?o m?i vehicle check-in
         /// </summary>
         [HttpPost]
+        [Authorize(Roles = "Consulter")] // Chỉ Consulter được tạo check-in
         public async Task<IActionResult> CreateVehicleCheckin([FromBody] VehicleCheckinRequestDto request)
         {
             try
@@ -49,6 +51,7 @@ namespace vn.fpt.edu.controllers
         /// C?p nh?t vehicle check-in
         /// </summary>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Consulter")] // Chỉ Consulter được sửa check-in
         public async Task<IActionResult> UpdateVehicleCheckin(long id, [FromBody] UpdateDto request)
         {
             try
@@ -73,6 +76,7 @@ namespace vn.fpt.edu.controllers
         /// L?y chi ti?t vehicle check-in theo ID
         /// </summary>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Branch Manager,Consulter")] // Admin, Giám đốc và Consulter đều xem được
         public async Task<IActionResult> GetVehicleCheckinById(long id)
         {
             try
@@ -94,6 +98,7 @@ namespace vn.fpt.edu.controllers
         /// L?y danh s�ch t?t c? vehicle check-in (c� ph�n trang)
         /// </summary>
         [HttpGet]
+        [Authorize(Roles = "Admin,Branch Manager,Consulter")] // Admin, Giám đốc và Consulter đều xem được
         public async Task<IActionResult> GetAllVehicleCheckins(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
@@ -118,16 +123,27 @@ namespace vn.fpt.edu.controllers
                     System.Diagnostics.Debug.WriteLine("[VehicleCheckinController] No userId found in JWT token");
                 }
 
-                // ✅ Nếu có BranchId trong JWT claim, ưu tiên dùng nó
-                if (!branchId.HasValue)
+                // Kiểm tra nếu user là Admin
+                var roleIdClaim = User.FindFirst("RoleId")?.Value;
+                var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
+                var isAdmin = roleId == 1;
+
+                // Nếu là Admin và có branchId từ query parameter, dùng nó (cho phép Admin filter theo chi nhánh)
+                // Nếu là Admin và không có branchId từ query, không filter (hiển thị tất cả) - giữ nguyên null
+                if (!isAdmin)
                 {
-                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    // Nếu không phải Admin, LUÔN lấy BranchId từ JWT claim
+                    if (!branchId.HasValue)
                     {
-                        branchId = claimBranchId;
-                        System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Got branchId from JWT claim: {branchId}");
+                        var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                        if (long.TryParse(branchIdClaim, out var claimBranchId))
+                        {
+                            branchId = claimBranchId;
+                            System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Got branchId from JWT claim: {branchId}");
+                        }
                     }
                 }
+                // Nếu là Admin: giữ nguyên branchId từ query (null = hiển thị tất cả, có giá trị = filter theo chi nhánh)
 
                 System.Diagnostics.Debug.WriteLine($"[VehicleCheckinController] Final branchId: {branchId}, userId: {userId}, statusCode: {statusCode}");
 
@@ -189,6 +205,7 @@ namespace vn.fpt.edu.controllers
         /// X�a vehicle check-in
         /// </summary>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Consulter")] // Chỉ Consulter được xóa check-in
         public async Task<IActionResult> DeleteVehicleCheckin(long id)
         {
             try
@@ -254,6 +271,7 @@ namespace vn.fpt.edu.controllers
         /// Cập nhật trạng thái VehicleCheckin (chỉ PENDING hoặc CONFIRMED)
         /// </summary>
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "Consulter")] // Chỉ Consulter được cập nhật trạng thái
         public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusDto request)
         {
             try

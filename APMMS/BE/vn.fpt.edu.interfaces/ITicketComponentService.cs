@@ -9,7 +9,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CreateAsync(RequestDto dto, long? userId = null);
         Task<ResponseDto?> GetByIdAsync(long id);
         Task<IEnumerable<ResponseDto>> GetByMaintenanceTicketIdAsync(long maintenanceTicketId);
-        Task<ResponseDto?> UpdateAsync(long id, RequestDto dto);
+        Task<ResponseDto?> UpdateAsync(long id, RequestDto dto, long? userId = null);
         Task<bool> DeleteAsync(long id);
         Task<decimal> CalculateTotalCostAsync(long maintenanceTicketId);
     }
