@@ -96,6 +96,19 @@ namespace BE.vn.fpt.edu.repository
                 .ToListAsync();
         }
 
+        public async Task<List<MaintenanceTicket>> GetByUserIdAsync(long userId)
+        {
+            return await _context.MaintenanceTickets
+                .Include(mt => mt.Car)
+                    .ThenInclude(c => c.User)
+                .Include(mt => mt.Branch)
+                .Include(mt => mt.ServiceCategory)
+                .Include(mt => mt.TotalReceipts)
+                .Where(mt => mt.Car != null && mt.Car.UserId == userId)
+                .OrderByDescending(mt => mt.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<List<MaintenanceTicket>> GetByStatusAsync(string statusCode)
         {
             return await _context.MaintenanceTickets

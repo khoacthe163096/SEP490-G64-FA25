@@ -42,11 +42,14 @@ namespace BE.vn.fpt.edu.controllers
                 Data = new
                 {
                     result.Token,
+                    result.RefreshToken,
                     result.UserId,
                     result.Username,
                     result.RoleName,
                     result.RoleId,
-                    result.BranchId
+                    result.BranchId,
+                    result.FirstName,
+                    result.LastName
                 }
             };
 
@@ -106,6 +109,7 @@ namespace BE.vn.fpt.edu.controllers
                 Data = new
                 {
                     result.Token,
+                    result.RefreshToken,
                     result.UserId,
                     result.Username,
                     result.RoleName,

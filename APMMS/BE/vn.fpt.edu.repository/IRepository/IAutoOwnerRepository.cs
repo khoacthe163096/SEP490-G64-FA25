@@ -9,6 +9,9 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task<int> GetTotalCountAsync(string? search = null, string? status = null, long? roleId = null);
         Task<User?> GetByIdAsync(long id);
         Task<User?> GetByEmailAsync(string email);
+        Task<User?> GetByUsernameAsync(string username);
+        Task<User?> GetByPhoneAsync(string phone);
+        Task<User?> GetByCitizenIdAsync(string citizenId);
         Task<List<User>> GetByCarIdAsync(long carId);
         Task<List<User>> GetByBranchIdAsync(long branchId);
         Task<User> CreateAsync(User user);

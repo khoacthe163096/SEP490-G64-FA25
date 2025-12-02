@@ -142,6 +142,24 @@ namespace BE.vn.fpt.edu.repository
                 .FirstOrDefaultAsync(u => u.Email == email && (u.IsDelete == false || u.IsDelete == null));
         }
 
+        public async Task<User?> GetByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == username && (u.IsDelete == false || u.IsDelete == null));
+        }
+
+        public async Task<User?> GetByPhoneAsync(string phone)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.Phone == phone && (u.IsDelete == false || u.IsDelete == null));
+        }
+
+        public async Task<User?> GetByCitizenIdAsync(string citizenId)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.CitizenId == citizenId && (u.IsDelete == false || u.IsDelete == null));
+        }
+
         public async Task<List<User>> GetByCarIdAsync(long carId)
         {
             return await _context.Users

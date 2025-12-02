@@ -173,6 +173,43 @@ namespace BE.vn.fpt.edu.controllers
             }
         }
 
+        [HttpGet("customer/history")]
+        [Authorize]
+        public async Task<IActionResult> GetMaintenanceHistoryForCustomer([FromQuery] long? userId = null)
+        {
+            try
+            {
+                long? resolvedUserId = userId;
+                var claimUserIdValue = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!resolvedUserId.HasValue && long.TryParse(claimUserIdValue, out var claimUserId))
+                {
+                    resolvedUserId = claimUserId;
+                }
+
+                if (!resolvedUserId.HasValue)
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được người dùng." });
+                }
+
+                var isAdmin = User.IsInRole("Admin") || User.IsInRole("Branch Manager");
+                if (!isAdmin && claimUserIdValue != null && long.TryParse(claimUserIdValue, out var loggedInUserId))
+                {
+                    if (loggedInUserId != resolvedUserId.Value)
+                    {
+                        return Forbid("Bạn không được phép xem lịch sử của người dùng khác.");
+                    }
+                }
+
+                var result = await _maintenanceTicketService.GetMaintenanceHistoryByUserIdAsync(resolvedUserId.Value);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
         /// <summary>
         /// L?y Maintenance Tickets theo Status
         /// </summary>

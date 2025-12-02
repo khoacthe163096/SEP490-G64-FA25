@@ -21,8 +21,6 @@ public partial class Branch
 
     public virtual ICollection<CustomerGuest> CustomerGuests { get; set; } = new List<CustomerGuest>();
 
-    public virtual ICollection<MaintenanceRequest> MaintenanceRequests { get; set; } = new List<MaintenanceRequest>();
-
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 
     public virtual ICollection<ScheduleService> ScheduleServices { get; set; } = new List<ScheduleService>();

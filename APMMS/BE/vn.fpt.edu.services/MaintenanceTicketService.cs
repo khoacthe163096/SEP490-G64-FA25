@@ -8,6 +8,7 @@ using UpdateStatusDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.UpdateStatusDto;
 using AssignTechnicianDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.AssignTechnicianDto;
 using AssignTechniciansDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.AssignTechniciansDto;
 using TechnicianInfoDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.TechnicianInfoDto;
+using UserMaintenanceHistoryDto = BE.vn.fpt.edu.DTOs.MaintenanceTicket.UserMaintenanceHistoryDto;
 using TotalReceiptRequestDto = BE.vn.fpt.edu.DTOs.TotalReceipt.RequestDto;
 
 using BE.vn.fpt.edu.DTOs.TotalReceipt;
@@ -1438,6 +1439,51 @@ namespace BE.vn.fpt.edu.services
 
         }
 
+        public async Task<List<UserMaintenanceHistoryDto>> GetMaintenanceHistoryByUserIdAsync(long userId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("Invalid userId");
+            }
+
+            var tickets = await _maintenanceTicketRepository.GetByUserIdAsync(userId);
+            var result = new List<UserMaintenanceHistoryDto>();
+
+            foreach (var ticket in tickets)
+            {
+                var receipt = ticket.TotalReceipts?
+                    .OrderByDescending(r => r.CreatedAt ?? DateTime.MinValue)
+                    .FirstOrDefault();
+
+                // ✅ Chỉ hiển thị các phiếu đã thanh toán (hóa đơn có status = PAID)
+                if (!string.Equals(receipt?.StatusCode, "PAID", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                result.Add(new UserMaintenanceHistoryDto
+                {
+                    TicketId = ticket.Id,
+                    TicketCode = ticket.Code,
+                    StatusCode = ticket.StatusCode,
+                    StatusName = GetStatusDisplayName(ticket.StatusCode),
+                    CreatedDate = ticket.CreatedAt,
+                    StartTime = ticket.StartTime,
+                    EndTime = ticket.EndTime,
+                    CarName = ticket.SnapshotCarName ?? ticket.Car?.CarName,
+                    LicensePlate = ticket.SnapshotLicensePlate ?? ticket.Car?.LicensePlate,
+                    BranchName = ticket.SnapshotBranchName ?? ticket.Branch?.Name,
+                    ServiceCategoryName = ticket.ServiceCategory?.Name,
+                    ReceiptAmount = receipt?.FinalAmount ?? receipt?.Amount,
+                    ReceiptId = receipt?.Id,
+                    ReceiptCode = receipt != null ? $"REC-{receipt.Id}" : null,
+                    ReceiptStatus = receipt?.StatusCode
+                });
+            }
+
+            return result;
+        }
+
 
 
         /// <summary>
@@ -1824,6 +1870,26 @@ namespace BE.vn.fpt.edu.services
 
             await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
 
+        }
+
+        private static string GetStatusDisplayName(string? statusCode)
+        {
+            if (string.IsNullOrWhiteSpace(statusCode))
+            {
+                return "Không xác định";
+            }
+
+            return statusCode.ToUpperInvariant() switch
+            {
+                "PENDING" => "Chờ xử lý",
+                "ASSIGNED" => "Đã phân công",
+                "IN_PROGRESS" => "Đang thực hiện",
+                "WAITING_PAYMENT" => "Chờ thanh toán",
+                "PAID" => "Đã thanh toán",
+                "COMPLETED" => "Hoàn thành",
+                "CANCELLED" => "Đã hủy",
+                _ => statusCode.ToUpperInvariant()
+            };
         }
 
     }

@@ -451,6 +451,8 @@ namespace BE.vn.fpt.edu.services
             {
                 dto.CarId = car.Id;
                 dto.CarName = car.CarName;
+                dto.CarModel = car.CarModel;
+                dto.VehicleType = car.VehicleType?.Name;
                 dto.LicensePlate = car.LicensePlate;
                 dto.VinNumber = car.VinNumber;
                 dto.EngineNumber = car.VehicleEngineNumber;
@@ -458,6 +460,8 @@ namespace BE.vn.fpt.edu.services
                 {
                     var fullName = $"{car.User.FirstName} {car.User.LastName}".Trim();
                     dto.CustomerName = string.IsNullOrWhiteSpace(fullName) ? car.User.Username : fullName;
+                    dto.CustomerCode = car.User.Code;
+                    dto.CustomerGender = car.User.Gender;
                     dto.CustomerPhone = car.User.Phone;
                     dto.CustomerEmail = car.User.Email;
                     dto.CustomerAddress = car.User.Address;
@@ -467,6 +471,10 @@ namespace BE.vn.fpt.edu.services
             // Nếu không có từ Car, lấy từ MaintenanceTicket snapshot
             if (entity.MaintenanceTicket != null)
             {
+                // Map thêm thời gian bảo dưỡng từ phiếu bảo dưỡng
+                dto.MaintenanceStartTime = entity.MaintenanceTicket.StartTime;
+                dto.MaintenanceEndTime = entity.MaintenanceTicket.EndTime;
+
                 if (string.IsNullOrWhiteSpace(dto.VinNumber))
                 {
                     dto.VinNumber = entity.MaintenanceTicket.SnapshotVinNumber;

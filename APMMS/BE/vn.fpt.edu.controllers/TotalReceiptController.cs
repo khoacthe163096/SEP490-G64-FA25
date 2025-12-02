@@ -25,7 +25,7 @@ namespace BE.vn.fpt.edu.controllers
         {
             try
             {
-                // ✅ Lấy userId từ JWT token để service tự động lấy BranchId
+                // ✅ Lấy userId và role từ JWT token
                 long? userId = null;
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var parsedUserId))
@@ -33,8 +33,13 @@ namespace BE.vn.fpt.edu.controllers
                     userId = parsedUserId;
                 }
 
-                // ✅ Nếu có BranchId trong JWT claim, ưu tiên dùng nó
-                if (!branchId.HasValue)
+                var roleName = User.FindFirst(ClaimTypes.Role)?.Value;
+                var roleIdClaim = User.FindFirst("RoleId")?.Value;
+                bool isAdmin = string.Equals(roleName, "ADMIN", StringComparison.OrdinalIgnoreCase) || roleIdClaim == "1";
+
+                // ✅ Nếu không phải Admin, luôn giới hạn theo BranchId trong token
+                // Admin: chỉ áp branchId từ token khi client không truyền branchId (mặc định xem chi nhánh của mình)
+                if (!branchId.HasValue || !isAdmin)
                 {
                     var branchIdClaim = User.FindFirst("BranchId")?.Value;
                     if (long.TryParse(branchIdClaim, out var claimBranchId))
@@ -43,7 +48,10 @@ namespace BE.vn.fpt.edu.controllers
                     }
                 }
 
-                var result = await _service.GetPagedAsync(page, pageSize, search, statusCode, fromDate, toDate, branchId, userId);
+                // ✅ Nếu là Admin và không truyền branchId => cho phép xem tất cả chi nhánh (không ép theo user branch)
+                var effectiveUserId = isAdmin && !branchId.HasValue ? (long?)null : userId;
+
+                var result = await _service.GetPagedAsync(page, pageSize, search, statusCode, fromDate, toDate, branchId, effectiveUserId);
                 return Ok(new
                 {
                     success = true,

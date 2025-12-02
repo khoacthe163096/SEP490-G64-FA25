@@ -95,15 +95,18 @@
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 <input type="text" class="form-control" id="searchInput" placeholder="Tìm mã, khách hàng...">
-                </div>
+                            </div>
                         </div>
                         <select class="form-select form-select-sm" id="statusFilter" style="max-width: 180px;">
-                                <option value="">Tất cả trạng thái</option>
+                            <option value="">Tất cả trạng thái</option>
                             <option value="PENDING">Chưa thanh toán</option>
-                                <option value="PAID">Đã thanh toán</option>
-                            </select>
-                        </div>
-                        </div>
+                            <option value="PAID">Đã thanh toán</option>
+                        </select>
+                        <select class="form-select form-select-sm" id="branchFilter" style="max-width: 200px; display: none;">
+                            <option value="">Tất cả chi nhánh</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -151,6 +154,8 @@
         let pageSize = 10;
         let currentSearch = '';
         let currentStatus = '';
+        let currentBranchId = '';
+        let isAdminUser = false;
 
         $(document).ready(function () {
             attachEvents();
@@ -158,6 +163,8 @@
         });
 
         function attachEvents() {
+            initBranchFilterForAdmin();
+
             let searchTimeout;
             $('#searchInput').on('input', function () {
                 clearTimeout(searchTimeout);
@@ -174,6 +181,11 @@
                 loadReceipts();
             });
 
+            $('#branchFilter').on('change', function () {
+                currentBranchId = $('#branchFilter').val();
+                currentPage = 1;
+                loadReceipts();
+            });
         }
 
         function buildQueryParams() {
@@ -182,7 +194,56 @@
             params.append('pageSize', pageSize);
             if (currentSearch) params.append('search', currentSearch);
             if (currentStatus) params.append('statusCode', currentStatus);
+            if (isAdminUser && currentBranchId) params.append('branchId', currentBranchId);
             return params.toString();
+        }
+
+        async function initBranchFilterForAdmin() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (!userInfoStr) return;
+
+                const userInfo = JSON.parse(userInfoStr);
+                const roleId = userInfo.roleId || userInfo.role || userInfo.roleId;
+                const roleName = (userInfo.roleName || userInfo.role || '').toString();
+                const upperRoleName = roleName.toUpperCase();
+                isAdminUser = roleId === 1 || upperRoleName === 'ADMIN';
+
+                if (!isAdminUser) {
+                    return;
+                }
+
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE_URL}/Branch`, {
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.warn('Không thể tải danh sách chi nhánh cho filter hóa đơn.');
+                    return;
+                }
+
+                const result = await response.json();
+                const branches = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+
+                const branchFilter = document.getElementById('branchFilter');
+                branchFilter.style.display = 'block';
+                branchFilter.innerHTML = '<option value=\"\">Tất cả chi nhánh</option>';
+
+                branches.forEach(branch => {
+                    const branchId = branch.id || branch.Id;
+                    const branchName = branch.name || branch.Name || 'N/A';
+                    const option = document.createElement('option');
+                    option.value = branchId;
+                    option.textContent = branchName;
+                    branchFilter.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error initializing branch filter:', error);
+            }
         }
 
         function loadReceipts() {

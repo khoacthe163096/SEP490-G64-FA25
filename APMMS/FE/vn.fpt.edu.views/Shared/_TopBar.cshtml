@@ -31,38 +31,109 @@
 </div>
 
 <script>
-// Hiển thị tên user từ token
-function displayUserNameFromToken() {
+// ✅ Hiển thị họ tên thay vì username trong dashboard topbar
+async function displayUserNameFromToken() {
+    const userDisplayNameEl = document.getElementById('userDisplayName');
+    if (!userDisplayNameEl) return;
+    
     try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            console.log('No token found');
-            return;
-        }
-
-        // Decode token để lấy username
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
-            
-            if (username) {
-                // Hiển thị tên user
-                document.getElementById('userDisplayName').textContent = username;
-                console.log('Displayed username from token:', username);
+        // ✅ Lấy thông tin từ localStorage trước
+        const userInfoStr = localStorage.getItem('userInfo');
+        if (userInfoStr) {
+            try {
+                const userInfo = JSON.parse(userInfoStr);
+                
+                // ✅ Ưu tiên hiển thị firstName + lastName
+                let displayName = 'Người dùng';
+                if (userInfo.firstName && userInfo.lastName) {
+                    displayName = `${userInfo.firstName} ${userInfo.lastName}`.trim();
+                } else if (userInfo.fullName) {
+                    displayName = userInfo.fullName;
+                } else if (userInfo.username) {
+                    displayName = userInfo.username;
+                }
+                
+                userDisplayNameEl.textContent = displayName;
+                console.log('Displayed name from localStorage:', displayName);
+                
+                // ✅ Nếu chưa có firstName/lastName, gọi API để lấy
+                if (!userInfo.firstName || !userInfo.lastName) {
+                    const userId = userInfo.userId || userInfo.id;
+                    if (userId) {
+                        try {
+                            // Gọi FE API GetUserInfo để lấy firstName/lastName
+                            const response = await fetch('/Auth/GetUserInfo', {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                const result = await response.json();
+                                const firstName = result.firstName;
+                                const lastName = result.lastName;
+                                
+                                if (firstName && lastName) {
+                                    const fullName = `${firstName} ${lastName}`.trim();
+                                    userDisplayNameEl.textContent = fullName;
+                                    
+                                    // Cập nhật localStorage
+                                    const updatedUserInfo = {
+                                        ...userInfo,
+                                        firstName: firstName,
+                                        lastName: lastName,
+                                        fullName: fullName
+                                    };
+                                    localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+                                    console.log('Updated name from API:', fullName);
+                                }
+                            }
+                        } catch (error) {
+                            console.warn('Could not fetch user info from API:', error);
+                        }
+                    }
+                }
+                
+                return; // Đã hiển thị từ localStorage, không cần decode token
+            } catch (e) {
+                console.warn('Error parsing userInfo from localStorage:', e);
             }
-        } catch (e) {
-            console.log('Could not decode token, using default name');
-            document.getElementById('userDisplayName').textContent = 'User';
+        }
+        
+        // ✅ Fallback: Nếu không có trong localStorage, decode token để lấy username
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const username = payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'];
+                
+                if (username) {
+                    userDisplayNameEl.textContent = username;
+                    console.log('Displayed username from token:', username);
+                } else {
+                    userDisplayNameEl.textContent = 'Người dùng';
+                }
+            } catch (e) {
+                console.log('Could not decode token, using default name');
+                userDisplayNameEl.textContent = 'Người dùng';
+            }
+        } else {
+            userDisplayNameEl.textContent = 'Người dùng';
         }
     } catch (error) {
         console.error('Error displaying user name:', error);
-        document.getElementById('userDisplayName').textContent = 'User';
+        userDisplayNameEl.textContent = 'Người dùng';
     }
 }
 
 // Gọi hàm khi trang load
 document.addEventListener('DOMContentLoaded', function() {
     displayUserNameFromToken();
+    
+    // ✅ Chạy lại sau một khoảng thời gian để đảm bảo cập nhật sau khi login
+    setTimeout(displayUserNameFromToken, 300);
+    setTimeout(displayUserNameFromToken, 1000);
     
     // Khởi tạo dropdown
     const dropdownToggle = document.getElementById('userDropdownToggle');

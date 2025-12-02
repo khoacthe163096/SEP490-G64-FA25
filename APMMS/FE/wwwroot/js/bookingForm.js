@@ -3,6 +3,31 @@
 (function () {
     const REQUIRED_DATA_KEY = 'original-required';
 
+    function isTokenValid(token) {
+        if (!token) return false;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            // Kiểm tra expiration time (exp)
+            if (payload.exp) {
+                const expirationTime = payload.exp * 1000; // Convert to milliseconds
+                const currentTime = Date.now();
+                if (currentTime >= expirationTime) {
+                    console.log('⚠️ Token has expired, clearing from localStorage');
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userInfo');
+                    return false;
+                }
+            }
+            return true;
+        } catch (error) {
+            console.error('Error validating token:', error);
+            // Nếu không decode được, coi như token không hợp lệ
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userInfo');
+            return false;
+        }
+    }
+
     function getUserIdFromToken(token) {
         if (!token) return null;
         try {
@@ -41,14 +66,18 @@
         if (cars.length > 0) {
             field.append('<option value="">-- Chọn biển số xe --</option>');
             cars.forEach(car => {
-                const plate = car.licensePlate || 'Chưa có biển số';
-                const name = car.carName ? ` - ${car.carName}` : '';
-                field.append(`<option value="${car.id}" data-car-id="${car.id}">${plate}${name}</option>`);
+                // Handle both camelCase and PascalCase property names
+                const carId = car.id || car.Id;
+                const plate = car.licensePlate || car.LicensePlate || 'Chưa có biển số';
+                const name = (car.carName || car.CarName) ? ` - ${car.carName || car.CarName}` : '';
+                field.append(`<option value="${carId}" data-car-id="${carId}">${plate}${name}</option>`);
             });
             field.prop('disabled', false);
+            console.log(`✅ Populated license plate dropdown with ${cars.length} cars`);
         } else {
             field.append('<option value="">-- Bạn chưa có xe nào đã bảo dưỡng --</option>');
             field.prop('disabled', true);
+            console.log('⚠️ No cars to populate in license plate dropdown');
         }
         field.prop('required', true);
         return field;
@@ -243,7 +272,11 @@
 
     async function loadUserCars() {
         const token = localStorage.getItem('authToken');
-        if (!token) {
+        // QUAN TRỌNG: Kiểm tra token không chỉ tồn tại mà còn phải hợp lệ
+        if (!token || !isTokenValid(token)) {
+            console.log('🚗 No valid token, skipping car load - user not logged in');
+            // Không gọi ensureLicensePlateSelect() khi chưa đăng nhập
+            // Để updateBookingFormForUser() xử lý việc hiển thị input text
             return;
         }
 
@@ -253,39 +286,73 @@
             if (userInfoStr) {
                 const userInfo = JSON.parse(userInfoStr);
                 userId = userInfo.userId || userInfo.id;
+                console.log('🔍 UserId from localStorage:', userId);
             }
             if (!userId) {
                 userId = getUserIdFromToken(token);
+                console.log('🔍 UserId from token:', userId);
             }
         } catch (error) {
-            console.error('Error getting userId:', error);
+            console.error('❌ Error getting userId:', error);
+            ensureLicensePlateSelect([]);
             return;
         }
 
         if (!userId) {
+            console.warn('⚠️ No userId found, cannot load cars');
+            ensureLicensePlateSelect([]);
             return;
         }
 
         try {
             const apiBaseUrl = window.API_BASE_URL || 'https://localhost:7173/api';
-            const response = await fetch(`${apiBaseUrl}/CarOfAutoOwner/user/${userId}/serviced`, {
+            const url = `${apiBaseUrl}/CarOfAutoOwner/user/${userId}/serviced`;
+            console.log(`🚗 Loading cars for user ${userId} from ${url}`);
+            
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
 
+            console.log(`📥 Response status: ${response.status}`);
+
             if (!response.ok) {
-                console.warn('Failed to load user cars:', response.status);
+                const errorText = await response.text();
+                console.error(`❌ Failed to load user cars: ${response.status}`, errorText);
+                // Vẫn hiển thị dropdown nhưng với message lỗi
+                ensureLicensePlateSelect([]);
                 return;
             }
 
             const result = await response.json();
-            const cars = result.success && Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+            console.log('📦 Full response:', JSON.stringify(result, null, 2));
+            
+            // Parse response - có thể là { success: true, data: [...] } hoặc trực tiếp là array
+            let cars = [];
+            if (result && typeof result === 'object') {
+                if (result.success && Array.isArray(result.data)) {
+                    cars = result.data;
+                } else if (Array.isArray(result)) {
+                    cars = result;
+                } else if (Array.isArray(result.data)) {
+                    cars = result.data;
+                }
+            }
+            
+            console.log(`✅ Found ${cars.length} cars for user:`, cars);
+            
+            if (cars.length === 0) {
+                console.warn('⚠️ No cars found for user. This might be normal if user has not registered any cars yet.');
+            }
 
             ensureLicensePlateSelect(cars);
         } catch (error) {
-            console.error('Error loading serviced cars:', error);
+            console.error('❌ Error loading serviced cars:', error);
+            console.error('❌ Error details:', error.message, error.stack);
+            // Vẫn hiển thị dropdown nhưng với message lỗi
+            ensureLicensePlateSelect([]);
         }
     }
 
@@ -310,18 +377,39 @@
 
     function updateBookingFormForUser() {
         const token = localStorage.getItem('authToken');
-        const isLoggedIn = !!token;
+        // QUAN TRỌNG: Kiểm tra token không chỉ tồn tại mà còn phải hợp lệ (chưa hết hạn)
+        const isLoggedIn = token && isTokenValid(token);
+
+        console.log('🔄 updateBookingFormForUser - token exists:', !!token, 'isLoggedIn:', isLoggedIn);
 
         toggleGuestFields(isLoggedIn);
 
+        // QUAN TRỌNG: Luôn reset và chuyển đổi đúng loại field dựa trên trạng thái đăng nhập
+        const currentField = $('#licensePlate');
+        
         if (isLoggedIn) {
-            ensureLicensePlateSelect();
+            // User đã đăng nhập: hiển thị dropdown select
+            console.log('✅ User logged in, showing license plate dropdown');
+            // Nếu đang là input, chuyển sang select
+            if (currentField.is('input')) {
+                ensureLicensePlateSelect(); // Tạo select, sẽ được populate bởi loadUserCars()
+            } else {
+                // Đã là select, chỉ cần clear và để loadUserCars() populate
+                currentField.empty();
+            }
             $('#branch').prop('disabled', false);
             $('#mileage').val('');
             $('#message').val('');
         } else {
-            const plateInput = ensureLicensePlateInput();
-            plateInput.val('');
+            // User chưa đăng nhập: hiển thị input text
+            console.log('👤 User not logged in, showing license plate input text');
+            // Nếu đang là select, chuyển sang input
+            if (currentField.is('select')) {
+                ensureLicensePlateInput(); // Tạo input text
+            } else {
+                // Đã là input, chỉ cần clear
+                currentField.val('');
+            }
             $('#mileage').val('');
             $('#message').val('');
             $('#serviceType').val('');
@@ -500,13 +588,48 @@
         }, 500); // Delay nhỏ để đảm bảo DOM đã render
         
         $('#bookingModal').on('show.bs.modal', function () {
-            console.log('📋 Modal opening, ensuring data is loaded...');
-            updateBookingFormForUser();
+            console.log('📋 Modal opening, FORCE RESETTING form...');
+            
+            // QUAN TRỌNG: Force reset form và tất cả fields
+            $('#bookingForm')[0].reset();
+            
+            // Clear tất cả input values
+            $('#serviceType').val('');
+            $('#appointmentTime').val('');
+            $('#branch').val('');
+            $('#mileage').val('');
+            $('#message').val('');
+            
+            // QUAN TRỌNG: Kiểm tra lại token và reset field type
+            const token = localStorage.getItem('authToken');
+            const isValidToken = token && isTokenValid(token);
+            
+            console.log('🔍 Token check - exists:', !!token, 'valid:', isValidToken);
+            
+            // Force reset field type dựa trên trạng thái đăng nhập
+            if (isValidToken) {
+                console.log('✅ User is logged in, converting to select dropdown');
+                // Chuyển sang select dropdown
+                ensureLicensePlateSelect();
+                $('#branch').prop('disabled', false);
+            } else {
+                console.log('👤 User NOT logged in, converting to input text');
+                // Chuyển sang input text
+                ensureLicensePlateInput();
+                $('#branch').prop('disabled', false);
+            }
             
             // Luôn reload để đảm bảo data mới nhất
             loadBranches();
             loadServiceCategories();
-            loadUserCars();
+            
+            // Chỉ load user cars nếu đã đăng nhập và token hợp lệ
+            if (isValidToken) {
+                console.log('🔄 Loading user cars...');
+                loadUserCars();
+            } else {
+                console.log('🚗 User not logged in, skipping car load');
+            }
 
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -514,8 +637,26 @@
         });
 
         $('#bookingModal').on('shown.bs.modal', function () {
-            console.log('📋 Modal shown, ensuring data is loaded...');
-            updateBookingFormForUser();
+            console.log('📋 Modal shown, double-checking form state...');
+            
+            // Double-check trạng thái đăng nhập
+            const token = localStorage.getItem('authToken');
+            const isValidToken = token && isTokenValid(token);
+            const currentField = $('#licensePlate');
+            
+            // Đảm bảo field type đúng
+            if (isValidToken) {
+                if (currentField.is('input')) {
+                    console.log('⚠️ Field is input but user is logged in, converting to select');
+                    ensureLicensePlateSelect();
+                    loadUserCars();
+                }
+            } else {
+                if (currentField.is('select')) {
+                    console.log('⚠️ Field is select but user is not logged in, converting to input');
+                    ensureLicensePlateInput();
+                }
+            }
             
             // Đảm bảo load branches nếu chưa có
             if ($('#branch option').length <= 1) {
@@ -528,11 +669,28 @@
                 console.log('🔄 Reloading service categories...');
                 loadServiceCategories();
             }
+            
+            // Chỉ load user cars nếu đã đăng nhập và token hợp lệ
+            if (isValidToken) {
+                console.log('🔄 Loading user cars...');
+                loadUserCars();
+            }
         });
 
         $('#bookingModal').on('hidden.bs.modal', function () {
-            updateBookingFormForUser();
+            console.log('📋 Modal closed, FORCE RESETTING to default state...');
+            // Reset form về trạng thái ban đầu
             $('#bookingForm')[0].reset();
+            
+            // Clear tất cả values
+            $('#serviceType').val('');
+            $('#appointmentTime').val('');
+            $('#branch').val('');
+            $('#mileage').val('');
+            $('#message').val('');
+            
+            // LUÔN reset về input text khi đóng modal (sẽ được set lại đúng khi mở)
+            ensureLicensePlateInput();
         });
 
         $('#submitBooking').on('click', function (e) {
@@ -546,7 +704,12 @@
         });
 
         $(document).on('click', '[data-bs-target="#bookingModal"], .floating-tab-item[data-action="booking"]', function () {
-            console.log('📋 Booking button clicked, ensuring data is loaded...');
+            console.log('📋 Booking button clicked, resetting form and ensuring data is loaded...');
+            
+            // Reset form trước
+            $('#bookingForm')[0].reset();
+            
+            // QUAN TRỌNG: updateBookingFormForUser() phải chạy TRƯỚC để set đúng loại field
             updateBookingFormForUser();
             
             // Đảm bảo load branches nếu chưa có
@@ -559,7 +722,15 @@
                 loadServiceCategories();
             }
             
-            loadUserCars();
+            // Chỉ load user cars nếu đã đăng nhập và token hợp lệ
+            const token = localStorage.getItem('authToken');
+            if (token && isTokenValid(token)) {
+                console.log('🔄 Loading user cars from button click...');
+                loadUserCars();
+            } else {
+                console.log('🚗 User not logged in, ensuring input text field');
+                ensureLicensePlateInput();
+            }
         });
     });
 

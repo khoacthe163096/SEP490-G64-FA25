@@ -63,8 +63,6 @@ public partial class User
 
     public virtual ICollection<HistoryLog> HistoryLogs { get; set; } = new List<HistoryLog>();
 
-    public virtual ICollection<MaintenanceRequest> MaintenanceRequests { get; set; } = new List<MaintenanceRequest>();
-
     public virtual ICollection<MaintenanceTicket> MaintenanceTicketConsulters { get; set; } = new List<MaintenanceTicket>();
 
     public virtual ICollection<MaintenanceTicket> MaintenanceTicketTechnicians { get; set; } = new List<MaintenanceTicket>();
@@ -89,7 +87,7 @@ public partial class User
 
     public virtual ICollection<StockIn> StockInLastModifiedByNavigations { get; set; } = new List<StockIn>();
 
-    public virtual ICollection<StockInRequest> StockInRequests { get; set; } = new List<StockInRequest>();
+    public virtual ICollection<StockInRequest> StockInRequestCreatedByNavigations { get; set; } = new List<StockInRequest>();
 
     public virtual ICollection<StockInRequest> StockInRequestLastModifiedByNavigations { get; set; } = new List<StockInRequest>();
 

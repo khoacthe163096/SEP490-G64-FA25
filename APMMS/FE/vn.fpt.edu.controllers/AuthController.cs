@@ -58,6 +58,16 @@ namespace FE.vn.fpt.edu.controllers
                         Console.WriteLine("Login: BranchId not available in response");
                     }
                     
+                    // ✅ Lưu FirstName và LastName vào session
+                    if (!string.IsNullOrEmpty(result.FirstName))
+                    {
+                        HttpContext.Session.SetString("FirstName", result.FirstName);
+                    }
+                    if (!string.IsNullOrEmpty(result.LastName))
+                    {
+                        HttpContext.Session.SetString("LastName", result.LastName);
+                    }
+                    
                     Console.WriteLine($"Đăng nhập thành công - user: {request.Username}, Role: {roleId}, UserId: {result.UserId}, BranchId: {result.BranchId}");
                     return Json(new { 
                         success = true, 
@@ -65,6 +75,8 @@ namespace FE.vn.fpt.edu.controllers
                         userId = result.UserId,
                         roleId = roleId,
                         branchId = result.BranchId,
+                        firstName = result.FirstName,
+                        lastName = result.LastName,
                         redirectTo = result.RedirectTo ?? GetRedirectUrl(roleId)
                     });
                 }
@@ -123,7 +135,7 @@ namespace FE.vn.fpt.edu.controllers
 
         [HttpGet]
         [Route("GetUserInfo")]
-        public IActionResult GetUserInfo()
+        public async Task<IActionResult> GetUserInfo()
         {
             var token = HttpContext.Session.GetString("AuthToken");
             var username = HttpContext.Session.GetString("Username") ?? string.Empty;
@@ -136,6 +148,10 @@ namespace FE.vn.fpt.edu.controllers
 
             // Lấy branchId từ JWT token nếu có
             long? branchId = null;
+            string? firstName = null;
+            string? lastName = null;
+            string? fullName = null;
+            
             if (!string.IsNullOrEmpty(token))
             {
                 try
@@ -176,15 +192,66 @@ namespace FE.vn.fpt.edu.controllers
                 {
                     Console.WriteLine($"Error decoding branchId from token: {ex.Message}");
                 }
+                
+                // ✅ Gọi BE API để lấy firstName/lastName từ server-side
+                var userIdString = HttpContext.Session.GetString("UserId");
+                if (!string.IsNullOrEmpty(userIdString) && long.TryParse(userIdString, out var userId))
+                {
+                    try
+                    {
+                        // Gọi BE API từ server-side để tránh lỗi 403
+                        var backendResponse = await _authService.GetAutoOwnerInfoAsync(userId);
+                        if (backendResponse != null)
+                        {
+                            firstName = backendResponse.FirstName;
+                            lastName = backendResponse.LastName;
+                            if (!string.IsNullOrEmpty(firstName) && !string.IsNullOrEmpty(lastName))
+                            {
+                                fullName = $"{firstName} {lastName}".Trim();
+                            }
+                            else if (!string.IsNullOrEmpty(firstName))
+                            {
+                                fullName = firstName;
+                            }
+                            else if (!string.IsNullOrEmpty(lastName))
+                            {
+                                fullName = lastName;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error getting AutoOwner info: {ex.Message}");
+                        // Không throw, chỉ log lỗi và tiếp tục với thông tin có sẵn
+                    }
+                }
             }
 
             var isLoggedIn = !string.IsNullOrEmpty(token);
+            
+            // ✅ Lấy firstName/lastName từ session (đã lưu khi login)
+            var sessionFirstName = HttpContext.Session.GetString("FirstName");
+            var sessionLastName = HttpContext.Session.GetString("LastName");
+            
+            // Ưu tiên dùng từ session, nếu không có thì dùng từ API (nếu đã gọi)
+            var finalFirstName = sessionFirstName ?? firstName;
+            var finalLastName = sessionLastName ?? lastName;
+            var finalFullName = fullName;
+            
+            if (string.IsNullOrEmpty(finalFullName) && !string.IsNullOrEmpty(finalFirstName) && !string.IsNullOrEmpty(finalLastName))
+            {
+                finalFullName = $"{finalFirstName} {finalLastName}".Trim();
+            }
+            
             return Json(new { 
                 isLoggedIn, 
                 username, 
                 roleId,
                 branchId = branchId,
-                userId = HttpContext.Session.GetString("UserId")
+                userId = HttpContext.Session.GetString("UserId"),
+                firstName = finalFirstName,
+                lastName = finalLastName,
+                fullName = finalFullName
             });
         }
 

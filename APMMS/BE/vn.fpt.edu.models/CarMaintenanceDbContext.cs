@@ -29,13 +29,9 @@ public partial class CarMaintenanceDbContext : DbContext
 
     public virtual DbSet<HistoryLog> HistoryLogs { get; set; }
 
-    public virtual DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
-
     public virtual DbSet<MaintenanceTicket> MaintenanceTickets { get; set; }
 
     public virtual DbSet<MaintenanceTicketTechnician> MaintenanceTicketTechnicians { get; set; }
-
-    public virtual DbSet<Permission> Permissions { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -349,41 +345,6 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasConstraintName("FK__history_l__user___73BA3083");
         });
 
-        modelBuilder.Entity<MaintenanceRequest>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83FF37A669A");
-
-            entity.ToTable("maintenance_request");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.BranchId).HasColumnName("branch_id");
-            entity.Property(e => e.CarId).HasColumnName("car_id");
-            entity.Property(e => e.RequestDate)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime")
-                .HasColumnName("request_date");
-            entity.Property(e => e.StatusCode)
-                .HasMaxLength(50)
-                .HasColumnName("status_code");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.Branch).WithMany(p => p.MaintenanceRequests)
-                .HasForeignKey(d => d.BranchId)
-                .HasConstraintName("FK__maintenan__branc__74AE54BC");
-
-            entity.HasOne(d => d.Car).WithMany(p => p.MaintenanceRequests)
-                .HasForeignKey(d => d.CarId)
-                .HasConstraintName("FK__maintenan__car_i__75A278F5");
-
-            entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.MaintenanceRequests)
-                .HasForeignKey(d => d.StatusCode)
-                .HasConstraintName("FK_maintenance_request_status");
-
-            entity.HasOne(d => d.User).WithMany(p => p.MaintenanceRequests)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("FK__maintenan__user___76969D2E");
-        });
-
         modelBuilder.Entity<MaintenanceTicket>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__maintena__3213E83F1B33439E");
@@ -536,23 +497,6 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasConstraintName("FK__maintenan__techn__00200768");
         });
 
-        modelBuilder.Entity<Permission>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__permissi__3213E83F8B38E440");
-
-            entity.ToTable("permission");
-
-            entity.HasIndex(e => e.Code, "UQ__permissi__357D4CF96127E27E").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Code)
-                .HasMaxLength(50)
-                .HasColumnName("code");
-            entity.Property(e => e.Description)
-                .HasMaxLength(255)
-                .HasColumnName("description");
-        });
-
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__role__3213E83F74558E4F");
@@ -563,25 +507,6 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
                 .HasColumnName("name");
-
-            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RolePermission",
-                    r => r.HasOne<Permission>().WithMany()
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__role_perm__permi__01142BA1"),
-                    l => l.HasOne<Role>().WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__role_perm__role___02084FDA"),
-                    j =>
-                    {
-                        j.HasKey("RoleId", "PermissionId").HasName("PK__role_per__C85A546362073B9E");
-                        j.ToTable("role_permission");
-                        j.IndexerProperty<long>("RoleId").HasColumnName("role_id");
-                        j.IndexerProperty<long>("PermissionId").HasColumnName("permission_id");
-                    });
         });
 
         modelBuilder.Entity<ScheduleService>(entity =>
@@ -1013,7 +938,7 @@ public partial class CarMaintenanceDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_stock_in_request_branch");
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.StockInRequests)
+            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.StockInRequestCreatedByNavigations)
                 .HasForeignKey(d => d.CreatedBy)
                 .HasConstraintName("FK_stock_in_request_created_by");
 
@@ -1067,10 +992,10 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.Property(e => e.ComponentId).HasColumnName("component_id");
             entity.Property(e => e.MaintenanceTicketId).HasColumnName("maintenance_ticket_id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
             entity.Property(e => e.UnitPrice)
                 .HasColumnType("decimal(18, 2)")
                 .HasColumnName("unit_price");
-            entity.Property(e => e.ServicePackageId).HasColumnName("service_package_id");
 
             entity.HasOne(d => d.Branch).WithMany(p => p.TicketComponents)
                 .HasForeignKey(d => d.BranchId)
@@ -1301,7 +1226,6 @@ public partial class CarMaintenanceDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
-            entity.Property(e => e.MaintenanceRequestId).HasColumnName("maintenance_request_id");
             entity.Property(e => e.Mileage).HasColumnName("mileage");
             entity.Property(e => e.Notes)
                 .HasMaxLength(255)
@@ -1359,10 +1283,6 @@ public partial class CarMaintenanceDbContext : DbContext
             entity.HasOne(d => d.Car).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.CarId)
                 .HasConstraintName("FK__vehicle_c__car_i__151B244E");
-
-            entity.HasOne(d => d.MaintenanceRequest).WithMany(p => p.VehicleCheckins)
-                .HasForeignKey(d => d.MaintenanceRequestId)
-                .HasConstraintName("FK__vehicle_c__maint__160F4887");
 
             entity.HasOne(d => d.StatusCodeNavigation).WithMany(p => p.VehicleCheckins)
                 .HasForeignKey(d => d.StatusCode)

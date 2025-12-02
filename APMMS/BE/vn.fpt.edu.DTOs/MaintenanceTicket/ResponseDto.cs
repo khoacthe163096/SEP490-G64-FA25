@@ -83,6 +83,25 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public string? CustomerName { get; set; }
         public DateTime? CreatedDate { get; set; }
     }
+
+    public class UserMaintenanceHistoryDto
+    {
+        public long TicketId { get; set; }
+        public string? TicketCode { get; set; }
+        public string? StatusCode { get; set; }
+        public string StatusName { get; set; } = "Không xác định";
+        public DateTime? CreatedDate { get; set; }
+        public DateTime? StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public string? CarName { get; set; }
+        public string? LicensePlate { get; set; }
+        public string? BranchName { get; set; }
+        public string? ServiceCategoryName { get; set; }
+        public decimal? ReceiptAmount { get; set; }
+        public long? ReceiptId { get; set; }
+        public string? ReceiptCode { get; set; }
+        public string? ReceiptStatus { get; set; }
+    }
 }
 
 

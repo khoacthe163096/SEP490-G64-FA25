@@ -7,12 +7,15 @@ namespace BE.vn.fpt.edu.DTOs.Auth
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public string? Token { get; set; }
+        public string? Token { get; set; } // Access Token
+        public string? RefreshToken { get; set; } // Refresh Token
         public long? UserId { get; set; }
         public string? Username { get; set; }
         public string? RoleName { get; set; }
         public long? RoleId { get; set; }
         public long? BranchId { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
     }
 
     /// <summary>

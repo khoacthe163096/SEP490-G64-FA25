@@ -22,80 +22,10 @@ namespace FE.vn.fpt.edu.controllers
 
         [HttpGet]
         [Route("ListData")]
-        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
+        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null)
         {
-            // Kiểm tra nếu user là Admin, cho phép filter theo branchId từ query parameter
-            var roleIdFromSession = HttpContext.Session.GetString("RoleId");
-            var isAdmin = !string.IsNullOrEmpty(roleIdFromSession) && roleIdFromSession == "1";
-
-            // Nếu không phải Admin hoặc không có branchId từ query, lấy branchId của user đang đăng nhập
-            if (!isAdmin || !branchId.HasValue)
-            {
-                branchId = null;
-
-                // Thử lấy từ session trước
-                var branchIdFromSession = HttpContext.Session.GetString("BranchId");
-                if (!string.IsNullOrEmpty(branchIdFromSession) && long.TryParse(branchIdFromSession, out var sessionBranchId))
-                {
-                    branchId = sessionBranchId;
-                    Console.WriteLine($"[FE TypeComponentController] Got branchId from session: {branchId}");
-                }
-                else
-                {
-                    // Thử lấy từ JWT claim
-                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                    if (long.TryParse(branchIdClaim, out var claimBranchId))
-                    {
-                        branchId = claimBranchId;
-                        Console.WriteLine($"[FE TypeComponentController] Got branchId from JWT claim: {branchId}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("[FE TypeComponentController] No branchId in session or JWT claim, trying Employee/me API");
-                        // Nếu không có trong session hoặc claim, lấy từ Employee/me API
-                        try
-                        {
-                            var employeeResponse = await _service.GetEmployeeInfoAsync();
-                            if (employeeResponse != null)
-                            {
-                                // Response format: { success: true, data: { id, branchId, branchName } }
-                                var successProperty = employeeResponse.GetType().GetProperty("success");
-                                var dataProperty = employeeResponse.GetType().GetProperty("data");
-
-                                if (successProperty != null && dataProperty != null)
-                                {
-                                    var success = successProperty.GetValue(employeeResponse);
-                                    var employeeData = dataProperty.GetValue(employeeResponse);
-
-                                    if (success != null && success.ToString() == "True" && employeeData != null)
-                                    {
-                                        var branchIdProp = employeeData.GetType().GetProperty("branchId")
-                                            ?? employeeData.GetType().GetProperty("BranchId");
-                                        if (branchIdProp != null)
-                                        {
-                                            var branchIdValue = branchIdProp.GetValue(employeeData);
-                                            if (branchIdValue != null && long.TryParse(branchIdValue.ToString(), out var empBranchId))
-                                            {
-                                                branchId = empBranchId;
-                                                // Lưu vào session để lần sau không cần gọi API
-                                                HttpContext.Session.SetString("BranchId", branchId.Value.ToString());
-                                                Console.WriteLine($"[FE TypeComponentController] Got branchId from Employee/me API: {branchId}");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"[FE TypeComponentController] Error getting employee info: {ex.Message}");
-                        }
-                    }
-                }
-            }
-
-            Console.WriteLine($"[FE TypeComponentController] Final branchId: {branchId}, statusCode: {statusCode}");
-            var data = await _service.GetAllAsync(page, pageSize, search, statusCode, branchId);
+            // BE sẽ tự động lấy branchId từ JWT token, không cần FE gửi lên
+            var data = await _service.GetAllAsync(page, pageSize, search, statusCode);
             return Json(data);
         }
 

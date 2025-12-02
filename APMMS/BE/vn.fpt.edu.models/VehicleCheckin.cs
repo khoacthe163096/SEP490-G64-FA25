@@ -9,8 +9,6 @@ public partial class VehicleCheckin
 
     public long? CarId { get; set; }
 
-    public long? MaintenanceRequestId { get; set; }
-
     public int? Mileage { get; set; }
 
     public string? Notes { get; set; }
@@ -58,8 +56,6 @@ public partial class VehicleCheckin
     public virtual Branch? Branch { get; set; }
 
     public virtual Car? Car { get; set; }
-
-    public virtual MaintenanceRequest? MaintenanceRequest { get; set; }
 
     public virtual ICollection<MaintenanceTicket> MaintenanceTickets { get; set; } = new List<MaintenanceTicket>();
 

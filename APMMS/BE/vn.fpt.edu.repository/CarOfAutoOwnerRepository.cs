@@ -41,18 +41,36 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<List<Car>> GetServicedCarsByUserIdAsync(long userId)
         {
-            // Lấy các xe đã từng có schedule (đã bảo dưỡng) - loại trừ CANCELLED
-            var servicedCarIds = await _context.ScheduleServices
-                .Where(s => s.UserId == userId && 
-                           s.CarId != null &&
-                           s.StatusCode != "CANCELLED")
-                .Select(s => s.CarId.Value)
+            // ✅ Chỉ lấy những xe đã từng được bảo dưỡng (có ScheduleService hoặc MaintenanceTicket)
+            // Lấy danh sách carId từ ScheduleServices của user này
+            var carIdsWithSchedule = await _context.ScheduleServices
+                .Where(ss => ss.CarId != null)
+                .Join(_context.Cars.Where(c => c.UserId == userId),
+                    ss => ss.CarId,
+                    c => c.Id,
+                    (ss, c) => c.Id)
                 .Distinct()
                 .ToListAsync();
 
-            if (servicedCarIds.Count == 0)
-                return new List<Car>();
+            // Lấy danh sách carId từ MaintenanceTickets của user này
+            var carIdsWithTicket = await _context.MaintenanceTickets
+                .Where(mt => mt.CarId != null)
+                .Join(_context.Cars.Where(c => c.UserId == userId),
+                    mt => mt.CarId,
+                    c => c.Id,
+                    (mt, c) => c.Id)
+                .Distinct()
+                .ToListAsync();
 
+            // Hợp nhất 2 danh sách
+            var servicedCarIds = carIdsWithSchedule.Union(carIdsWithTicket).Distinct().ToList();
+
+            if (!servicedCarIds.Any())
+            {
+                return new List<Car>();
+            }
+
+            // Lấy thông tin đầy đủ các xe đã bảo dưỡng
             return await _context.Cars
                 .Include(c => c.VehicleType)
                 .Where(c => servicedCarIds.Contains(c.Id))
@@ -91,6 +109,48 @@ namespace BE.vn.fpt.edu.repository
             _context.Cars.Remove(existing);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<bool> ExistsLicensePlateAsync(string licensePlate, long? excludeCarId = null)
+        {
+            if (string.IsNullOrWhiteSpace(licensePlate))
+                return false;
+
+            var normalized = licensePlate.Trim().ToUpper();
+            var query = _context.Cars.Where(c => c.LicensePlate != null && c.LicensePlate.ToUpper() == normalized);
+            if (excludeCarId.HasValue)
+            {
+                query = query.Where(c => c.Id != excludeCarId.Value);
+            }
+            return await query.AnyAsync();
+        }
+
+        public async Task<bool> ExistsVinNumberAsync(string vinNumber, long? excludeCarId = null)
+        {
+            if (string.IsNullOrWhiteSpace(vinNumber))
+                return false;
+
+            var normalized = vinNumber.Trim().ToUpper();
+            var query = _context.Cars.Where(c => c.VinNumber != null && c.VinNumber.ToUpper() == normalized);
+            if (excludeCarId.HasValue)
+            {
+                query = query.Where(c => c.Id != excludeCarId.Value);
+            }
+            return await query.AnyAsync();
+        }
+
+        public async Task<bool> ExistsEngineNumberAsync(string engineNumber, long? excludeCarId = null)
+        {
+            if (string.IsNullOrWhiteSpace(engineNumber))
+                return false;
+
+            var normalized = engineNumber.Trim().ToUpper();
+            var query = _context.Cars.Where(c => c.VehicleEngineNumber != null && c.VehicleEngineNumber.ToUpper() == normalized);
+            if (excludeCarId.HasValue)
+            {
+                query = query.Where(c => c.Id != excludeCarId.Value);
+            }
+            return await query.AnyAsync();
         }
     }
 }

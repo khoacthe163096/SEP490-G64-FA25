@@ -435,18 +435,58 @@
             };
         }
 
-        function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-            alertDiv.innerHTML = `
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        function ensureToastContainer() {
+            let container = document.getElementById('alertToastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'alertToastContainer';
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                container.style.zIndex = '1080';
+                document.body.appendChild(container);
+            }
+            return container;
+        }
+
+        function showAlert(message, type = 'info') {
+            const variantMap = {
+                success: 'success',
+                danger: 'danger',
+                warning: 'warning',
+                info: 'primary'
+            };
+            const titleMap = {
+                success: 'Thành công',
+                danger: 'Lỗi',
+                warning: 'Cảnh báo',
+                info: 'Thông báo'
+            };
+
+            const container = ensureToastContainer();
+            const toastId = `toast-${Date.now()}`;
+            const variant = variantMap[type] || variantMap.info;
+
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center text-bg-${variant} border-0`;
+            toastEl.id = toastId;
+            toastEl.role = 'alert';
+            toastEl.ariaLive = 'assertive';
+            toastEl.ariaAtomic = 'true';
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>${titleMap[type] || titleMap.info}:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
             `;
-            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.table-responsive'));
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
+            container.appendChild(toastEl);
+
+            const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+            toast.show();
+
+            toastEl.addEventListener('hidden.bs.toast', () => {
+                toastEl.remove();
+            });
         }
     </script>
 
@@ -475,4 +515,5 @@
         </div>
     </div>
 </div>
+
 }

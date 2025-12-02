@@ -10,6 +10,8 @@ namespace BE.vn.fpt.edu.DTOs.TotalReceipt
         public string? MaintenanceTicketCode { get; set; }
         public long? CarId { get; set; }
         public string? CarName { get; set; }
+        public string? CarModel { get; set; }
+        public string? VehicleType { get; set; }
         public string? LicensePlate { get; set; }
         public string? VinNumber { get; set; }
         public string? EngineNumber { get; set; }
@@ -31,10 +33,18 @@ namespace BE.vn.fpt.edu.DTOs.TotalReceipt
         public string? StatusName { get; set; }
         public string? Note { get; set; }
         public DateTime? CreatedAt { get; set; }
+        
+        // Customer info
         public string? CustomerName { get; set; }
+        public string? CustomerCode { get; set; }
+        public string? CustomerGender { get; set; }
         public string? CustomerPhone { get; set; }
         public string? CustomerEmail { get; set; }
         public string? CustomerAddress { get; set; }
+        
+        // Maintenance ticket timeline
+        public DateTime? MaintenanceStartTime { get; set; }
+        public DateTime? MaintenanceEndTime { get; set; }
         
         // Service Package fields
         public long? ServicePackageId { get; set; }

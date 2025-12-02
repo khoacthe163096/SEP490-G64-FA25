@@ -50,173 +50,233 @@
                             <h4 class="mb-0">Thông tin cá nhân</h4>
                         </div>
                         <div class="profile-card-body">
-                            <!-- Avatar Section -->
-                            <div class="text-center mb-4">
+                            <!-- Avatar Section - Improved -->
+                            <div class="text-center mb-5">
                                 <div class="avatar-container position-relative d-inline-block">
-                                    <img src="https://via.placeholder.com/100/e0e0e0/ffffff?text=User" 
-                                         alt="Avatar" 
-                                         class="profile-avatar-img" 
-                                         id="userAvatar">
-                                    <button class="btn btn-sm avatar-change-btn" 
-                                            onclick="document.getElementById('avatarInput').click()" 
-                                            id="changeAvatarBtn"
-                                            style="display: none;"
-                                            title="Thay đổi ảnh đại diện">
-                                        <i class="fas fa-camera"></i>
-                                    </button>
+                                    <div class="avatar-wrapper">
+                                        <img src="https://via.placeholder.com/120/6366f1/ffffff?text=User" 
+                                             alt="Avatar" 
+                                             class="profile-avatar-img" 
+                                             id="userAvatar">
+                                        <div class="avatar-overlay" id="avatarOverlay" style="display: none;">
+                                            <button class="btn btn-light avatar-change-btn" 
+                                                    onclick="document.getElementById('avatarInput').click()" 
+                                                    id="changeAvatarBtn"
+                                                    title="Thay đổi ảnh đại diện">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <input type="file" 
                                            id="avatarInput" 
                                            accept="image/*" 
                                            style="display: none;" 
                                            onchange="previewAvatar(this)">
                                 </div>
+                                <h5 class="mt-3 mb-1" id="userFullName">Người dùng</h5>
+                                <p class="text-muted mb-0 small" id="userEmailDisplay">user@example.com</p>
                                 <p class="text-muted mt-2 mb-0" id="avatarHint" style="display: none;">
-                                    <small>Nhấn vào biểu tượng camera để thay đổi ảnh đại diện</small>
+                                    <small><i class="fas fa-info-circle"></i> Nhấn vào ảnh để thay đổi ảnh đại diện</small>
                                 </p>
                             </div>
 
-                            <!-- Profile Form -->
+                            <!-- Profile Form - Improved Layout -->
                             <form id="profileForm">
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="firstName" class="form-label">
-                                            Họ <span class="text-danger">*</span>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <input type="text" 
-                                               class="form-control form-control-lg" 
-                                               id="firstName" 
-                                               name="firstName" 
-                                               readonly>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="lastName" class="form-label">
-                                            Tên <span class="text-danger">*</span>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <input type="text" 
-                                               class="form-control form-control-lg" 
-                                               id="lastName" 
-                                               name="lastName" 
-                                               readonly>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="email" class="form-label">
-                                            Email <span class="text-danger">*</span>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <input type="email" 
-                                               class="form-control form-control-lg" 
-                                               id="email" 
-                                               name="email" 
-                                               readonly>
-                                        <small class="text-muted">Email không thể thay đổi</small>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="phone" class="form-label">
-                                            Số điện thoại <span class="text-danger">*</span>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <input type="tel" 
-                                               class="form-control form-control-lg" 
-                                               id="phone" 
-                                               name="phone" 
-                                               readonly>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="birthDate" class="form-label">
-                                            Ngày sinh
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <input type="date" 
-                                               class="form-control form-control-lg" 
-                                               id="birthDate" 
-                                               name="birthDate" 
-                                               readonly>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="gender" class="form-label">
-                                            Giới tính
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <select class="form-select form-select-lg" 
-                                                id="gender" 
-                                                name="gender" 
-                                                disabled>
-                                            <option value="">-- Chọn giới tính --</option>
-                                            <option value="Male">Nam</option>
-                                            <option value="Female">Nữ</option>
-                                            <option value="Other">Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mb-4 row">
-                                    <div class="col-md-3">
-                                        <label for="address" class="form-label">
-                                            Địa chỉ
-                                        </label>
-                                    </div>
-                                    <div class="col-md-9">
-                                        <textarea class="form-control form-control-lg" 
-                                                  id="address" 
-                                                  name="address" 
-                                                  rows="2" 
-                                                  readonly></textarea>
-                                    </div>
-                                </div>
-
-                                <!-- Action Buttons -->
-                                <div class="profile-actions mt-4 pt-4 border-top">
-                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                        <div>
-                                            <button type="button" 
-                                                    class="btn btn-outline-primary btn-lg" 
-                                                    onclick="changePassword()"
-                                                    id="changePasswordBtn">
-                                                Đổi mật khẩu
-                                            </button>
+                                <!-- Personal Info Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title mb-3">
+                                        <i class="fas fa-user-circle me-2 text-primary"></i>
+                                        Thông tin cơ bản
+                                    </h6>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="firstName" class="form-label fw-semibold">
+                                                <i class="fas fa-user me-1 text-muted"></i>
+                                                Họ <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       id="firstName" 
+                                                       name="firstName" 
+                                                       placeholder="Nhập họ của bạn"
+                                                       readonly>
+                                            </div>
                                         </div>
+
+                                        <div class="col-md-6">
+                                            <label for="lastName" class="form-label fw-semibold">
+                                                <i class="fas fa-user me-1 text-muted"></i>
+                                                Tên <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </span>
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       id="lastName" 
+                                                       name="lastName" 
+                                                       placeholder="Nhập tên của bạn"
+                                                       readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contact Info Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title mb-3">
+                                        <i class="fas fa-address-book me-2 text-primary"></i>
+                                        Thông tin liên hệ
+                                    </h6>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="email" class="form-label fw-semibold">
+                                                <i class="fas fa-envelope me-1 text-muted"></i>
+                                                Email <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-envelope text-muted"></i>
+                                                </span>
+                                                <input type="email" 
+                                                       class="form-control" 
+                                                       id="email" 
+                                                       name="email" 
+                                                       placeholder="email@example.com"
+                                                       readonly>
+                                            </div>
+                                            <small class="text-muted d-block mt-1">
+                                                <i class="fas fa-lock me-1"></i>Email không thể thay đổi
+                                            </small>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="phone" class="form-label fw-semibold">
+                                                <i class="fas fa-phone me-1 text-muted"></i>
+                                                Số điện thoại <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-phone text-muted"></i>
+                                                </span>
+                                                <input type="tel" 
+                                                       class="form-control" 
+                                                       id="phone" 
+                                                       name="phone" 
+                                                       placeholder="0123456789"
+                                                       readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Additional Info Section -->
+                                <div class="form-section mb-4">
+                                    <h6 class="section-title mb-3">
+                                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                                        Thông tin bổ sung
+                                    </h6>
+                                    
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="birthDate" class="form-label fw-semibold">
+                                                <i class="fas fa-calendar me-1 text-muted"></i>
+                                                Ngày sinh
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-calendar text-muted"></i>
+                                                </span>
+                                                <input type="date" 
+                                                       class="form-control" 
+                                                       id="birthDate" 
+                                                       name="birthDate" 
+                                                       readonly>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label for="gender" class="form-label fw-semibold">
+                                                <i class="fas fa-venus-mars me-1 text-muted"></i>
+                                                Giới tính
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light">
+                                                    <i class="fas fa-venus-mars text-muted"></i>
+                                                </span>
+                                                <select class="form-select" 
+                                                        id="gender" 
+                                                        name="gender" 
+                                                        disabled>
+                                                    <option value="">-- Chọn giới tính --</option>
+                                                    <option value="Male">Nam</option>
+                                                    <option value="Female">Nữ</option>
+                                                    <option value="Other">Khác</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mt-1">
+                                        <div class="col-12">
+                                            <label for="address" class="form-label fw-semibold">
+                                                <i class="fas fa-map-marker-alt me-1 text-muted"></i>
+                                                Địa chỉ
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-light align-items-start pt-3">
+                                                    <i class="fas fa-map-marker-alt text-muted"></i>
+                                                </span>
+                                                <textarea class="form-control" 
+                                                          id="address" 
+                                                          name="address" 
+                                                          rows="3" 
+                                                          placeholder="Nhập địa chỉ của bạn"
+                                                          readonly></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons - Improved -->
+                                <div class="profile-actions mt-5 pt-4 border-top">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-lg px-4" 
+                                                onclick="changePassword()"
+                                                id="changePasswordBtn">
+                                            <i class="fas fa-key me-2"></i>
+                                            Đổi mật khẩu
+                                        </button>
                                         <div class="btn-group">
                                             <button type="button" 
-                                                    class="btn btn-secondary btn-lg" 
+                                                    class="btn btn-outline-secondary btn-lg px-4" 
                                                     onclick="cancelEdit()" 
                                                     id="cancelBtn" 
                                                     style="display: none;">
+                                                <i class="fas fa-times me-2"></i>
                                                 Hủy
                                             </button>
                                             <button type="button" 
-                                                    class="btn btn-primary btn-lg" 
+                                                    class="btn btn-primary btn-lg px-4" 
                                                     onclick="toggleEditMode()" 
                                                     id="editToggleBtn">
+                                                <i class="fas fa-edit me-2"></i>
                                                 Chỉnh sửa
                                             </button>
                                             <button type="button" 
-                                                    class="btn btn-primary btn-lg" 
+                                                    class="btn btn-success btn-lg px-4" 
                                                     onclick="saveProfile()" 
                                                     id="saveBtn" 
                                                     style="display: none;">
+                                                <i class="fas fa-save me-2"></i>
                                                 Lưu thay đổi
                                             </button>
                                         </div>
@@ -510,71 +570,139 @@
             margin: 0;
         }
 
-        /* Avatar Styles */
+        /* Avatar Styles - Improved */
         .avatar-container {
             position: relative;
+            display: inline-block;
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            display: inline-block;
         }
 
         .profile-avatar-img {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid #e0e0e0;
+            border: 4px solid #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .avatar-wrapper:hover .profile-avatar-img {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.25);
+            transform: scale(1.05);
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .avatar-wrapper:hover .avatar-overlay {
+            opacity: 1;
         }
 
         .avatar-change-btn {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 28px;
-            height: 28px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             border: 2px solid #fff;
-            background: #495057;
+            background: #6366f1;
             color: #fff;
-            font-size: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
 
         .avatar-change-btn:hover {
-            background: #343a40;
+            background: #4f46e5;
+            transform: scale(1.1);
         }
 
-        /* Form Styles */
+        /* Form Styles - Improved */
+        .form-section {
+            background: #f8f9fa;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
         .form-label {
-            font-weight: 500;
-            color: #212529;
+            font-weight: 600;
+            color: #495057;
             margin-bottom: 8px;
             font-size: 0.9rem;
+        }
+
+        .form-label i {
+            width: 16px;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        .form-group.row .form-label {
-            margin-bottom: 0;
-            padding-top: 8px;
-            text-align: right;
+        .input-group-text {
+            border-right: none;
+            min-width: 45px;
+            justify-content: center;
         }
 
-        @@media (max-width: 768px) {
-            .form-group.row .form-label {
-                text-align: left;
-                padding-top: 0;
-                margin-bottom: 8px;
-            }
+        .input-group .form-control,
+        .input-group .form-select {
+            border-left: none;
+            padding-left: 12px;
+        }
+
+        .input-group .form-control:focus,
+        .input-group .form-select:focus {
+            border-left: 1px solid #6366f1;
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
         }
 
         .form-control:read-only,
         .form-select:disabled {
             background-color: #ffffff;
             cursor: default;
-            border-color: #e0e0e0;
-            color: #212529;
+            border-color: #dee2e6;
+            color: #495057;
+        }
+
+        .form-control:not(:read-only):focus,
+        .form-select:not(:disabled):focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+        }
+
+        .input-group-lg .form-control,
+        .input-group-lg .form-select {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
         }
 
         .form-control:not(:read-only),
@@ -826,7 +954,51 @@
 
         /* Profile Actions */
         .profile-actions {
-            border-top: 1px solid #e0e0e0;
+            border-top: 2px solid #e9ecef;
+            padding-top: 24px;
+        }
+
+        .profile-actions .btn {
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .profile-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-actions .btn-primary {
+            background: #6366f1;
+            border-color: #6366f1;
+        }
+
+        .profile-actions .btn-primary:hover {
+            background: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        .profile-actions .btn-success {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .profile-actions .btn-success:hover {
+            background: #059669;
+            border-color: #059669;
+        }
+
+        /* User Info Display */
+        #userFullName {
+            color: #212529;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        #userEmailDisplay {
+            color: #6c757d;
+            font-size: 0.9rem;
         }
 
         /* Responsive */
@@ -979,16 +1151,50 @@
                 document.getElementById('address').value = address;
                 originalData['address'] = address;
             }
+
+            // ✅ Cập nhật tên và email trong phần avatar
+            updateAvatarDisplay(firstName, lastName, email);
         }
 
         function populateProfileFormFromUserInfo(userInfo) {
-            if (userInfo.fullName) {
+            let firstName = userInfo.firstName;
+            let lastName = userInfo.lastName;
+            
+            if (userInfo.fullName && (!firstName || !lastName)) {
                 const nameParts = userInfo.fullName.split(' ');
-                document.getElementById('lastName').value = nameParts.pop() || '';
-                document.getElementById('firstName').value = nameParts.join(' ') || '';
+                lastName = nameParts.pop() || '';
+                firstName = nameParts.join(' ') || '';
             }
+            
+            if (firstName) document.getElementById('firstName').value = firstName;
+            if (lastName) document.getElementById('lastName').value = lastName;
             if (userInfo.email) document.getElementById('email').value = userInfo.email;
             if (userInfo.phone) document.getElementById('phone').value = userInfo.phone;
+
+            // ✅ Cập nhật tên và email trong phần avatar
+            updateAvatarDisplay(firstName, lastName, userInfo.email);
+        }
+
+        // ✅ Hàm cập nhật hiển thị tên và email trong phần avatar
+        function updateAvatarDisplay(firstName, lastName, email) {
+            const fullNameEl = document.getElementById('userFullName');
+            const emailEl = document.getElementById('userEmailDisplay');
+            
+            if (fullNameEl) {
+                if (firstName && lastName) {
+                    fullNameEl.textContent = `${firstName} ${lastName}`.trim();
+                } else if (firstName) {
+                    fullNameEl.textContent = firstName;
+                } else if (lastName) {
+                    fullNameEl.textContent = lastName;
+                } else {
+                    fullNameEl.textContent = 'Người dùng';
+                }
+            }
+            
+            if (emailEl && email) {
+                emailEl.textContent = email;
+            }
         }
 
         // Load Cars Data
@@ -1485,16 +1691,34 @@
                 const userInfoStr = localStorage.getItem('userInfo');
                 
                 if (!userInfoStr) {
-                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem lịch sử bảo dưỡng</div>';
+                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem lịch sử bảo dưỡng.</div>';
                     return;
                 }
 
-                const userInfo = JSON.parse(userInfoStr);
-                const userId = userInfo.userId || userInfo.id;
+                const response = await fetch(`${API_BASE_URL}/MaintenanceTicket/customer/history`, {
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-                // TODO: Call API to get maintenance history
-                // For now, show placeholder
-                container.innerHTML = '<div class="alert alert-info">Chức năng đang được phát triển. Vui lòng quay lại sau.</div>';
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const history = result.success && Array.isArray(result.data)
+                    ? result.data
+                    : (Array.isArray(result) ? result : []);
+
+                if (!history.length) {
+                    container.innerHTML = '<div class="alert alert-info mb-0">Bạn chưa có lịch sử bảo dưỡng nào.</div>';
+                    return;
+                }
+
+                const itemsHtml = history.map(item => renderMaintenanceHistoryItem(item)).join('');
+                container.innerHTML = `<div class="maintenance-history-list">${itemsHtml}</div>`;
             } catch (error) {
                 console.error('Error loading maintenance history:', error);
                 container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử bảo dưỡng.</div>';
@@ -1532,6 +1756,8 @@
             const cancelBtn = document.getElementById('cancelBtn');
             const saveBtn = document.getElementById('saveBtn');
             const changeAvatarBtn = document.getElementById('changeAvatarBtn');
+            const avatarOverlay = document.getElementById('avatarOverlay');
+            const avatarHint = document.getElementById('avatarHint');
             const changePasswordBtn = document.getElementById('changePasswordBtn');
 
             if (isEditMode) {
@@ -1556,8 +1782,8 @@
                 editBtn.style.display = 'none';
                 cancelBtn.style.display = 'inline-block';
                 saveBtn.style.display = 'inline-block';
-                changeAvatarBtn.style.display = 'block';
-                document.getElementById('avatarHint').style.display = 'block';
+                if (avatarOverlay) avatarOverlay.style.display = 'flex';
+                if (avatarHint) avatarHint.style.display = 'block';
                 changePasswordBtn.disabled = true;
             } else {
                 inputs.forEach(input => {
@@ -1571,8 +1797,8 @@
                 editBtn.style.display = 'inline-block';
                 cancelBtn.style.display = 'none';
                 saveBtn.style.display = 'none';
-                changeAvatarBtn.style.display = 'none';
-                document.getElementById('avatarHint').style.display = 'none';
+                if (avatarOverlay) avatarOverlay.style.display = 'none';
+                if (avatarHint) avatarHint.style.display = 'none';
                 changePasswordBtn.disabled = false;
             }
         }
@@ -1587,6 +1813,105 @@
             });
             toggleEditMode();
             showAlert('Đã hủy các thay đổi', 'info');
+        }
+
+        // Helpers for Maintenance History
+        function formatDateTimeVi(value) {
+            if (!value) return '—';
+            const date = new Date(value);
+            if (Number.isNaN(date)) return '—';
+            return date.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatCurrencyVi(value) {
+            if (value === null || value === undefined) return '—';
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(value);
+        }
+
+        function getTicketStatusBadge(statusCode, statusName) {
+            const map = {
+                PENDING: 'warning',
+                ASSIGNED: 'secondary',
+                IN_PROGRESS: 'primary',
+                WAITING_PAYMENT: 'info',
+                PAID: 'success',
+                COMPLETED: 'success',
+                CANCELLED: 'danger'
+            };
+            const variant = map[(statusCode || '').toUpperCase()] || 'secondary';
+            return `<span class="badge bg-${variant}">${statusName || statusCode || 'Không xác định'}</span>`;
+        }
+
+        function renderMaintenanceHistoryItem(item) {
+            const ticketCode = item.ticketCode || item.TicketCode || 'N/A';
+            const statusCode = item.statusCode || item.StatusCode || '';
+            const statusName = item.statusName || item.StatusName || statusCode || 'Không xác định';
+            const carName = item.carName || item.CarName || 'Không rõ';
+            const licensePlate = item.licensePlate || item.LicensePlate || '-';
+            const branchName = item.branchName || item.BranchName || '-';
+            const createdDate = item.createdDate || item.CreatedDate;
+            const endTime = item.endTime || item.EndTime;
+            const serviceCategoryName = item.serviceCategoryName || item.ServiceCategoryName || 'Bảo dưỡng';
+            const receiptAmount = item.receiptAmount ?? item.ReceiptAmount;
+            const receiptId = item.receiptId || item.ReceiptId;
+            const receiptCode = item.receiptCode || item.ReceiptCode;
+
+            const statusBadge = getTicketStatusBadge(statusCode, statusName);
+            const createdText = formatDateTimeVi(createdDate);
+            const completedText = endTime ? formatDateTimeVi(endTime) : '<span class="text-muted">Đang xử lý</span>';
+
+            const receiptAction = receiptId
+                ? `<button type="button" class="btn btn-sm btn-outline-primary" onclick="viewReceiptDetail(${receiptId})">
+                        <i class="fas fa-receipt me-1"></i> Xem hóa đơn
+                   </button>`
+                : '<span class="text-muted small">Chưa tạo hóa đơn</span>';
+
+            return `
+                <div class="card shadow-sm mb-3 maintenance-history-item">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                            <div>
+                                <div class="text-muted small">Mã phiếu</div>
+                                <div class="h5 mb-0">${ticketCode}</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="text-muted small">Xe</div>
+                                <div class="fw-semibold">${carName}</div>
+                                <div class="text-muted small">${licensePlate}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small">Chi nhánh</div>
+                                <div class="fw-semibold">${branchName}</div>
+                                <div class="text-muted small">${serviceCategoryName}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-muted small">Ngày tạo</div>
+                                <div>${createdText}</div>
+                                <div class="text-muted small">Hoàn thành: ${completedText}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <div class="text-muted small">Tổng thanh toán</div>
+                                <div class="h6 mb-0">${formatCurrencyVi(receiptAmount)}</div>
+                            </div>
+                            ${receiptAction}
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Save Profile

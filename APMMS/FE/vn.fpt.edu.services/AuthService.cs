@@ -42,7 +42,9 @@ namespace FE.vn.fpt.edu.services
                         Username = backendResponse.Data.Username,
                         Role = backendResponse.Data.RoleName,
                         RoleId = (int)(backendResponse.Data.RoleId ?? 0),
-                        BranchId = backendResponse.Data.BranchId
+                        BranchId = backendResponse.Data.BranchId,
+                        FirstName = backendResponse.Data.FirstName,
+                        LastName = backendResponse.Data.LastName
                     };
                     
                     Console.WriteLine($"AuthService: Mapped result - Success: {result.Success}, RoleId: {result.RoleId}");
@@ -96,5 +98,36 @@ namespace FE.vn.fpt.edu.services
         {
             // Clear token from storage
         }
+
+        // ✅ Lấy thông tin AutoOwner từ BE API
+        public async Task<AutoOwnerInfoResponse?> GetAutoOwnerInfoAsync(long userId)
+        {
+            try
+            {
+                // BE API trả về { success: true, data: {...} }
+                var response = await _apiAdapter.GetAsync<BackendApiResponse<AutoOwnerInfoResponse>>($"AutoOwner/{userId}");
+                if (response?.Success == true && response.Data != null)
+                {
+                    return response.Data;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting AutoOwner info: {ex.Message}");
+                return null;
+            }
+        }
+    }
+
+    // ✅ Model để nhận thông tin AutoOwner từ BE (tương ứng với ResponseDto)
+    public class AutoOwnerInfoResponse
+    {
+        public long Id { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Username { get; set; }
     }
 }

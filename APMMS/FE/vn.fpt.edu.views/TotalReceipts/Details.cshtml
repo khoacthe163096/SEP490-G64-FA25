@@ -105,6 +105,11 @@
         color: var(--bs-secondary);
     }
 
+    /* Ẩn layout in đặc biệt trên màn hình, chỉ hiện khi in */
+    .only-print {
+        display: none;
+    }
+
     .invoice-company-header {
         border-bottom: 2px solid rgba(13, 110, 253, 0.2);
         padding-bottom: 1.5rem;
@@ -192,6 +197,15 @@
             display: none !important;
         }
 
+        /* Ẩn layout màn hình, chỉ dùng layout in đặc biệt */
+        .screen-layout {
+            display: none !important;
+        }
+
+        .only-print {
+            display: block !important;
+        }
+
         .invoice-header-card,
         .card {
             box-shadow: none !important;
@@ -231,7 +245,7 @@
     }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid screen-layout">
     <!-- Action Buttons -->
     <div class="row mb-3 no-print">
         <div class="col-12">
@@ -284,6 +298,8 @@
                     <div class="invoice-billing-section">
                         <div class="label">Thông tin khách hàng</div>
                         <div class="value mb-2" id="billingCustomerName">-</div>
+                        <div class="text-muted small mb-1" id="billingCustomerCode">Mã KH: -</div>
+                        <div class="text-muted small mb-1" id="billingCustomerGender">Giới tính: -</div>
                         <div class="text-muted small mb-1" id="billingCustomerPhone">-</div>
                         <div class="text-muted small mb-1" id="billingCustomerEmail">-</div>
                         <div class="text-muted small" id="billingCustomerAddress">-</div>
@@ -292,11 +308,12 @@
                 <div class="col-md-6">
                     <div class="invoice-billing-section">
                         <div class="label">Thông tin xe</div>
-                        <div class="value mb-2" id="billingCarName">-</div>
+                        <div class="value mb-1" id="billingCarName">-</div>
+                        <div class="text-muted small mb-1" id="billingCarModel">Mẫu xe: -</div>
+                        <div class="text-muted small mb-1" id="billingVehicleType">Loại xe: -</div>
                         <div class="text-muted small mb-1">Biển số: <span id="billingLicensePlate" class="fw-semibold">-</span></div>
                         <div class="text-muted small mb-1">Số khung: <span id="billingVinNumber" class="fw-semibold">-</span></div>
                         <div class="text-muted small mb-1">Số máy: <span id="billingEngineNumber" class="fw-semibold">-</span></div>
-                        <div class="text-muted small">Phiếu bảo dưỡng: <a href="#" id="billingTicketLink" class="text-decoration-none">-</a></div>
                     </div>
                 </div>
             </div>
@@ -326,6 +343,14 @@
                         <div class="col-md-6">
                             <div class="fw-semibold text-uppercase small text-muted">Phiếu bảo dưỡng</div>
                             <div id="detailTicketLink">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Ngày sửa</div>
+                            <div id="detailMaintenanceStart">-</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="fw-semibold text-uppercase small text-muted">Ngày hoàn thành</div>
+                            <div id="detailMaintenanceEnd">-</div>
                         </div>
                         <div class="col-md-6">
                             <div class="fw-semibold text-uppercase small text-muted">Kế toán xử lý</div>
@@ -550,6 +575,249 @@
     </div>
 </div>
 
+<!-- Layout in hóa đơn kiểu A4, chỉ hiện khi in -->
+<div class="container-fluid only-print">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="bg-white p-4" style="border: 1px solid #000; min-height: 1050px;">
+                <!-- Header công ty + tiêu đề -->
+                <div class="text-center mb-3">
+                    <div class="fw-bold text-uppercase" style="font-size: 0.9rem;" id="printCompanyName">
+                        CÔNG TY BẢO DƯỠNG XE
+                    </div>
+                    <div class="small" id="printCompanyAddress">
+                        Địa chỉ chi nhánh sẽ được cập nhật
+                    </div>
+                    <div class="small" id="printCompanyPhone">
+                        Điện thoại: Sẽ được cập nhật
+                    </div>
+
+                    <div class="mt-3" style="font-size: 1.4rem; font-weight: 700;">
+                        HÓA ĐƠN DỊCH VỤ
+                    </div>
+                    <div class="small mt-1">
+                        Ngày <span id="printInvoiceDate">..../..../....</span>
+                    </div>
+                    <div class="small">
+                        Số: <span id="printInvoiceCode" class="fw-semibold">..............</span>
+                    </div>
+                </div>
+
+                <!-- Thông tin khách hàng / xe -->
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 40%;" class="fw-normal">Khách hàng:</th>
+                                    <td id="printCustomerName">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Mã khách hàng:</th>
+                                    <td id="printCustomerCode">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Giới tính:</th>
+                                    <td id="printCustomerGender">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Điện thoại:</th>
+                                    <td id="printCustomerPhone">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Email:</th>
+                                    <td id="printCustomerEmail">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Địa chỉ:</th>
+                                    <td id="printCustomerAddress">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <th style="width: 40%;" class="fw-normal">Tên xe:</th>
+                                    <td id="printCarName">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Biển số:</th>
+                                    <td id="printLicensePlate">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Số khung:</th>
+                                    <td id="printVinNumber">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Số máy:</th>
+                                    <td id="printEngineNumber">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Phiếu bảo dưỡng:</th>
+                                    <td id="printTicketInfo">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Thông tin chung hóa đơn -->
+                <table class="table table-borderless table-sm mb-3">
+                    <tbody>
+                        <tr>
+                            <th style="width: 18%;" class="fw-normal">Mã hóa đơn:</th>
+                            <td style="width: 32%;" id="printDetailCode">-</td>
+                            <th style="width: 18%;" class="fw-normal">Trạng thái:</th>
+                            <td style="width: 32%;" id="printDetailStatus">-</td>
+                        </tr>
+                        <tr>
+                            <th class="fw-normal">Ngày tạo:</th>
+                            <td id="printDetailCreated">-</td>
+                            <th class="fw-normal">Kế toán:</th>
+                            <td id="printDetailAccountant">-</td>
+                        </tr>
+                        <tr>
+                            <th class="fw-normal">Ngày sửa:</th>
+                            <td id="printDetailMaintenanceStart">-</td>
+                            <th class="fw-normal">Ngày hoàn thành:</th>
+                            <td id="printDetailMaintenanceEnd">-</td>
+                        </tr>
+                        <tr>
+                            <th class="fw-normal">Ghi chú:</th>
+                            <td colspan="3" id="printDetailNote" class="fst-italic text-muted">Không có ghi chú</td>
+                        </tr>
+                        <tr id="printServicePackageRow" style="display: none;">
+                            <th class="fw-normal">Gói dịch vụ:</th>
+                            <td colspan="3">
+                                <span class="badge bg-info" id="printServicePackageName">-</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Danh sách công việc -->
+                <div class="mb-2">
+                    <strong>Danh sách công việc</strong>
+                    <div class="table-responsive mt-1">
+                        <table class="table table-bordered table-sm mb-2">
+                            <thead class="text-center" style="background: #f5f5f5; font-size: 0.85rem;">
+                                <tr>
+                                    <th style="width: 40px;">STT</th>
+                                    <th>Tên công việc</th>
+                                    <th style="width: 140px;">Phí nhân công</th>
+                                </tr>
+                            </thead>
+                            <tbody id="printTasksBody">
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Đang tải danh sách công việc...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Phụ tùng sử dụng -->
+                <div class="mb-3">
+                    <strong>Phụ tùng sử dụng</strong>
+                    <div class="table-responsive mt-1">
+                        <table class="table table-bordered table-sm mb-2">
+                            <thead class="text-center" style="background: #f5f5f5; font-size: 0.85rem;">
+                                <tr>
+                                    <th style="width: 40px;">STT</th>
+                                    <th>Phụ tùng</th>
+                                    <th style="width: 100px;">Số lượng</th>
+                                    <th style="width: 120px;">Đơn giá</th>
+                                    <th style="width: 130px;">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="printComponentsBody">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">Đang tải danh sách phụ tùng...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tổng tiền -->
+                <div class="row mt-3">
+                    <div class="col-7">
+                        <div class="small mb-2">
+                            Số tiền viết bằng chữ:
+                            <span class="fw-semibold" id="printAmountInWords">
+                                ........................................................................................
+                            </span>
+                        </div>
+                        <div class="small">
+                            Ghi chú thêm:
+                            <span id="printNoteBottom" class="text-muted"></span>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="fw-normal">Phí nhân công:</th>
+                                    <td class="text-end" id="printLaborCost">0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Chi phí phụ tùng:</th>
+                                    <td class="text-end" id="printComponentCost">0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Tổng phụ:</th>
+                                    <td class="text-end fw-semibold" id="printSubtotal">0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">
+                                        Thuế GTGT (<span id="printVatPercent">0</span>%):
+                                    </th>
+                                    <td class="text-end" id="printVatAmount">0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Phụ thu:</th>
+                                    <td class="text-end" id="printSurcharge">0 ₫</td>
+                                </tr>
+                                <tr id="printPackageDiscountRow" style="display: none;">
+                                    <th class="fw-normal">
+                                        Giảm giá gói <span id="printPackageName" class="text-muted small"></span>:
+                                    </th>
+                                    <td class="text-end text-danger" id="printPackageDiscount">-0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-normal">Giảm giá khác:</th>
+                                    <td class="text-end text-danger" id="printDiscount">-0 ₫</td>
+                                </tr>
+                                <tr>
+                                    <th class="fw-bold">Tổng thanh toán:</th>
+                                    <td class="text-end fw-bold" id="printGrandTotal">0 ₫</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Chữ ký -->
+                <div class="row mt-5 text-center">
+                    <div class="col-4">
+                        <div class="fw-semibold">Người mua hàng</div>
+                        <div class="fst-italic small">(Ký, họ tên)</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-semibold">Kế toán trưởng</div>
+                        <div class="fst-italic small">(Ký, họ tên)</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fw-semibold">Giám đốc</div>
+                        <div class="fst-italic small">(Ký, họ tên)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Confirmation Modal -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -667,8 +935,10 @@
             const getValue = (pascal, camel, defaultValue = '') => data?.[pascal] ?? data?.[camel] ?? defaultValue;
             
             // Header
-            $('#invoiceCodeValue').text(getValue('Code', 'code', '-'));
-            $('#invoiceDate').text(formatDateOnly(getValue('CreatedAt', 'createdAt')));
+            const code = getValue('Code', 'code', '-');
+            const createdAt = getValue('CreatedAt', 'createdAt');
+            $('#invoiceCodeValue').text(code);
+            $('#invoiceDate').text(formatDateOnly(createdAt));
             const statusCode = getValue('StatusCode', 'statusCode', '');
             const statusClass = getStatusClass(statusCode);
             const statusText = getStatusText(statusCode);
@@ -694,32 +964,96 @@
             const branchPhone = getValue('BranchPhone', 'branchPhone');
             $('#companyPhone').text(branchPhone ? `Điện thoại: ${branchPhone}` : 'Điện thoại: Sẽ được cập nhật');
 
+            // Company Info - PRINT
+            $('#printCompanyName').text($('#companyName').text());
+            $('#printCompanyAddress').text($('#companyAddress').text());
+            $('#printCompanyPhone').text($('#companyPhone').text());
+            $('#printInvoiceCode').text(code || '..............');
+            $('#printInvoiceDate').text(formatDateOnly(createdAt) || '..../..../....');
+
             // Billing Information - Customer
-            $('#billingCustomerName').text(getValue('CustomerName', 'customerName', 'Không rõ'));
+            const customerName = getValue('CustomerName', 'customerName', 'Không rõ');
+            const customerCode = getValue('CustomerCode', 'customerCode');
+            const customerGenderRaw = getValue('CustomerGender', 'customerGender');
             const customerPhone = getValue('CustomerPhone', 'customerPhone');
-            $('#billingCustomerPhone').text(customerPhone ? `Điện thoại: ${customerPhone}` : '');
             const customerEmail = getValue('CustomerEmail', 'customerEmail');
-            $('#billingCustomerEmail').text(customerEmail ? `Email: ${customerEmail}` : '');
             const customerAddress = getValue('CustomerAddress', 'customerAddress');
+
+            // Chuẩn hóa giới tính hiển thị
+            let customerGender = '-';
+            if (customerGenderRaw) {
+                if (customerGenderRaw === 'Male' || customerGenderRaw === 'Nam') {
+                    customerGender = 'Nam';
+                } else if (customerGenderRaw === 'Female' || customerGenderRaw === 'Nữ') {
+                    customerGender = 'Nữ';
+                } else {
+                    customerGender = customerGenderRaw;
+                }
+            }
+
+            $('#billingCustomerName').text(customerName);
+            $('#billingCustomerCode').text(customerCode ? `Mã KH: ${customerCode}` : 'Mã KH: -');
+            $('#billingCustomerGender').text(`Giới tính: ${customerGender}`);
+            $('#billingCustomerPhone').text(customerPhone ? `Điện thoại: ${customerPhone}` : '');
+            $('#billingCustomerEmail').text(customerEmail ? `Email: ${customerEmail}` : '');
             $('#billingCustomerAddress').text(customerAddress ? `Địa chỉ: ${customerAddress}` : 'Địa chỉ: Sẽ được cập nhật');
 
+            // Customer - PRINT
+            $('#printCustomerName').text(customerName);
+            $('#printCustomerCode').text(customerCode || '-');
+            $('#printCustomerGender').text(customerGender);
+            $('#printCustomerPhone').text(customerPhone || '-');
+            $('#printCustomerEmail').text(customerEmail || '-');
+            $('#printCustomerAddress').text(customerAddress || '-');
+
             // Billing Information - Vehicle
-            $('#billingCarName').text(getValue('CarName', 'carName', 'Không rõ'));
-            $('#billingLicensePlate').text(getValue('LicensePlate', 'licensePlate', '-'));
-            $('#billingVinNumber').text(getValue('VinNumber', 'vinNumber', '-'));
-            $('#billingEngineNumber').text(getValue('EngineNumber', 'engineNumber', '-'));
+            const carName = getValue('CarName', 'carName', 'Không rõ');
+            const carModel = getValue('CarModel', 'carModel');
+            const vehicleType = getValue('VehicleType', 'vehicleType');
+            const licensePlate = getValue('LicensePlate', 'licensePlate', '-');
+            const vinNumber = getValue('VinNumber', 'vinNumber', '-');
+            const engineNumber = getValue('EngineNumber', 'engineNumber', '-');
             const maintenanceTicketId = getValue('MaintenanceTicketId', 'maintenanceTicketId');
+
+            $('#billingCarName').text(carName);
+            $('#billingCarModel').text(carModel ? `Mẫu xe: ${carModel}` : 'Mẫu xe: -');
+            $('#billingVehicleType').text(vehicleType ? `Loại xe: ${vehicleType}` : 'Loại xe: -');
+            $('#billingLicensePlate').text(licensePlate);
+            $('#billingVinNumber').text(vinNumber);
+            $('#billingEngineNumber').text(engineNumber);
+
+            // Vehicle - PRINT
+            $('#printCarName').text(carName);
+            $('#printLicensePlate').text(licensePlate);
+            $('#printVinNumber').text(vinNumber);
+            $('#printEngineNumber').text(engineNumber);
             if (maintenanceTicketId) {
                 $('#billingTicketLink').attr('href', `/MaintenanceTickets/Details/${maintenanceTicketId}`)
                     .text(getValue('MaintenanceTicketCode', 'maintenanceTicketCode') || `#${maintenanceTicketId}`);
+                $('#printTicketInfo').text(getValue('MaintenanceTicketCode', 'maintenanceTicketCode') || `#${maintenanceTicketId}`);
             } else {
                 $('#billingTicketLink').text('Không xác định').removeAttr('href');
+                $('#printTicketInfo').text('Không xác định');
             }
 
             // Detail Info (old section - keeping for compatibility)
-            $('#detailCode').text(getValue('Code', 'code', '-'));
-            $('#detailCreated').text(formatDateTime(getValue('CreatedAt', 'createdAt')));
+            const createdAtText = formatDateTime(createdAt);
+            const maintenanceStart = getValue('MaintenanceStartTime', 'maintenanceStartTime');
+            const maintenanceEnd = getValue('MaintenanceEndTime', 'maintenanceEndTime');
+            const maintenanceStartText = maintenanceStart ? formatDateTime(maintenanceStart) : 'Chưa xác định';
+            const maintenanceEndText = maintenanceEnd ? formatDateTime(maintenanceEnd) : 'Chưa xác định';
+            $('#detailCode').text(code);
+            $('#detailCreated').text(createdAtText);
             $('#detailStatus').html(`<span class="invoice-status-badge ${statusClass}">${statusText}</span>`);
+            $('#detailMaintenanceStart').text(maintenanceStartText);
+            $('#detailMaintenanceEnd').text(maintenanceEndText);
+
+            // Detail Info - PRINT
+            $('#printDetailCode').text(code);
+            $('#printDetailCreated').text(createdAtText);
+            $('#printDetailMaintenanceStart').text(maintenanceStartText);
+            $('#printDetailMaintenanceEnd').text(maintenanceEndText);
+            $('#printDetailStatus').text(statusText);
 
             if (maintenanceTicketId) {
                 $('#detailTicketLink').html(`<a href="/MaintenanceTickets/Details/${maintenanceTicketId}" class="text-decoration-none">${getValue('MaintenanceTicketCode', 'maintenanceTicketCode') || 'Xem phiếu'}</a>`);
@@ -727,15 +1061,21 @@
                 $('#detailTicketLink').text('Không xác định');
             }
 
-            $('#detailAccountant').text(getValue('AccountantName', 'accountantName', 'Chưa xác định'));
+            const accountantName = getValue('AccountantName', 'accountantName', 'Chưa xác định');
+            $('#detailAccountant').text(accountantName);
+            $('#printDetailAccountant').text(accountantName);
 
             const note = getValue('Note', 'note');
             if (note) {
                 $('#detailNote').text(note);
                 $('#noteInput').val(note);
+                $('#printDetailNote').text(note);
+                $('#printNoteBottom').text(note);
             } else {
                 $('#detailNote').text('Không có ghi chú');
                 $('#noteInput').val('');
+                $('#printDetailNote').text('Không có ghi chú');
+                $('#printNoteBottom').text('');
             }
             
             // Hiển thị thông tin gói dịch vụ
@@ -744,8 +1084,11 @@
             if (servicePackageId && servicePackageName) {
                 $('#detailServicePackageName').text(servicePackageName);
                 $('#servicePackageInfoRow').show();
+                $('#printServicePackageName').text(servicePackageName);
+                $('#printServicePackageRow').show();
             } else {
                 $('#servicePackageInfoRow').hide();
+                $('#printServicePackageRow').hide();
             }
         }
 
@@ -780,12 +1123,35 @@
 
             if (!tasks.length) {
                 $('#tasksEmptyState').show();
+            } else {
+                $('#tasksEmptyState').hide();
+                tasks.forEach((task, index) => {
+                    tbody.append(`
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>${escapeHtml(task.taskName || 'Công việc')}</td>
+                        <td class="text-end">${formatCurrency(task.laborCost || 0)}</td>
+                    </tr>
+                `);
+                });
+            }
+
+            // Render cho layout in
+            const tbodyPrint = $('#printTasksBody');
+            if (!tbodyPrint.length) return;
+            tbodyPrint.empty();
+
+            if (!tasks.length) {
+                tbodyPrint.append(`
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">Không có công việc nào.</td>
+                    </tr>
+                `);
                 return;
             }
 
-            $('#tasksEmptyState').hide();
             tasks.forEach((task, index) => {
-                tbody.append(`
+                tbodyPrint.append(`
                     <tr>
                         <td class="text-center">${index + 1}</td>
                         <td>${escapeHtml(task.taskName || 'Công việc')}</td>
@@ -826,15 +1192,46 @@
 
             if (!components.length) {
                 $('#componentsEmptyState').show();
+            } else {
+                $('#componentsEmptyState').hide();
+                components.forEach((component, index) => {
+                    const quantity = component.actualQuantity ?? component.quantity ?? 0;
+                    const unitPrice = component.unitPrice ?? 0;
+                    const total = component.totalPrice ?? (quantity * unitPrice);
+                    tbody.append(`
+                    <tr>
+                        <td class="text-center">${index + 1}</td>
+                        <td>
+                            <div class="fw-semibold">${escapeHtml(component.componentName || 'Phụ tùng')}</div>
+                            ${component.componentCode ? `<div class="text-muted small">Mã: ${escapeHtml(component.componentCode)}</div>` : ''}
+                        </td>
+                        <td class="text-end">${quantity.toFixed(2)}</td>
+                        <td class="text-end">${formatCurrency(unitPrice)}</td>
+                        <td class="text-end">${formatCurrency(total)}</td>
+                    </tr>
+                    `);
+                });
+            }
+
+            // Render cho layout in
+            const tbodyPrint = $('#printComponentsBody');
+            if (!tbodyPrint.length) return;
+            tbodyPrint.empty();
+
+            if (!components.length) {
+                tbodyPrint.append(`
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">Chưa có phụ tùng nào được ghi nhận.</td>
+                    </tr>
+                `);
                 return;
             }
 
-            $('#componentsEmptyState').hide();
             components.forEach((component, index) => {
                 const quantity = component.actualQuantity ?? component.quantity ?? 0;
                 const unitPrice = component.unitPrice ?? 0;
                 const total = component.totalPrice ?? (quantity * unitPrice);
-                tbody.append(`
+                tbodyPrint.append(`
                     <tr>
                         <td class="text-center">${index + 1}</td>
                         <td>
@@ -858,12 +1255,15 @@
                 return sum + total;
             }, 0);
 
-            $('#summaryLaborCost').text(formatCurrency(laborTotal));
-            $('#summaryComponentCost').text(formatCurrency(componentTotal));
+            const laborText = formatCurrency(laborTotal);
+            const componentText = formatCurrency(componentTotal);
+            $('#summaryLaborCost').text(laborText);
+            $('#summaryComponentCost').text(componentText);
 
             // Calculate subtotal (before tax) - Hỗ trợ cả PascalCase và camelCase
             const subtotal = receiptData?.Subtotal ?? receiptData?.subtotal ?? (laborTotal + componentTotal);
-            $('#summarySubtotal').text(formatCurrency(subtotal));
+            const subtotalText = formatCurrency(subtotal);
+            $('#summarySubtotal').text(subtotalText);
 
             // Other charges - Hỗ trợ cả PascalCase và camelCase
             const surcharge = receiptData?.SurchargeAmount ?? receiptData?.surchargeAmount ?? 0;
@@ -880,14 +1280,17 @@
                 receiptData: receiptData
             });
             
-            $('#summarySurcharge').text(formatCurrency(surcharge));
-            $('#summaryDiscount').text(formatCurrency(discount));
+            const surchargeText = formatCurrency(surcharge);
+            const discountText = formatCurrency(discount);
+            $('#summarySurcharge').text(surchargeText);
+            $('#summaryDiscount').text(discountText);
 
             // Hiển thị Package Discount nếu có packageId (hiển thị kể cả khi discount = 0)
             if (packageId) {
                 const displayName = packageName || 'Gói dịch vụ';
+                const pkgDiscountText = formatCurrency(packageDiscount);
                 $('#packageName').text(`(${displayName})`);
-                $('#summaryPackageDiscount').text(formatCurrency(packageDiscount));
+                $('#summaryPackageDiscount').text(pkgDiscountText);
                 $('#packageDiscountRow').show();
             } else {
                 $('#packageDiscountRow').hide();
@@ -909,14 +1312,36 @@
             // Debug
             console.log('updateCostSummary - vatPercent:', vatPercent, 'vatAmount:', vatAmount, 'subtotal:', subtotal, 'packageDiscount:', packageDiscount, 'discount:', discount, 'totalDiscount:', totalDiscount, 'surcharge:', surcharge, 'amountAfterDiscount:', amountAfterDiscount);
             
-            $('#vatPercent').text(vatPercent.toFixed(1));
-            $('#summaryVat').text(formatCurrency(vatAmount));
+            const vatPercentText = vatPercent.toFixed(1);
+            const vatAmountText = formatCurrency(vatAmount);
+            $('#vatPercent').text(vatPercentText);
+            $('#summaryVat').text(vatAmountText);
 
             // Grand total - (Subtotal - TotalDiscount) + VAT + Surcharge
             // totalDiscount đã được tính ở trên (dòng 878)
             // Luôn tính lại grand total dựa trên data hiện tại để đảm bảo chính xác
             const grandTotal = amountAfterDiscount + vatAmount + surcharge;
-            $('#summaryGrandTotal').text(formatCurrency(grandTotal));
+            const grandTotalText = formatCurrency(grandTotal);
+            $('#summaryGrandTotal').text(grandTotalText);
+
+            // Cập nhật cho layout in
+            $('#printLaborCost').text(laborText);
+            $('#printComponentCost').text(componentText);
+            $('#printSubtotal').text(subtotalText);
+            $('#printVatPercent').text(vatPercentText);
+            $('#printVatAmount').text(vatAmountText);
+            $('#printSurcharge').text(surchargeText);
+            $('#printDiscount').text(discountText);
+
+            if (packageId) {
+                $('#printPackageName').text($('#packageName').text());
+                $('#printPackageDiscount').text(formatCurrency(packageDiscount));
+                $('#printPackageDiscountRow').show();
+            } else {
+                $('#printPackageDiscountRow').hide();
+            }
+
+            $('#printGrandTotal').text(grandTotalText);
         }
 
         function getStatusClass(statusCode) {

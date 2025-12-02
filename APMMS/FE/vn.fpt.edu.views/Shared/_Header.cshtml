@@ -20,7 +20,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
         <!-- Logo -->
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="@Url.Action("Index", "Home")">
             <div class="logo-container">
                 <div class="logo-icon">
                     <i class="fas fa-car"></i>
@@ -41,7 +41,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link active" href="#">Trang chủ</a>
+                    <a class="nav-link active" href="@Url.Action("Index", "Home")">Trang chủ</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">Giới thiệu</a>
@@ -92,3 +92,57 @@
         </div>
     </div>
 </nav>
+
+<script>
+    // ✅ Hiển thị họ tên thay vì username trong header
+    // Sử dụng hàm từ site.js để tránh lỗi Razor compilation
+    (function() {
+        function updateProfileName() {
+            const profileNameEl = document.getElementById('profileName');
+            if (!profileNameEl) return;
+            
+            const userInfoStr = localStorage.getItem('userInfo');
+            if (!userInfoStr) return;
+            
+            try {
+                const userInfo = JSON.parse(userInfoStr);
+                
+                // ✅ Ưu tiên hiển thị firstName + lastName
+                let displayName = 'Người dùng';
+                if (userInfo.firstName && userInfo.lastName) {
+                    displayName = (userInfo.firstName + ' ' + userInfo.lastName).trim();
+                } else if (userInfo.fullName) {
+                    displayName = userInfo.fullName;
+                } else if (userInfo.username) {
+                    displayName = userInfo.username;
+                }
+                
+                if (profileNameEl.textContent !== displayName) {
+                    profileNameEl.textContent = displayName;
+                }
+            } catch (error) {
+                console.error('Error updating profile name:', error);
+            }
+        }
+        
+        // Chạy khi DOM ready
+        function init() {
+            updateProfileName();
+            setTimeout(updateProfileName, 300);
+            setTimeout(updateProfileName, 1000);
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        // Lắng nghe storage event
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'userInfo') {
+                updateProfileName();
+            }
+        });
+    })();
+</script>

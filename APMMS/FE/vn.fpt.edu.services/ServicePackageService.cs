@@ -14,7 +14,7 @@ namespace FE.vn.fpt.edu.services
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
+        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null)
         {
             var queryParams = new List<string>
             {
@@ -28,9 +28,7 @@ namespace FE.vn.fpt.edu.services
             if (!string.IsNullOrWhiteSpace(statusCode))
                 queryParams.Add($"statusCode={Uri.EscapeDataString(statusCode)}");
 
-            if (branchId.HasValue)
-                queryParams.Add($"branchId={branchId.Value}");
-
+            // BE sẽ tự động lấy branchId từ JWT token, không cần gửi từ FE
             var queryString = string.Join("&", queryParams);
             return await _apiAdapter.GetAsync<object>($"ServicePackage?{queryString}");
         }
@@ -46,20 +44,6 @@ namespace FE.vn.fpt.edu.services
             {
                 Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
                 return new { success = false, message = "Không thể tải dữ liệu chi tiết", error = ex.Message };
-            }
-        }
-
-        public async Task<object?> GetEmployeeInfoAsync()
-        {
-            try
-            {
-                var result = await _apiAdapter.GetAsync<object>("Employee/me");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in GetEmployeeInfoAsync: {ex.Message}");
-                return null;
             }
         }
 

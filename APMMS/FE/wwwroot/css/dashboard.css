@@ -182,6 +182,10 @@
     height: 100vh;
     overflow-y: auto;
     z-index: 1000;
+    /* Đảm bảo sidebar không bị "nhấp nháy" khi reload */
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .sidebar.collapsed {

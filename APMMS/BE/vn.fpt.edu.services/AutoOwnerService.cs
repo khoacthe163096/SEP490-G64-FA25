@@ -52,6 +52,122 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> CreateAsync(RequestDto dto)
         {
+            // Basic field normalization
+            dto.Username = dto.Username?.Trim() ?? string.Empty;
+            dto.Email = dto.Email?.Trim();
+            // ✅ Validate required fields
+            if (string.IsNullOrWhiteSpace(dto.Username))
+            {
+                throw new ArgumentException("Tên đăng nhập là bắt buộc.");
+            }
+            if (string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
+            {
+                throw new ArgumentException("Họ và Tên là bắt buộc.");
+            }
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                throw new ArgumentException("Email là bắt buộc.");
+            }
+
+            // ✅ Validate email format (basic)
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                try
+                {
+                    var _ = new System.Net.Mail.MailAddress(dto.Email);
+                }
+                catch
+                {
+                    throw new ArgumentException("Định dạng email không hợp lệ.");
+                }
+            }
+
+            dto.Phone = dto.Phone?.Trim();
+            dto.CitizenId = dto.CitizenId?.Trim();
+            dto.TaxCode = dto.TaxCode?.Trim();
+
+            // ✅ Validate phone: must be 10 digits and start with 0
+            if (!string.IsNullOrWhiteSpace(dto.Phone))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.Phone, @"^0\d{9}$"))
+                {
+                    throw new ArgumentException("Số điện thoại không hợp lệ. Vui lòng nhập đúng 10 số và bắt đầu bằng số 0.");
+                }
+            }
+
+            // ✅ Validate DOB: must be at least 18 years old
+            // ✅ Validate CitizenId format: exactly 12 digits if provided
+            if (!string.IsNullOrWhiteSpace(dto.CitizenId))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.CitizenId, @"^\d{12}$"))
+                {
+                    throw new ArgumentException("CCCD không hợp lệ. Vui lòng nhập đúng 12 chữ số.");
+                }
+            }
+
+            // ✅ Validate TaxCode format if provided: 10 digits OR 10 digits-3 digits
+            if (!string.IsNullOrWhiteSpace(dto.TaxCode))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.TaxCode, @"^([0-9]{10}|[0-9]{10}-[0-9]{3})$"))
+                {
+                    throw new ArgumentException("Mã số thuế không hợp lệ. Định dạng hợp lệ: 10 số hoặc 10 số-3 số (VD: 0123456789 hoặc 0123456789-001).");
+                }
+            }
+            if (dto.Dob.HasValue)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var age = today.Year - dto.Dob.Value.Year - (today.DayOfYear < dto.Dob.Value.DayOfYear ? 1 : 0);
+                if (age < 18)
+                {
+                    throw new ArgumentException("Khách hàng phải từ 18 tuổi trở lên.");
+                }
+            }
+
+            // ✅ Check duplicates: Username, Email, Phone, CitizenId
+            if (!string.IsNullOrWhiteSpace(dto.Username))
+            {
+                var existingUsername = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Username == dto.Username && (u.IsDelete == false || u.IsDelete == null));
+                if (existingUsername != null)
+                {
+                    throw new ArgumentException("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                var existingEmail = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Email == dto.Email && (u.IsDelete == false || u.IsDelete == null));
+                if (existingEmail != null)
+                {
+                    throw new ArgumentException("Email đã tồn tại. Vui lòng sử dụng email khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone))
+            {
+                var existingPhone = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Phone == dto.Phone && (u.IsDelete == false || u.IsDelete == null));
+                if (existingPhone != null)
+                {
+                    throw new ArgumentException("Số điện thoại đã tồn tại. Vui lòng sử dụng số khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CitizenId))
+            {
+                var existingCitizen = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.CitizenId == dto.CitizenId && (u.IsDelete == false || u.IsDelete == null));
+                if (existingCitizen != null)
+                {
+                    throw new ArgumentException("CCCD đã tồn tại. Vui lòng kiểm tra lại.");
+                }
+            }
+
             var user = _mapper.Map<User>(dto);
 
             // Business rules
@@ -59,6 +175,16 @@ namespace BE.vn.fpt.edu.services
             user.StatusCode = "ACTIVE";
             user.CreatedDate = DateTime.UtcNow;
             user.IsDelete = false;
+
+            // ✅ Hash password when creating (avoid storing plain text)
+            if (!string.IsNullOrWhiteSpace(dto.Password))
+            {
+                using (var sha256 = System.Security.Cryptography.SHA256.Create())
+                {
+                    var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(dto.Password));
+                    user.Password = Convert.ToBase64String(hashedBytes);
+                }
+            }
             
             // Explicitly set Address to ensure it's saved
             user.Address = dto.Address;
@@ -78,6 +204,117 @@ namespace BE.vn.fpt.edu.services
             var existing = await _repository.GetByIdAsync(id);
             if (existing == null)
                 throw new KeyNotFoundException("Auto Owner not found.");
+
+            // Chuẩn hóa dữ liệu đầu vào
+            dto.Username = dto.Username?.Trim() ?? existing.Username;
+            dto.Email = dto.Email?.Trim() ?? existing.Email;
+            dto.Phone = dto.Phone?.Trim() ?? existing.Phone;
+            dto.CitizenId = dto.CitizenId?.Trim() ?? existing.CitizenId;
+
+            // ✅ Validate required fields (không cho phép clear Họ/Tên/Email)
+            if (string.IsNullOrWhiteSpace(dto.FirstName) || string.IsNullOrWhiteSpace(dto.LastName))
+            {
+                throw new ArgumentException("Họ và Tên là bắt buộc.");
+            }
+            if (string.IsNullOrWhiteSpace(dto.Email))
+            {
+                throw new ArgumentException("Email là bắt buộc.");
+            }
+
+            // ✅ Validate email format
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+            {
+                try
+                {
+                    var _ = new System.Net.Mail.MailAddress(dto.Email);
+                }
+                catch
+                {
+                    throw new ArgumentException("Định dạng email không hợp lệ.");
+                }
+            }
+
+            // ✅ Validate phone nếu có truyền
+            if (!string.IsNullOrWhiteSpace(dto.Phone))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.Phone, @"^0\d{9}$"))
+                {
+                    throw new ArgumentException("Số điện thoại không hợp lệ. Vui lòng nhập đúng 10 số và bắt đầu bằng số 0.");
+                }
+            }
+
+            // ✅ Validate DOB >= 18 tuổi nếu có truyền
+            // ✅ Validate CitizenId format nếu có truyền
+            if (!string.IsNullOrWhiteSpace(dto.CitizenId))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.CitizenId, @"^\d{12}$"))
+                {
+                    throw new ArgumentException("CCCD không hợp lệ. Vui lòng nhập đúng 12 chữ số.");
+                }
+            }
+
+            // ✅ Validate TaxCode format nếu có truyền
+            if (!string.IsNullOrWhiteSpace(dto.TaxCode))
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(dto.TaxCode, @"^([0-9]{10}|[0-9]{10}-[0-9]{3})$"))
+                {
+                    throw new ArgumentException("Mã số thuế không hợp lệ. Định dạng hợp lệ: 10 số hoặc 10 số-3 số (VD: 0123456789 hoặc 0123456789-001).");
+                }
+            }
+            if (dto.Dob.HasValue)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var age = today.Year - dto.Dob.Value.Year - (today.DayOfYear < dto.Dob.Value.DayOfYear ? 1 : 0);
+                if (age < 18)
+                {
+                    throw new ArgumentException("Khách hàng phải từ 18 tuổi trở lên.");
+                }
+            }
+
+            // ✅ Check duplicates khi update (bỏ qua chính user hiện tại)
+            if (!string.IsNullOrWhiteSpace(dto.Username) && !string.Equals(dto.Username, existing.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingUsername = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Username == dto.Username && u.Id != id && (u.IsDelete == false || u.IsDelete == null));
+                if (existingUsername != null)
+                {
+                    throw new ArgumentException("Tên đăng nhập đã tồn tại. Vui lòng chọn tên khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Email) && !string.Equals(dto.Email, existing.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingEmail = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Email == dto.Email && u.Id != id && (u.IsDelete == false || u.IsDelete == null));
+                if (existingEmail != null)
+                {
+                    throw new ArgumentException("Email đã tồn tại. Vui lòng sử dụng email khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.Phone) && !string.Equals(dto.Phone, existing.Phone, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingPhone = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.Phone == dto.Phone && u.Id != id && (u.IsDelete == false || u.IsDelete == null));
+                if (existingPhone != null)
+                {
+                    throw new ArgumentException("Số điện thoại đã tồn tại. Vui lòng sử dụng số khác.");
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(dto.CitizenId) && !string.Equals(dto.CitizenId, existing.CitizenId, StringComparison.OrdinalIgnoreCase))
+            {
+                var existingCitizen = await _db.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.CitizenId == dto.CitizenId && u.Id != id && (u.IsDelete == false || u.IsDelete == null));
+                if (existingCitizen != null)
+                {
+                    throw new ArgumentException("CCCD đã tồn tại. Vui lòng kiểm tra lại.");
+                }
+            }
 
             // QUAN TRỌNG: Lưu các giá trị quan trọng trước khi map để tránh bị mất
             var currentPassword = existing.Password;

@@ -10,6 +10,7 @@ namespace BE.vn.fpt.edu.repository.IRepository
         Task<MaintenanceTicket?> GetByIdWithCostDetailsAsync(long id);
         Task<List<MaintenanceTicket>> GetAllAsync(int page = 1, int pageSize = 10, long? branchId = null);
         Task<List<MaintenanceTicket>> GetByCarIdAsync(long carId);
+        Task<List<MaintenanceTicket>> GetByUserIdAsync(long userId);
         Task<List<MaintenanceTicket>> GetByStatusAsync(string statusCode);
         Task<MaintenanceTicket> UpdateAsync(MaintenanceTicket maintenanceTicket);
         Task<bool> DeleteAsync(long id);

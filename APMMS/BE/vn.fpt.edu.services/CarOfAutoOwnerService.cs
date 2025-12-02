@@ -3,7 +3,7 @@ using BE.vn.fpt.edu.DTOs.CarOfAutoOwner;
 using BE.vn.fpt.edu.interfaces;
 using BE.vn.fpt.edu.models;
 using BE.vn.fpt.edu.repository.IRepository;
-using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace BE.vn.fpt.edu.services
 {
@@ -11,6 +11,9 @@ namespace BE.vn.fpt.edu.services
     {
         private readonly ICarOfAutoOwnerRepository _repository;
         private readonly IMapper _mapper;
+        private static readonly Regex LicensePlateRegex = new(@"^(?:[0-9]{2}[A-Z][0-9]-[0-9]{2}\.[0-9]{3}|[0-9]{2}[A-Z][0-9]-[0-9]{3}\.[0-9]{2}|[0-9]{2}[A-Z][0-9]-?[0-9]{4,5})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex VinRegex = new(@"^[A-HJ-NPR-Z0-9]{17}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex EngineRegex = new(@"^[A-Z0-9\-]{5,20}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         public CarOfAutoOwnerService(ICarOfAutoOwnerRepository repository, IMapper mapper)
         {
@@ -60,10 +63,7 @@ namespace BE.vn.fpt.edu.services
                 throw new ArgumentNullException(nameof(dto), "Request DTO cannot be null.");
             }
 
-            if (!dto.UserId.HasValue || dto.UserId.Value <= 0)
-            {
-                throw new ArgumentException("UserId is required and must be greater than 0.", nameof(dto));
-            }
+            await NormalizeAndValidateAsync(dto);
 
             var car = _mapper.Map<Car>(dto);
             car.CreatedDate = DateTime.UtcNow;
@@ -80,6 +80,8 @@ namespace BE.vn.fpt.edu.services
             if (existing == null)
                 throw new KeyNotFoundException("Car not found.");
 
+            await NormalizeAndValidateAsync(dto, existingCarId: id, fallbackUserId: existing.UserId);
+
             _mapper.Map(dto, existing);
             existing.LastModifiedDate = DateTime.UtcNow;
             // Xe của khách hàng không cần chi nhánh
@@ -92,6 +94,63 @@ namespace BE.vn.fpt.edu.services
         public async Task<bool> DeleteAsync(long id)
         {
             return await _repository.DeleteAsync(id);
+        }
+
+        private async Task NormalizeAndValidateAsync(RequestDto dto, long? existingCarId = null, long? fallbackUserId = null)
+        {
+            dto.CarName = dto.CarName?.Trim();
+            if (string.IsNullOrWhiteSpace(dto.CarName))
+                throw new ArgumentException("Tên xe là bắt buộc.");
+            if (dto.CarName!.Length > 100)
+                throw new ArgumentException("Tên xe không được vượt quá 100 ký tự.");
+
+            dto.CarModel = dto.CarModel?.Trim();
+            if (!string.IsNullOrEmpty(dto.CarModel) && dto.CarModel.Length > 100)
+                throw new ArgumentException("Mẫu xe không được vượt quá 100 ký tự.");
+
+            dto.Color = dto.Color?.Trim();
+            if (!string.IsNullOrEmpty(dto.Color) && dto.Color.Length > 50)
+                throw new ArgumentException("Màu xe không được vượt quá 50 ký tự.");
+
+            dto.LicensePlate = dto.LicensePlate?.Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(dto.LicensePlate))
+                throw new ArgumentException("Biển số là bắt buộc.");
+            if (!LicensePlateRegex.IsMatch(dto.LicensePlate))
+                throw new ArgumentException("Biển số không hợp lệ. Ví dụ hợp lệ: 30A-123.45, 30A-12345, 59N1-12345.");
+
+            dto.VehicleEngineNumber = dto.VehicleEngineNumber?.Trim().ToUpperInvariant();
+            if (!string.IsNullOrEmpty(dto.VehicleEngineNumber) && !EngineRegex.IsMatch(dto.VehicleEngineNumber))
+                throw new ArgumentException("Số máy không hợp lệ. Chỉ cho phép 5-20 ký tự chữ số hoặc dấu gạch ngang.");
+
+            dto.VinNumber = dto.VinNumber?.Trim().ToUpperInvariant();
+            if (!string.IsNullOrEmpty(dto.VinNumber) && !VinRegex.IsMatch(dto.VinNumber))
+                throw new ArgumentException("Số khung (VIN) phải gồm đúng 17 ký tự chữ số/ chữ cái (không bao gồm I, O, Q).");
+
+            if (!dto.VehicleTypeId.HasValue || dto.VehicleTypeId.Value <= 0)
+                throw new ArgumentException("Loại xe là bắt buộc.");
+
+            var year = dto.YearOfManufacture;
+            if (year.HasValue)
+            {
+                var currentYear = DateTime.UtcNow.Year + 1;
+                if (year < 1900 || year > currentYear)
+                    throw new ArgumentException($"Năm sản xuất phải nằm trong khoảng 1900 - {currentYear}.");
+            }
+
+            var userId = dto.UserId ?? fallbackUserId;
+            if (!userId.HasValue || userId.Value <= 0)
+                throw new ArgumentException("Khách hàng sở hữu xe không hợp lệ.");
+            dto.UserId = userId;
+
+            // Check duplicates
+            if (await _repository.ExistsLicensePlateAsync(dto.LicensePlate!, existingCarId))
+                throw new ArgumentException("Biển số này đã được đăng ký cho một xe khác.");
+
+            if (!string.IsNullOrEmpty(dto.VinNumber) && await _repository.ExistsVinNumberAsync(dto.VinNumber, existingCarId))
+                throw new ArgumentException("Số khung (VIN) này đã tồn tại trong hệ thống.");
+
+            if (!string.IsNullOrEmpty(dto.VehicleEngineNumber) && await _repository.ExistsEngineNumberAsync(dto.VehicleEngineNumber, existingCarId))
+                throw new ArgumentException("Số máy này đã tồn tại trong hệ thống.");
         }
     }
 }
