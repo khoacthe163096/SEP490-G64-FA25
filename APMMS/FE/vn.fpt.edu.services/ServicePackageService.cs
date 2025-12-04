@@ -60,6 +60,20 @@ namespace FE.vn.fpt.edu.services
             }
         }
 
+        public async Task<object?> CreateAsync(object data)
+        {
+            try
+            {
+                var result = await _apiAdapter.PostAsync<object>("ServicePackage", data);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in CreateAsync: {ex.Message}");
+                return new { success = false, message = "Không thể tạo gói dịch vụ", error = ex.Message };
+            }
+        }
+
         public async Task<object?> UpdateAsync(long id, object data)
         {
             try

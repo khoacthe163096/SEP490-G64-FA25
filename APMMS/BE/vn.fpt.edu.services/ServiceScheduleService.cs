@@ -241,6 +241,41 @@ namespace BE.vn.fpt.edu.services
 
         }
 
+        /// <summary>
+        /// Lấy danh sách lịch hẹn hôm nay (chỉ lấy các lịch chưa hoàn thành)
+        /// </summary>
+        public async Task<List<ListResponseDto>> GetTodaySchedulesAsync(long? branchId = null)
+        {
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+            
+            // Lấy lịch hẹn từ đầu ngày hôm nay đến đầu ngày mai (trong khoảng hôm nay)
+            var schedules = await _repository.GetByDateRangeAsync(today, tomorrow.AddSeconds(-1), branchId);
+            
+            // Chỉ lấy các lịch chưa bị hủy hoặc hoàn thành
+            var activeSchedules = schedules
+                .Where(s => s.StatusCode != "CANCELLED" && s.StatusCode != "COMPLETED")
+                .OrderBy(s => s.ScheduledDate)
+                .ToList();
+            
+            return activeSchedules.Select(MapToListResponseDto).ToList();
+        }
+
+        /// <summary>
+        /// Đếm số lượng lịch hẹn hôm nay (chỉ đếm các lịch chưa hoàn thành)
+        /// </summary>
+        public async Task<int> GetTodaySchedulesCountAsync(long? branchId = null)
+        {
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+            
+            // Lấy lịch hẹn từ đầu ngày hôm nay đến đầu ngày mai
+            var schedules = await _repository.GetByDateRangeAsync(today, tomorrow.AddSeconds(-1), branchId);
+            
+            // Đếm các lịch chưa bị hủy hoặc hoàn thành
+            return schedules.Count(s => s.StatusCode != "CANCELLED" && s.StatusCode != "COMPLETED");
+        }
+
 
 
         public async Task<ResponseDto> UpdateScheduleAsync(long id, UpdateScheduleDto request, long? currentUserId = null)
@@ -629,62 +664,6 @@ namespace BE.vn.fpt.edu.services
 
                 .LoadAsync();
 
-
-
-            // Nếu schedule có user_id nhưng chưa có guest_id, và user là public booking (Password = "N/A")
-
-            // thì tạo CustomerGuest và chuyển sang guest_id
-
-            if (schedule.UserId.HasValue && !schedule.GuestId.HasValue && schedule.User != null && schedule.User.Password == "N/A")
-
-            {
-
-                // Tạo CustomerGuest từ thông tin user và car
-
-                var customerGuest = new CustomerGuest
-
-                {
-
-                    Name = $"{schedule.User.FirstName} {schedule.User.LastName}".Trim(),
-
-                    Phone = schedule.User.Phone ?? string.Empty,
-
-                    Email = schedule.User.Email,
-
-                    CarName = schedule.Car?.CarName,
-
-                    CarModel = schedule.Car?.CarModel,
-
-                    LicensePlate = schedule.Car?.LicensePlate,
-
-                    BranchId = schedule.BranchId ?? consultant.BranchId,
-
-                    LinkedUserId = schedule.UserId, // Liên kết với user để sau này có thể chuyển đổi
-
-                    CreatedAt = DateTime.UtcNow
-
-                };
-
-
-
-                _context.CustomerGuests.Add(customerGuest);
-
-                await _context.SaveChangesAsync(); // Save để lấy ID
-
-
-
-                // Chuyển schedule từ user_id sang guest_id
-
-                schedule.GuestId = customerGuest.Id;
-
-                schedule.UserId = null; // Set null vì CHECK constraint chỉ cho phép một trong hai
-
-                schedule.CarId = null;  // Set null vì car thuộc về user, không thuộc về guest
-
-            }
-
-
-
             var existingAssignment = GetLatestAssignmentNote(schedule);
 
             if (existingAssignment != null)
@@ -1009,7 +988,9 @@ namespace BE.vn.fpt.edu.services
 
                 carModel = schedule.Car?.CarModel;
 
-                isPublicBooking = schedule.User.Password == "N/A";
+                // Nếu có UserId thì không phải public booking (public booking chỉ có GuestId)
+
+                isPublicBooking = false;
 
             }
 
@@ -1129,7 +1110,9 @@ namespace BE.vn.fpt.edu.services
 
                 licensePlate = schedule.Car?.LicensePlate;
 
-                isPublicBooking = schedule.User.Password == "N/A";
+                // Nếu có UserId thì không phải public booking (public booking chỉ có GuestId)
+
+                isPublicBooking = false;
 
             }
 

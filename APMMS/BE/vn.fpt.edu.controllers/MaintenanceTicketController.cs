@@ -428,6 +428,27 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         /// <summary>
+        /// Xóa gói dịch vụ đã áp dụng khỏi Maintenance Ticket - xóa các Components từ package
+        /// </summary>
+        [HttpDelete("{id}/remove-service-package")]
+        public async Task<IActionResult> RemoveServicePackage(long id)
+        {
+            try
+            {
+                var result = await _maintenanceTicketService.RemoveServicePackageAsync(id);
+                return Ok(new { success = true, data = result, message = "Xóa gói dịch vụ thành công" });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Export PDF báo cáo chi tiết phiếu bảo dưỡng
         /// </summary>
         [HttpGet("{id}/export-pdf")]

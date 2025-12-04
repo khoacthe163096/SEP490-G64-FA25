@@ -35,7 +35,6 @@ namespace BE.vn.fpt.edu.repository
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Branch)
-                .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .FirstOrDefaultAsync(vc => vc.Id == id);
         }
@@ -48,7 +47,6 @@ namespace BE.vn.fpt.edu.repository
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Branch)
-                .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .AsQueryable();
 
@@ -90,7 +88,6 @@ namespace BE.vn.fpt.edu.repository
         {
             return await _context.VehicleCheckins
                 .Include(vc => vc.Car)
-                .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .Where(vc => vc.CarId == carId)
                 .OrderByDescending(vc => vc.CreatedAt)
@@ -99,13 +96,8 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<List<VehicleCheckin>> GetByMaintenanceRequestIdAsync(long maintenanceRequestId)
         {
-            return await _context.VehicleCheckins
-                .Include(vc => vc.Car)
-                .Include(vc => vc.MaintenanceRequest)
-                .Include(vc => vc.VehicleCheckinImages)
-                .Where(vc => vc.MaintenanceRequestId == maintenanceRequestId)
-                .OrderByDescending(vc => vc.CreatedAt)
-                .ToListAsync();
+            // MaintenanceRequest entity does not exist - return empty list
+            return new List<VehicleCheckin>();
         }
 
         public async Task<bool> DeleteAsync(long id)
@@ -126,8 +118,6 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.VehicleType)
-                .Include(vc => vc.MaintenanceRequest)
-                    .ThenInclude(mr => mr.User)
                 .Include(vc => vc.VehicleCheckinImages)
                 .FirstOrDefaultAsync(vc => vc.Id == id);
         }
@@ -139,8 +129,6 @@ namespace BE.vn.fpt.edu.repository
                     .ThenInclude(c => c.User)
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.VehicleType)
-                .Include(vc => vc.MaintenanceRequest)
-                    .ThenInclude(mr => mr.User)
                 .Include(vc => vc.VehicleCheckinImages)
                 .AsQueryable();
 

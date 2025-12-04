@@ -26,6 +26,7 @@ namespace BE.vn.fpt.edu.DTOs.ServicePackage
             public int? QuantityStock { get; set; }
             public string? ImageUrl { get; set; }
             public int? Quantity { get; set; } // Số lượng trong gói dịch vụ (nếu có trong bảng trung gian)
+            public string? StatusCode { get; set; } // Trạng thái của linh kiện
         }
 
         public class ServiceCategorySummary

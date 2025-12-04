@@ -127,7 +127,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold mb-3" style="font-size: 1.1rem; color: #212529;">Thông tin</label>
                                 <div>
-                                    <button type="button" class="btn btn-primary btn-lg" id="editButton" data-bs-toggle="modal" data-bs-target="#editTypeComponentModal" style="font-size: 1rem; padding: 12px 24px;">
+                                    <button type="button" class="btn btn-outline-primary btn-lg" id="editButton" data-bs-toggle="modal" data-bs-target="#editTypeComponentModal" style="font-size: 1rem; padding: 12px 24px;">
                                         <i class="fas fa-user-edit me-2"></i>Chỉnh sửa thông tin
                                     </button>
                                 </div>
@@ -268,7 +268,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Đóng
                 </button>
-                <button type="button" class="btn btn-primary" id="updateTypeComponentBtn">
+                <button type="button" class="btn btn-outline-primary" id="updateTypeComponentBtn">
                     <i class="fas fa-save me-1"></i>Cập nhật
                 </button>
             </div>
@@ -697,8 +697,8 @@
                 
                 const branchId = document.getElementById('editTypeComponentBranchId').value;
                 const url = branchId 
-                    ? `${apiBaseUrl}/Component?page=1&pageSize=1000&branchId=${branchId}`
-                    : `${apiBaseUrl}/Component?page=1&pageSize=1000`;
+                    ? `${apiBaseUrl}/Component?page=1&pageSize=1000&branchId=${branchId}&statusCode=ACTIVE`
+                    : `${apiBaseUrl}/Component?page=1&pageSize=1000&statusCode=ACTIVE`;
                 
                 const response = await fetch(url, {
                     headers: {
@@ -715,10 +715,12 @@
                 loadingEl.style.display = 'none';
                 
                 if (data.success && data.data && data.data.length > 0) {
+                    // ✅ Lọc bỏ các linh kiện có trạng thái "Không hoạt động" (OUT_OF_STOCK)
+                    const activeComponents = data.data.filter(comp => comp.statusCode === 'ACTIVE');
                     // Store all components for filtering
-                    window.allAvailableComponents = data.data;
-                    window.filteredAvailableComponents = data.data;
-                    renderAvailableComponentsTable(data.data);
+                    window.allAvailableComponents = activeComponents;
+                    window.filteredAvailableComponents = activeComponents;
+                    renderAvailableComponentsTable(activeComponents);
                 } else {
                     emptyEl.style.display = 'block';
                 }
@@ -743,13 +745,10 @@
                 let statusText = 'Không xác định';
                 if (component.statusCode === 'ACTIVE') {
                     statusClass = 'bg-success';
-                    statusText = 'Có sẵn';
+                    statusText = 'Đang hoạt động';
                 } else if (component.statusCode === 'OUT_OF_STOCK') {
-                    statusClass = 'bg-warning';
-                    statusText = 'Hết hàng';
-                } else if (component.statusCode === 'DISCONTINUED') {
-                    statusClass = 'bg-danger';
-                    statusText = 'Ngừng sản xuất';
+                    statusClass = 'bg-secondary';
+                    statusText = 'Không hoạt động';
                 }
                 
                 const unitPrice = component.unitPrice 
@@ -977,13 +976,10 @@
                 let statusText = 'Không xác định';
                 if (component.statusCode === 'ACTIVE') {
                     statusClass = 'bg-success';
-                    statusText = 'Có sẵn';
+                    statusText = 'Đang hoạt động';
                 } else if (component.statusCode === 'OUT_OF_STOCK') {
-                    statusClass = 'bg-warning';
-                    statusText = 'Hết hàng';
-                } else if (component.statusCode === 'DISCONTINUED') {
-                    statusClass = 'bg-danger';
-                    statusText = 'Ngừng sản xuất';
+                    statusClass = 'bg-secondary';
+                    statusText = 'Không hoạt động';
                 }
                 
                 const unitPrice = component.unitPrice 

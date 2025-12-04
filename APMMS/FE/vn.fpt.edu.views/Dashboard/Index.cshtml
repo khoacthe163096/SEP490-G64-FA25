@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/vn.fpt.edu.views/Shared/_DashboardLayout.cshtml";
+    var apiBaseUrl = ViewBag.ApiBaseUrl ?? "https://localhost:7173/api";
 }
 
 <!-- Welcome Page (Default) -->
@@ -228,6 +229,154 @@
                     }
                 });
             });
+
+            // Load today's schedules sau khi DOM ready
+            setTimeout(() => {
+                loadTodaySchedules();
+            }, 500);
         });
+
+        // Load lịch hẹn hôm nay
+        function loadTodaySchedules() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+
+            // Lấy branchId từ userInfo hoặc JWT token
+            let userBranchId = null;
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    userBranchId = userInfo.branchId || userInfo.BranchId;
+                }
+                
+                if (!userBranchId && token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        userBranchId = payload['BranchId'] || payload['branchId'] || payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/branchid'];
+                        if (userBranchId) {
+                            userBranchId = parseInt(userBranchId, 10);
+                        }
+                    } catch (e) {
+                        console.warn('Could not get branchId from token:', e);
+                    }
+                }
+            } catch (error) {
+                console.warn('Error getting branchId:', error);
+            }
+
+            const apiBaseUrl = '@apiBaseUrl';
+            let url = `${apiBaseUrl}/ServiceSchedule/today`;
+            if (userBranchId) {
+                url += `?branchId=${userBranchId}`;
+            }
+
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async response => {
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        return; // Không hiển thị nếu không có quyền
+                    }
+                    throw new Error('Failed to load today schedules');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Today schedules data:', data);
+                if (data && data.success && data.data) {
+                    const schedules = data.data;
+                    const count = data.count || schedules.length;
+                    
+                    console.log(`Found ${count} schedules for today`);
+                    if (count > 0) {
+                        displayTodaySchedules(schedules, count);
+                    } else {
+                        // Nếu không có lịch, vẫn hiển thị thông báo
+                        const alertDiv = document.getElementById('todayScheduleAlert');
+                        if (alertDiv) {
+                            const messageDiv = document.getElementById('todayScheduleMessage');
+                            if (messageDiv) {
+                                messageDiv.textContent = 'Hôm nay không có lịch hẹn nào.';
+                                alertDiv.style.display = 'block';
+                                alertDiv.querySelector('.alert').classList.remove('alert-info');
+                                alertDiv.querySelector('.alert').classList.add('alert-success');
+                            }
+                        }
+                    }
+                } else {
+                    console.warn('No data returned from API');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading today schedules:', error);
+                // Hiển thị lỗi để debug
+                const alertDiv = document.getElementById('todayScheduleAlert');
+                if (alertDiv) {
+                    const messageDiv = document.getElementById('todayScheduleMessage');
+                    if (messageDiv) {
+                        messageDiv.textContent = 'Không thể tải lịch hẹn hôm nay. Vui lòng thử lại sau.';
+                        alertDiv.style.display = 'block';
+                        alertDiv.querySelector('.alert').classList.remove('alert-info');
+                        alertDiv.querySelector('.alert').classList.add('alert-warning');
+                    }
+                }
+            });
+        }
+
+        // Hiển thị lịch hẹn hôm nay
+        function displayTodaySchedules(schedules, count) {
+            const alertDiv = document.getElementById('todayScheduleAlert');
+            const messageDiv = document.getElementById('todayScheduleMessage');
+            const listDiv = document.getElementById('todayScheduleList');
+
+            if (!alertDiv || !messageDiv || !listDiv) return;
+
+            // Hiển thị thông báo
+            messageDiv.textContent = `Hôm nay có ${count} lịch hẹn cần xử lý:`;
+
+            // Hiển thị danh sách (tối đa 5 lịch đầu tiên)
+            const displaySchedules = schedules.slice(0, 5);
+            let listHtml = '<ul class="list-unstyled mb-0">';
+            displaySchedules.forEach(schedule => {
+                const time = new Date(schedule.scheduledDate).toLocaleTimeString('vi-VN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const customerName = schedule.userName || 'Khách hàng';
+                const carInfo = schedule.licensePlate ? ` - ${schedule.licensePlate}` : '';
+                const statusBadge = getStatusBadge(schedule.statusCode);
+                
+                listHtml += `
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <strong>${time}</strong> - ${customerName}${carInfo}
+                        ${statusBadge}
+                    </li>
+                `;
+            });
+            if (schedules.length > 5) {
+                listHtml += `<li class="text-muted"><small>... và ${schedules.length - 5} lịch hẹn khác</small></li>`;
+            }
+            listHtml += '</ul>';
+
+            listDiv.innerHTML = listHtml;
+            alertDiv.style.display = 'block';
+        }
+
+        // Tạo badge trạng thái
+        function getStatusBadge(statusCode) {
+            const badges = {
+                'PENDING': '<span class="badge bg-warning">Chờ xử lý</span>',
+                'IN_PROGRESS': '<span class="badge bg-info">Đang xử lý</span>',
+                'COMPLETED': '<span class="badge bg-success">Hoàn thành</span>',
+                'CANCELLED': '<span class="badge bg-secondary">Đã hủy</span>'
+            };
+            return badges[statusCode] || '';
+        }
     </script>
 }

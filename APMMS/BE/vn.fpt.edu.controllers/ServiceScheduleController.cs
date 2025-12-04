@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 
 using Microsoft.AspNetCore.Mvc;
 
+using Microsoft.EntityFrameworkCore;
+
 using System.Security.Claims;
 
 
@@ -25,15 +27,19 @@ namespace BE.vn.fpt.edu.controllers
     {
 
         private readonly IServiceScheduleService _serviceScheduleService;
+        private readonly BE.vn.fpt.edu.repository.IRepository.IServiceScheduleRepository _scheduleRepository;
+        private readonly BE.vn.fpt.edu.models.CarMaintenanceDbContext _context;
 
 
 
-        public ServiceScheduleController(IServiceScheduleService serviceScheduleService)
-
+        public ServiceScheduleController(
+            IServiceScheduleService serviceScheduleService,
+            BE.vn.fpt.edu.repository.IRepository.IServiceScheduleRepository scheduleRepository,
+            BE.vn.fpt.edu.models.CarMaintenanceDbContext context)
         {
-
             _serviceScheduleService = serviceScheduleService;
-
+            _scheduleRepository = scheduleRepository;
+            _context = context;
         }
 
 
@@ -468,7 +474,67 @@ namespace BE.vn.fpt.edu.controllers
 
         }
 
+        /// <summary>
+        /// Lấy danh sách lịch hẹn hôm nay (dùng cho thông báo/dashboard)
+        /// Nếu user có branchId, chỉ trả về lịch hẹn của chi nhánh đó
+        /// </summary>
+        [HttpGet("today")]
+        public async Task<IActionResult> GetTodaySchedules([FromQuery] long? branchId = null)
+        {
+            try
+            {
+                // Nếu không có branchId trong query, thử lấy từ JWT token
+                if (!branchId.HasValue && User.Identity?.IsAuthenticated == true)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var userBranchId))
+                    {
+                        branchId = userBranchId;
+                    }
+                }
 
+                var schedules = await _serviceScheduleService.GetTodaySchedulesAsync(branchId);
+                var count = await _serviceScheduleService.GetTodaySchedulesCountAsync(branchId);
+
+                return Ok(new { 
+                    success = true, 
+                    data = schedules,
+                    count = count,
+                    message = $"Hôm nay có {count} lịch hẹn"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đếm số lượng lịch hẹn hôm nay (dùng cho badge notification)
+        /// </summary>
+        [HttpGet("today/count")]
+        public async Task<IActionResult> GetTodaySchedulesCount([FromQuery] long? branchId = null)
+        {
+            try
+            {
+                // Nếu không có branchId trong query, thử lấy từ JWT token
+                if (!branchId.HasValue && User.Identity?.IsAuthenticated == true)
+                {
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var userBranchId))
+                    {
+                        branchId = userBranchId;
+                    }
+                }
+
+                var count = await _serviceScheduleService.GetTodaySchedulesCountAsync(branchId);
+                return Ok(new { success = true, count = count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
 
         /// <summary>
 
@@ -549,6 +615,104 @@ namespace BE.vn.fpt.edu.controllers
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
                 long? currentUserId = long.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : null;
+
+                var result = await _serviceScheduleService.CancelScheduleAsync(id, request, currentUserId);
+
+                return Ok(new { success = true, data = result, message = "Schedule cancelled successfully" });
+
+            }
+
+            catch (ArgumentException ex)
+
+            {
+
+                return BadRequest(new { success = false, message = ex.Message });
+
+            }
+
+            catch (Exception ex)
+
+            {
+
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+
+            }
+
+        }
+
+
+
+        /// <summary>
+
+        /// AutoOwner hủy lịch hẹn của chính họ
+
+        /// </summary>
+
+        [HttpPut("{id}/cancel-by-owner")]
+
+        [Authorize(Roles = "Auto Owner,AutoOwner")]
+
+        public async Task<IActionResult> CancelScheduleByOwner(long id, [FromBody] CancelScheduleDto? request = null)
+
+        {
+
+            try
+
+            {
+
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var currentUserId))
+
+                {
+
+                    return Unauthorized(new { success = false, message = "Invalid user token" });
+
+                }
+
+
+
+                var schedule = await _scheduleRepository.GetByIdAsync(id);
+
+                if (schedule == null)
+
+                {
+
+                    return NotFound(new { success = false, message = "Schedule not found" });
+
+                }
+
+
+
+                var isOwner = schedule.UserId == currentUserId;
+
+                if (!isOwner && schedule.GuestId.HasValue)
+
+                {
+
+                    await _context.Entry(schedule).Reference(s => s.Guest).LoadAsync();
+
+                    if (schedule.Guest?.LinkedUserId == currentUserId)
+
+                    {
+
+                        isOwner = true;
+
+                    }
+
+                }
+
+
+
+                if (!isOwner)
+
+                {
+
+                    return Forbid("You can only cancel your own schedules");
+
+                }
+
+
 
                 var result = await _serviceScheduleService.CancelScheduleAsync(id, request, currentUserId);
 

@@ -257,7 +257,7 @@
                     <button class="btn btn-success btn-sm d-none" type="button" id="payInvoiceBtn" title="Thanh toán hóa đơn">
                         <i class="fas fa-money-bill-wave me-1"></i>Thanh toán
                     </button>
-                    <button class="btn btn-outline-primary btn-sm" type="button" onclick="window.print()">
+                    <button class="btn btn-outline-primary btn-sm" type="button" id="exportPdfBtn" onclick="exportPdf()">
                         <i class="fas fa-print me-1"></i>In hóa đơn
                     </button>
                 </div>
@@ -852,6 +852,89 @@
         let maintenanceTicketId = null;
         let tasksData = [];
         let componentsData = [];
+
+        function exportPdf() {
+            if (!RECEIPT_ID || Number.isNaN(RECEIPT_ID)) {
+                showAlert('Không tìm thấy mã hóa đơn hợp lệ.', 'danger');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            const url = `${API_BASE_URL}/TotalReceipt/${RECEIPT_ID}/export-pdf`;
+            
+            // Disable button while loading
+            const btn = document.getElementById('exportPdfBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tạo PDF...';
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': token ? `Bearer ${token}` : '',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Không thể tạo PDF');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Tạo URL từ blob
+                const pdfUrl = window.URL.createObjectURL(blob);
+                
+                // Mở PDF trong tab mới
+                const printWindow = window.open(pdfUrl, '_blank');
+                
+                if (printWindow) {
+                    // Đợi PDF load xong rồi tự động in
+                    let printAttempted = false;
+                    const tryPrint = () => {
+                        if (!printAttempted) {
+                            try {
+                                printWindow.focus();
+                                setTimeout(() => {
+                                    printWindow.print();
+                                    printAttempted = true;
+                                }, 1000);
+                            } catch (e) {
+                                console.log('Print dialog sẽ hiện khi PDF load xong');
+                            }
+                        }
+                    };
+                    
+                    // Thử in khi window load
+                    printWindow.onload = tryPrint;
+                    
+                    // Thử in sau khi đợi một chút (fallback)
+                    setTimeout(tryPrint, 1500);
+                    
+                    // Cleanup URL sau một thời gian
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(pdfUrl);
+                    }, 60000);
+                } else {
+                    // Nếu popup bị chặn, tạo link download
+                    const a = document.createElement('a');
+                    a.href = pdfUrl;
+                    a.target = '_blank';
+                    a.click();
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(pdfUrl);
+                    }, 100);
+                }
+                
+                // Restore button ngay sau khi mở PDF
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-print me-1"></i>In hóa đơn';
+            })
+            .catch(error => {
+                console.error('Export PDF error:', error);
+                showAlert('Không thể in hóa đơn: ' + error.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-print me-1"></i>In hóa đơn';
+            });
+        }
 
         $(document).ready(function () {
             if (!RECEIPT_ID || Number.isNaN(RECEIPT_ID)) {

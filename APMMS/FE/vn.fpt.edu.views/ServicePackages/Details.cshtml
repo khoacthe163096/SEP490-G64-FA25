@@ -202,11 +202,6 @@
                                             <div class="col-md-6">
                                                 <input type="text" class="form-control" id="editComponentSearch" placeholder="Tìm kiếm linh kiện...">
                                             </div>
-                                            <div class="col-md-6">
-                                                <button type="button" class="btn btn-outline-secondary" id="refreshComponentsBtn">
-                                                    <i class="fas fa-sync"></i> Làm mới
-                                                </button>
-                                            </div>
                                         </div>
                                         <div id="editComponentsLoading" class="text-center mb-2" style="display: none;">
                                             <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -223,7 +218,7 @@
                                         <button type="button" class="btn btn-secondary" id="cancelEditBtn">
                                             <i class="fas fa-times me-1"></i>Hủy
                                         </button>
-                                        <button type="submit" class="btn btn-primary" id="saveEditBtn">
+                                        <button type="submit" class="btn btn-outline-primary" id="saveEditBtn">
                                             <i class="fas fa-save me-1"></i>Lưu thay đổi
                                         </button>
                                     </div>
@@ -324,13 +319,7 @@
                 });
             }
             
-            // Setup refresh components button
-            const refreshComponentsBtn = document.getElementById('refreshComponentsBtn');
-            if (refreshComponentsBtn) {
-                refreshComponentsBtn.addEventListener('click', function() {
-                    loadEditComponents();
-                });
-            }
+            // Refresh button removed
         });
         
         let allComponents = [];

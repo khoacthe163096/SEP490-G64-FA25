@@ -103,7 +103,6 @@ namespace BE.vn.fpt.edu.services
             var vehicleCheckin = new VehicleCheckin
             {
                 CarId = request.CarId,
-                MaintenanceRequestId = request.MaintenanceRequestId,
                 Mileage = request.Mileage,
                 Notes = request.Notes,
                 BranchId = request.BranchId,
@@ -265,7 +264,7 @@ namespace BE.vn.fpt.edu.services
             {
                 Id = vehicleCheckin.Id,
                 CarId = vehicleCheckin.CarId ?? 0,
-                MaintenanceRequestId = vehicleCheckin.MaintenanceRequestId ?? 0,
+                MaintenanceRequestId = 0, // Not supported - MaintenanceRequest entity does not exist
                 Mileage = vehicleCheckin.Mileage ?? 0,
                 Notes = vehicleCheckin.Notes,
                 CreatedAt = vehicleCheckin.CreatedAt,
@@ -305,9 +304,9 @@ namespace BE.vn.fpt.edu.services
                     Category = img.Category
                 }).ToList() ?? new List<VehicleCheckinImageDto>(),
                 
-                // Maintenance request info
-                MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
-                RequestDate = vehicleCheckin.MaintenanceRequest?.RequestDate,
+                // Maintenance request info - Not supported
+                MaintenanceRequestStatus = null,
+                RequestDate = null,
                 
                 // VehicleCheckin status
                 StatusCode = vehicleCheckin.StatusCode
@@ -316,14 +315,8 @@ namespace BE.vn.fpt.edu.services
 
         public async Task<ResponseDto> LinkMaintenanceRequestAsync(long vehicleCheckinId, long maintenanceRequestId)
         {
-            var vehicleCheckin = await _vehicleCheckinRepository.GetByIdAsync(vehicleCheckinId);
-            if (vehicleCheckin == null)
-                throw new ArgumentException("Vehicle check-in not found");
-
-            vehicleCheckin.MaintenanceRequestId = maintenanceRequestId;
-            await _vehicleCheckinRepository.UpdateAsync(vehicleCheckin);
-            
-            return await GetVehicleCheckinByIdAsync(vehicleCheckinId);
+            // MaintenanceRequest entity does not exist - this method is not supported
+            throw new NotImplementedException("MaintenanceRequest entity does not exist in the database schema");
         }
 
         public async Task<object> SearchVehicleAsync(string searchTerm)
@@ -377,7 +370,7 @@ namespace BE.vn.fpt.edu.services
                 FirstImageUrl = vehicleCheckin.VehicleCheckinImages?.FirstOrDefault()?.ImageUrl,
                 BranchId = vehicleCheckin.BranchId ?? vehicleCheckin.Car?.BranchId,
                 BranchName = vehicleCheckin.SnapshotBranchName ?? vehicleCheckin.Branch?.Name ?? vehicleCheckin.Car?.Branch?.Name,
-                MaintenanceRequestStatus = vehicleCheckin.MaintenanceRequest?.StatusCode,
+                MaintenanceRequestStatus = null, // Not supported - MaintenanceRequest entity does not exist
                 StatusCode = vehicleCheckin.StatusCode
             };
         }
@@ -424,7 +417,6 @@ namespace BE.vn.fpt.edu.services
                 .Include(vc => vc.Car)
                     .ThenInclude(c => c.Branch)
                 .Include(vc => vc.Branch)
-                .Include(vc => vc.MaintenanceRequest)
                 .Include(vc => vc.VehicleCheckinImages)
                 .FirstOrDefaultAsync(vc => vc.Id == id);
 

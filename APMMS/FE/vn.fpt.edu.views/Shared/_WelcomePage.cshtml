@@ -25,6 +25,27 @@
             </div>
         </div>
 
+        <!-- Today's Schedule Alert -->
+        <div class="row mb-4" id="todayScheduleAlert" style="display: none;">
+            <div class="col-12">
+                <div class="alert alert-info alert-dismissible fade show" role="alert" id="todayScheduleAlertBox">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        Lịch hẹn hôm nay
+                    </h5>
+                    <p class="mb-2" id="todayScheduleMessage">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Đang tải lịch hẹn...
+                    </p>
+                    <div id="todayScheduleList" class="mt-2"></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <hr>
+                    <a href="/ServiceSchedules" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list me-1"></i> Xem tất cả lịch hẹn
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <!-- Quick Stats -->
         <div class="row mb-5">
             <div class="col-md-3">

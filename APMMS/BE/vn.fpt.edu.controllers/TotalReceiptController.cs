@@ -12,10 +12,12 @@ namespace BE.vn.fpt.edu.controllers
     public class TotalReceiptController : ControllerBase
     {
         private readonly ITotalReceiptService _service;
+        private readonly IReportService _reportService;
 
-        public TotalReceiptController(ITotalReceiptService service)
+        public TotalReceiptController(ITotalReceiptService service, IReportService reportService)
         {
             _service = service;
+            _reportService = reportService;
         }
 
         [HttpGet]
@@ -175,6 +177,37 @@ namespace BE.vn.fpt.edu.controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Export PDF hóa đơn dịch vụ
+        /// </summary>
+        [HttpGet("{id}/export-pdf")]
+        public async Task<IActionResult> ExportPdf(long id)
+        {
+            try
+            {
+                var pdfBytes = await _reportService.GenerateTotalReceiptPdfAsync(id);
+                var receipt = await _service.GetByIdAsync(id);
+                var fileName = $"HoaDon_{receipt?.Code ?? id.ToString()}_{DateTime.Now:yyyyMMdd}.pdf";
+                
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log chi tiết lỗi để debug
+                Console.WriteLine($"Error generating PDF for receipt {id}: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                return StatusCode(500, new { success = false, message = "Internal server error", error = ex.Message, stackTrace = ex.StackTrace });
             }
         }
     }

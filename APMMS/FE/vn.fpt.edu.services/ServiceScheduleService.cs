@@ -41,6 +41,26 @@ namespace FE.vn.fpt.edu.services
             return await _apiAdapter.GetAsync<object>($"ServiceSchedule/by-date-range?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
         }
 
+        public async Task<object?> GetTodaySchedulesAsync(long? branchId = null)
+        {
+            var url = "ServiceSchedule/today";
+            if (branchId.HasValue)
+            {
+                url += $"?branchId={branchId.Value}";
+            }
+            return await _apiAdapter.GetAsync<object>(url);
+        }
+
+        public async Task<object?> GetTodaySchedulesCountAsync(long? branchId = null)
+        {
+            var url = "ServiceSchedule/today/count";
+            if (branchId.HasValue)
+            {
+                url += $"?branchId={branchId.Value}";
+            }
+            return await _apiAdapter.GetAsync<object>(url);
+        }
+
         public async Task<object?> CreateAsync(object payload)
         {
             return await _apiAdapter.PostAsync<object>("ServiceSchedule", payload);

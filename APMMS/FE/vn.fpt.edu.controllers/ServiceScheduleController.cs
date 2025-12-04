@@ -44,6 +44,36 @@ namespace FE.vn.fpt.edu.controllers
         [Route("Details/{id}")]
         public IActionResult Details(int id)
         {
+            // ✅ Kiểm tra quyền truy cập
+            var roleIdStr = HttpContext.Session.GetString("RoleId");
+            if (string.IsNullOrEmpty(roleIdStr))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (!int.TryParse(roleIdStr, out var roleId))
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // ✅ Chặn AutoOwner (role 7) - khách hàng không được xem chi tiết
+            if (roleId == 7)
+            {
+                return RedirectToAction("Index", "Profile");
+            }
+
+            // ✅ Chặn Guest (role 8)
+            if (roleId == 8)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // ✅ Chỉ cho phép nhân viên (role 1-6) vào trang Details
+            if (roleId < 1 || roleId > 6)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
             ViewBag.ServiceScheduleId = id;
             ViewBag.ApiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7173/api";
             return View("~/vn.fpt.edu.views/ServiceSchedules/Details.cshtml");

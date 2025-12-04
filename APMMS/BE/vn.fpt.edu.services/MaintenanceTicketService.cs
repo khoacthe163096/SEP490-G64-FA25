@@ -161,11 +161,7 @@ namespace BE.vn.fpt.edu.services
 
                 throw new ArgumentException("Vehicle check-in not found");
 
-
-
-            if (vehicleCheckin.MaintenanceRequestId.HasValue && vehicleCheckin.MaintenanceRequestId.Value > 0)
-
-                throw new ArgumentException("Vehicle check-in already has a maintenance ticket");
+            // Note: MaintenanceRequestId check removed - MaintenanceRequest entity does not exist
 
 
 
@@ -1661,17 +1657,28 @@ namespace BE.vn.fpt.edu.services
 
 
 
+
             // ✅ CHỈ THÊM phụ tùng từ gói vào phiếu, KHÔNG XÓA phụ tùng hiện có
             var addedComponents = new List<string>();
 
             var skippedComponents = new List<string>();
 
+            // ✅ Kiểm tra và báo lỗi nếu có linh kiện "Không hoạt động" trong gói dịch vụ
+            var inactiveComponents = servicePackage.Components
+                .Where(c => c.StatusCode != null && c.StatusCode != "ACTIVE")
+                .Select(c => c.Name ?? $"Component ID: {c.Id}")
+                .ToList();
+
+            if (inactiveComponents.Any())
+            {
+                var inactiveList = string.Join(", ", inactiveComponents);
+                throw new ArgumentException($"Không thể áp dụng gói dịch vụ vì có {inactiveComponents.Count} linh kiện không hoạt động: {inactiveList}. Vui lòng kiểm tra lại trạng thái các linh kiện trong gói dịch vụ.");
+            }
 
             
             foreach (var packageComponent in servicePackage.Components)
 
             {
-
                 // ✅ Bỏ qua nếu phụ tùng đã tồn tại trong phiếu (giữ nguyên phụ tùng hiện có)
                 if (existingComponentIds.Contains(packageComponent.Id))
 
@@ -1756,7 +1763,7 @@ namespace BE.vn.fpt.edu.services
 
             if (skippedComponents.Any())
 
-                logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại, giữ nguyên): {string.Join(", ", skippedComponents)}.";
+                logMessage += $"Đã bỏ qua {skippedComponents.Count} phụ tùng (đã tồn tại, giữ nguyên): {string.Join(", ", skippedComponents)}. ";
             
             logMessage += $" Tổng số phụ tùng: {initialComponentCount} → {finalComponentCount}.";
 
@@ -1805,7 +1812,77 @@ namespace BE.vn.fpt.edu.services
 
         }
 
+        /// <summary>
+        /// Xóa gói dịch vụ đã áp dụng khỏi Maintenance Ticket - chỉ xóa thông tin gói dịch vụ, giữ lại các phụ tùng
+        /// </summary>
+        public async Task<ResponseDto> RemoveServicePackageAsync(long id)
+        {
+            // Validate MaintenanceTicket exists
+            var maintenanceTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            if (maintenanceTicket == null)
+                throw new ArgumentException("Maintenance ticket not found");
 
+            // ✅ VALIDATION: Chỉ cho phép xóa Service Package khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS
+            if (maintenanceTicket.StatusCode != "PENDING" && maintenanceTicket.StatusCode != "ASSIGNED" && maintenanceTicket.StatusCode != "IN_PROGRESS")
+                throw new ArgumentException($"Không thể xóa gói dịch vụ cho phiếu có trạng thái {maintenanceTicket.StatusCode}. Chỉ có thể xóa khi phiếu ở trạng thái PENDING, ASSIGNED hoặc IN_PROGRESS.");
+
+            // Check if service package is applied
+            if (!maintenanceTicket.ServicePackageId.HasValue)
+                throw new ArgumentException("Phiếu bảo dưỡng không có gói dịch vụ nào được áp dụng");
+
+            var servicePackageId = maintenanceTicket.ServicePackageId.Value;
+            var servicePackageName = maintenanceTicket.ServicePackage?.Name ?? $"Gói dịch vụ ID: {servicePackageId}";
+
+            // ✅ Xóa ServicePackageId khỏi các TicketComponent (không xóa components, chỉ xóa đánh dấu "Từ gói dịch vụ")
+            var componentsFromPackage = await _context.TicketComponents
+                .Where(tc => tc.MaintenanceTicketId == id && tc.ServicePackageId == servicePackageId)
+                .ToListAsync();
+
+            var componentNames = new List<string>();
+            foreach (var component in componentsFromPackage)
+            {
+                component.ServicePackageId = null; // Xóa đánh dấu "Từ gói dịch vụ"
+                _context.TicketComponents.Update(component);
+                
+                // Lấy tên component để log
+                var componentEntity = await _context.Components.FindAsync(component.ComponentId);
+                componentNames.Add(componentEntity?.Name ?? $"Component ID: {component.ComponentId}");
+            }
+            
+            if (componentsFromPackage.Any())
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            // Create history log
+            var consulterName = maintenanceTicket.Consulter != null 
+                ? ($"{maintenanceTicket.Consulter.FirstName} {maintenanceTicket.Consulter.LastName}").Trim() 
+                : "Unknown";
+
+            var logMessage = $"Xóa gói dịch vụ '{servicePackageName}' bởi {consulterName}. ";
+            if (componentNames.Any())
+                logMessage += $"Đã xóa đánh dấu 'Từ gói dịch vụ' khỏi {componentNames.Count} phụ tùng (phụ tùng vẫn được giữ lại): {string.Join(", ", componentNames)}.";
+
+            await CreateHistoryLogAsync(
+                userId: maintenanceTicket.ConsulterId,
+                action: "REMOVE_SERVICE_PACKAGE",
+                maintenanceTicketId: id,
+                oldData: $"ServicePackageId: {servicePackageId}, ServicePackageName: {servicePackageName}",
+                newData: logMessage
+            );
+
+            // ✅ Xóa thông tin Service Package khỏi MaintenanceTicket
+            maintenanceTicket.ServicePackageId = null;
+            maintenanceTicket.ServicePackagePrice = null;
+            await _maintenanceTicketRepository.UpdateAsync(maintenanceTicket);
+
+            // ✅ Cập nhật TotalEstimatedCost = ComponentTotal + LaborCostTotal
+            await UpdateMaintenanceTicketTotalCost(id);
+
+            // Return updated ticket
+            var updatedTicket = await _maintenanceTicketRepository.GetByIdAsync(id);
+            return MapToResponseWithServicePackage(updatedTicket);
+        }
 
         /// <summary>
         /// ✅ Helper method để map ServicePackage info vào ResponseDto

@@ -100,7 +100,7 @@
                 <p id="messageModalText"></p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="messageModalOkBtn">OK</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="messageModalOkBtn">OK</button>
             </div>
         </div>
     </div>
@@ -119,7 +119,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmModalCancelBtn">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirmModalOkBtn">Xác nhận</button>
+                <button type="button" class="btn btn-outline-primary" id="confirmModalOkBtn">Xác nhận</button>
             </div>
         </div>
     </div>
@@ -139,7 +139,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-danger" id="cancelNoteConfirmBtn">Xác nhận hủy</button>
+                <button type="button" class="btn btn-outline-danger" id="cancelNoteConfirmBtn">Xác nhận hủy</button>
             </div>
         </div>
     </div>
@@ -202,7 +202,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-warning" id="editRequestSubmitBtn">
+                <button type="button" class="btn btn-outline-primary" id="editRequestSubmitBtn">
                     <i class="fas fa-save"></i> Lưu thay đổi
                 </button>
             </div>
@@ -462,10 +462,10 @@
             // BRANCH MANAGER (roleId = 2): Có thể duyệt và hủy khi status = PENDING
             if (isBranchManager && statusCode === 'PENDING' && stockInRequestId > 0) {
                 buttonsHtml = `
-                    <button type="button" class="btn btn-success" onclick="approveRequest(${stockInRequestId})">
+                    <button type="button" class="btn btn-outline-primary" onclick="approveRequest(${stockInRequestId})">
                         <i class="fas fa-check"></i> Duyệt
                     </button>
-                    <button type="button" class="btn btn-danger" onclick="cancelRequest(${stockInRequestId})">
+                    <button type="button" class="btn btn-outline-danger" onclick="cancelRequest(${stockInRequestId})">
                         <i class="fas fa-times"></i> Hủy
                     </button>
                 `;
@@ -473,10 +473,10 @@
             // WAREHOUSE KEEPER (roleId = 5): Có thể chỉnh sửa và gửi đơn khi status = CREATED hoặc CANCELLED
             else if (isWarehouseKeeper && (statusCode === 'CREATED' || statusCode === 'CANCELLED') && stockInRequestId > 0) {
                 buttonsHtml = `
-                    <button type="button" class="btn btn-warning" onclick="editRequest(${stockInRequestId})">
+                    <button type="button" class="btn btn-outline-primary" onclick="editRequest(${stockInRequestId})">
                         <i class="fas fa-edit"></i> Chỉnh sửa
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="sendRequest(${stockInRequestId})">
+                    <button type="button" class="btn btn-outline-primary" onclick="sendRequest(${stockInRequestId})">
                         <i class="fas fa-paper-plane"></i> Gửi đơn
                     </button>
                 `;

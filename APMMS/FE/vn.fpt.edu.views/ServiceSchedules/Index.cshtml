@@ -13,7 +13,7 @@
                         <i class="fas fa-calendar-alt me-2"></i>
                         Danh sách đặt lịch hẹn
                     </h4>
-                    <a href="/ServiceSchedules/Create" class="btn btn-primary">
+                    <a href="/ServiceSchedules/Create" class="btn btn-outline-primary">
                         <i class="fas fa-plus"></i> Đặt lịch mới
                     </a>
                 </div>
@@ -488,7 +488,9 @@
                             ` : '';
 
                 // Badge phân biệt khách đặt lịch công khai và khách có tài khoản
-                const bookingTypeBadge = schedule.isPublicBooking 
+                // Hỗ trợ cả PascalCase (IsPublicBooking) và camelCase (isPublicBooking)
+                const isPublicBooking = schedule.isPublicBooking ?? schedule.IsPublicBooking ?? false;
+                const bookingTypeBadge = isPublicBooking 
                     ? '<span class="badge bg-info text-white me-1" title="Khách đặt lịch công khai (không có tài khoản)">Khách mới</span>'
                     : '<span class="badge bg-secondary text-white me-1" title="Khách đã có tài khoản">Khách cũ</span>';
 

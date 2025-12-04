@@ -36,6 +36,21 @@ namespace FE.vn.fpt.edu.controllers
             return View("~/vn.fpt.edu.views/ServicePackages/Create.cshtml");
         }
 
+        [HttpPost]
+        [Route("Create")]
+        public async Task<IActionResult> Create([FromBody] object data)
+        {
+            try
+            {
+                var result = await _service.CreateAsync(data);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("Edit/{id}")]
         public IActionResult Edit(int id)

@@ -37,6 +37,12 @@
                                 <span>Lịch sử sửa chữa</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="#" class="sidebar-menu-item" data-section="schedule-history" onclick="showSection('schedule-history', event)">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Lịch sử đặt lịch</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -342,6 +348,62 @@
                                     </div>
                                     <p class="mt-3 text-muted">Đang tải lịch sử sửa chữa...</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule History Section -->
+                <div class="content-section" id="schedule-history-section" style="display: none;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h4 class="mb-0">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                Lịch sử đặt lịch hẹn
+                            </h4>
+                        </div>
+                        <div class="profile-card-body">
+                            <!-- Filter -->
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="scheduleStatusFilter" class="form-label">Lọc theo trạng thái</label>
+                                    <select class="form-select" id="scheduleStatusFilter" onchange="filterSchedules()">
+                                        <option value="">Tất cả</option>
+                                        <option value="PENDING">Chờ xử lý</option>
+                                        <option value="IN_PROGRESS">Đang xử lý</option>
+                                        <option value="COMPLETED">Hoàn thành</option>
+                                        <option value="CANCELLED">Đã hủy</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Schedule List -->
+                            <div id="scheduleHistoryContainer">
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Đang tải...</span>
+                                    </div>
+                                    <p class="mt-3 text-muted">Đang tải lịch sử đặt lịch...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal xác nhận hủy lịch -->
+                <div class="modal fade" id="cancelScheduleModal" tabindex="-1" aria-labelledby="cancelScheduleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="cancelScheduleModalLabel">Xác nhận hủy lịch hẹn</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Bạn có chắc chắn muốn hủy lịch hẹn này?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
+                                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Có, hủy lịch</button>
                             </div>
                         </div>
                     </div>
@@ -1072,6 +1134,9 @@
                 case 'repair-history':
                     loadRepairHistory();
                     break;
+                case 'schedule-history':
+                    loadScheduleHistory();
+                    break;
             }
         }
 
@@ -1748,6 +1813,198 @@
             }
         }
 
+        // Load Schedule History
+        let allSchedules = [];
+        async function loadScheduleHistory() {
+            const container = document.getElementById('scheduleHistoryContainer');
+            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3 text-muted">Đang tải lịch sử đặt lịch...</p></div>';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const userInfoStr = localStorage.getItem('userInfo');
+                
+                if (!token || !userInfoStr) {
+                    container.innerHTML = '<div class="alert alert-warning">Vui lòng đăng nhập để xem lịch sử đặt lịch</div>';
+                    return;
+                }
+
+                const userInfo = JSON.parse(userInfoStr);
+                const userId = userInfo.userId || userInfo.id;
+
+                if (!userId) {
+                    container.innerHTML = '<div class="alert alert-warning">Không tìm thấy thông tin người dùng</div>';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE_URL}/ServiceSchedule/by-user/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load schedules');
+                }
+
+                const result = await response.json();
+                
+                if (result && result.success && result.data) {
+                    allSchedules = result.data;
+                    displaySchedules(allSchedules);
+                } else {
+                    container.innerHTML = '<div class="alert alert-info">Bạn chưa có lịch hẹn nào.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading schedule history:', error);
+                container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử đặt lịch: ' + error.message + '</div>';
+            }
+        }
+
+        // Display Schedules
+        function displaySchedules(schedules) {
+            const container = document.getElementById('scheduleHistoryContainer');
+            
+            if (!schedules || schedules.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">Bạn chưa có lịch hẹn nào.</div>';
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sortedSchedules = [...schedules].sort((a, b) => 
+                new Date(b.scheduledDate) - new Date(a.scheduledDate)
+            );
+
+            let html = '<div class="table-responsive"><table class="table table-hover">';
+            html += '<thead class="table-light"><tr>';
+            html += '<th>Ngày hẹn</th>';
+            html += '<th>Giờ hẹn</th>';
+            html += '<th>Xe</th>';
+            html += '<th>Biển số</th>';
+            html += '<th>Chi nhánh</th>';
+            html += '<th>Trạng thái</th>';
+            html += '<th>Thao tác</th>';
+            html += '</tr></thead><tbody>';
+
+            sortedSchedules.forEach(schedule => {
+                const date = new Date(schedule.scheduledDate);
+                const dateStr = date.toLocaleDateString('vi-VN');
+                const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                
+                const statusBadge = getScheduleStatusBadge(schedule.statusCode);
+                const canCancel = schedule.statusCode === 'PENDING' || schedule.statusCode === 'IN_PROGRESS';
+                
+                html += '<tr>';
+                html += `<td>${dateStr}</td>`;
+                html += `<td>${timeStr}</td>`;
+                html += `<td>${schedule.carName || '—'}</td>`;
+                html += `<td>${schedule.licensePlate || '—'}</td>`;
+                html += `<td>${schedule.branchName || '—'}</td>`;
+                html += `<td>${statusBadge}</td>`;
+                html += '<td>';
+                // ✅ Đã xóa link "Xem chi tiết" - khách hàng không được xem chi tiết
+                if (canCancel) {
+                    html += `<button class="btn btn-sm btn-outline-danger" onclick="cancelSchedule(${schedule.id})" title="Hủy lịch">
+                                <i class="fas fa-times"></i>
+                             </button>`;
+                } else {
+                    html += '<span class="text-muted">—</span>';
+                }
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        // Get Schedule Status Badge
+        function getScheduleStatusBadge(statusCode) {
+            const badges = {
+                'PENDING': '<span class="badge bg-warning">Chờ xử lý</span>',
+                'IN_PROGRESS': '<span class="badge bg-info">Đang xử lý</span>',
+                'COMPLETED': '<span class="badge bg-success">Hoàn thành</span>',
+                'CANCELLED': '<span class="badge bg-secondary">Đã hủy</span>'
+            };
+            return badges[statusCode] || '<span class="badge bg-secondary">' + statusCode + '</span>';
+        }
+
+        // Filter Schedules
+        function filterSchedules() {
+            const statusFilter = document.getElementById('scheduleStatusFilter').value;
+            
+            if (!statusFilter) {
+                displaySchedules(allSchedules);
+                return;
+            }
+
+            const filtered = allSchedules.filter(s => s.statusCode === statusFilter);
+            displaySchedules(filtered);
+        }
+
+        // Cancel Schedule - Mở modal xác nhận
+        let currentScheduleIdToCancel = null;
+        
+        function cancelSchedule(scheduleId) {
+            currentScheduleIdToCancel = scheduleId;
+            const modal = new bootstrap.Modal(document.getElementById('cancelScheduleModal'));
+            modal.show();
+        }
+
+        // Xác nhận hủy lịch
+        async function confirmCancelSchedule() {
+            if (!currentScheduleIdToCancel) {
+                return;
+            }
+
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                // ✅ Sử dụng endpoint riêng cho AutoOwner
+                const response = await fetch(`${API_BASE_URL}/ServiceSchedule/${currentScheduleIdToCancel}/cancel-by-owner`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: 'Khách hàng hủy lịch' })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Failed to cancel schedule');
+                }
+
+                // Đóng modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('cancelScheduleModal'));
+                if (modal) {
+                    modal.hide();
+                }
+
+                showAlert('Hủy lịch hẹn thành công!', 'success');
+                loadScheduleHistory(); // Reload
+                currentScheduleIdToCancel = null;
+            } catch (error) {
+                console.error('Error canceling schedule:', error);
+                showAlert('Đã xảy ra lỗi khi hủy lịch hẹn: ' + error.message, 'danger');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        }
+
+        // Gắn event listener cho nút xác nhận
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', confirmCancelSchedule);
+            }
+        });
+
         // Toggle Edit Mode
         function toggleEditMode() {
             isEditMode = !isEditMode;
@@ -2108,3 +2365,4 @@
         });
     </script>
 }
+

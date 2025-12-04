@@ -110,7 +110,7 @@
                                             <i class="fas fa-arrow-left me-1"></i> 
                                             Quay lại
                                         </a>
-                                <button type="submit" id="submitBtn" class="btn btn-primary btn-sm">
+                                <button type="submit" id="submitBtn" class="btn btn-outline-primary btn-sm">
                                     <span id="submitText">
                                             <i class="fas fa-save me-1"></i> 
                                             Cập nhật
@@ -138,7 +138,7 @@
                 <p class="text-muted mb-0">Thông tin check-in đã được cập nhật.</p>
             </div>
             <div class="modal-footer justify-content-center border-0">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="closeSuccessModal">Đóng</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="closeSuccessModal">Đóng</button>
             </div>
         </div>
     </div>
@@ -262,7 +262,7 @@
                 col.innerHTML = `
                     <div class="card h-100" data-image-id="${imageId}" id="image-card-${imageId}">
                         <div class="card-body p-2 position-relative">
-                            <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                            <button type="button" class="btn btn-outline-danger btn-sm position-absolute top-0 end-0 m-1" 
                                     style="z-index: 10; width: 24px; height: 24px; padding: 0; border-radius: 50%; font-size: 0.7rem;"
                                     onclick="removeImage(${imageId}, '${imageUrl}')"
                                     title="Xóa ảnh này">

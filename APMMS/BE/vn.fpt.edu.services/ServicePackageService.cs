@@ -282,7 +282,8 @@ namespace BE.vn.fpt.edu.services
                 UnitPrice = cp.Component.UnitPrice,
                 QuantityStock = cp.Component.QuantityStock,
                 ImageUrl = cp.Component.ImageUrl,
-                Quantity = cp.Quantity // Lấy từ bảng trung gian
+                Quantity = cp.Quantity, // Lấy từ bảng trung gian
+                StatusCode = cp.Component.StatusCode // Trạng thái của linh kiện
             }).ToList();
             
             // ❌ ĐÃ LOẠI BỎ: Map ServiceCategories

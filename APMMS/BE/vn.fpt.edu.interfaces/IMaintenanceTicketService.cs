@@ -21,6 +21,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto> CancelMaintenanceTicketAsync(long id);
         Task<List<BE.vn.fpt.edu.DTOs.HistoryLog.ResponseDto>> GetHistoryLogsAsync(long id);
         Task<ResponseDto> ApplyServicePackageAsync(long id, long servicePackageId);
+        Task<ResponseDto> RemoveServicePackageAsync(long id);
         Task<List<UserMaintenanceHistoryDto>> GetMaintenanceHistoryByUserIdAsync(long userId);
     }
 }

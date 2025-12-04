@@ -14,7 +14,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Danh sách linh kiện</h4>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createComponentModal">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#createComponentModal">
                         <i class="fas fa-plus"></i> Thêm linh kiện mới
                     </button>
                 </div>
@@ -27,9 +27,8 @@
                         <div class="col-md-2">
                             <select class="form-select" id="statusFilter">
                                 <option value="">Tất cả trạng thái</option>
-                                <option value="ACTIVE">Có sẵn</option>
-                                <option value="OUT_OF_STOCK">Hết hàng</option>
-                                <option value="DISCONTINUED">Ngừng sản xuất</option>
+                                <option value="ACTIVE">Đang hoạt động</option>
+                                <option value="OUT_OF_STOCK">Không hoạt động</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -38,8 +37,8 @@
                             </button>
                         </div>
                         <div class="col-md-4 text-end">
-                            <button class="btn btn-warning" id="batchUpdateStatusBtn" style="display: none;">
-                                <i class="fas fa-edit"></i> Cập nhật trạng thái (<span id="selectedCount">0</span>)
+                            <button class="btn btn-outline-primary" id="batchUpdateStatusBtn" style="display: none;">
+                                Cập nhật trạng thái (<span id="selectedCount">0</span>)
                             </button>
                         </div>
                     </div>
@@ -149,9 +148,8 @@
                             <div class="mb-3">
                                 <label for="createComponentStatusCode" class="form-label fw-semibold">Trạng thái</label>
                                 <select class="form-select" id="createComponentStatusCode" name="statusCode">
-                                    <option value="ACTIVE">Có sẵn</option>
-                                    <option value="OUT_OF_STOCK">Hết hàng</option>
-                                    <option value="DISCONTINUED">Ngừng sản xuất</option>
+                                    <option value="ACTIVE">Đang hoạt động</option>
+                                    <option value="OUT_OF_STOCK">Không hoạt động</option>
                                 </select>
                             </div>
                         </div>
@@ -161,7 +159,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times me-1"></i>Đóng
                     </button>
-                    <button type="submit" class="btn btn-primary" id="createComponentSubmitBtn">
+                    <button type="submit" class="btn btn-outline-primary" id="createComponentSubmitBtn">
                         <i class="fas fa-save me-1"></i>Tạo
                     </button>
                 </div>
@@ -174,9 +172,9 @@
 <div class="modal fade" id="batchUpdateStatusModal" tabindex="-1" aria-labelledby="batchUpdateStatusModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold" id="batchUpdateStatusModalLabel">
-                    <i class="fas fa-edit me-2"></i>Cập nhật trạng thái
+            <div class="modal-header">
+                <h5 class="modal-title" id="batchUpdateStatusModalLabel">
+                    Cập nhật trạng thái
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -185,9 +183,8 @@
                 <div class="mb-3">
                     <label for="batchStatusSelect" class="form-label fw-semibold">Trạng thái mới</label>
                     <select class="form-select" id="batchStatusSelect">
-                        <option value="ACTIVE">Có sẵn</option>
-                        <option value="OUT_OF_STOCK">Hết hàng</option>
-                        <option value="DISCONTINUED">Ngừng sản xuất</option>
+                        <option value="ACTIVE">Đang hoạt động</option>
+                        <option value="OUT_OF_STOCK">Không hoạt động</option>
                     </select>
                 </div>
             </div>
@@ -195,8 +192,8 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Hủy
                 </button>
-                <button type="button" class="btn btn-warning" id="confirmBatchUpdateBtn">
-                    <i class="fas fa-save me-1"></i>Cập nhật
+                <button type="button" class="btn btn-outline-primary" id="confirmBatchUpdateBtn">
+                    Cập nhật
                 </button>
             </div>
         </div>
@@ -418,13 +415,10 @@
                 let statusText = 'Không xác định';
                 if (item.statusCode === 'ACTIVE') {
                     statusClass = 'bg-success';
-                    statusText = 'Có sẵn';
+                    statusText = 'Đang hoạt động';
                 } else if (item.statusCode === 'OUT_OF_STOCK') {
-                    statusClass = 'bg-warning';
-                    statusText = 'Hết hàng';
-                } else if (item.statusCode === 'DISCONTINUED') {
-                    statusClass = 'bg-danger';
-                    statusText = 'Ngừng sản xuất';
+                    statusClass = 'bg-secondary';
+                    statusText = 'Không hoạt động';
                 }
 
                 const branchName = item.branchName || item.branchId || 'N/A';

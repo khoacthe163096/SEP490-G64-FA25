@@ -128,10 +128,10 @@
                                             <div class="pt-2">
                                                 <input type="file" id="editComponentImageFile" name="imageFile" accept="image/*" style="display: none;">
                                                 <input type="hidden" id="editComponentImageUrl" name="imageUrl">
-                                                <label for="editComponentImageFile" class="btn btn-primary btn-sm me-2">
+                                                <label for="editComponentImageFile" class="btn btn-outline-primary btn-sm me-2">
                                                     <i class="fa fa-upload me-1"></i> Tải lên
                                                 </label>
-                                                <button type="button" class="btn btn-danger btn-sm" onclick="clearEditImage()">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="clearEditImage()">
                                                     <i class="fa fa-trash me-1"></i> Xóa
                                                 </button>
                                                 <div id="editImagePreviewContainer" class="mt-2" style="display: none;">
@@ -167,7 +167,7 @@
                                         <button type="button" class="btn btn-secondary" id="cancelEditBtn">
                                             <i class="fas fa-times me-1"></i>Hủy
                                         </button>
-                                        <button type="submit" class="btn btn-primary" id="saveEditBtn">
+                                        <button type="submit" class="btn btn-outline-primary" id="saveEditBtn">
                                             <i class="fas fa-save me-1"></i>Lưu thay đổi
                                         </button>
                                     </div>
@@ -326,9 +326,7 @@
             if (component.statusCode === 'ACTIVE') {
                 statusBadge = '<span class="badge bg-success">Đang hoạt động</span>';
             } else if (component.statusCode === 'OUT_OF_STOCK') {
-                statusBadge = '<span class="badge bg-warning">Hết hàng</span>';
-            } else if (component.statusCode === 'DISCONTINUED') {
-                statusBadge = '<span class="badge bg-danger">Ngừng sản xuất</span>';
+                statusBadge = '<span class="badge bg-secondary">Không hoạt động</span>';
             }
             document.getElementById('componentStatus').innerHTML = statusBadge;
             

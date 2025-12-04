@@ -71,15 +71,8 @@
 
                         <div class="mb-3">
                             <label class="form-label">Linh kiện trong gói</label>
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <input type="text" class="form-control" id="componentSearch" placeholder="Tìm kiếm linh kiện..." />
-                                </div>
-                                <div class="col-md-6">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="loadComponents()">
-                                        <i class="fas fa-sync"></i> Làm mới
-                                    </button>
-                                </div>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" id="componentSearch" placeholder="Tìm kiếm linh kiện..." />
                             </div>
                             <div id="componentsLoading" class="text-center mb-2" style="display: none;">
                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
@@ -96,7 +89,7 @@
                             <a href="/ServicePackages" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> Hủy
                             </a>
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn btn-outline-primary">
                                 <i class="fas fa-save"></i> Cập nhật
                             </button>
                         </div>
