@@ -747,9 +747,9 @@ namespace BE.UnitTests.Services
                 MockDataBuilder.CreateEmployee(id: 2)
             };
 
-            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, null, null))
+            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, null, null, null))
                 .ReturnsAsync(employees);
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null, null))
                 .ReturnsAsync(2);
 
             // Act
@@ -776,8 +776,8 @@ namespace BE.UnitTests.Services
             totalCount.Should().Be(2);
 
             // Verify
-            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, null, null), Times.Once);
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -790,9 +790,9 @@ namespace BE.UnitTests.Services
                 MockDataBuilder.CreateEmployee(id: 1, username: "employee01")
             };
 
-            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, searchTerm, null, null))
+            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, searchTerm, null, null, null))
                 .ReturnsAsync(employees);
-            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, null, null, null))
                 .ReturnsAsync(1);
 
             // Act
@@ -802,8 +802,8 @@ namespace BE.UnitTests.Services
             result.Should().NotBeNull();
 
             // Verify
-            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, searchTerm, null, null), Times.Once);
-            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, searchTerm, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -816,9 +816,9 @@ namespace BE.UnitTests.Services
                 MockDataBuilder.CreateEmployee(id: 1, statusCode: "ACTIVE")
             };
 
-            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, status, null))
+            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, status, null, null))
                 .ReturnsAsync(employees);
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, status, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, status, null, null))
                 .ReturnsAsync(1);
 
             // Act
@@ -828,8 +828,8 @@ namespace BE.UnitTests.Services
             result.Should().NotBeNull();
 
             // Verify
-            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, status, null), Times.Once);
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, status, null), Times.Once);
+            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, status, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, status, null, null), Times.Once);
         }
 
         [Fact]
@@ -842,9 +842,9 @@ namespace BE.UnitTests.Services
                 MockDataBuilder.CreateEmployee(id: 1, roleId: roleId)
             };
 
-            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, null, roleId))
+            _mockRepository.Setup(x => x.GetWithFiltersAsync(1, 10, null, null, roleId, null))
                 .ReturnsAsync(employees);
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, roleId))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, roleId, null))
                 .ReturnsAsync(1);
 
             // Act
@@ -854,8 +854,8 @@ namespace BE.UnitTests.Services
             result.Should().NotBeNull();
 
             // Verify
-            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, null, roleId), Times.Once);
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, roleId), Times.Once);
+            _mockRepository.Verify(x => x.GetWithFiltersAsync(1, 10, null, null, roleId, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, roleId, null), Times.Once);
         }
 
         [Fact]
@@ -870,9 +870,9 @@ namespace BE.UnitTests.Services
                 MockDataBuilder.CreateEmployee(id: 7)
             };
 
-            _mockRepository.Setup(x => x.GetWithFiltersAsync(page, pageSize, null, null, null))
+            _mockRepository.Setup(x => x.GetWithFiltersAsync(page, pageSize, null, null, null, null))
                 .ReturnsAsync(employees);
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null, null))
                 .ReturnsAsync(10);
 
             // Act
@@ -891,7 +891,7 @@ namespace BE.UnitTests.Services
             totalPagesProperty!.GetValue(result).Should().Be(2); // 10 / 5 = 2
 
             // Verify
-            _mockRepository.Verify(x => x.GetWithFiltersAsync(page, pageSize, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetWithFiltersAsync(page, pageSize, null, null, null, null), Times.Once);
         }
 
         #endregion

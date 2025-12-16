@@ -1,13 +1,13 @@
 <!-- Sidebar -->
 <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
-        <h4>APMMS</h4>
+        <h4><span id="apmmsLogo" onclick="goToWelcomePage()" style="cursor: pointer; user-select: none;">APMMS</span></h4>
         <p>Quản lý hệ thống</p>
     </div>
     
     <nav class="sidebar-nav">
         <!-- Quản lý người dùng -->
-        <div class="nav-section">
+        <div class="nav-section" id="userManagementSection">
             <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#userManagement" aria-expanded="true">
                 <i class="fas fa-users"></i>
                 <span>Quản lý người dùng</span>
@@ -36,7 +36,7 @@
         </div>
 
         <!-- Quản lý kho -->
-        <div class="nav-section">
+        <div class="nav-section" id="warehouseSection">
             <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#warehouseManagement" aria-expanded="false">
                 <i class="fas fa-warehouse"></i>
                 <span>Quản lý kho</span>
@@ -46,13 +46,13 @@
                 <ul class="nav-list">
                     <li><a href="/TypeComponents" class="nav-link"><i class="fas fa-tags"></i> Danh sách loại linh kiện</a></li>
                     <li><a href="/Components" class="nav-link"><i class="fas fa-cogs"></i> Danh sách linh kiện</a></li>
-                    <li><a href="/ServicePackages" class="nav-link"><i class="fas fa-box"></i> Danh sách gói dịch vụ</a></li>
+                    <li id="servicePackageItem"><a href="/ServicePackages" class="nav-link"><i class="fas fa-box"></i> Danh sách gói dịch vụ</a></li>
                 </ul>
             </div>
         </div>
 
         <!-- Nhập kho -->
-        <div class="nav-section">
+        <div class="nav-section" id="stockInSection">
             <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#stockInManagement" aria-expanded="false">
                 <i class="fas fa-arrow-down"></i>
                 <span>Nhập kho</span>
@@ -60,14 +60,14 @@
             </div>
             <div class="collapse" id="stockInManagement">
                 <ul class="nav-list">
-                    <li><a href="/StockInRequests" class="nav-link"><i class="fas fa-clipboard-list"></i> Yêu cầu nhập kho</a></li>
+                    <li id="stockInRequestsItem"><a href="/StockInRequests" class="nav-link"><i class="fas fa-clipboard-list"></i> Yêu cầu nhập kho</a></li>
                     <li><a href="/StockIns" class="nav-link"><i class="fas fa-file-invoice"></i> Phiếu nhập kho</a></li>
                 </ul>
             </div>
         </div>
 
         <!-- Hóa đơn -->
-        <div class="nav-section">
+        <div class="nav-section" id="receiptSection">
             <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#totalReceipt" aria-expanded="false">
                 <i class="fas fa-file-invoice"></i>
                 <span>Danh sách hóa đơn</span>
@@ -82,7 +82,7 @@
       
 
         <!-- Check-in và Bảo dưỡng -->
-        <div class="nav-section">
+        <div class="nav-section" id="scheduleSection">
             <div class="nav-section-header" data-bs-toggle="collapse" data-bs-target="#maintenanceManagement" aria-expanded="false">
                 <i class="fas fa-wrench"></i>
                 <span>Check-in & Bảo dưỡng</span>
@@ -90,10 +90,10 @@
             </div>
             <div class="collapse" id="maintenanceManagement">
                 <ul class="nav-list">
-                    <li><a href="/VehicleCheckins" class="nav-link"><i class="fas fa-car"></i> Check-in xe</a></li>
+                    <li id="vehicleCheckinsItem"><a href="/VehicleCheckins" class="nav-link"><i class="fas fa-car"></i> Check-in xe</a></li>
                     <li><a href="/MaintenanceTickets" class="nav-link"><i class="fas fa-clipboard-list"></i> Phiếu bảo dưỡng</a></li>
-                    <li><a href="/ServiceSchedules" class="nav-link"><i class="fas fa-calendar-alt"></i> Danh sách đặt lịch</a></li>
-                    <li><a href="/ServiceTasks" class="nav-link"><i class="fas fa-tasks"></i> Danh sách nhiệm vụ</a></li>
+                    <li id="scheduleListItem"><a href="/ServiceSchedules" class="nav-link"><i class="fas fa-calendar-alt"></i> Danh sách đặt lịch</a></li>
+                    <li id="serviceTasksItem"><a href="/ServiceTasks" class="nav-link"><i class="fas fa-tasks"></i> Danh sách nhiệm vụ</a></li>
                 </ul>
             </div>
         </div>

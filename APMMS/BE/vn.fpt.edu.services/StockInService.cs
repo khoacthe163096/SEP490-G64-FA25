@@ -268,8 +268,9 @@ namespace BE.vn.fpt.edu.services
             if (entity == null)
                 throw new ArgumentException("Phiếu nhập kho không tồn tại");
 
-            if (entity.StatusCode != "PENDING")
-                throw new ArgumentException("Chỉ có thể duyệt phiếu ở trạng thái PENDING");
+            // Cho phép duyệt khi status là CREATED hoặc PENDING
+            if (entity.StatusCode != "PENDING" && entity.StatusCode != "CREATED")
+                throw new ArgumentException("Chỉ có thể duyệt phiếu ở trạng thái CREATED hoặc PENDING");
 
             // Validate prices and quantities
             if (dto.Details == null || !dto.Details.Any())

@@ -84,13 +84,13 @@ namespace BE.vn.fpt.edu.services
 
             if (car == null)
 
-                throw new ArgumentException("Car not found");
+                throw new ArgumentException("Không tìm thấy xe");
 
 
 
             if (car.UserId != request.UserId)
 
-                throw new ArgumentException("Car does not belong to this user");
+                throw new ArgumentException("Xe này không thuộc về người dùng này");
 
 
 
@@ -106,7 +106,7 @@ namespace BE.vn.fpt.edu.services
 
                 if (serviceCategory == null)
 
-                    throw new ArgumentException("Service category not found");
+                    throw new ArgumentException("Không tìm thấy loại dịch vụ");
 
             }
 
@@ -116,7 +116,7 @@ namespace BE.vn.fpt.edu.services
 
             if (request.ScheduledDate <= DateTime.UtcNow)
 
-                throw new ArgumentException("Scheduled date must be in the future");
+                throw new ArgumentException("Thời gian đặt lịch phải trong tương lai");
 
 
 
@@ -136,7 +136,7 @@ namespace BE.vn.fpt.edu.services
 
             if (conflictingSchedule != null)
 
-                throw new ArgumentException("You already have a schedule on this date");
+                throw new ArgumentException("Bạn đã có lịch hẹn vào ngày này rồi");
 
 
 
@@ -165,7 +165,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
@@ -286,7 +286,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
@@ -300,13 +300,13 @@ namespace BE.vn.fpt.edu.services
             // Check if schedule has been accepted (has assignment note)
             var assignment = GetLatestAssignmentNote(schedule);
             if (assignment == null && schedule.StatusCode == "PENDING")
-                throw new ArgumentException("Cannot update schedule that has not been accepted. Please accept the schedule first.");
+                throw new ArgumentException("Không thể cập nhật lịch hẹn chưa được chấp nhận. Vui lòng chấp nhận lịch hẹn trước.");
 
             // Cannot update cancelled or completed schedules
 
             if (schedule.StatusCode == "CANCELLED" || schedule.StatusCode == "COMPLETED")
 
-                throw new ArgumentException("Cannot update cancelled or completed schedule");
+                throw new ArgumentException("Không thể cập nhật lịch hẹn đã bị hủy hoặc đã hoàn thành");
 
 
 
@@ -318,7 +318,7 @@ namespace BE.vn.fpt.edu.services
 
                 if (request.ScheduledDate.Value <= DateTime.UtcNow)
 
-                    throw new ArgumentException("Scheduled date must be in the future");
+                    throw new ArgumentException("Thời gian đặt lịch phải trong tương lai");
 
                 schedule.ScheduledDate = request.ScheduledDate.Value;
 
@@ -338,7 +338,7 @@ namespace BE.vn.fpt.edu.services
                 var serviceCategory = await _context.ServiceCategories
                     .FirstOrDefaultAsync(sc => sc.Id == request.ServiceCategoryId.Value);
                 if (serviceCategory == null)
-                    throw new ArgumentException("Service category not found");
+                    throw new ArgumentException("Không tìm thấy loại dịch vụ");
                 schedule.ServiceCategoryId = request.ServiceCategoryId.Value;
             }
 
@@ -366,7 +366,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
@@ -374,13 +374,13 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule.StatusCode == "CANCELLED")
 
-                throw new ArgumentException("Schedule is already cancelled");
+                throw new ArgumentException("Lịch hẹn đã bị hủy rồi");
 
 
 
             if (schedule.StatusCode == "COMPLETED")
 
-                throw new ArgumentException("Cannot cancel completed schedule");
+                throw new ArgumentException("Không thể hủy lịch hẹn đã hoàn thành");
 
 
 
@@ -435,7 +435,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
@@ -443,13 +443,13 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule.StatusCode == "CANCELLED")
 
-                throw new ArgumentException("Cannot complete cancelled schedule");
+                throw new ArgumentException("Không thể hoàn thành lịch hẹn đã bị hủy");
 
 
 
             if (schedule.StatusCode == "COMPLETED")
 
-                throw new ArgumentException("Schedule is already completed");
+                throw new ArgumentException("Lịch hẹn đã hoàn thành rồi");
 
 
 
@@ -485,7 +485,7 @@ namespace BE.vn.fpt.edu.services
 
             if (request.ScheduledDate <= DateTime.UtcNow)
 
-                throw new ArgumentException("Scheduled date must be in the future");
+                throw new ArgumentException("Thời gian đặt lịch phải trong tương lai");
 
 
 
@@ -501,7 +501,7 @@ namespace BE.vn.fpt.edu.services
 
                 if (serviceCategory == null)
 
-                    throw new ArgumentException("Service category not found");
+                    throw new ArgumentException("Không tìm thấy loại dịch vụ");
 
             }
 
@@ -606,19 +606,19 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
             if (schedule.StatusCode == "CANCELLED")
 
-                throw new ArgumentException("Cannot accept a cancelled schedule");
+                throw new ArgumentException("Không thể chấp nhận lịch hẹn đã bị hủy");
 
 
 
             if (schedule.StatusCode == "COMPLETED")
 
-                throw new ArgumentException("Cannot accept a completed schedule");
+                throw new ArgumentException("Không thể chấp nhận lịch hẹn đã hoàn thành");
 
 
 
@@ -626,13 +626,13 @@ namespace BE.vn.fpt.edu.services
 
             if (consultant == null)
 
-                throw new ArgumentException("Consultant not found");
+                throw new ArgumentException("Không tìm thấy tư vấn viên");
 
 
 
             if (consultant.RoleId != 6)
 
-                throw new ArgumentException("User is not authorized to accept schedules");
+                throw new ArgumentException("Người dùng không có quyền chấp nhận lịch hẹn");
 
 
 
@@ -752,7 +752,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 
@@ -760,13 +760,13 @@ namespace BE.vn.fpt.edu.services
 
             if (consultant == null)
 
-                throw new ArgumentException("Consultant not found");
+                throw new ArgumentException("Không tìm thấy tư vấn viên");
 
 
 
             if (string.IsNullOrWhiteSpace(request.Note))
 
-                throw new ArgumentException("Note cannot be empty");
+                throw new ArgumentException("Ghi chú không được để trống");
 
 
 
@@ -834,7 +834,7 @@ namespace BE.vn.fpt.edu.services
 
             if (schedule == null)
 
-                throw new ArgumentException("Schedule not found");
+                throw new ArgumentException("Không tìm thấy lịch hẹn");
 
 
 

@@ -21,8 +21,8 @@ namespace FE.vn.fpt.edu.controllers
             var roleIdInt = int.Parse(roleId);
             if (roleIdInt != 1 && roleIdInt != 2)
             {
-                TempData["ErrorMessage"] = "Bạn không có quyền truy cập trang này.";
-                return RedirectToAction("Index", "Home");
+                // Trả 403 để hiển thị lỗi rõ ràng thay vì chuyển về trang Home
+                return StatusCode(403, "Bạn không có quyền truy cập trang này.");
             }
 
             return null;

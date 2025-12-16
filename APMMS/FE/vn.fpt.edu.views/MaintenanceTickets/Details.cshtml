@@ -699,9 +699,79 @@ let maintenanceTicketData = null;
 let currentUserRoleId = null; // Lưu roleId của user hiện tại
 let currentUserId = null; // Lưu userId của user hiện tại
 
+// Helpers: xác định quyền chỉnh sửa phiếu
+function mapRoleNameToId(roleName) {
+    if (!roleName) return null;
+    const normalized = roleName.toString().trim().toLowerCase();
+    if (normalized.includes('consulter') || normalized.includes('consultant') || normalized.includes('tư vấn')) return 6;
+    if (normalized.includes('technician') || normalized.includes('kỹ thuật')) return 4;
+    if (normalized.includes('admin')) return 1;
+    if (normalized.includes('branch')) return 2;
+    return null;
+}
+
+function decodeJwtPayload(token) {
+    if (!token || typeof token !== 'string') return null;
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    try {
+        const payload = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        return JSON.parse(payload);
+    } catch (e) {
+        console.warn('Cannot decode JWT payload', e);
+        return null;
+    }
+}
+
+function getIdsFromTokenOrStorage() {
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const payload = decodeJwtPayload(token);
+    const jwtRoleId = payload?.roleId ?? payload?.roleID ?? payload?.role ?? payload?.RoleId ?? payload?.RoleID;
+    const jwtUserId = payload?.userId ?? payload?.sub ?? payload?.nameid ?? payload?.UserId ?? payload?.UserID;
+    const jwtRoleName = payload?.roleName ?? payload?.RoleName ?? payload?.name;
+
+    const lsRoleId = localStorage.getItem('roleId') ?? localStorage.getItem('RoleId') ?? localStorage.getItem('userRoleId');
+    const lsRoleName = localStorage.getItem('roleName') ?? localStorage.getItem('RoleName');
+    const lsUserId = localStorage.getItem('userId') ?? localStorage.getItem('UserId');
+
+    const derivedRoleId = [jwtRoleId, lsRoleId, mapRoleNameToId(jwtRoleName), mapRoleNameToId(lsRoleName)]
+        .map(v => (v !== undefined && v !== null && !Number.isNaN(Number(v)) ? Number(v) : null))
+        .find(v => v !== null) ?? null;
+    const derivedUserId = [jwtUserId, lsUserId].map(v => (v !== undefined && v !== null && !Number.isNaN(Number(v)) ? Number(v) : null)).find(v => v !== null) ?? null;
+
+    return { derivedRoleId, derivedUserId, payload };
+}
+
+function isTechnicianAssignedToTicket(ticket) {
+    if (currentUserRoleId !== 4 || !currentUserId || !ticket) return false;
+    const technicians = Array.isArray(ticket.technicians) ? ticket.technicians : [];
+    const matchedByList = technicians.some(t =>
+        Number(t.technicianId) === Number(currentUserId) ||
+        Number(t.id) === Number(currentUserId)
+    );
+    const matchedByLegacyId = ticket.technicianId && Number(ticket.technicianId) === Number(currentUserId);
+    const matchedByIdList = Array.isArray(ticket.technicianIds) && ticket.technicianIds.some(id => Number(id) === Number(currentUserId));
+    return matchedByList || matchedByLegacyId || matchedByIdList;
+}
+
+function canCurrentUserEditTicket(ticket) {
+    if (!ticket) return false;
+    const roleId = currentUserRoleId !== null && currentUserRoleId !== undefined ? Number(currentUserRoleId) : null;
+    if (roleId === 6) return true; // Consulter
+    if (roleId === 4) {
+        // Kỹ thuật viên chỉ được sửa khi nằm trong phiếu hiện tại
+        return isTechnicianAssignedToTicket(ticket);
+    }
+    return false;
+}
+
 $(document).ready(function() {
-    loadCurrentUserInfo(); // Load thông tin user để kiểm tra quyền
-    loadMaintenanceTicketDetails();
+    // Đảm bảo đã có role/id trước khi render quyền
+    loadCurrentUserInfo()
+        .catch(() => {})
+        .finally(() => {
+            loadMaintenanceTicketDetails();
+        });
     
     // Modal events
     $('#addServiceTaskBtn').on('click', function() {
@@ -903,7 +973,7 @@ function loadCurrentUserInfo() {
     const token = localStorage.getItem('authToken');
     
     // Gọi API Employee/me để lấy thông tin user
-    fetch(`${API_BASE_URL}/Employee/me`, {
+    return fetch(`${API_BASE_URL}/Employee/me`, {
         headers: {
             'Authorization': token ? `Bearer ${token}` : '',
             'Content-Type': 'application/json'
@@ -912,9 +982,23 @@ function loadCurrentUserInfo() {
     .then(response => response.json())
     .then(data => {
         if (data.success && data.data) {
-            currentUserRoleId = data.data.roleId || null;
-            currentUserId = data.data.id || null;
-            console.log('[loadCurrentUserInfo] User RoleId:', currentUserRoleId, 'UserId:', currentUserId);
+            const rawRoleId =
+                data.data.roleId ??
+                data.data.roleID ??
+                (data.data.role && (data.data.role.id ?? data.data.role.roleId ?? data.data.role.roleID)) ??
+                null;
+            const rawUserId = data.data.id ?? null;
+
+            const { derivedRoleId, derivedUserId, payload } = getIdsFromTokenOrStorage();
+
+            currentUserRoleId = rawRoleId !== undefined && rawRoleId !== null && !Number.isNaN(Number(rawRoleId))
+                ? Number(rawRoleId)
+                : derivedRoleId;
+            currentUserId = rawUserId !== undefined && rawUserId !== null && !Number.isNaN(Number(rawUserId))
+                ? Number(rawUserId)
+                : derivedUserId;
+
+            console.log('[loadCurrentUserInfo] User RoleId:', currentUserRoleId, 'UserId:', currentUserId, 'rawRoleId:', rawRoleId, 'derivedRoleId:', derivedRoleId, 'jwtPayload:', payload);
         } else {
             console.warn('[loadCurrentUserInfo] Could not load user info');
         }
@@ -955,11 +1039,17 @@ function loadMaintenanceTicketDetails() {
                 displayTimeline(data.data);
                 displayServicePackageInfo(data.data);
                 
-                // Show/hide add component and apply service package buttons based on status
-                const canEditComponents = data.data.statusCode === 'PENDING' || data.data.statusCode === 'ASSIGNED' || data.data.statusCode === 'IN_PROGRESS';
-                $('#addComponentBtn').toggle(canEditComponents);
-                $('#applyServicePackageBtn').toggle(canEditComponents);
-                $('#addServiceTaskBtn').toggle(canEditComponents);
+                // Show/hide nút theo role + trạng thái
+                const baseCanEdit =
+                    data.data.statusCode === 'PENDING' ||
+                    data.data.statusCode === 'ASSIGNED' ||
+                    data.data.statusCode === 'IN_PROGRESS';
+
+                const canEditByRole = baseCanEdit && canCurrentUserEditTicket(data.data);
+
+                $('#addComponentBtn').toggle(canEditByRole);
+                $('#applyServicePackageBtn').toggle(canEditByRole);
+                $('#addServiceTaskBtn').toggle(canEditByRole);
                 
                 loadServiceTasks();
                 loadComponents(); // This will also update cost summary
@@ -1266,7 +1356,11 @@ function displayServicePackageInfo(data) {
         
         // Show/hide remove button based on ticket status
         const statusCode = data?.StatusCode ?? data?.statusCode;
-        const canEditComponents = statusCode === 'PENDING' || statusCode === 'ASSIGNED' || statusCode === 'IN_PROGRESS';
+        const canEditComponents = (
+            statusCode === 'PENDING' ||
+            statusCode === 'ASSIGNED' ||
+            statusCode === 'IN_PROGRESS'
+        ) && canCurrentUserEditTicket(data);
         $('#removeServicePackageBtn').toggle(canEditComponents);
     } else {
         servicePackageInfo.hide();
@@ -1295,6 +1389,16 @@ function displayStatusAndActions(data) {
     // Action buttons
     let buttons = '';
     const canCancel = data.statusCode !== 'COMPLETED' && data.statusCode !== 'CANCELLED';
+    const canModifyTicket = canCurrentUserEditTicket(data);
+
+    if (!canModifyTicket) {
+        actionButtons.html(`
+            <div class="alert alert-info mb-2">
+                <small><i class="fas fa-info-circle me-1"></i>Bạn không có quyền chỉnh sửa phiếu bảo dưỡng này.</small>
+            </div>
+        `);
+        return;
+    }
     
     switch(data.statusCode) {
         case 'PENDING':
@@ -1387,8 +1491,40 @@ function displayStatusAndActions(data) {
     actionButtons.html(buttons);
 }
 
+// Helper: làm sạch danh sách kỹ thuật viên (loại trùng, giữ tối đa 1 PRIMARY)
+function getSanitizedTechnicians() {
+  const list = (maintenanceTicketData && Array.isArray(maintenanceTicketData.technicians))
+    ? maintenanceTicketData.technicians
+    : [];
+  const seen = new Set();
+  const result = [];
+  let primaryId = null;
+
+  list.forEach(t => {
+    if (!t || !t.technicianId) return;
+    if (seen.has(t.technicianId)) return;
+    seen.add(t.technicianId);
+    result.push({ ...t });
+    if (t.roleInTicket === 'PRIMARY' && primaryId === null) {
+      primaryId = t.technicianId;
+    }
+  });
+
+  if (primaryId !== null) {
+    result.forEach(t => {
+      t.roleInTicket = (t.technicianId === primaryId) ? 'PRIMARY' : 'ASSISTANT';
+    });
+  }
+
+  return result;
+}
+
 // Modal chọn kỹ thuật viên
 function openAssignTechniciansModal() {
+    // Làm sạch dữ liệu kỹ thuật viên trước khi hiển thị
+    const sanitizedTechs = getSanitizedTechnicians();
+    maintenanceTicketData.technicians = sanitizedTechs;
+
     const modalHtml = `
     <div class="modal fade" id="assignTechniciansModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -1396,15 +1532,15 @@ function openAssignTechniciansModal() {
           <div class="modal-header">
             <h5 class="modal-title">
               <i class="fas fa-user-plus me-2"></i>
-              ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}
+              ${(sanitizedTechs.length > 0) ? 'Thêm/Chỉnh sửa kỹ thuật viên' : 'Gán kỹ thuật viên'}
             </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            ${(maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) ? `
+            ${(sanitizedTechs.length > 0) ? `
             <div class="alert alert-light border mb-3">
               <i class="fas fa-info-circle me-1"></i>
-              <strong>Danh sách hiện tại:</strong> ${maintenanceTicketData.technicians.map(t => t.technicianName).join(', ')}
+              <strong>Danh sách hiện tại:</strong> ${sanitizedTechs.map(t => t.technicianName).join(', ')}
               <br><small>Bạn có thể thêm kỹ thuật viên mới hoặc bỏ chọn để xóa người không còn tham gia.</small>
             </div>
             ` : ''}
@@ -1451,9 +1587,15 @@ function openAssignTechniciansModal() {
       </div>
     </div>`;
 
-    $('body').append(modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('assignTechniciansModal'));
-    modal.show();
+  $('body').append(modalHtml);
+  const modalEl = document.getElementById('assignTechniciansModal');
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+  // Cleanup tất cả handler khi đóng modal để tránh nhân sự kiện
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    $(document).off('.assignTech');
+    $('#assignTechniciansModal').remove();
+  }, { once: true });
     
     // Focus vào search box khi modal hiển thị
     setTimeout(() => $('#assignTechSearch').focus(), 300);
@@ -1462,8 +1604,8 @@ function openAssignTechniciansModal() {
     let currentPrimaryId = null;
     
     // Lấy primary technician hiện tại
-    if (maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
-      const primaryTech = maintenanceTicketData.technicians.find(t => t.roleInTicket === 'PRIMARY');
+    if (sanitizedTechs.length > 0) {
+      const primaryTech = sanitizedTechs.find(t => t.roleInTicket === 'PRIMARY');
       if (primaryTech) {
         currentPrimaryId = primaryTech.technicianId;
       }
@@ -1503,6 +1645,22 @@ function openAssignTechniciansModal() {
           $('#selectedCountBadge').text(`Đã chọn: ${count}`);
         }
 
+        function updatePrimaryHighlight() {
+          $('.tech-card').each(function() {
+            const cb = $(this).find('input.assign-tech-checkbox');
+            const id = parseInt(cb.val());
+            const labelStrong = $(this).find('label strong');
+            const baseText = labelStrong.text().replace(/\s+Chính$/i, '').trim();
+            if (currentPrimaryId && id === currentPrimaryId) {
+              $(this).addClass('border-secondary bg-light');
+              labelStrong.html(`${baseText} <span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>`);
+            } else {
+              $(this).removeClass('border-secondary bg-light');
+              labelStrong.text(baseText);
+            }
+          });
+        }
+
         function updatePrimarySelect() {
           const primarySelect = $('#primaryTechSelect');
           const checkedIds = [];
@@ -1519,12 +1677,6 @@ function openAssignTechniciansModal() {
               primarySelect.append(`<option value="${emp.id}" ${isPrimary ? 'selected' : ''}>${emp.name}</option>`);
             }
           });
-          
-          // Nếu chưa có primary và có ít nhất 1 checkbox được chọn, tự động chọn checkbox đầu tiên làm primary
-          if (!currentPrimaryId && checkedIds.length > 0) {
-            currentPrimaryId = checkedIds[0];
-            primarySelect.val(currentPrimaryId);
-          }
         }
 
         function render(listToRender, searchQuery = '') {
@@ -1544,8 +1696,8 @@ function openAssignTechniciansModal() {
           });
           
           // Nếu chưa có checkbox nào (lần đầu render), lấy từ maintenanceTicketData
-          if (checkedIds.length === 0 && maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
-            maintenanceTicketData.technicians.forEach(t => {
+          if (checkedIds.length === 0 && sanitizedTechs.length > 0) {
+            sanitizedTechs.forEach(t => {
               if (!checkedIds.includes(t.technicianId)) {
                 checkedIds.push(t.technicianId);
               }
@@ -1584,38 +1736,22 @@ function openAssignTechniciansModal() {
           updatePrimarySelect();
         }
 
-        // Xử lý click vào card để toggle checkbox (chỉ khi click vào vùng trống, không phải checkbox/label)
-        $(document).on('click', '.tech-card', function(e) {
-          // Nếu click vào checkbox, để browser xử lý tự nhiên
+        // Xử lý click vào card/label/checkbox: toggle bình thường, không chặn sự kiện
+        $(document).on('click.assignTech', '.tech-card', function(e) {
           if ($(e.target).is('input[type="checkbox"]')) {
-            return; // Cho phép default behavior của checkbox
+            return; // để checkbox tự xử lý
           }
-          // Nếu click vào label, để browser xử lý tự nhiên (label tự động toggle checkbox)
-          if ($(e.target).is('label') || $(e.target).closest('label').length > 0) {
-            return; // Cho phép default behavior của label
-          }
-          // Nếu click vào vùng khác của card, toggle checkbox
-          e.preventDefault();
-          e.stopPropagation();
           const checkbox = $(this).find('input[type="checkbox"]');
           if (checkbox.length) {
             checkbox.prop('checked', !checkbox.prop('checked'));
             checkbox.trigger('change');
           }
-          return false;
         });
 
-        // Xử lý checkbox change
-        $(document).on('change', '.assign-tech-checkbox', function(e) {
-          e.stopPropagation();
+        // Xử lý checkbox change (không re-render để tránh mất trạng thái)
+        $(document).on('change.assignTech', '.assign-tech-checkbox', function() {
           const techId = parseInt($(this).val());
           const isChecked = $(this).is(':checked');
-          
-          // Nếu đây là checkbox đầu tiên được chọn và chưa có primary, tự động set làm primary
-          if (isChecked && !currentPrimaryId && $('.assign-tech-checkbox:checked').length === 1) {
-            currentPrimaryId = techId;
-            $('#primaryTechSelect').val(techId);
-          }
           
           // Nếu bỏ chọn primary technician, xóa primary
           if (!isChecked && currentPrimaryId === techId) {
@@ -1623,43 +1759,30 @@ function openAssignTechniciansModal() {
             $('#primaryTechSelect').val('');
           }
           
-          // Cập nhật UI mà không re-render toàn bộ
           updateSelectedCount();
           updatePrimarySelect();
-          
-          // Cập nhật highlight cho card
-          const card = $(this).closest('.tech-card');
-          if (currentPrimaryId === techId) {
-            card.addClass('border-secondary bg-light');
-            card.find('label strong').html(function() {
-              const text = $(this).text().replace(/\s*\(Chính\)\s*$/, '');
-              return text + ' <span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>';
-            });
-          } else {
-            card.removeClass('border-secondary bg-light');
-            card.find('label strong').html(function() {
-              return $(this).text().replace(/\s*\(Chính\)\s*$/, '');
-            });
-          }
+
+          updatePrimaryHighlight();
         });
 
         // Xử lý thay đổi primary select
-        $(document).on('change', '#primaryTechSelect', function() {
+        $(document).on('change.assignTech', '#primaryTechSelect', function() {
+          const checkedIds = $('.assign-tech-checkbox:checked').map(function() { return parseInt($(this).val()); }).get();
           currentPrimaryId = $(this).val() ? parseInt($(this).val()) : null;
-          // Đảm bảo checkbox của primary được chọn
-          if (currentPrimaryId) {
-            $(`#assign_${currentPrimaryId}`).prop('checked', true);
+          if (currentPrimaryId && !checkedIds.includes(currentPrimaryId)) {
+            checkedIds.push(currentPrimaryId);
           }
-          // Re-render để highlight
-          const searchQuery = $('#assignTechSearch').val().toLowerCase();
-          const filtered = searchQuery ? 
-            allEmployees.filter(e => e.name.toLowerCase().includes(searchQuery) || (e.code && e.code.toLowerCase().includes(searchQuery))) :
-            allEmployees;
-          render(filtered, searchQuery);
+          $('.assign-tech-checkbox').each(function() {
+            const id = parseInt($(this).val());
+            $(this).prop('checked', checkedIds.includes(id));
+          });
+          updateSelectedCount();
+          updatePrimarySelect();
+          updatePrimaryHighlight();
         });
 
         // Chọn tất cả
-        $(document).on('click', '#selectAllTechBtn', function() {
+        $(document).on('click.assignTech', '#selectAllTechBtn', function() {
           const searchQuery = $('#assignTechSearch').val().toLowerCase();
           const filtered = searchQuery ? 
             allEmployees.filter(e => e.name.toLowerCase().includes(searchQuery) || (e.code && e.code.toLowerCase().includes(searchQuery))) :
@@ -1668,19 +1791,13 @@ function openAssignTechniciansModal() {
           filtered.forEach(emp => {
             $(`#assign_${emp.id}`).prop('checked', true);
           });
-          
-          // Tự động chọn primary nếu chưa có
-          if (!currentPrimaryId && filtered.length > 0) {
-            currentPrimaryId = filtered[0].id;
-            $('#primaryTechSelect').val(currentPrimaryId);
-          }
-          
+
           updateSelectedCount();
           updatePrimarySelect();
         });
 
         // Bỏ chọn tất cả
-        $(document).on('click', '#deselectAllTechBtn', function() {
+        $(document).on('click.assignTech', '#deselectAllTechBtn', function() {
           $('.assign-tech-checkbox').prop('checked', false);
           currentPrimaryId = null;
           $('#primaryTechSelect').val('');
@@ -1921,8 +2038,19 @@ function displayServiceTasks(tasks) {
         updateCompleteButtonState([]);
         return;
     }
-    
-    const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
+
+    // Chỉ cho phép chỉnh sửa nếu phiếu ở trạng thái cho phép
+    const baseCanEdit =
+        maintenanceTicketData &&
+        (maintenanceTicketData.statusCode === 'PENDING' ||
+            maintenanceTicketData.statusCode === 'ASSIGNED' ||
+            maintenanceTicketData.statusCode === 'IN_PROGRESS');
+
+    const roleCanEditTicket = canCurrentUserEditTicket(maintenanceTicketData);
+    const isConsulter = currentUserRoleId === 6;
+    const isTechnician = currentUserRoleId === 4;
+    const isTechnicianOnTicket = roleCanEditTicket && isTechnician;
+    const canEditGlobally = baseCanEdit && isConsulter;
     
     // Kiểm tra công việc chưa hoàn thành
     const incompleteTasks = tasks.filter(t => t.statusCode !== 'DONE' && t.statusCode !== 'COMPLETED');
@@ -1941,7 +2069,25 @@ function displayServiceTasks(tasks) {
         
         // Kiểm tra công việc đã hoàn thành chưa
         const isTaskCompleted = task.statusCode === 'DONE' || task.statusCode === 'COMPLETED';
-        const canEditTask = canEdit && !isTaskCompleted;
+
+        // Kỹ thuật viên chỉ được phép chỉnh sửa công việc nếu chính họ là người được gán vào công việc đó
+        const isCurrentTechAssigned =
+            isTechnician &&
+            currentUserId &&
+            (
+                (task.technicians && Array.isArray(task.technicians) &&
+                    task.technicians.some(t => Number(t.technicianId) === Number(currentUserId))) ||
+                (!task.technicians && task.technicianId && Number(task.technicianId) === Number(currentUserId))
+            );
+
+        // Quyền chỉnh sửa từng task:
+        // - Consulter/Admin/Branch Manager: chỉnh sửa mọi task (khi baseCanEdit true)
+        // - Technician: chỉ chỉnh sửa task được gán cho mình
+        const canEditTask = !isTaskCompleted && baseCanEdit && (
+            canEditGlobally ||
+            (isTechnicianOnTicket && isCurrentTechAssigned)
+        );
+        const canChangeTaskStatus = canEditTask;
         
         html += `
             <div class="card mb-2 border-start border-3 ${getTaskBorderColor(task.statusCode)}">
@@ -1959,10 +2105,7 @@ function displayServiceTasks(tasks) {
                                     <small class="text-dark d-block">Kỹ thuật viên:</small>
                                     <div>
                                         ${task.technicians.map(tech => {
-                                            const roleBadge = tech.roleInTask === 'PRIMARY' 
-                                                ? '<span class="badge bg-warning text-dark ms-1"><i class="fas fa-star me-1"></i>Chính</span>' 
-                                                : '';
-                                            return `<span class="badge bg-light text-dark me-1"><i class="fas fa-user-tie me-1"></i>${escapeHtml(tech.technicianName || 'N/A')}${roleBadge}</span>`;
+                                            return `<span class="badge bg-light text-dark me-1"><i class="fas fa-user-tie me-1"></i>${escapeHtml(tech.technicianName || 'N/A')}</span>`;
                                         }).join('')}
                                     </div>
                                 </div>
@@ -2026,12 +2169,12 @@ function displayServiceTasks(tasks) {
                                     <i class="fas fa-trash"></i>
                                 </button>
                             ` : ''}
-                            ${task.statusCode === 'PENDING' ? `
+                            ${canChangeTaskStatus && task.statusCode === 'PENDING' ? `
                                 <button class="btn btn-sm btn-outline-primary mt-2" onclick="updateTaskStatus(${task.id}, 'IN_PROGRESS')" title="Bắt đầu">
                                     <i class="fas fa-play"></i>
                                 </button>
                             ` : ''}
-                            ${task.statusCode === 'IN_PROGRESS' ? `
+                            ${canChangeTaskStatus && task.statusCode === 'IN_PROGRESS' ? `
                                 <button class="btn btn-sm btn-outline-success mt-2" onclick="updateTaskStatus(${task.id}, 'DONE')" title="Hoàn thành">
                                     <i class="fas fa-check"></i>
                                 </button>
@@ -2420,7 +2563,11 @@ function displayComponents(components) {
         const actualQuantity = component.actualQuantity ?? component.quantity;
         const total = component.totalPrice || (actualQuantity * (component.unitPrice || 0));
         totalCost += total;
-        const canEdit = maintenanceTicketData && (maintenanceTicketData.statusCode === 'PENDING' || maintenanceTicketData.statusCode === 'ASSIGNED' || maintenanceTicketData.statusCode === 'IN_PROGRESS');
+        const canEdit = maintenanceTicketData &&
+            (maintenanceTicketData.statusCode === 'PENDING' ||
+             maintenanceTicketData.statusCode === 'ASSIGNED' ||
+             maintenanceTicketData.statusCode === 'IN_PROGRESS') &&
+            canCurrentUserEditTicket(maintenanceTicketData);
         const quantityDisplay = component.actualQuantity !== null && component.actualQuantity !== undefined && component.actualQuantity !== component.quantity
             ? `<span>${component.quantity}</span> <small class="text-dark">→</small> <strong class="text-warning">${actualQuantity}</strong>`
             : `<span>${component.quantity}</span>`;
@@ -2720,13 +2867,13 @@ function executeRemoveTechnician(ticketId, technicianId) {
     }
 
     // Lấy danh sách kỹ thuật viên còn lại (loại bỏ người được xóa)
-    const remainingTechnicians = maintenanceTicketData.technicians
+    const remainingTechnicians = getSanitizedTechnicians()
         .filter(t => t.technicianId !== technicianId)
         .map(t => t.technicianId);
 
     // Xác định primary mới (nếu người bị xóa là primary, chọn người đầu tiên còn lại)
     let primaryId = null;
-    const currentPrimary = maintenanceTicketData.technicians.find(t => t.roleInTicket === 'PRIMARY');
+    const currentPrimary = getSanitizedTechnicians().find(t => t.roleInTicket === 'PRIMARY');
     
     if (remainingTechnicians.length > 0) {
         // Còn kỹ thuật viên khác
@@ -3141,14 +3288,15 @@ function editServiceTask(taskId) {
 function loadTechniciansForTask() {
     return new Promise((resolve, reject) => {
         const container = $('#taskTechniciansContainer');
+        const techs = getSanitizedTechnicians();
+        maintenanceTicketData.technicians = techs;
         
         // ✅ Lấy danh sách kỹ thuật viên từ maintenanceTicketData.technicians (đã được gán ở thao tác)
-        if (maintenanceTicketData && maintenanceTicketData.technicians && maintenanceTicketData.technicians.length > 0) {
+        if (techs && techs.length > 0) {
             let html = '';
-            maintenanceTicketData.technicians.forEach(tech => {
+            techs.forEach(tech => {
                 const techName = tech.technicianName || `Kỹ thuật viên #${tech.technicianId}`;
                 const isPrimary = tech.roleInTicket === 'PRIMARY';
-                const primaryBadge = isPrimary ? '<span class="badge bg-warning text-dark ms-2"><i class="fas fa-star me-1"></i>Chính</span>' : '';
                 html += `
                     <div class="form-check">
                         <input class="form-check-input task-technician-checkbox" type="checkbox" 
@@ -3156,13 +3304,13 @@ function loadTechniciansForTask() {
                                id="taskTech_${tech.technicianId}"
                                ${isPrimary ? 'data-is-primary="true"' : ''}>
                         <label class="form-check-label" for="taskTech_${tech.technicianId}">
-                            ${techName}${primaryBadge}
+                            ${techName}
                         </label>
                     </div>
                 `;
             });
             container.html(html);
-            console.log('[loadTechniciansForTask] Loaded', maintenanceTicketData.technicians.length, 'technicians from maintenanceTicketData');
+            console.log('[loadTechniciansForTask] Loaded', techs.length, 'technicians from maintenanceTicketData');
         } else {
             // Nếu chưa có kỹ thuật viên nào được gán, hiển thị thông báo
             container.html('<div class="text-dark text-center py-2"><small>Vui lòng gán kỹ thuật viên ở phần "Thao tác" trước</small></div>');
@@ -3331,7 +3479,21 @@ function saveComponent(keepModalOpen = false) {
         },
         body: JSON.stringify(formData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        // Kiểm tra status code trước khi parse JSON
+        if (!response.ok) {
+            let errorMessage = 'Không thể thêm phụ tùng';
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.message || errorData.error || errorMessage;
+            } catch (e) {
+                // Nếu không parse được JSON, dùng status text
+                errorMessage = `Lỗi ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+        return response.json();
+    })
     .then(data => {
         saveBtn.html(originalSaveText);
         saveBtn.prop('disabled', false);
@@ -3339,7 +3501,7 @@ function saveComponent(keepModalOpen = false) {
         saveAndAddMoreBtn.prop('disabled', false);
         
         if (data.success) {
-            showAlert('Thêm phụ tùng thành công!', 'success');
+            showAlert('✅ Thêm phụ tùng thành công!', 'success');
             
             // Reset form
             $('#componentForm')[0].reset();
@@ -3366,7 +3528,9 @@ function saveComponent(keepModalOpen = false) {
                 }, 100);
             }
         } else {
-            showAlert(data.message || 'Không thể thêm phụ tùng', 'danger');
+            // Hiển thị thông báo lỗi rõ ràng hơn
+            const errorMsg = data.message || 'Không thể thêm phụ tùng';
+            showAlert(errorMsg, 'danger');
         }
     })
     .catch(error => {
@@ -3374,8 +3538,23 @@ function saveComponent(keepModalOpen = false) {
         saveBtn.prop('disabled', false);
         saveAndAddMoreBtn.html(originalAddMoreText);
         saveAndAddMoreBtn.prop('disabled', false);
-        console.error('Error:', error);
-        showAlert('Không thể thêm phụ tùng', 'danger');
+        console.error('Error adding component:', error);
+        
+        // Hiển thị thông báo lỗi rõ ràng
+        let errorMessage = error.message || 'Không thể thêm phụ tùng';
+        
+        // Xử lý thông báo lỗi có nhiều dòng (từ backend)
+        // Thay \n thành <br> để hiển thị đẹp hơn
+        if (errorMessage.includes('\n')) {
+            errorMessage = errorMessage.replace(/\n/g, '<br>');
+            // Thêm style để làm nổi bật thông báo quan trọng
+            if (errorMessage.includes('❌')) {
+                errorMessage = `<div style="font-size: 1.05em; line-height: 1.6;">${errorMessage}</div>`;
+            }
+            showAlert(errorMessage, 'danger', true); // true = cho phép HTML
+        } else {
+            showAlert(errorMessage, 'danger');
+        }
     });
 }
 
@@ -3826,10 +4005,6 @@ function displaySelectedServicePackage(packageData) {
             <i class="fas fa-info-circle me-2"></i>
             <small>Các phụ tùng trong gói sẽ được thêm vào phiếu bảo dưỡng. Phụ tùng đã tồn tại sẽ được bỏ qua.</small>
         </div>
-        <div class="alert alert-warning mt-2 mb-0">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <small><strong>Lưu ý:</strong> Công việc (ServiceTasks) cần được tạo thủ công bằng nút "Thêm công việc". Gói dịch vụ chỉ tự động thêm phụ tùng.</small>
-        </div>
     `);
     
     infoDiv.show();
@@ -3921,9 +4096,19 @@ function removeServicePackage() {
     });
 }
 
-function showAlert(message, type) {
+function showAlert(message, type, allowHtml = false) {
     // Xóa prefix "Lỗi: " nếu có
     let cleanMessage = message.replace(/^Lỗi:\s*/i, '');
+    
+    // Nếu không cho phép HTML, escape các ký tự đặc biệt
+    if (!allowHtml) {
+        cleanMessage = cleanMessage
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
     
     // Xác định icon và màu sắc
     let icon = '';
@@ -3948,7 +4133,7 @@ function showAlert(message, type) {
             icon = 'fa-times-circle';
             bgColor = 'bg-danger';
             textColor = 'text-white';
-            title = 'Thông báo';
+            title = 'Lỗi';
             break;
         default:
             icon = 'fa-info-circle';
@@ -3969,7 +4154,7 @@ function showAlert(message, type) {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="mb-0">${cleanMessage}</p>
+                        ${allowHtml ? `<div class="mb-0" style="white-space: pre-line;">${cleanMessage}</div>` : `<p class="mb-0">${cleanMessage}</p>`}
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>

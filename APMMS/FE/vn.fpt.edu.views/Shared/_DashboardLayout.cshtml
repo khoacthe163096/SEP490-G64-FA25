@@ -76,12 +76,24 @@
             
             // ✅ Show Branch Management menu only for Admin (role id = 1)
             const branchManagementSection = document.getElementById('branchManagementSection');
+            // ✅ Hide nhập kho cho Consulter (role id = 6)
+            const stockInSection = document.getElementById('stockInSection');
+            const stockInRequestsItem = document.getElementById('stockInRequestsItem');
+            // ✅ Hiển thị "Danh sách nhiệm vụ" chỉ cho Technician (role id = 4)
+            const serviceTasksItem = document.getElementById('serviceTasksItem');
+            // ✅ Hide cho technician & các role khác: user management, schedule list, receipts, check-in xe
+            const userManagementSection = document.getElementById('userManagementSection');
+            const scheduleSection = document.getElementById('scheduleSection');
+            const scheduleListItem = document.getElementById('scheduleListItem');
+            const vehicleCheckinsItem = document.getElementById('vehicleCheckinsItem');
+            const receiptSection = document.getElementById('receiptSection');
             if (branchManagementSection) {
                 try {
                     const token = localStorage.getItem('authToken');
                     if (token) {
                         const payload = JSON.parse(atob(token.split('.')[1]));
                         const roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                        const roleName = (payload['RoleName'] || payload['role_name'] || '').toString().toUpperCase();
                         
                         console.log('Checking Branch Management access for RoleId:', roleId);
                         
@@ -92,6 +104,46 @@
                         } else {
                             branchManagementSection.style.display = 'none';
                             console.log('Branch Management menu hidden for role:', roleId);
+                        }
+
+                        // Hide menus cho Consulter (role 6), Technician (role 4), Warehouse Keeper (role 5)
+                        const isConsulter = roleId === 6 || roleName === 'CONSULTER';
+                        const isTechnician = roleId === 4 || roleName === 'TECHNICIAN';
+                        const isWarehouseKeeper = roleId === 5 || roleName === 'WAREHOUSE_KEEPER' || roleName.includes('WAREHOUSE');
+                        const isRole3 = roleId === 3;
+
+                        if (isConsulter) {
+                            if (stockInSection) stockInSection.style.display = 'none';
+                            console.log('Consulter detected -> hide stock-in menu');
+                        }
+
+                        // Hide chỉ "Yêu cầu nhập kho" + "Check-in xe" + "Danh sách đặt lịch" cho role 3
+                        if (isRole3) {
+                            if (stockInRequestsItem) stockInRequestsItem.style.display = 'none';
+                            if (vehicleCheckinsItem) vehicleCheckinsItem.style.display = 'none';
+                            if (scheduleListItem) scheduleListItem.style.display = 'none';
+                            console.log('Role 3 detected -> hide stock-in requests, vehicle check-ins, schedule list');
+                        }
+
+                        if (!isTechnician && serviceTasksItem) {
+                            serviceTasksItem.style.display = 'none';
+                            console.log('Hide service tasks menu for non-technician roles');
+                        }
+
+                        if (isTechnician) {
+                            if (userManagementSection) userManagementSection.style.display = 'none';
+                            if (stockInSection) stockInSection.style.display = 'none';
+                            if (receiptSection) receiptSection.style.display = 'none';
+                            if (scheduleListItem) scheduleListItem.style.display = 'none';
+                            console.log('Technician detected -> hide user management, stock-in, receipts, schedule list');
+                        }
+
+                        // Hide receipts + check-in xe + danh sách đặt lịch cho Warehouse Keeper (role 5)
+                        if (isWarehouseKeeper && !isTechnician) {
+                            if (receiptSection) receiptSection.style.display = 'none';
+                            if (vehicleCheckinsItem) vehicleCheckinsItem.style.display = 'none';
+                            if (scheduleListItem) scheduleListItem.style.display = 'none';
+                            console.log('Warehouse Keeper detected -> hide receipts, vehicle check-ins, schedule list');
                         }
                     } else {
                         // If no token, hide the menu

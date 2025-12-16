@@ -22,10 +22,11 @@ namespace FE.vn.fpt.edu.controllers
 
         [HttpGet]
         [Route("ListData")]
-        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null)
+        public async Task<IActionResult> ListData(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
         {
-            // BE sẽ tự động lấy branchId từ JWT token, không cần FE gửi lên
-            var data = await _service.GetAllAsync(page, pageSize, search, statusCode);
+            // ✅ Nhận branchId từ query parameter và truyền xuống service
+            // Admin có thể filter theo chi nhánh, user thường sẽ bị filter tự động bởi BE
+            var data = await _service.GetAllAsync(page, pageSize, search, statusCode, branchId);
             return Json(data);
         }
 

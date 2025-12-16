@@ -9,6 +9,53 @@
 
 @section Scripts {
     <script>
+        // APMMS Logo click - quay về trang welcome
+        // Define globally BEFORE DOMContentLoaded so inline onclick can access it
+        window.goToWelcomePage = function() {
+            console.log('goToWelcomePage called');
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+                page.style.visibility = 'hidden';
+                page.style.opacity = '0';
+                page.style.position = 'absolute';
+                page.style.left = '-9999px';
+            });
+            
+            // Show welcome page
+            const welcomePage = document.getElementById('welcome-page');
+            if (welcomePage) {
+                welcomePage.classList.add('active');
+                welcomePage.style.display = 'block';
+                welcomePage.style.visibility = 'visible';
+                welcomePage.style.opacity = '1';
+                welcomePage.style.position = 'relative';
+                welcomePage.style.left = 'auto';
+                console.log('Welcome page shown');
+            } else {
+                console.error('Welcome page not found!');
+            }
+            
+            // Update page title
+            const titleElement = document.getElementById('pageTitle');
+            if (titleElement) {
+                titleElement.textContent = 'Dashboard';
+            }
+            
+            // Close mobile sidebar
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768 && sidebar) {
+                sidebar.classList.remove('show');
+            }
+            
+            return false;
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard JavaScript loaded');
             
@@ -71,6 +118,22 @@
                     console.error('Error setting active nav link:', error);
                 }
             }
+
+            // APMMS logo already has inline onclick, but add backup handlers too
+            setTimeout(function() {
+                const apmmsLogo = document.getElementById('apmmsLogo');
+                if (apmmsLogo) {
+                    console.log('APMMS logo found, adding backup handlers');
+                    apmmsLogo.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('APMMS clicked via addEventListener backup');
+                        window.goToWelcomePage();
+                    });
+                } else {
+                    console.warn('APMMS logo not found');
+                }
+            }, 100);
 
             // Navigation links
             const navLinks = document.querySelectorAll('.nav-link[data-page]');
@@ -230,9 +293,10 @@
                 });
             });
 
-            // Load today's schedules sau khi DOM ready
+            // Load today's schedules và stats sau khi DOM ready
             setTimeout(() => {
                 loadTodaySchedules();
+                loadTodayStats();
             }, 500);
         });
 
@@ -377,6 +441,115 @@
                 'CANCELLED': '<span class="badge bg-secondary">Đã hủy</span>'
             };
             return badges[statusCode] || '';
+        }
+
+        // Load thống kê hôm nay (chỉ cho giám đốc và quản lý chi nhánh)
+        function loadTodayStats() {
+            console.log('loadTodayStats called');
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                console.warn('No token found');
+                return;
+            }
+
+            // Kiểm tra role - chỉ Admin (1) và Branch Manager (2) mới được xem
+            let roleId = null;
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                console.log('Current roleId:', roleId);
+            } catch (e) {
+                console.warn('Could not get roleId from token:', e);
+                return;
+            }
+
+            // Chỉ hiển thị cho Admin (1) và Branch Manager (2)
+            if (roleId !== 1 && roleId !== 2) {
+                console.log('User is not Admin or Branch Manager, hiding stats');
+                const statsSection = document.getElementById('todayStatsSection');
+                if (statsSection) {
+                    statsSection.style.display = 'none';
+                }
+                return;
+            }
+
+            const apiBaseUrl = '@apiBaseUrl';
+            const url = `${apiBaseUrl}/Home/today-stats`;
+            console.log('Fetching stats from:', url);
+
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(async response => {
+                console.log('Stats response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        console.warn('Unauthorized or Forbidden');
+                        // Không có quyền, ẩn section
+                        const statsSection = document.getElementById('todayStatsSection');
+                        if (statsSection) {
+                            statsSection.style.display = 'none';
+                        }
+                        return;
+                    }
+                    const errorText = await response.text();
+                    console.error('Failed to load today stats:', errorText);
+                    throw new Error('Failed to load today stats');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Today stats data:', data);
+                if (data && data.success && data.data) {
+                    displayTodayStats(data.data);
+                } else {
+                    console.warn('No data returned from API');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading today stats:', error);
+                // Ẩn section nếu có lỗi
+                const statsSection = document.getElementById('todayStatsSection');
+                if (statsSection) {
+                    statsSection.style.display = 'none';
+                }
+            });
+        }
+
+        // Hiển thị thống kê hôm nay
+        function displayTodayStats(stats) {
+            console.log('displayTodayStats called with:', stats);
+            const statsSection = document.getElementById('todayStatsSection');
+            const revenueEl = document.getElementById('todayRevenue');
+            const orderCountEl = document.getElementById('todayOrderCount');
+
+            console.log('Elements found:', {
+                statsSection: !!statsSection,
+                revenueEl: !!revenueEl,
+                orderCountEl: !!orderCountEl
+            });
+
+            if (!statsSection || !revenueEl || !orderCountEl) {
+                console.error('Missing elements for stats display');
+                return;
+            }
+
+            // Format số tiền
+            const revenue = stats.revenue || 0;
+            const formattedRevenue = new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(revenue);
+
+            revenueEl.textContent = formattedRevenue;
+            orderCountEl.textContent = stats.orderCount || 0;
+
+            // Hiển thị section
+            statsSection.style.display = 'block';
+            console.log('Stats section displayed');
         }
     </script>
 }

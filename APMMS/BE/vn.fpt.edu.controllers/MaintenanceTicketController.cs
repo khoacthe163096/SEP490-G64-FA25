@@ -192,16 +192,25 @@ namespace BE.vn.fpt.edu.controllers
                     return BadRequest(new { success = false, message = "Không xác định được người dùng." });
                 }
 
+                // ✅ Cho phép Admin, Branch Manager, và Consultant xem lịch sử của khách hàng
+                // Consultant có thể xem lịch sử của khách hàng ở bất kỳ chi nhánh nào
                 var isAdmin = User.IsInRole("Admin") || User.IsInRole("Branch Manager");
-                if (!isAdmin && claimUserIdValue != null && long.TryParse(claimUserIdValue, out var loggedInUserId))
+                var isConsultant = User.IsInRole("Consultant");
+                
+                if (!isAdmin && !isConsultant && claimUserIdValue != null && long.TryParse(claimUserIdValue, out var loggedInUserId))
                 {
+                    // Chỉ user thường mới bị giới hạn xem lịch sử của chính họ
                     if (loggedInUserId != resolvedUserId.Value)
                     {
                         return Forbid("Bạn không được phép xem lịch sử của người dùng khác.");
                     }
                 }
 
+                // ✅ Load lịch sử từ TẤT CẢ chi nhánh, không filter theo branchId của user đang đăng nhập
                 var result = await _maintenanceTicketService.GetMaintenanceHistoryByUserIdAsync(resolvedUserId.Value);
+                
+                System.Diagnostics.Debug.WriteLine($"[GetMaintenanceHistoryForCustomer] User {claimUserIdValue} (Admin: {isAdmin}, Consultant: {isConsultant}) viewing history of userId: {resolvedUserId.Value}, returned {result.Count} items");
+                
                 return Ok(new { success = true, data = result });
             }
             catch (Exception ex)

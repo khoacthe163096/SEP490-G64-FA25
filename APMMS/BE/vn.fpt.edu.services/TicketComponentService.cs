@@ -51,37 +51,110 @@ namespace BE.vn.fpt.edu.services
             if (component.StatusCode != "ACTIVE")
                 throw new ArgumentException("Component không khả dụng (trạng thái không phải ACTIVE)");
 
-            // ✅ VALIDATION: Kiểm tra số lượng tồn kho
-            if (component.QuantityStock.HasValue && dto.Quantity > component.QuantityStock.Value)
-                throw new ArgumentException($"Không đủ số lượng tồn kho. Hiện có: {component.QuantityStock.Value}, yêu cầu: {dto.Quantity}");
+            // ✅ XỬ LÝ CONCURRENCY: Sử dụng database transaction với pessimistic locking
+            // Để tránh race condition khi nhiều phiếu cùng thêm phụ tùng
+            // Sử dụng RepeatableRead isolation level để đảm bảo không có dirty reads
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            try
+            {
+                // ✅ LOCK và LOAD component trong cùng một query với UPDLOCK
+                // Sử dụng FromSqlRaw để lock row và load entity cùng lúc
+                // UPDLOCK: Update lock - ngăn các transaction khác update cho đến khi commit
+                // ROWLOCK: Lock ở mức hàng, không lock cả bảng
+                var lockedComponent = await _context.Components
+                    .FromSqlRaw($"SELECT * FROM component WITH (UPDLOCK, ROWLOCK) WHERE id = {dto.ComponentId}")
+                    .Include(c => c.TypeComponent)
+                    .AsTracking() // QUAN TRỌNG: Track entity để có thể update
+                    .FirstOrDefaultAsync();
+                
+                if (lockedComponent == null)
+                {
+                    await transaction.RollbackAsync();
+                    throw new ArgumentException($"Không tìm thấy phụ tùng với ID: {dto.ComponentId}");
+                }
 
-            // Check if already exists
+                // ✅ VALIDATION: Kiểm tra lại số lượng tồn kho SAU KHI LOCK (tránh race condition)
+                // Component đã được lock, không có transaction nào khác có thể update cho đến khi commit
+                if (lockedComponent.QuantityStock.HasValue && dto.Quantity > lockedComponent.QuantityStock.Value)
+                {
+                    await transaction.RollbackAsync();
+                    var componentName = lockedComponent.Name ?? lockedComponent.Code ?? "N/A";
+                    var currentStock = lockedComponent.QuantityStock.Value;
+                    var shortage = dto.Quantity - currentStock;
+                    
+                    throw new ArgumentException(
+                        $"❌ KHÔNG ĐỦ TỒN KHO!\n\n" +
+                        $"Phụ tùng: {componentName} (Mã: {lockedComponent.Code ?? "N/A"})\n" +
+                        $"Tồn kho hiện có: {currentStock} cái\n" +
+                        $"Số lượng yêu cầu: {dto.Quantity} cái\n" +
+                        $"Thiếu: {shortage} cái\n\n" +
+                        $"Vui lòng giảm số lượng xuống {currentStock} cái hoặc nhập kho thêm phụ tùng này.");
+                }
+
+                // ✅ XỬ LÝ: Kiểm tra component đã tồn tại
+                // Nếu component đã có trong service package, cho phép thêm thủ công (tăng số lượng)
+                // Nếu component đã có thủ công, không cho thêm trùng
             var existing = await _context.TicketComponents
                 .FirstOrDefaultAsync(tc => tc.MaintenanceTicketId == dto.MaintenanceTicketId 
                     && tc.ComponentId == dto.ComponentId);
+                
             if (existing != null)
-                throw new ArgumentException("Component already added to this ticket");
+                {
+                    // Nếu component đã có từ service package, cho phép thêm thủ công (tạo record mới)
+                    if (existing.ServicePackageId.HasValue)
+                    {
+                        // Component từ gói dịch vụ đã tồn tại, nhưng cho phép thêm thủ công
+                        // Tạo record mới với ServicePackageId = null (phụ tùng thủ công)
+                        // Không throw exception, tiếp tục tạo mới
+                    }
+                    else
+                    {
+                        // Component đã được thêm thủ công trước đó, không cho thêm trùng
+                        await transaction.RollbackAsync();
+                        throw new ArgumentException("Phụ tùng này đã được thêm vào phiếu bảo dưỡng. Nếu muốn thay đổi số lượng, vui lòng sử dụng chức năng chỉnh sửa.");
+                    }
+                }
 
             // ✅ QUY TRÌNH: Giá trong phiếu PHẢI theo giá xuất (UnitPrice) trong kho - KHÔNG cho phép chỉnh
             // Giảm giá sẽ được áp dụng ở hóa đơn (TotalReceipt.DiscountAmount), không chỉnh giá từng component
             
-            // Luôn lấy giá xuất từ Component, bỏ qua UnitPrice từ DTO (nếu có)
+                // Luôn lấy giá xuất từ Component (dùng component gốc vì đã có TypeComponent)
             var unitPrice = component.UnitPrice ?? 0;
             
             // ✅ VALIDATION: Không cho phép chỉnh giá trong phiếu
             if (dto.UnitPrice.HasValue && component.UnitPrice.HasValue && dto.UnitPrice.Value != component.UnitPrice.Value)
             {
+                    await transaction.RollbackAsync();
                 throw new ArgumentException($"Không được phép chỉnh đơn giá trong phiếu bảo dưỡng. Giá phải theo giá xuất trong kho: {component.UnitPrice.Value:N0} ₫. Nếu cần giảm giá, vui lòng sử dụng phần giảm giá trong hóa đơn.");
             }
 
-            // ✅ Trừ số lượng tồn kho
-            if (component.QuantityStock.HasValue)
-            {
-                component.QuantityStock -= dto.Quantity;
-                if (component.QuantityStock < 0)
-                    component.QuantityStock = 0;
-                _context.Components.Update(component);
-            }
+                // ✅ Trừ số lượng tồn kho (sử dụng lockedComponent để đảm bảo tính nhất quán)
+                // QUAN TRỌNG: Component đã được lock, đảm bảo không có transaction nào khác có thể update
+                if (lockedComponent.QuantityStock.HasValue)
+                {
+                    var oldStock = lockedComponent.QuantityStock.Value;
+                    lockedComponent.QuantityStock -= dto.Quantity;
+                    
+                    // Không cho phép tồn kho âm
+                    if (lockedComponent.QuantityStock < 0)
+                    {
+                        await transaction.RollbackAsync();
+                        var componentName = lockedComponent.Name ?? lockedComponent.Code ?? "N/A";
+                        throw new ArgumentException(
+                            $"❌ KHÔNG ĐỦ TỒN KHO!\n\n" +
+                            $"Phụ tùng: {componentName} (Mã: {lockedComponent.Code ?? "N/A"})\n" +
+                            $"Tồn kho hiện có: {oldStock} cái\n" +
+                            $"Số lượng yêu cầu: {dto.Quantity} cái\n" +
+                            $"Thiếu: {dto.Quantity - oldStock} cái\n\n" +
+                            $"Vui lòng giảm số lượng xuống {oldStock} cái hoặc nhập kho thêm phụ tùng này.");
+                    }
+                    
+                    // Đảm bảo component được track trong context để update
+                    _context.Entry(lockedComponent).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                    _context.Components.Update(lockedComponent);
+                    
+                    Console.WriteLine($"[AddComponent] Trừ {dto.Quantity} cái '{lockedComponent.Name}' từ kho. Tồn kho: {oldStock} → {lockedComponent.QuantityStock}");
+                }
 
             var entity = new TicketComponent
             {
@@ -96,10 +169,15 @@ namespace BE.vn.fpt.edu.services
 
             var created = await _repository.AddAsync(entity);
             
-            // Cập nhật TotalEstimatedCost của MaintenanceTicket
-            await UpdateMaintenanceTicketTotalCost(dto.MaintenanceTicketId);
+            // ✅ Cập nhật TotalEstimatedCost của MaintenanceTicket (KHÔNG gọi SaveChanges riêng)
+            // Tất cả sẽ được save trong transaction này
+            await UpdateMaintenanceTicketTotalCostInTransaction(dto.MaintenanceTicketId);
             
-            // ✅ Tạo history log để ghi nhận việc thêm phụ tùng
+            // ✅ Commit transaction - tất cả thay đổi (component stock, ticket component, total cost) được lưu cùng lúc
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+                
+                // ✅ Tạo history log để ghi nhận việc thêm phụ tùng (sau khi commit)
             if (userId.HasValue)
             {
                 var user = await _context.Users.FindAsync(userId.Value);
@@ -124,6 +202,29 @@ namespace BE.vn.fpt.edu.services
             }
             
             return MapToResponse(created);
+            }
+            catch (ArgumentException)
+            {
+                // ArgumentException là lỗi validation, đã có thông báo rõ ràng
+                try { await transaction.RollbackAsync(); } catch { }
+                throw; // Re-throw để caller xử lý
+            }
+            catch (Exception ex)
+            {
+                // Các lỗi khác (database, network, etc.)
+                try { await transaction.RollbackAsync(); } catch { }
+                
+                // Log lỗi chi tiết để debug
+                Console.WriteLine($"[TicketComponentService] Error adding component: {ex.Message}");
+                Console.WriteLine($"[TicketComponentService] StackTrace: {ex.StackTrace}");
+                
+                // Thông báo lỗi rõ ràng cho user
+                throw new ArgumentException(
+                    $"❌ LỖI KHI THÊM PHỤ TÙNG!\n\n" +
+                    $"Đã xảy ra lỗi khi thêm phụ tùng vào phiếu bảo dưỡng.\n" +
+                    $"Chi tiết: {ex.Message}\n\n" +
+                    $"Vui lòng thử lại sau hoặc liên hệ quản trị viên nếu lỗi vẫn tiếp tục.");
+            }
         }
 
         public async Task<ResponseDto?> GetByIdAsync(long id)
@@ -375,13 +476,17 @@ namespace BE.vn.fpt.edu.services
             var componentCode = componentForDelete?.Code ?? "N/A";
             
             // ✅ Hoàn trả component về tồn kho
+            // QUAN TRỌNG: Hoàn trả số lượng ĐÃ LẤY (Quantity), không phải ActualQuantity
+            // Vì Quantity là số lượng đã trừ từ kho ban đầu
             if (componentForDelete != null && componentForDelete.QuantityStock.HasValue)
             {
-                // Hoàn trả số lượng đã lấy (dùng Quantity, không phải ActualQuantity vì có thể đã dùng rồi)
-                // Hoặc có thể hoàn trả ActualQuantity nếu chưa dùng hết
-                // Ở đây hoàn trả Quantity để đơn giản
-                componentForDelete.QuantityStock += entity.Quantity;
+                // Hoàn trả số lượng đã lấy từ kho (Quantity)
+                // Không dùng ActualQuantity vì đó là số lượng thực tế sử dụng (có thể khác)
+                var quantityToReturn = entity.Quantity; // Số lượng đã lấy từ kho
+                componentForDelete.QuantityStock += quantityToReturn;
                 _context.Components.Update(componentForDelete);
+                
+                Console.WriteLine($"[DeleteComponent] Hoàn trả {quantityToReturn} cái '{componentForDelete.Name}' về kho. Tồn kho: {componentForDelete.QuantityStock}");
             }
             
             var maintenanceTicketId = entity.MaintenanceTicketId ?? 0;
@@ -451,6 +556,35 @@ namespace BE.vn.fpt.edu.services
         }
 
         /// <summary>
+        /// Cập nhật TotalEstimatedCost của MaintenanceTicket trong transaction (KHÔNG gọi SaveChanges)
+        /// </summary>
+        private async Task UpdateMaintenanceTicketTotalCostInTransaction(long maintenanceTicketId)
+        {
+            var maintenanceTicket = await _context.MaintenanceTickets
+                .Include(mt => mt.TicketComponents)
+                .Include(mt => mt.ServiceTasks)
+                .FirstOrDefaultAsync(mt => mt.Id == maintenanceTicketId);
+            
+            if (maintenanceTicket == null)
+                return;
+            
+            // Tính tổng phụ tùng dựa trên ActualQuantity (nếu có) hoặc Quantity
+            var componentTotal = maintenanceTicket.TicketComponents
+                .Sum(tc => 
+                {
+                    var quantity = tc.ActualQuantity ?? tc.Quantity;
+                    return quantity * (tc.UnitPrice ?? 0);
+                });
+            
+            // Tính tổng phí nhân công
+            var laborCostTotal = maintenanceTicket.ServiceTasks
+                .Sum(st => st.LaborCost ?? 0);
+            
+            // Cập nhật TotalEstimatedCost (KHÔNG gọi SaveChanges - sẽ được save trong transaction)
+            maintenanceTicket.TotalEstimatedCost = componentTotal + laborCostTotal;
+        }
+
+        /// <summary>
         /// Helper method để tạo history log
         /// </summary>
         private async Task CreateHistoryLogAsync(long? userId, string action, long? maintenanceTicketId = null, string? oldData = null, string? newData = null)
@@ -492,4 +626,10 @@ namespace BE.vn.fpt.edu.services
         }
     }
 }
+
+
+
+
+
+
 

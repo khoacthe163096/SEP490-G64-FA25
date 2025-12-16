@@ -1081,6 +1081,8 @@
 
     <script>
         const API_BASE_URL = window.API_BASE_URL || 'https://localhost:7173/api';
+        const SERVICE_CATEGORY_MAINTENANCE = 1;
+        const SERVICE_CATEGORY_REPAIR = 2;
         let isEditMode = false;
         let originalData = {};
         let currentUserId = null;
@@ -1574,14 +1576,21 @@
             const carName = receipt.carName || receipt.CarName || 'N/A';
             const licensePlate = receipt.licensePlate || receipt.LicensePlate || 'N/A';
             const subtotal = receipt.subtotal || receipt.Subtotal || 0;
-            const vatAmount = receipt.vatAmount || receipt.VatAmount || 0;
             const discountAmount = receipt.discountAmount || receipt.DiscountAmount || 0;
             const surchargeAmount = receipt.surchargeAmount || receipt.SurchargeAmount || 0;
-            const finalAmount = receipt.finalAmount || receipt.FinalAmount || 0;
             const statusName = receipt.statusName || receipt.StatusName || 'N/A';
             const note = receipt.note || receipt.Note || '';
             const servicePackageName = receipt.servicePackageName || receipt.ServicePackageName;
+            const servicePackageId = receipt.servicePackageId || receipt.ServicePackageId;
+            const packageDiscountAmount = receipt.packageDiscountAmount || receipt.PackageDiscountAmount || 0;
             const servicePackagePrice = receipt.servicePackagePrice || receipt.ServicePackagePrice || 0;
+            const vatPercent = receipt.vatPercent || receipt.VatPercent || 10;
+
+            // Tính lại VAT và tổng giống màn chi tiết hóa đơn
+            const totalDiscount = (packageDiscountAmount || 0) + (discountAmount || 0);
+            const amountAfterDiscount = Math.max(0, subtotal - totalDiscount);
+            const vatAmount = (vatPercent * amountAfterDiscount) / 100;
+            const finalAmount = amountAfterDiscount + vatAmount + (surchargeAmount || 0);
 
             const formattedDate = createdAt ? new Date(createdAt).toLocaleString('vi-VN', {
                 day: '2-digit',
@@ -1716,6 +1725,11 @@
                             <span>VAT:</span>
                             <span>${formatCurrency(vatAmount)}</span>
                         </div>
+                        ${servicePackageId || packageDiscountAmount ? `
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Trừ gói bảo dưỡng${servicePackageName ? ` (${servicePackageName})` : ''}:</span>
+                            <span class="text-danger">-${formatCurrency(packageDiscountAmount)}</span>
+                        </div>` : ''}
                         <div class="d-flex justify-content-between mb-2">
                             <span>Giảm giá:</span>
                             <span>${formatCurrency(discountAmount)}</span>
@@ -1744,6 +1758,32 @@
 
             html += '</div>';
             container.innerHTML = html;
+        }
+
+        function filterHistoryByCategory(history, targetCategoryId) {
+            if (!Array.isArray(history)) {
+                return [];
+            }
+
+            return history.filter(item => {
+                const categoryId = Number(item.serviceCategoryId ?? item.ServiceCategoryId ?? 0);
+                if (categoryId) {
+                    return categoryId === targetCategoryId;
+                }
+
+                const categoryName = (item.serviceCategoryName ?? item.ServiceCategoryName ?? '').toLowerCase();
+                if (!categoryName) return false;
+
+                if (targetCategoryId === SERVICE_CATEGORY_REPAIR) {
+                    return categoryName.includes('sửa chữa') || categoryName.includes('repair');
+                }
+
+                if (targetCategoryId === SERVICE_CATEGORY_MAINTENANCE) {
+                    return categoryName.includes('bảo dưỡng') || categoryName.includes('maintenance');
+                }
+
+                return false;
+            });
         }
 
         // Load Maintenance History
@@ -1777,12 +1817,14 @@
                     ? result.data
                     : (Array.isArray(result) ? result : []);
 
-                if (!history.length) {
+                const maintenanceHistory = filterHistoryByCategory(history, SERVICE_CATEGORY_MAINTENANCE);
+
+                if (!maintenanceHistory.length) {
                     container.innerHTML = '<div class="alert alert-info mb-0">Bạn chưa có lịch sử bảo dưỡng nào.</div>';
                     return;
                 }
 
-                const itemsHtml = history.map(item => renderMaintenanceHistoryItem(item)).join('');
+                const itemsHtml = maintenanceHistory.map(item => renderMaintenanceHistoryItem(item)).join('');
                 container.innerHTML = `<div class="maintenance-history-list">${itemsHtml}</div>`;
             } catch (error) {
                 console.error('Error loading maintenance history:', error);
@@ -1804,9 +1846,32 @@
                     return;
                 }
 
-                // TODO: Call API to get repair history
-                // For now, show placeholder
-                container.innerHTML = '<div class="alert alert-info">Chức năng đang được phát triển. Vui lòng quay lại sau.</div>';
+                const response = await fetch(`${API_BASE_URL}/MaintenanceTicket/customer/history`, {
+                    headers: {
+                        'Authorization': token ? `Bearer ${token}` : '',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || `HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const history = result.success && Array.isArray(result.data)
+                    ? result.data
+                    : (Array.isArray(result) ? result : []);
+
+                const repairHistory = filterHistoryByCategory(history, SERVICE_CATEGORY_REPAIR);
+
+                if (!repairHistory.length) {
+                    container.innerHTML = '<div class="alert alert-info mb-0">Bạn chưa có lịch sử sửa chữa nào.</div>';
+                    return;
+                }
+
+                const itemsHtml = repairHistory.map(item => renderMaintenanceHistoryItem(item)).join('');
+                container.innerHTML = `<div class="maintenance-history-list">${itemsHtml}</div>`;
             } catch (error) {
                 console.error('Error loading repair history:', error);
                 container.innerHTML = '<div class="alert alert-danger">Đã xảy ra lỗi khi tải lịch sử sửa chữa.</div>';

@@ -671,11 +671,22 @@ namespace BE.vn.fpt.edu.services
 
 
             
-            // Lấy danh sách kỹ thuật viên hiện tại
-
+            // Lấy danh sách kỹ thuật viên hiện tại và loại bỏ bản ghi trùng kỹ thuật viên (nếu có)
             var existingTechnicians = maintenanceTicket.MaintenanceTicketTechnicians?.ToList() ?? new List<MaintenanceTicketTechnician>();
+            var deduped = existingTechnicians
+                .GroupBy(x => x.TechnicianId)
+                .Select(g => g.First())
+                .ToList();
+            if (deduped.Count != existingTechnicians.Count)
+            {
+                maintenanceTicket.MaintenanceTicketTechnicians.Clear();
+                foreach (var item in deduped)
+                {
+                    maintenanceTicket.MaintenanceTicketTechnicians.Add(item);
+                }
+            }
 
-            var existingIds = existingTechnicians.Select(x => x.TechnicianId).ToHashSet();
+            var existingIds = maintenanceTicket.MaintenanceTicketTechnicians.Select(x => x.TechnicianId).ToHashSet();
 
 
             
@@ -775,6 +786,21 @@ namespace BE.vn.fpt.edu.services
 
                 maintenanceTicket.TechnicianId = null;
 
+            }
+
+            // Đảm bảo chỉ tối đa 1 PRIMARY (xử lý dữ liệu trùng cũ nếu có)
+            var primaries = maintenanceTicket.MaintenanceTicketTechnicians
+                .Where(x => x.RoleInTicket == "PRIMARY")
+                .OrderByDescending(x => x.AssignedDate)
+                .ToList();
+            if (primaries.Count > 1)
+            {
+                var keepPrimary = primaries.First();
+                foreach (var p in primaries.Skip(1))
+                {
+                    p.RoleInTicket = "ASSISTANT";
+                }
+                maintenanceTicket.TechnicianId = keepPrimary.TechnicianId;
             }
 
 
@@ -1442,11 +1468,15 @@ namespace BE.vn.fpt.edu.services
                 throw new ArgumentException("Invalid userId");
             }
 
+            // ✅ Load tất cả tickets của user từ TẤT CẢ chi nhánh, không filter theo branchId
             var tickets = await _maintenanceTicketRepository.GetByUserIdAsync(userId);
             var result = new List<UserMaintenanceHistoryDto>();
 
+            System.Diagnostics.Debug.WriteLine($"[GetMaintenanceHistoryByUserIdAsync] Loaded {tickets.Count} tickets for userId: {userId}");
+
             foreach (var ticket in tickets)
             {
+                // ✅ Load receipt mới nhất (có thể có nhiều receipts)
                 var receipt = ticket.TotalReceipts?
                     .OrderByDescending(r => r.CreatedAt ?? DateTime.MinValue)
                     .FirstOrDefault();
@@ -1454,8 +1484,11 @@ namespace BE.vn.fpt.edu.services
                 // ✅ Chỉ hiển thị các phiếu đã thanh toán (hóa đơn có status = PAID)
                 if (!string.Equals(receipt?.StatusCode, "PAID", StringComparison.OrdinalIgnoreCase))
                 {
+                    System.Diagnostics.Debug.WriteLine($"[GetMaintenanceHistoryByUserIdAsync] Skipping ticket {ticket.Id} (Code: {ticket.Code}) - Receipt status: {receipt?.StatusCode ?? "NULL"}, Branch: {ticket.SnapshotBranchName ?? ticket.Branch?.Name}");
                     continue;
                 }
+
+                System.Diagnostics.Debug.WriteLine($"[GetMaintenanceHistoryByUserIdAsync] Including ticket {ticket.Id} (Code: {ticket.Code}) - Branch: {ticket.SnapshotBranchName ?? ticket.Branch?.Name}, Receipt: {receipt?.Id}");
 
                 result.Add(new UserMaintenanceHistoryDto
                 {
@@ -1469,6 +1502,7 @@ namespace BE.vn.fpt.edu.services
                     CarName = ticket.SnapshotCarName ?? ticket.Car?.CarName,
                     LicensePlate = ticket.SnapshotLicensePlate ?? ticket.Car?.LicensePlate,
                     BranchName = ticket.SnapshotBranchName ?? ticket.Branch?.Name,
+                    ServiceCategoryId = ticket.ServiceCategoryId,
                     ServiceCategoryName = ticket.ServiceCategory?.Name,
                     ReceiptAmount = receipt?.FinalAmount ?? receipt?.Amount,
                     ReceiptId = receipt?.Id,
@@ -1477,6 +1511,7 @@ namespace BE.vn.fpt.edu.services
                 });
             }
 
+            System.Diagnostics.Debug.WriteLine($"[GetMaintenanceHistoryByUserIdAsync] Returning {result.Count} paid tickets from {tickets.Count} total tickets");
             return result;
         }
 

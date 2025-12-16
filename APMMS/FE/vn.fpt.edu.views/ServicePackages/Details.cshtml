@@ -276,8 +276,11 @@
         const apiBaseUrl = '@apiBaseUrl';
         let currentServicePackageId = null;
         let currentServicePackageData = null;
+        let isWarehouseRole = false;
 
         document.addEventListener('DOMContentLoaded', function() {
+            initServicePackagePermissions();
+
             currentServicePackageId = getServicePackageIdFromUrl();
             if (currentServicePackageId) {
                 loadServicePackageDetails(currentServicePackageId);
@@ -304,12 +307,15 @@
                 }
             });
             
-            // Load components for edit form when settings tab is shown
-            document.getElementById('settings-tab').addEventListener('shown.bs.tab', function() {
-                if (currentServicePackageData) {
+            // Load components for edit form khi tab Cài đặt được bật (chỉ cho Thủ kho)
+            const settingsTab = document.getElementById('settings-tab');
+            if (settingsTab) {
+                settingsTab.addEventListener('shown.bs.tab', function() {
+                    if (isWarehouseRole && currentServicePackageData) {
                     loadEditComponents();
                 }
             });
+            }
             
             // Setup edit component search
             const editComponentSearch = document.getElementById('editComponentSearch');
@@ -331,6 +337,38 @@
         let editAllComponents = [];
         let editSelectedComponentIds = [];
         let editComponentQuantities = {};
+
+        function initServicePackagePermissions() {
+            isWarehouseRole = false;
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    const roleId = parseInt(userInfo.roleId || userInfo.RoleId || '0');
+                    const roleName = (userInfo.roleName || userInfo.RoleName || '').toString().toUpperCase();
+                    isWarehouseRole = roleId === 5 || roleName === 'WAREHOUSE' || roleName === 'WAREHOUSE_KEEPER';
+                }
+            } catch (e) {
+                console.warn('Cannot determine role for service package details:', e);
+                isWarehouseRole = false;
+            }
+
+            if (!isWarehouseRole) {
+                // Ẩn tab Cài đặt cho role khác Thủ kho
+                const settingsTab = document.getElementById('settings-tab');
+                const settingsTabLi = settingsTab?.closest('li');
+                if (settingsTabLi) {
+                    settingsTabLi.style.display = 'none';
+                }
+
+                // Disable form chỉnh sửa nếu vì lý do nào đó vẫn hiển thị
+                const settingsContent = document.getElementById('settingsContent');
+                if (settingsContent) {
+                    const inputs = settingsContent.querySelectorAll('input, select, textarea, button');
+                    inputs.forEach(el => el.disabled = true);
+                }
+            }
+        }
 
         function getServicePackageIdFromUrl() {
             const path = window.location.pathname;

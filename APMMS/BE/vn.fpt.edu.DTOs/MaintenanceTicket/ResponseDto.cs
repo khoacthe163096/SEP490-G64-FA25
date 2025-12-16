@@ -96,6 +96,7 @@ namespace BE.vn.fpt.edu.DTOs.MaintenanceTicket
         public string? CarName { get; set; }
         public string? LicensePlate { get; set; }
         public string? BranchName { get; set; }
+        public long? ServiceCategoryId { get; set; }
         public string? ServiceCategoryName { get; set; }
         public decimal? ReceiptAmount { get; set; }
         public long? ReceiptId { get; set; }

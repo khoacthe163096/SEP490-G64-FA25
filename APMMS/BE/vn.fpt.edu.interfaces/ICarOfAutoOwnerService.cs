@@ -8,6 +8,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<ResponseDto?> GetByIdAsync(long id);
         Task<List<ResponseDto>> GetByUserIdAsync(long userId);
         Task<List<ResponseDto>> GetServicedCarsByUserIdAsync(long userId);
+        Task<DuplicateCheckResponseDto> CheckDuplicateAsync(string? licensePlate = null, string? vinNumber = null, string? engineNumber = null, long? excludeCarId = null);
         Task<ResponseDto> CreateAsync(RequestDto dto);
         Task<ResponseDto> UpdateAsync(long id, RequestDto dto);
         Task<bool> DeleteAsync(long id);

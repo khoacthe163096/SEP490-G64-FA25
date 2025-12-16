@@ -13,7 +13,7 @@
                         <i class="fas fa-calendar-alt me-2"></i>
                         Danh sách đặt lịch hẹn
                     </h4>
-                    <a href="/ServiceSchedules/Create" class="btn btn-outline-primary">
+                    <a href="/ServiceSchedules/Create" class="btn btn-outline-primary" id="createScheduleBtn" style="display: none;">
                         <i class="fas fa-plus"></i> Đặt lịch mới
                     </a>
                 </div>
@@ -102,8 +102,10 @@
         let allSchedules = []; // Lưu tất cả schedules để phân trang client-side
         let filteredSchedules = []; // Lưu schedules sau khi filter
         let totalRecords = 0;
+        let isConsulterRole = false; // Lưu lại flag role để dùng cho việc render nút
 
         $(document).ready(function() {
+            initRoleForSchedules();
             loadServiceSchedules();
 
             // Search với debounce
@@ -130,6 +132,34 @@
                 applyFilters();
             });
         });
+
+        function initRoleForSchedules() {
+            const createBtn = document.getElementById('createScheduleBtn');
+            isConsulterRole = false;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    if (createBtn) createBtn.style.display = 'none';
+                    return;
+                }
+
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                const roleName = (payload['RoleName'] || payload['role_name'] || '').toString().toUpperCase();
+
+                // Chỉ Consulter (roleId = 6) được phép thao tác
+                isConsulterRole = roleId === 6 || roleName === 'CONSULTER';
+
+                if (createBtn) {
+                    createBtn.style.display = isConsulterRole ? 'inline-block' : 'none';
+                }
+            } catch (e) {
+                console.error('Error determining role for schedules:', e);
+                if (createBtn) createBtn.style.display = 'none';
+                isConsulterRole = false;
+            }
+        }
 
         function loadServiceSchedules() {
             const token = localStorage.getItem('authToken');
@@ -465,22 +495,27 @@
                     : '<span class="text-muted">Chưa nhận</span>';
 
                 const actionsDisabled = schedule.statusCode === 'CANCELLED' || schedule.statusCode === 'COMPLETED';
-                const acceptButtonHtml = (!schedule.acceptedById && !actionsDisabled)
+
+                // Nếu không phải Consulter thì ẩn toàn bộ nút thao tác
+                const canShowActions = isConsulterRole;
+
+                const acceptButtonHtml = (canShowActions && !schedule.acceptedById && !actionsDisabled)
                     ? `<button class="btn btn-sm btn-outline-success me-1" onclick="acceptSchedule(${schedule.id})" title="Nhận đơn">
                             <i class="fas fa-handshake"></i>
                        </button>`
                     : '';
 
-                const acceptedLabelHtml = (schedule.acceptedById && Number(schedule.acceptedById) === currentUserId)
+                const acceptedLabelHtml = (canShowActions && schedule.acceptedById && Number(schedule.acceptedById) === currentUserId)
                     ? '<span class="badge bg-success text-white me-1">Bạn đã nhận</span>'
                     : '';
 
+                // Nút xem chi tiết vẫn cho tất cả role
                 const viewButtonHtml = `<a href="/ServiceSchedules/Details/${schedule.id}" class="btn btn-sm btn-outline-info me-1" title="Xem chi tiết">
                                 <i class="fas fa-eye"></i>
                             </a>`;
 
                 // Chỉ hiển thị nút Edit nếu đã nhận đơn và không bị disabled
-                const canEdit = schedule.acceptedById && !actionsDisabled;
+                const canEdit = canShowActions && schedule.acceptedById && !actionsDisabled;
                 const editButton = canEdit ? `
                                 <a href="/ServiceSchedules/Edit/${schedule.id}" class="btn btn-sm btn-outline-primary me-1" title="Chỉnh sửa">
                                     <i class="fas fa-edit"></i>
@@ -510,7 +545,7 @@
                             ${acceptButtonHtml}
                             ${acceptedLabelHtml}
                             ${viewButtonHtml}
-                            ${schedule.acceptedById && Number(schedule.acceptedById) !== currentUserId ? '<span class="badge bg-success-subtle text-success me-1">Đã nhận</span>' : ''}
+                            ${canShowActions && schedule.acceptedById && Number(schedule.acceptedById) !== currentUserId ? '<span class="badge bg-success-subtle text-success me-1">Đã nhận</span>' : ''}
                             ${editButton}
                         </td>
                     </tr>

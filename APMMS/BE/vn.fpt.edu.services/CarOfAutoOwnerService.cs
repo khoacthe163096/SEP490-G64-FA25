@@ -11,7 +11,8 @@ namespace BE.vn.fpt.edu.services
     {
         private readonly ICarOfAutoOwnerRepository _repository;
         private readonly IMapper _mapper;
-        private static readonly Regex LicensePlateRegex = new(@"^(?:[0-9]{2}[A-Z][0-9]-[0-9]{2}\.[0-9]{3}|[0-9]{2}[A-Z][0-9]-[0-9]{3}\.[0-9]{2}|[0-9]{2}[A-Z][0-9]-?[0-9]{4,5})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        // Biển số: ví dụ 30A-12345, 30A-123.45, 59N-12345
+        private static readonly Regex LicensePlateRegex = new(@"^(?:[0-9]{2}[A-Z]-[0-9]{2}\.[0-9]{3}|[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}|[0-9]{2}[A-Z]-?[0-9]{4,5})$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex VinRegex = new(@"^[A-HJ-NPR-Z0-9]{17}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private static readonly Regex EngineRegex = new(@"^[A-Z0-9\-]{5,20}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
@@ -94,6 +95,32 @@ namespace BE.vn.fpt.edu.services
         public async Task<bool> DeleteAsync(long id)
         {
             return await _repository.DeleteAsync(id);
+        }
+
+        public async Task<DuplicateCheckResponseDto> CheckDuplicateAsync(string? licensePlate = null, string? vinNumber = null, string? engineNumber = null, long? excludeCarId = null)
+        {
+            var normalizedPlate = licensePlate?.Trim().ToUpperInvariant();
+            var normalizedVin = vinNumber?.Trim().ToUpperInvariant();
+            var normalizedEngine = engineNumber?.Trim().ToUpperInvariant();
+
+            var response = new DuplicateCheckResponseDto();
+
+            if (!string.IsNullOrEmpty(normalizedPlate))
+            {
+                response.LicensePlateExists = await _repository.ExistsLicensePlateAsync(normalizedPlate, excludeCarId);
+            }
+
+            if (!string.IsNullOrEmpty(normalizedVin))
+            {
+                response.VinNumberExists = await _repository.ExistsVinNumberAsync(normalizedVin, excludeCarId);
+            }
+
+            if (!string.IsNullOrEmpty(normalizedEngine))
+            {
+                response.EngineNumberExists = await _repository.ExistsEngineNumberAsync(normalizedEngine, excludeCarId);
+            }
+
+            return response;
         }
 
         private async Task NormalizeAndValidateAsync(RequestDto dto, long? existingCarId = null, long? fallbackUserId = null)

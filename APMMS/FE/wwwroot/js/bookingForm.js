@@ -415,6 +415,7 @@
             $('#serviceType').val('');
             $('#appointmentTime').val('');
             $('#branch').val('');
+            $('#branch').prop('disabled', false);
         }
     }
 
@@ -600,6 +601,9 @@
             $('#mileage').val('');
             $('#message').val('');
             
+            // QUAN TRỌNG: Cập nhật form state (ẩn/hiện các trường) dựa trên trạng thái đăng nhập
+            updateBookingFormForUser();
+            
             // QUAN TRỌNG: Kiểm tra lại token và reset field type
             const token = localStorage.getItem('authToken');
             const isValidToken = token && isTokenValid(token);
@@ -638,6 +642,9 @@
 
         $('#bookingModal').on('shown.bs.modal', function () {
             console.log('📋 Modal shown, double-checking form state...');
+            
+            // Double-check trạng thái đăng nhập và đảm bảo form state đúng
+            updateBookingFormForUser();
             
             // Double-check trạng thái đăng nhập
             const token = localStorage.getItem('authToken');

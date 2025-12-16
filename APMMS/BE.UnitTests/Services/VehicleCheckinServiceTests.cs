@@ -52,6 +52,15 @@ namespace BE.UnitTests.Services
             var createdVehicleCheckin = MockDataBuilder.CreateVehicleCheckin();
             var car = MockDataBuilder.CreateCar();
             var branch = MockDataBuilder.CreateBranch();
+            var user = MockDataBuilder.CreateUser();
+
+            // Thêm Car, Branch, User vào DbContext để service có thể validate
+            car.Branch = null;
+            car.User = null;
+            _context.Cars.Add(car);
+            _context.Branches.Add(branch);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
             // Mock Repository.CreateAsync
             _mockRepository.Setup(x => x.CreateAsync(It.IsAny<VehicleCheckin>()))
@@ -101,6 +110,15 @@ namespace BE.UnitTests.Services
             var createdVehicleCheckin = MockDataBuilder.CreateVehicleCheckin(statusCode: "PENDING");
             var car = MockDataBuilder.CreateCar();
             var branch = MockDataBuilder.CreateBranch();
+            var user = MockDataBuilder.CreateUser();
+
+            // Thêm Car, Branch, User vào DbContext để service có thể validate
+            car.Branch = null;
+            car.User = null;
+            _context.Cars.Add(car);
+            _context.Branches.Add(branch);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
             _mockRepository.Setup(x => x.CreateAsync(It.IsAny<VehicleCheckin>()))
                 .ReturnsAsync(createdVehicleCheckin);
@@ -132,6 +150,15 @@ namespace BE.UnitTests.Services
             var createdVehicleCheckin = MockDataBuilder.CreateVehicleCheckin();
             var car = MockDataBuilder.CreateCar();
             var branch = MockDataBuilder.CreateBranch();
+            var user = MockDataBuilder.CreateUser();
+
+            // Thêm Car, Branch, User vào DbContext để service có thể validate
+            car.Branch = null;
+            car.User = null;
+            _context.Cars.Add(car);
+            _context.Branches.Add(branch);
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
             // Setup repository để lưu vào in-memory database (để service có thể check code uniqueness)
             _mockRepository.Setup(x => x.CreateAsync(It.IsAny<VehicleCheckin>()))
@@ -473,7 +500,7 @@ namespace BE.UnitTests.Services
             vehicleCheckins[1].Car = MockDataBuilder.CreateCar(id: 2);
             vehicleCheckins[1].Branch = MockDataBuilder.CreateBranch(id: 2);
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null, null))
                 .ReturnsAsync(vehicleCheckins);
 
             // Act
@@ -486,7 +513,7 @@ namespace BE.UnitTests.Services
             result[1].Id.Should().Be(2);
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -505,7 +532,7 @@ namespace BE.UnitTests.Services
             vehicleCheckins[1].Car = MockDataBuilder.CreateCar();
             vehicleCheckins[1].Branch = MockDataBuilder.CreateBranch();
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(page, pageSize, null, null, null, null))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(page, pageSize, null, null, null, null, null))
                 .ReturnsAsync(vehicleCheckins);
 
             // Act
@@ -518,7 +545,7 @@ namespace BE.UnitTests.Services
             result[1].Id.Should().Be(7);
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(page, pageSize, null, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(page, pageSize, null, null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -534,7 +561,7 @@ namespace BE.UnitTests.Services
             vehicleCheckins[0].Car = car;
             vehicleCheckins[0].Branch = MockDataBuilder.CreateBranch();
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, searchTerm, null, null, null))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, searchTerm, null, null, null, null))
                 .ReturnsAsync(vehicleCheckins);
 
             // Act
@@ -546,7 +573,7 @@ namespace BE.UnitTests.Services
             result[0].LicensePlate.Should().Be(searchTerm);
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, searchTerm, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, searchTerm, null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -561,7 +588,7 @@ namespace BE.UnitTests.Services
             vehicleCheckins[0].Car = MockDataBuilder.CreateCar();
             vehicleCheckins[0].Branch = MockDataBuilder.CreateBranch();
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, statusCode, null, null))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, statusCode, null, null, null))
                 .ReturnsAsync(vehicleCheckins);
 
             // Act
@@ -573,7 +600,7 @@ namespace BE.UnitTests.Services
             result[0].StatusCode.Should().Be(statusCode);
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, statusCode, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, statusCode, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -589,7 +616,7 @@ namespace BE.UnitTests.Services
             vehicleCheckins[0].Car = MockDataBuilder.CreateCar();
             vehicleCheckins[0].Branch = MockDataBuilder.CreateBranch();
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, fromDate, toDate))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, fromDate, toDate, null))
                 .ReturnsAsync(vehicleCheckins);
 
             // Act
@@ -600,7 +627,7 @@ namespace BE.UnitTests.Services
             result.Should().HaveCount(1);
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, fromDate, toDate), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, fromDate, toDate, null), Times.Once);
         }
 
         [Fact]
@@ -609,7 +636,7 @@ namespace BE.UnitTests.Services
             // Arrange
             var emptyList = new List<VehicleCheckin>();
 
-            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null))
+            _mockRepository.Setup(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null, null))
                 .ReturnsAsync(emptyList);
 
             // Act
@@ -620,7 +647,7 @@ namespace BE.UnitTests.Services
             result.Should().BeEmpty();
 
             // Verify
-            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetAllWithDetailsAsync(1, 10, null, null, null, null, null), Times.Once);
         }
 
         #endregion
@@ -633,7 +660,7 @@ namespace BE.UnitTests.Services
             // Arrange
             var expectedCount = 10;
 
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, null, null, null))
                 .ReturnsAsync(expectedCount);
 
             // Act
@@ -643,7 +670,7 @@ namespace BE.UnitTests.Services
             result.Should().Be(expectedCount);
 
             // Verify
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -653,7 +680,7 @@ namespace BE.UnitTests.Services
             var searchTerm = "51A-12345";
             var expectedCount = 2;
 
-            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, null, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, null, null, null, null))
                 .ReturnsAsync(expectedCount);
 
             // Act
@@ -663,7 +690,7 @@ namespace BE.UnitTests.Services
             result.Should().Be(expectedCount);
 
             // Verify
-            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, null, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, null, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -673,7 +700,7 @@ namespace BE.UnitTests.Services
             var statusCode = "PENDING";
             var expectedCount = 5;
 
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, statusCode, null, null))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, statusCode, null, null, null))
                 .ReturnsAsync(expectedCount);
 
             // Act
@@ -683,7 +710,7 @@ namespace BE.UnitTests.Services
             result.Should().Be(expectedCount);
 
             // Verify
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, statusCode, null, null), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, statusCode, null, null, null), Times.Once);
         }
 
         [Fact]
@@ -694,7 +721,7 @@ namespace BE.UnitTests.Services
             var toDate = new DateTime(2024, 12, 31);
             var expectedCount = 3;
 
-            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, fromDate, toDate))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(null, null, fromDate, toDate, null))
                 .ReturnsAsync(expectedCount);
 
             // Act
@@ -704,7 +731,7 @@ namespace BE.UnitTests.Services
             result.Should().Be(expectedCount);
 
             // Verify
-            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, fromDate, toDate), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(null, null, fromDate, toDate, null), Times.Once);
         }
 
         [Fact]
@@ -717,7 +744,7 @@ namespace BE.UnitTests.Services
             var toDate = new DateTime(2024, 12, 31);
             var expectedCount = 1;
 
-            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate))
+            _mockRepository.Setup(x => x.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate, null))
                 .ReturnsAsync(expectedCount);
 
             // Act
@@ -727,7 +754,7 @@ namespace BE.UnitTests.Services
             result.Should().Be(expectedCount);
 
             // Verify
-            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate), Times.Once);
+            _mockRepository.Verify(x => x.GetTotalCountAsync(searchTerm, statusCode, fromDate, toDate, null), Times.Once);
         }
 
         #endregion
@@ -798,7 +825,7 @@ namespace BE.UnitTests.Services
             {
                 MockDataBuilder.CreateVehicleCheckin(id: 1, carId: 1, branchId: 1, mileage: 10000, code: "VCI-12345", statusCode: "PENDING")
             };
-            vehicleCheckins[0].MaintenanceRequestId = maintenanceRequestId;
+            // MaintenanceRequestId không tồn tại trong VehicleCheckin model
             vehicleCheckins[0].Car = MockDataBuilder.CreateCar();
             vehicleCheckins[0].Branch = MockDataBuilder.CreateBranch();
 
@@ -848,35 +875,13 @@ namespace BE.UnitTests.Services
             // Arrange
             var vehicleCheckinId = 1;
             var maintenanceRequestId = 100;
-            var existingVehicleCheckin = MockDataBuilder.CreateVehicleCheckin(id: vehicleCheckinId);
-            var car = MockDataBuilder.CreateCar();
-            var branch = MockDataBuilder.CreateBranch();
 
-            _mockRepository.Setup(x => x.GetByIdAsync(vehicleCheckinId))
-                .ReturnsAsync(existingVehicleCheckin);
+            // Act & Assert
+            // Service method throws NotImplementedException because MaintenanceRequest entity does not exist
+            var exception = await Assert.ThrowsAsync<NotImplementedException>(async () =>
+                await _service.LinkMaintenanceRequestAsync(vehicleCheckinId, maintenanceRequestId));
 
-            _mockRepository.Setup(x => x.UpdateAsync(It.IsAny<VehicleCheckin>()))
-                .ReturnsAsync((VehicleCheckin vc) => vc);
-
-            var updatedVehicleCheckin = MockDataBuilder.CreateVehicleCheckin(id: vehicleCheckinId);
-            updatedVehicleCheckin.MaintenanceRequestId = maintenanceRequestId;
-            updatedVehicleCheckin.Car = car;
-            updatedVehicleCheckin.Branch = branch;
-
-            _mockRepository.Setup(x => x.GetByIdWithDetailsAsync(vehicleCheckinId))
-                .ReturnsAsync(updatedVehicleCheckin);
-
-            // Act
-            var result = await _service.LinkMaintenanceRequestAsync(vehicleCheckinId, maintenanceRequestId);
-
-            // Assert
-            result.Should().NotBeNull();
-            result.Id.Should().Be(vehicleCheckinId);
-
-            // Verify
-            _mockRepository.Verify(x => x.GetByIdAsync(vehicleCheckinId), Times.Once);
-            _mockRepository.Verify(x => x.UpdateAsync(It.Is<VehicleCheckin>(vc => vc.MaintenanceRequestId == maintenanceRequestId)), Times.Once);
-            _mockRepository.Verify(x => x.GetByIdWithDetailsAsync(vehicleCheckinId), Times.Once);
+            exception.Message.Should().Contain("MaintenanceRequest entity does not exist");
         }
 
         [Fact]
@@ -886,18 +891,12 @@ namespace BE.UnitTests.Services
             var vehicleCheckinId = 99999;
             var maintenanceRequestId = 100;
 
-            _mockRepository.Setup(x => x.GetByIdAsync(vehicleCheckinId))
-                .ReturnsAsync((VehicleCheckin?)null);
-
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<ArgumentException>(async () =>
+            // Service method throws NotImplementedException because MaintenanceRequest entity does not exist
+            var exception = await Assert.ThrowsAsync<NotImplementedException>(async () =>
                 await _service.LinkMaintenanceRequestAsync(vehicleCheckinId, maintenanceRequestId));
 
-            exception.Message.Should().Contain("Vehicle check-in not found");
-
-            // Verify
-            _mockRepository.Verify(x => x.GetByIdAsync(vehicleCheckinId), Times.Once);
-            _mockRepository.Verify(x => x.UpdateAsync(It.IsAny<VehicleCheckin>()), Times.Never);
+            exception.Message.Should().Contain("MaintenanceRequest entity does not exist");
         }
 
         #endregion

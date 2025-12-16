@@ -30,7 +30,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Branch Manager,Admin")] // Admin & Branch Manager đều xem được danh sách
+        [Authorize(Roles = "Branch Manager,Admin")] // Admin xem tất cả, BM xem chi nhánh của mình
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -39,13 +39,27 @@ namespace BE.vn.fpt.edu.controllers
             [FromQuery] long? role = null,
             [FromQuery] long? branchId = null)
         {
+            // Nếu là Branch Manager thì ép branchId về chi nhánh của chính họ
+            var roleIdClaim = User.FindFirst("RoleId")?.Value;
+            var roleParseSuccess = long.TryParse(roleIdClaim, out var roleIdVal);
+            var isBranchManager = roleParseSuccess && roleIdVal == 2;
+            if (isBranchManager)
+            {
+                var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                if (!long.TryParse(branchIdClaim, out var managerBranchId))
+                {
+                    return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+                }
+                branchId = managerBranchId; // ép filter theo chi nhánh của BM
+            }
+
             // Luôn dùng filter method để đảm bảo format response đồng nhất
             var result = await _employeeService.GetWithFiltersAsync(page, pageSize, search, status, role, branchId);
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Branch Manager,Admin")] // Admin & Branch Manager đều xem được chi tiết
+        [Authorize(Roles = "Branch Manager,Admin")] // Admin xem tất cả, BM xem chi nhánh của mình
         public async Task<IActionResult> GetById(long id)
         {
             var employee = await _employeeService.GetByIdAsync(id);
@@ -55,19 +69,19 @@ namespace BE.vn.fpt.edu.controllers
             var roleIdClaim = User.FindFirst("RoleId")?.Value;
             var roleId = long.TryParse(roleIdClaim, out var parsedRoleId) ? parsedRoleId : 0;
             if (roleId == 2) // Branch Manager
-            {
-                var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                if (!long.TryParse(branchIdClaim, out var branchId) || employee.BranchId != branchId)
                 {
-                    return Forbid("Bạn không có quyền xem thông tin nhân viên thuộc chi nhánh khác.");
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (!long.TryParse(branchIdClaim, out var branchId) || employee.BranchId != branchId)
+                    {
+                    return StatusCode(403, new { success = false, message = "Bạn không có quyền xem thông tin nhân viên thuộc chi nhánh khác." });
+                    }
                 }
-            }
 
             return Ok(employee);
         }
 
         [HttpPost]
-        [Authorize(Roles = "Branch Manager")] // Chỉ Giám đốc chi nhánh mới được tạo nhân viên
+        [Authorize(Roles = "Branch Manager,Admin")] // ✅ Admin và Giám đốc chi nhánh đều được tạo nhân viên
         public async Task<IActionResult> Create([FromBody] EmployeeRequestDto dto)
         {
             try
@@ -82,12 +96,40 @@ namespace BE.vn.fpt.edu.controllers
                     return BadRequest(new { success = false, message = "Dữ liệu không hợp lệ", errors = errors });
                 }
 
-                // Chỉ cho phép tạo nhân viên trong chi nhánh của Giám đốc đang đăng nhập
+                // ✅ Kiểm tra quyền: Admin có thể tạo nhân viên cho bất kỳ chi nhánh nào, Branch Manager chỉ tạo cho chi nhánh của mình
+                var isAdmin = User.IsInRole("Admin");
+                long? branchId = null;
+
+                if (isAdmin)
+                {
+                    // ✅ Admin: Sử dụng branchId từ request body (nếu có), nếu không có thì lấy từ JWT
+                    branchId = dto.BranchId;
+                    if (!branchId.HasValue)
+                    {
+                        var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                        if (long.TryParse(branchIdClaim, out var claimBranchId))
+                        {
+                            branchId = claimBranchId;
+                        }
+                    }
+                    
+                    // ✅ Nếu Admin không có branchId trong request và không có trong JWT, báo lỗi
+                    if (!branchId.HasValue)
+                    {
+                        return BadRequest(new { success = false, message = "Vui lòng chỉ định chi nhánh cho nhân viên mới." });
+                    }
+                }
+                else
+                {
+                    // ✅ Branch Manager: Chỉ cho phép tạo nhân viên trong chi nhánh của mình
                 var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                if (!long.TryParse(branchIdClaim, out var branchId))
+                    if (!long.TryParse(branchIdClaim, out var managerBranchId))
                 {
                     return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
                 }
+                    branchId = managerBranchId; // ✅ Ép branchId về chi nhánh của Branch Manager
+                }
+                
                 dto.BranchId = branchId;
                 
                 // Get current user ID from JWT claims for audit log
@@ -146,7 +188,7 @@ namespace BE.vn.fpt.edu.controllers
                 }
                 if (existing.BranchId != managerBranchId)
                 {
-                    return Forbid("Bạn chỉ được phép chỉnh sửa nhân viên thuộc chi nhánh của mình.");
+                    return StatusCode(403, new { success = false, message = "Bạn chỉ được phép chỉnh sửa nhân viên thuộc chi nhánh của mình." });
                 }
 
                 // Cố định BranchId về chi nhánh của Giám đốc
@@ -196,7 +238,7 @@ namespace BE.vn.fpt.edu.controllers
             }
             if (existing.BranchId != managerBranchId)
             {
-                return Forbid("Bạn chỉ được phép xoá nhân viên thuộc chi nhánh của mình.");
+                return StatusCode(403, new { success = false, message = "Bạn chỉ được phép xoá nhân viên thuộc chi nhánh của mình." });
             }
 
             var success = await _employeeService.DeleteAsync(id);

@@ -47,6 +47,9 @@
 
                                     <dt class="col-sm-4">Ngày tạo:</dt>
                                     <dd class="col-sm-8" id="createdAt">-</dd>
+
+                                    <dt class="col-sm-4">Người tạo:</dt>
+                                    <dd class="col-sm-8" id="createdByName">-</dd>
                                 </dl>
                             </div>
                         </div>
@@ -92,20 +95,19 @@
             <div class="modal-body">
                 <p class="mb-3">Vui lòng kiểm tra và cập nhật giá cho các linh kiện trước khi duyệt:</p>
                 <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Mã linh kiện</th>
-                                <th>Tên linh kiện</th>
-                                <th>Số lượng thực tế</th>
-                                <th>Giá nhập <span class="text-danger">*</span></th>
-                                <th>Giá xuất <span class="text-danger">*</span></th>
-                                <th>VAT (%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="approveDetailsTableBody">
-                        </tbody>
-                    </table>
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Mã linh kiện</th>
+                                        <th>Tên linh kiện</th>
+                                        <th>Số lượng thực tế</th>
+                                        <th>Giá nhập <span class="text-danger">*</span></th>
+                                        <th>Giá xuất <span class="text-danger">*</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="approveDetailsTableBody">
+                                </tbody>
+                            </table>
                 </div>
             </div>
             <div class="modal-footer">
@@ -205,26 +207,42 @@
             const approvedByName = data.approvedByName || data.ApprovedByName || '-';
             const approvedAt = data.approvedAt || data.ApprovedAt;
             const createdAt = data.createdAt || data.CreatedAt;
+            const createdByName = data.createdByName || data.CreatedByName || data.createdBy || data.CreatedBy || '-';
             const details = data.details || data.Details || [];
+            
+            // Debug: Log status code để kiểm tra
+            console.log('StockIn Status Code Debug:', {
+                original: statusCode,
+                normalized: (statusCode || '').trim().toUpperCase(),
+                canApprove: ['PENDING', 'CREATED', 'PENDING_APPROVAL'].includes((statusCode || '').trim().toUpperCase())
+            });
             
             $('#code').text(code);
             $('#stockInRequestCode').text(stockInRequestCode);
             $('#branchName').text(branchName);
+            $('#createdByName').text(createdByName);
             
             let statusClass = 'bg-secondary';
             let statusText = 'Không xác định';
-            if (statusCode === 'PENDING' || statusCode === 'Pending') {
+            // Xử lý statusCode - normalize về uppercase để so sánh
+            const normalizedStatus = (statusCode || '').trim().toUpperCase();
+            
+            if (normalizedStatus === 'CREATED' || normalizedStatus === 'PENDING' || 
+                normalizedStatus === 'PENDING_APPROVAL' || statusCode === 'Created' || statusCode === 'Pending') {
                 statusClass = 'bg-warning';
                 statusText = 'Chờ duyệt';
-            } else if (statusCode === 'APPROVED' || statusCode === 'Approved') {
+            } else if (normalizedStatus === 'APPROVED') {
                 statusClass = 'bg-success';
                 statusText = 'Đã duyệt';
-            } else if (statusCode === 'COMPLETED' || statusCode === 'Completed') {
+            } else if (normalizedStatus === 'COMPLETED') {
                 statusClass = 'bg-info';
                 statusText = 'Hoàn thành';
-            } else if (statusCode === 'CANCELLED' || statusCode === 'Cancelled') {
+            } else if (normalizedStatus === 'CANCELLED' || normalizedStatus === 'CANCELED') {
                 statusClass = 'bg-danger';
                 statusText = 'Đã hủy';
+            } else {
+                // Nếu status không khớp, hiển thị status gốc
+                statusText = statusCode || 'Không xác định';
             }
             $('#status').html(`<span class="badge ${statusClass}">${statusText}</span>`);
 
@@ -314,23 +332,28 @@
                                    roleNameLower.includes('giám đốc') ||
                                    roleId === 2;
             
-            // Xử lý statusCode - chuyển về uppercase để so sánh
-            const normalizedStatusCode = (statusCode || '').toUpperCase();
-            const isPending = normalizedStatusCode === 'PENDING';
+            // Xử lý statusCode - chuyển về uppercase để so sánh (xử lý tất cả các case)
+            const normalizedStatusCode = (statusCode || '').trim().toUpperCase();
+            // Có thể duyệt khi status là CREATED hoặc PENDING (xử lý cả các biến thể)
+            const canApprove = normalizedStatusCode === 'PENDING' || 
+                              normalizedStatusCode === 'CREATED' ||
+                              normalizedStatusCode === 'PENDING_APPROVAL';
             
             console.log('StockIn Action Buttons Debug:');
             console.log('  - stockInId:', stockInId);
             console.log('  - statusCode (original):', statusCode);
             console.log('  - normalizedStatusCode:', normalizedStatusCode);
-            console.log('  - isPending:', isPending);
+            console.log('  - canApprove:', canApprove);
             console.log('  - roleId:', roleId);
             console.log('  - roleName:', roleName);
             console.log('  - isBranchManager:', isBranchManager);
             
             let buttonsHtml = '';
             
-            // BRANCH MANAGER (roleId = 2): Có thể duyệt khi status = PENDING
-            if (isBranchManager && isPending && stockInId > 0) {
+            // CHỈ BRANCH MANAGER (roleId = 2 - Giám đốc chi nhánh) mới được duyệt
+            const canApproveByRole = isBranchManager && roleId === 2;
+            
+            if (canApproveByRole && canApprove && stockInId > 0) {
                 buttonsHtml = `
                     <button type="button" class="btn btn-success" onclick="openApproveModal(${stockInId})">
                         <i class="fas fa-check"></i> Duyệt phiếu nhập kho
@@ -343,9 +366,10 @@
                 console.log('  - Button rendered successfully');
             } else {
                 console.log('  - Button NOT rendered. Conditions:');
-                console.log('    * isBranchManager:', isBranchManager);
-                console.log('    * isPending:', isPending);
+                console.log('    * canApproveByRole (isBranchManager && roleId === 2):', canApproveByRole);
+                console.log('    * canApprove:', canApprove);
                 console.log('    * stockInId > 0:', stockInId > 0);
+                console.log('    * All conditions met:', canApproveByRole && canApprove && stockInId > 0);
             }
         }
 
@@ -418,18 +442,6 @@
                                                    step="1000" 
                                                    required>
                                         </td>
-                                        <td>
-                                            <input type="number" 
-                                                   class="form-control approve-vat" 
-                                                   data-component-code="${componentCode}"
-                                                   data-component-id="${componentId}"
-                                                   data-component-name="${componentName.replace(/"/g, '&quot;')}"
-                                                   data-quantity="${quantity}"
-                                                   value="${vat}" 
-                                                   min="0" 
-                                                   step="0.1" 
-                                                   required>
-                                        </td>
                                     </tr>
                                 `;
                                 tbody.append(row);
@@ -475,7 +487,6 @@
                 const quantityAfterCheck = parseInt($(this).find('td:eq(2)').text().trim()) || 0;
                 const importPricePerUnit = parseFloat($(this).find('.approve-import-price').val()) || 0;
                 const exportPricePerUnit = parseFloat($(this).find('.approve-export-price').val()) || 0;
-                const vat = parseFloat($(this).find('.approve-vat').val()) || 0;
 
                 if (importPricePerUnit <= 0 || exportPricePerUnit <= 0) {
                     showMessage('Lỗi', `Vui lòng nhập giá nhập và giá xuất cho linh kiện ${componentCode}`, 'error');
@@ -508,8 +519,7 @@
                     quantity: quantity, // Số lượng yêu cầu (bắt buộc)
                     quantityAfterCheck: quantityAfterCheck, // Số lượng thực tế
                     importPricePerUnit: importPricePerUnit,
-                    exportPricePerUnit: exportPricePerUnit,
-                    vat: vat
+                    exportPricePerUnit: exportPricePerUnit
                 });
             });
 

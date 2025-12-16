@@ -20,6 +20,7 @@ namespace BE.vn.fpt.edu.controllers
         }
 
         [HttpGet]
+        [Route("")] // ✅ Route cụ thể để tránh ambiguous match
         public async Task<IActionResult> GetAll(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -37,23 +38,49 @@ namespace BE.vn.fpt.edu.controllers
                     userId = parsedUserId;
                 }
 
-                // LUÔN lấy BranchId từ JWT claim của user đang đăng nhập để đảm bảo chỉ hiển thị loại linh kiện của branch đó
-                // Bỏ qua branchId từ query parameter để tránh user có thể xem loại linh kiện của branch khác
-                var branchIdClaim = User.FindFirst("BranchId")?.Value;
-                if (long.TryParse(branchIdClaim, out var claimBranchId))
+                // ✅ Kiểm tra quyền: Admin có thể xem tất cả, Branch Manager chỉ xem chi nhánh của mình
+                var isAdmin = User.IsInRole("Admin");
+                var isBranchManager = User.IsInRole("Branch Manager");
+                
+                // ✅ Lưu branchId từ query parameter trước khi xử lý
+                var originalBranchIdFromQuery = branchId;
+                
+                // ✅ Branch Manager: Chỉ xem được chi nhánh của mình, ép branchId về chi nhánh của chính họ
+                if (isBranchManager)
                 {
-                    branchId = claimBranchId;
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (!long.TryParse(branchIdClaim, out var managerBranchId))
+                    {
+                        return BadRequest(new { success = false, message = "Không xác định được chi nhánh của người dùng hiện tại." });
+                    }
+                    branchId = managerBranchId; // ✅ Ép filter theo chi nhánh của Branch Manager, bỏ qua query parameter
                 }
-                // Nếu không có branchId trong JWT, không trả về dữ liệu (hoặc có thể throw exception tùy yêu cầu)
-                // Để đảm bảo an toàn, nếu không có branchId thì set branchId = -1 để không trả về gì
-                if (!branchId.HasValue)
+                // ✅ Admin: Nếu có branchId trong query parameter, dùng nó để filter; nếu không có, xem tất cả (branchId = null)
+                else if (!isAdmin)
                 {
-                    branchId = -1; // Sẽ không có loại linh kiện nào có branchId = -1
+                    // User thường: LUÔN lấy BranchId từ JWT claim để đảm bảo chỉ hiển thị loại linh kiện của branch đó
+                    // Bỏ qua branchId từ query parameter để tránh user có thể xem loại linh kiện của branch khác
+                    var branchIdClaim = User.FindFirst("BranchId")?.Value;
+                    if (long.TryParse(branchIdClaim, out var claimBranchId))
+                    {
+                        branchId = claimBranchId;
+                    }
+                    // Nếu không có branchId trong JWT, không trả về dữ liệu (hoặc có thể throw exception tùy yêu cầu)
+                    // Để đảm bảo an toàn, nếu không có branchId thì set branchId = -1 để không trả về gì
+                    if (!branchId.HasValue)
+                    {
+                        branchId = -1; // Sẽ không có loại linh kiện nào có branchId = -1
+                    }
                 }
+                // ✅ Admin: branchId từ query parameter đã được giữ nguyên ở trên (có thể null để xem tất cả)
+
+                System.Diagnostics.Debug.WriteLine($"[TypeComponentController.GetAll] isAdmin: {isAdmin}, isBranchManager: {isBranchManager}, originalBranchIdFromQuery: {originalBranchIdFromQuery}, finalBranchId: {branchId}");
 
                 var result = await _service.GetAllAsync(page, pageSize, branchId, statusCode, search);
                 var totalCount = await _service.GetTotalCountAsync(branchId, statusCode, search);
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                System.Diagnostics.Debug.WriteLine($"[TypeComponentController.GetAll] Returned {result.Count} items, totalCount: {totalCount}");
 
                 return Ok(new
                 {
@@ -72,7 +99,7 @@ namespace BE.vn.fpt.edu.controllers
             }
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:long}")] // ✅ Constraint để chỉ match với số, tránh ambiguous match
         public async Task<IActionResult> Get(long id)
         {
             try

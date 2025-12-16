@@ -12,6 +12,7 @@ namespace BE.vn.fpt.edu.interfaces
         Task<bool> DeleteAsync(long id);
         Task<EmployeeResponseDto?> GetDirectorAsync(long branchId);
         Task<bool> ChangeDirectorAsync(long branchId, long newDirectorId);
+        Task<EmployeeResponseDto> CreateDirectorAsync(long branchId, CreateDirectorDto dto, long? createdByUserId = null);
     }
 }
 

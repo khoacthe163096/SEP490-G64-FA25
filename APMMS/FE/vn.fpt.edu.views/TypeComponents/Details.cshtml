@@ -29,8 +29,8 @@
         <!-- Left Panel: Type Component Name -->
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm h-100 border-0">
-                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 350px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <h1 class="text-center fw-bold text-white" id="typeComponentNameLarge" style="font-size: 3rem; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 350px; background: #ffffff;">
+                    <h1 class="text-center fw-bold" id="typeComponentNameLarge" style="font-size: 3rem; letter-spacing: 1px; color: #212529;">
                         <div class="spinner-border text-white" role="status">
                             <span class="visually-hidden">Đang tải...</span>
                         </div>
@@ -82,6 +82,7 @@
                                     <dt class="col-sm-4 fw-bold text-muted mb-3" style="font-size: 1rem; color: #6c757d !important;">Chi nhánh</dt>
                                     <dd class="col-sm-8 mb-3 fw-semibold" id="typeComponentBranch" style="font-size: 1.1rem; color: #212529;">-</dd>
 
+
                                     <dt class="col-sm-4 fw-bold text-muted mb-3" style="font-size: 1rem; color: #6c757d !important;">Trạng thái</dt>
                                     <dd class="col-sm-8 mb-3" id="typeComponentStatus" style="font-size: 1.1rem;">-</dd>
                         </dl>
@@ -108,6 +109,7 @@
                                                 <th style="font-size: 1rem; font-weight: 600; padding: 14px;">Số lượng</th>
                                                 <th style="font-size: 1rem; font-weight: 600; padding: 14px;">Giá</th>
                                                 <th style="font-size: 1rem; font-weight: 600; padding: 14px;">Trạng thái</th>
+                                                <th style="font-size: 1rem; font-weight: 600; padding: 14px;">Hình ảnh</th>
                                                 <th style="font-size: 1rem; font-weight: 600; padding: 14px;">Thao tác</th>
                                             </tr>
                                         </thead>
@@ -137,6 +139,29 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Modal: Xác nhận gỡ linh kiện khỏi loại -->
+    <div class="modal fade" id="confirmRemoveComponentModal" tabindex="-1" aria-labelledby="confirmRemoveComponentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="confirmRemoveComponentModalLabel">
+                        <i class="fas fa-question-circle me-2 text-danger"></i>Xác nhận gỡ linh kiện
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Bạn có chắc muốn gỡ <strong id="removeComponentName">linh kiện</strong> khỏi loại linh kiện này?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" id="removeComponentCloseBtn" class="btn btn-danger" onclick="confirmRemoveComponent()">
+                        <i class="fas fa-unlink me-1"></i>Gỡ
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Error Message -->
@@ -353,22 +378,59 @@
         const apiBaseUrl = '@apiBaseUrl';
         let currentTypeComponentId = null;
         let currentTypeComponentData = null;
+        let isWarehouseRole = false;
 
         document.addEventListener('DOMContentLoaded', function() {
+            initTypeComponentPermissions();
+
             currentTypeComponentId = getTypeComponentIdFromUrl();
             if (currentTypeComponentId) {
                 loadTypeComponentDetails(currentTypeComponentId);
                 
                 // Load components when components tab is shown
-                document.getElementById('components-tab').addEventListener('shown.bs.tab', function() {
-                    if (currentTypeComponentId) {
-                        loadComponents(currentTypeComponentId);
-                    }
-                });
+                const componentsTab = document.getElementById('components-tab');
+                if (componentsTab) {
+                    componentsTab.addEventListener('shown.bs.tab', function() {
+                        if (currentTypeComponentId) {
+                            loadComponents(currentTypeComponentId);
+                        }
+                    });
+                }
             } else {
                 showError('Không tìm thấy ID loại linh kiện');
             }
         });
+
+        function initTypeComponentPermissions() {
+            try {
+                const userInfoStr = localStorage.getItem('userInfo');
+                if (userInfoStr) {
+                    const userInfo = JSON.parse(userInfoStr);
+                    const roleId = parseInt(userInfo.roleId || userInfo.RoleId || '0');
+                    const roleName = (userInfo.roleName || userInfo.RoleName || '').toString().toUpperCase();
+                    isWarehouseRole = roleId === 5 || roleName === 'WAREHOUSE' || roleName === 'WAREHOUSE_KEEPER';
+                } else {
+                    isWarehouseRole = false;
+                }
+            } catch (e) {
+                console.warn('Cannot determine role for TypeComponent details:', e);
+                isWarehouseRole = false;
+            }
+
+            // Nếu không phải thủ kho thì ẩn các chức năng chỉnh sửa
+            if (!isWarehouseRole) {
+                const settingsTab = document.getElementById('settings-tab');
+                const settingsTabLi = settingsTab?.closest('li');
+                if (settingsTabLi) {
+                    settingsTabLi.style.display = 'none';
+                }
+
+                const editButton = document.getElementById('editButton');
+                if (editButton) {
+                    editButton.style.display = 'none';
+                }
+            }
+        }
 
         function getTypeComponentIdFromUrl() {
             const path = window.location.pathname;
@@ -425,6 +487,16 @@
         // Biến lưu trữ component khi edit TypeComponent
         window.editSelectedComponents = [];
         window.editAvailableComponents = [];
+
+        function isComponentUnassigned(component) {
+            const typeId =
+                component.typeComponentId ??
+                component.typeComponentID ??
+                (component.typeComponent && (component.typeComponent.id ?? component.typeComponent.typeComponentId)) ??
+                component.componentTypeId ??
+                component.typeId;
+            return !typeId; // chỉ chọn linh kiện chưa gán loại
+        }
 
         function setupEditTypeComponentModal() {
             const modalElement = document.getElementById('editTypeComponentModal');
@@ -541,9 +613,11 @@
                 success: function(result) {
                     $('#editAvailableComponentsLoading').hide();
                     if (result.success && result.data) {
-                        // Lọc ra các component chưa được chọn
+                        // Lọc ra các component chưa được chọn và chưa thuộc loại nào
                         const selectedIds = window.editSelectedComponents.map(c => c.id);
-                        window.editAvailableComponents = result.data.filter(c => !selectedIds.includes(c.id));
+                        window.editAvailableComponents = result.data
+                            .filter(isComponentUnassigned)
+                            .filter(c => !selectedIds.includes(c.id));
                         renderEditAvailableComponents();
                     } else {
                         $('#editAvailableComponentsTableBody').html('<tr><td colspan="5" class="text-center text-muted">Không có dữ liệu</td></tr>');
@@ -956,6 +1030,7 @@
                     renderComponentsTable(data.data);
                     contentEl.style.display = 'block';
                 } else {
+                    tableBody.innerHTML = '';
                     emptyEl.style.display = 'block';
                     contentEl.style.display = 'block';
                 }
@@ -970,6 +1045,8 @@
         function renderComponentsTable(components) {
             const tbody = document.getElementById('componentsTableBody');
             tbody.innerHTML = '';
+            // reset cache
+            Object.keys(componentCacheById).forEach(k => delete componentCacheById[k]);
             
             components.forEach(function(component) {
                 let statusClass = 'bg-secondary';
@@ -986,6 +1063,22 @@
                     ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice) 
                     : 'N/A';
                 
+                // cache for later update/remove
+                componentCacheById[component.id] = component;
+
+                const imageUrl = component.imageUrl || '';
+                const imageCell = imageUrl
+                    ? `<img src="${imageUrl}" alt="Ảnh linh kiện" style="width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #dee2e6;">`
+                    : `<div class="bg-light text-muted d-flex align-items-center justify-content-center rounded" style="width: 64px; height: 64px; border: 1px solid #dee2e6;">N/A</div>`;
+
+                const removeButton = isWarehouseRole
+                    ? `
+                    <button class="btn btn-sm btn-outline-danger" onclick="openRemoveComponentModal(${component.id}, '${component.name || ''}')" title="Gỡ khỏi loại linh kiện" style="font-size: 0.95rem; padding: 6px 12px;">
+                        <i class="fas fa-unlink me-1"></i>Gỡ
+                    </button>
+                `
+                    : '';
+
                 const row = document.createElement('tr');
                 row.style.fontSize = '1rem';
                 row.innerHTML = `
@@ -994,17 +1087,92 @@
                     <td style="padding: 14px; color: #212529; font-weight: 500;">${component.quantityStock || 0}</td>
                     <td style="padding: 14px; color: #28a745; font-weight: 600;">${unitPrice}</td>
                     <td style="padding: 14px;"><span class="badge ${statusClass}" style="font-size: 0.9rem; padding: 6px 12px;">${statusText}</span></td>
-                    <td style="padding: 14px;">
-                        <a href="/Components/Details/${component.id}" class="btn btn-sm btn-outline-info me-1" title="Xem chi tiết" style="font-size: 0.95rem; padding: 6px 12px;">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="/Components/Edit/${component.id}" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa" style="font-size: 0.95rem; padding: 6px 12px;">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </td>
+                    <td style="padding: 14px;">${imageCell}</td>
+                    <td style="padding: 14px;">${removeButton}</td>
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        let removeComponentModalInstance = null;
+        let pendingRemoveComponentId = null;
+        let pendingRemoveComponentName = '';
+        const componentCacheById = {};
+
+        function openRemoveComponentModal(componentId, componentName) {
+            pendingRemoveComponentId = componentId;
+            pendingRemoveComponentName = componentName || '';
+
+            const nameEl = document.getElementById('removeComponentName');
+            if (nameEl) {
+                nameEl.textContent = pendingRemoveComponentName || 'linh kiện';
+            }
+
+            const modalEl = document.getElementById('confirmRemoveComponentModal');
+            if (modalEl) {
+                removeComponentModalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                removeComponentModalInstance.show();
+            }
+        }
+
+        async function confirmRemoveComponent() {
+            const componentId = pendingRemoveComponentId;
+            if (!componentId) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    alert('Vui lòng đăng nhập lại');
+                    return;
+                }
+
+                // Lấy dữ liệu hiện tại để giữ nguyên các trường khác khi update
+                const comp = componentCacheById[componentId] || {};
+                const payload = {
+                    TypeComponentId: null,
+                    Name: comp.name || null,
+                    Code: comp.code || null,
+                    MinimumQuantity: comp.minimumQuantity != null ? comp.minimumQuantity : 0,
+                    ImageUrl: comp.imageUrl || null,
+                    StatusCode: comp.statusCode || 'ACTIVE'
+                };
+
+                const response = await fetch(`/Components/Update/${componentId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || `Lỗi ${response.status}: ${response.statusText}`);
+                }
+
+                showAlert('Đã gỡ linh kiện khỏi loại.', 'success');
+
+                if (removeComponentModalInstance) {
+                    removeComponentModalInstance.hide();
+                }
+                pendingRemoveComponentId = null;
+                pendingRemoveComponentName = '';
+
+                // Reload components list
+                if (currentTypeComponentId) {
+                    await loadComponents(currentTypeComponentId);
+                }
+            } catch (error) {
+                console.error('Error removing component from type:', error);
+                showAlert('Lỗi: ' + (error.message || 'Không thể gỡ linh kiện'), 'danger');
+            } finally {
+                const closeBtn = document.getElementById('removeComponentCloseBtn');
+                if (closeBtn) {
+                    closeBtn.disabled = false;
+                }
+            }
         }
 
         function showError(message) {

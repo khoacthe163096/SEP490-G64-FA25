@@ -76,7 +76,7 @@ namespace vn.fpt.edu.controllers
         /// L?y chi ti?t vehicle check-in theo ID
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Branch Manager,Consulter")] // Admin, Giám đốc và Consulter đều xem được
+        [Authorize(Roles = "Admin,Branch Manager,Consulter,Technician")] // Admin, Giám đốc, Consulter và KTV xem được
         public async Task<IActionResult> GetVehicleCheckinById(long id)
         {
             try
@@ -98,7 +98,7 @@ namespace vn.fpt.edu.controllers
         /// L?y danh s�ch t?t c? vehicle check-in (c� ph�n trang)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin,Branch Manager,Consulter")] // Admin, Giám đốc và Consulter đều xem được
+        [Authorize(Roles = "Admin,Branch Manager,Consulter,Technician")] // Cho phép KTV xem danh sách
         public async Task<IActionResult> GetAllVehicleCheckins(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,

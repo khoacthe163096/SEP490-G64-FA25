@@ -98,12 +98,15 @@ namespace BE.vn.fpt.edu.repository
 
         public async Task<List<MaintenanceTicket>> GetByUserIdAsync(long userId)
         {
+            // ✅ Load đầy đủ dữ liệu từ TẤT CẢ chi nhánh, không filter theo branchId
+            // Sử dụng AsSplitQuery để tránh vấn đề với multiple includes
             return await _context.MaintenanceTickets
+                .AsSplitQuery() // ✅ Tách query để load đầy đủ dữ liệu
                 .Include(mt => mt.Car)
                     .ThenInclude(c => c.User)
                 .Include(mt => mt.Branch)
                 .Include(mt => mt.ServiceCategory)
-                .Include(mt => mt.TotalReceipts)
+                .Include(mt => mt.TotalReceipts) // ✅ Load tất cả receipts của ticket
                 .Where(mt => mt.Car != null && mt.Car.UserId == userId)
                 .OrderByDescending(mt => mt.CreatedAt)
                 .ToListAsync();

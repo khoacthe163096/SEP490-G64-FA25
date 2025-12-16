@@ -38,17 +38,9 @@
                 <i class="fab fa-facebook-messenger"></i>
                 <span>Messenger</span>
             </div>
-            <div class="floating-tab-item" data-action="hotline">
-                <i class="fas fa-phone"></i>
-                <span>Hotline</span>
-            </div>
             <div class="floating-tab-item" data-action="zalo">
                 <i class="fab fa-whatsapp"></i>
                 <span>Chat Zalo</span>
-            </div>
-            <div class="floating-tab-item" data-action="directions">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>Chỉ đường</span>
             </div>
         </div>
     </div>
@@ -69,7 +61,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="serviceType" class="form-label">Chọn loại dịch vụ <span class="text-danger">*</span></label>
+                                    <label for="serviceType" class="form-label">Nội dung công việc <span class="text-danger">*</span></label>
                                     <select class="form-select" id="serviceType" required>
                                         <option value="">-- Chọn dịch vụ --</option>
                                     </select>
@@ -83,11 +75,11 @@
                                     <input type="email" class="form-control" id="email" autocomplete="off">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="appointmentTime" class="form-label">Chọn Thời Gian <span class="text-danger">*</span></label>
+                                    <label for="appointmentTime" class="form-label">Thời gian <span class="text-danger">*</span></label>
                                     <input type="datetime-local" class="form-control" id="appointmentTime" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="message" class="form-label">Lời nhắn</label>
+                                    <label for="message" class="form-label">Nội dung</label>
                                     <textarea class="form-control" id="message" rows="3" placeholder="Mô tả chi tiết về vấn đề của xe..."></textarea>
                                 </div>
                             </div>
@@ -101,17 +93,17 @@
                                     <input type="text" class="form-control" id="vehicleType" placeholder="VD: Toyota Camry, Honda Civic..." autocomplete="off">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="branch" class="form-label">Chọn loại chi nhánh <span class="text-danger">*</span></label>
+                                    <label for="branch" class="form-label">Chọn chi nhánh <span class="text-danger">*</span></label>
                                     <select class="form-select" id="branch" required>
                                         <option value="">-- Đang tải danh sách chi nhánh --</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="licensePlate" class="form-label">Biển Số Xe</label>
+                                    <label for="licensePlate" class="form-label">Chọn biển số xe <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="licensePlate" placeholder="VD: 30A-12345" autocomplete="off">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="mileage" class="form-label">Số Km</label>
+                                    <label for="mileage" class="form-label">Số km hiện tại</label>
                                     <input type="number" class="form-control" id="mileage" placeholder="Số km hiện tại">
                                 </div>
                             </div>

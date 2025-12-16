@@ -14,7 +14,7 @@ namespace FE.vn.fpt.edu.services
             _apiAdapter = apiAdapter;
         }
 
-        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null)
+        public async Task<object?> GetAllAsync(int page = 1, int pageSize = 10, string? search = null, string? statusCode = null, long? branchId = null)
         {
             var queryParams = new List<string>
             {
@@ -28,7 +28,10 @@ namespace FE.vn.fpt.edu.services
             if (!string.IsNullOrWhiteSpace(statusCode))
                 queryParams.Add($"statusCode={Uri.EscapeDataString(statusCode)}");
 
-            // BE sẽ tự động lấy branchId từ JWT token, không cần gửi từ FE
+            // ✅ Thêm branchId vào query nếu có (Admin có thể filter theo chi nhánh)
+            if (branchId.HasValue)
+                queryParams.Add($"branchId={branchId.Value}");
+
             var queryString = string.Join("&", queryParams);
             return await _apiAdapter.GetAsync<object>($"TypeComponent?{queryString}");
         }

@@ -685,6 +685,24 @@ function getRoleName(roleId) {
     }
 }
 
+// Hàm chuyển đổi tên chức vụ sang tiếng Việt
+function getRoleNameInVietnamese(roleName) {
+    if (!roleName) return '';
+    
+    const roleMap = {
+        'Admin': 'Tổng giám đốc',
+        'Branch Manager': 'Giám đốc chi nhánh',
+        'Accountant': 'Kế toán',
+        'Technician': 'Kỹ thuật viên',
+        'Warehouse Keeper': 'Thủ kho',
+        'Consulter': 'Tư vấn viên',
+        'Auto Owner': 'Chủ xe',
+        'Guest': 'Khách'
+    };
+    
+    return roleMap[roleName] || roleName;
+}
+
 function showLoginModal() {
     $('#loginModal').modal('show');
 }

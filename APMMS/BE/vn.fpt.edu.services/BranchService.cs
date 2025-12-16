@@ -129,33 +129,135 @@ namespace BE.vn.fpt.edu.services
                 throw new KeyNotFoundException("Không tìm thấy nhân viên");
             }
 
-            // Kiểm tra nhân viên mới có cùng chi nhánh không
-            if (newDirector.BranchId != branchId)
-            {
-                throw new InvalidOperationException("Nhân viên không thuộc chi nhánh này");
-            }
-
-            // Tìm và set giám đốc cũ thành INACTIVE
+            // ✅ Tìm giám đốc cũ của chi nhánh (trừ chính nhân viên mới nếu đã là giám đốc)
             var oldDirector = await _dbContext.Users
                 .FirstOrDefaultAsync(u => 
                     u.BranchId == branchId && 
                     u.RoleId == DIRECTOR_ROLE_ID && 
                     u.StatusCode == "ACTIVE" &&
-                    (u.IsDelete == null || u.IsDelete == false));
+                    (u.IsDelete == null || u.IsDelete == false) &&
+                    u.Id != newDirectorId); // ✅ Tránh set chính nhân viên mới thành INACTIVE
 
+            // ✅ Set giám đốc cũ thành INACTIVE (nếu có và không phải chính nhân viên mới)
             if (oldDirector != null)
             {
                 oldDirector.StatusCode = "INACTIVE";
                 oldDirector.LastModifiedDate = DateTime.Now;
             }
 
-            // Set nhân viên mới thành giám đốc
+            // ✅ Set nhân viên mới thành giám đốc
+            // Cho phép gán nhân viên từ chi nhánh khác - tự động set BranchId
             newDirector.RoleId = DIRECTOR_ROLE_ID;
+            newDirector.BranchId = branchId; // ✅ Đảm bảo BranchId đúng
             newDirector.StatusCode = "ACTIVE";
             newDirector.LastModifiedDate = DateTime.Now;
 
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// ✅ Tạo giám đốc chi nhánh mới (độc lập với Employee)
+        /// </summary>
+        public async Task<EmployeeResponseDto> CreateDirectorAsync(long branchId, CreateDirectorDto dto, long? createdByUserId = null)
+        {
+            // Kiểm tra branch có tồn tại không
+            var branch = await _branchRepository.GetByIdAsync(branchId);
+            if (branch == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy chi nhánh");
+            }
+
+            // Kiểm tra username đã tồn tại chưa
+            var existingUser = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.Username == dto.Username);
+            if (existingUser != null)
+            {
+                throw new ArgumentException($"Tên đăng nhập '{dto.Username}' đã tồn tại. Vui lòng chọn tên khác.");
+            }
+
+            // ✅ Kiểm tra chi nhánh đã có giám đốc chưa - nếu có thì tự động thay thế
+            var existingDirector = await _dbContext.Users
+                .FirstOrDefaultAsync(u => 
+                    u.BranchId == branchId && 
+                    u.RoleId == DIRECTOR_ROLE_ID && 
+                    u.StatusCode == "ACTIVE" &&
+                    (u.IsDelete == null || u.IsDelete == false));
+            
+            if (existingDirector != null)
+            {
+                // ✅ Tự động chuyển giám đốc cũ sang role Consultant (RoleId = 6)
+                existingDirector.RoleId = 6; // Consultant role
+                existingDirector.LastModifiedDate = DateTime.Now;
+            }
+
+            // ✅ Tạo user mới với role Branch Manager
+            var newDirector = new User
+            {
+                Username = dto.Username,
+                Password = dto.Password, // Trong thực tế nên hash password
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                Gender = dto.Gender,
+                Image = dto.Image,
+                CitizenId = dto.CitizenId,
+                TaxCode = dto.TaxCode,
+                Address = dto.Address,
+                RoleId = DIRECTOR_ROLE_ID, // Branch Manager
+                BranchId = branchId,
+                StatusCode = "ACTIVE",
+                CreatedDate = DateTime.Now,
+                IsDelete = false,
+                CreatedBy = createdByUserId
+            };
+
+            // ✅ Parse ngày sinh nếu có
+            if (!string.IsNullOrWhiteSpace(dto.Dob))
+            {
+                if (DateOnly.TryParseExact(dto.Dob, "dd-MM-yyyy", null, System.Globalization.DateTimeStyles.None, out var dob))
+                {
+                    newDirector.Dob = dob;
+                }
+            }
+
+            // ✅ Sinh mã tự động cho giám đốc (prefix: BM)
+            newDirector.Code = await GenerateUniqueDirectorCodeAsync();
+
+            // ✅ Thêm vào database
+            await _dbContext.Users.AddAsync(newDirector);
+            await _dbContext.SaveChangesAsync();
+
+            // ✅ Load lại với navigation properties
+            var createdDirector = await _dbContext.Users
+                .Include(u => u.Role)
+                .Include(u => u.Branch)
+                .FirstOrDefaultAsync(u => u.Id == newDirector.Id);
+
+            return _mapper.Map<EmployeeResponseDto>(createdDirector);
+        }
+
+        /// <summary>
+        /// Sinh mã duy nhất cho giám đốc: BM + 5 số ngẫu nhiên (vd: BM04218)
+        /// </summary>
+        private async Task<string> GenerateUniqueDirectorCodeAsync()
+        {
+            const string prefix = "BM";
+            const int digits = 5;
+            var rnd = new Random();
+
+            for (int i = 0; i < 50; i++)
+            {
+                var number = rnd.Next(0, (int)Math.Pow(10, digits)).ToString($"D{digits}");
+                var code = $"{prefix}{number}";
+
+                var exists = await _dbContext.Users.AsNoTracking().AnyAsync(u => u.Code == code);
+                if (!exists) return code;
+            }
+
+            // Fallback (hầu như không bao giờ xảy ra)
+            return $"{prefix}{DateTime.UtcNow:HHmmssff}";
         }
     }
 }

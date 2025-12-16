@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using BE.vn.fpt.edu.DTOs.Branch;
 using BE.vn.fpt.edu.interfaces;
 using System.Linq;
+using System.Security.Claims;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -153,6 +154,44 @@ namespace BE.vn.fpt.edu.controllers
                     return Ok(new { success = true, data = (object?)null, message = "Chi nhánh chưa có giám đốc" });
                 }
                 return Ok(new { success = true, data = director });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// ✅ Tạo giám đốc chi nhánh mới (độc lập với Employee)
+        /// </summary>
+        [HttpPost("{id}/Director")]
+        [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateDirector(long id, [FromBody] CreateDirectorDto dto)
+        {
+            try
+            {
+                // Lấy userId từ JWT
+                long? createdByUserId = null;
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var parsedUserId))
+                {
+                    createdByUserId = parsedUserId;
+                }
+
+                var result = await _branchService.CreateDirectorAsync(id, dto, createdByUserId);
+                return Ok(new { success = true, message = "Tạo giám đốc thành công", data = result });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {

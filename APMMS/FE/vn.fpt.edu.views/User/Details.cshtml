@@ -469,16 +469,6 @@
                                             </div>
                                             
                                             <div class="info-field">
-                                                <div class="info-label">Ngày tạo</div>
-                                                <div class="info-value" id="userCreatedDate">-</div>
-                                            </div>
-                                            
-                                            <div class="info-field">
-                                                <div class="info-label">Người tạo</div>
-                                                <div class="info-value" id="userCreatedBy">-</div>
-                                            </div>
-                                            
-                                            <div class="info-field">
                                                 <div class="info-label">Tình trạng</div>
                                                 <div class="info-value" id="userStatus">-</div>
                                             </div>
@@ -705,7 +695,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-outline-primary" onclick="submitAddCarForm()">Thêm</button>
+                <button type="button" class="btn btn-outline-primary" id="addCarSubmitBtn" onclick="submitAddCarForm()">Thêm</button>
             </div>
         </div>
     </div>
@@ -967,33 +957,6 @@
             document.getElementById('userAddress').textContent = user.address || '-';
             document.getElementById('userCitizenId').textContent = user.citizenId || '-';
             document.getElementById('userTaxCode').textContent = user.taxCode || '-';
-            
-            // Ngày tạo
-            const createdDateElement = document.getElementById('userCreatedDate');
-            if (createdDateElement && user.createdDate) {
-                try {
-                    const createdDate = new Date(user.createdDate);
-                    if (!isNaN(createdDate.getTime())) {
-                        createdDateElement.textContent = createdDate.toLocaleDateString('vi-VN', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit'
-                        });
-                    } else {
-                        createdDateElement.textContent = '-';
-                    }
-                } catch (e) {
-                    createdDateElement.textContent = '-';
-                }
-            } else if (createdDateElement) {
-                createdDateElement.textContent = '-';
-            }
-            
-            // Người tạo (nếu có)
-            const createdByElement = document.getElementById('userCreatedBy');
-            if (createdByElement) {
-                createdByElement.textContent = '-'; // Chưa có thông tin người tạo trong DTO
-            }
             
             // Status - đổi thành "Có hiệu lực" / "Không hiệu lực"
             const isActive = user.statusCode === 'ACTIVE';
@@ -1460,6 +1423,92 @@
                 });
         }
         
+        // Kiểm tra trùng (nếu BE hỗ trợ endpoint check-duplicate). Nếu lỗi/404 sẽ bỏ qua để không chặn luồng.
+        async function checkCarDuplicate(plate, vin, engine) {
+            try {
+                const params = new URLSearchParams();
+                if (plate) params.append('licensePlate', plate);
+                if (vin) params.append('vinNumber', vin);
+                if (engine) params.append('engineNumber', engine);
+
+                if (!plate && !vin && !engine) return { success: true, data: {} };
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                const resp = await fetch(`${API_BASE_URL}/CarOfAutoOwner/check-duplicate?${params.toString()}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken') || localStorage.getItem('token') || ''}` },
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!resp.ok) {
+                    console.warn('Skip duplicate check, status:', resp.status);
+                    return { success: true, data: {} };
+                }
+
+                const data = await resp.json().catch(() => ({}));
+                return data;
+            } catch (e) {
+                console.warn('Skip duplicate check due to error:', e);
+                return { success: true, data: {} };
+            }
+        }
+        
+        function validateCarForm() {
+            const errors = [];
+            const carName = document.getElementById('carName').value.trim();
+            const carModel = document.getElementById('carModel').value.trim();
+            const vehicleTypeId = document.getElementById('vehicleTypeId').value;
+            const carColor = document.getElementById('carColor').value.trim();
+            const yearOfManufacture = document.getElementById('yearOfManufacture').value;
+            const vinNumber = document.getElementById('vinNumber').value.trim();
+            const vehicleEngineNumber = document.getElementById('vehicleEngineNumber').value.trim();
+            // Chuẩn hoá biển số: bỏ khoảng trắng/dấu chấm, upper-case
+            const licensePlate = document.getElementById('licensePlate').value
+                .trim()
+                .replace(/\s+/g, '')
+                .toUpperCase();
+
+            if (carName.length < 2 || carName.length > 30) {
+                errors.push('Tên phương tiện phải từ 2-30 ký tự.');
+            }
+            if (carModel.length < 1 || carModel.length > 20) {
+                errors.push('Model phải từ 1-20 ký tự.');
+            }
+            if (!vehicleTypeId) {
+                errors.push('Vui lòng chọn loại phương tiện.');
+            }
+            if (carColor.length < 1 || carColor.length > 10) {
+                errors.push('Màu xe phải từ 1-10 ký tự.');
+            }
+            const currentYear = new Date().getFullYear();
+            const year = parseInt(yearOfManufacture, 10);
+            if (isNaN(year) || year < 1950 || year > currentYear + 1) {
+                errors.push(`Năm sản xuất phải từ 1950 đến ${currentYear + 1}.`);
+            }
+            const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
+            if (vinNumber.length !== 17 || !vinRegex.test(vinNumber.toUpperCase())) {
+                errors.push('Số khung (VIN) phải đúng 17 ký tự (không chứa I, O, Q).');
+            }
+            const engineRegex = /^[A-Z0-9\-]{5,20}$/i;
+            if (!engineRegex.test(vehicleEngineNumber)) {
+                errors.push('Số máy phải gồm 5-20 ký tự chữ số hoặc dấu gạch ngang.');
+            }
+            // Biển số: bám gần regex BE (30A-12345, 30A-123.45, 59N-12345,...)
+            const plateRegex = /^(?:[0-9]{2}[A-Z]-[0-9]{2}\.[0-9]{3}|[0-9]{2}[A-Z]-[0-9]{3}\.[0-9]{2}|[0-9]{2}[A-Z]-?[0-9]{4,5})$/;
+            if (!plateRegex.test(licensePlate)) {
+                errors.push('Biển số không hợp lệ. Ví dụ: 30A-12345, 30A-123.45, 59N-12345.');
+            }
+
+            if (errors.length) {
+                showNotification(errors.join('<br>'), 'error');
+                return { isValid: false };
+            }
+            return { isValid: true, licensePlate };
+        }
+
         // Submit add car form
         function submitAddCarForm() {
             if (!currentUser || !currentUser.id) {
@@ -1472,6 +1521,11 @@
                 form.reportValidity();
                 return;
             }
+
+            const validation = validateCarForm();
+            if (!validation.isValid) {
+                return;
+            }
             
             const formData = {
                 userId: currentUser.id,
@@ -1482,7 +1536,7 @@
                 yearOfManufacture: parseInt(document.getElementById('yearOfManufacture').value),
                 vinNumber: document.getElementById('vinNumber').value,
                 vehicleEngineNumber: document.getElementById('vehicleEngineNumber').value,
-                licensePlate: document.getElementById('licensePlate').value
+                licensePlate: validation.licensePlate
                 // Không gửi branchId vì xe của khách hàng không cần chi nhánh
             };
             
@@ -1509,7 +1563,7 @@
             }
             
             // Show loading state
-            const submitBtn = document.querySelector('#addCarModal .btn-primary');
+            const submitBtn = document.getElementById('addCarSubmitBtn');
             if (!submitBtn) {
                 showNotification('Không tìm thấy nút submit', 'error');
                 return;
@@ -1518,70 +1572,105 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
             
-            console.log('Submitting car data:', formData);
-            console.log('Using token:', token ? 'Token exists' : 'No token');
+            // Check duplicates before submit
+            const plate = formData.licensePlate;
+            const vin = formData.vinNumber;
+            const engine = formData.vehicleEngineNumber;
             
-            fetch(`${API_BASE_URL}/CarOfAutoOwner`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(async response => {
-                console.log('Response status:', response.status);
-                const responseData = await response.json().catch(() => ({}));
-                
-                if (!response.ok) {
-                    // Extract error message from response
-                    let errorMessage = 'Đã xảy ra lỗi khi thêm xe.';
-                    
-                    if (responseData.message) {
-                        errorMessage = responseData.message;
-                    } else if (responseData.error) {
-                        errorMessage = responseData.error;
-                    } else if (response.status === 400) {
-                        errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
-                    } else if (response.status === 500) {
-                        errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+            checkCarDuplicate(plate, vin, engine)
+                .then(result => {
+                    if (result && result.success === false && result.message) {
+                        throw new Error(result.message);
+                    }
+                    if (result && result.data) {
+                        const { licensePlateExists, vinNumberExists, engineNumberExists } = result.data;
+                        const dupMessages = [];
+                        if (licensePlateExists) dupMessages.push('Biển số xe đã tồn tại.');
+                        if (vinNumberExists) dupMessages.push('Số khung (VIN) đã tồn tại.');
+                        if (engineNumberExists) dupMessages.push('Số máy đã tồn tại.');
+                        if (dupMessages.length) {
+                            throw new Error(dupMessages.join('<br>'));
+                        }
                     }
                     
-                    console.error('Error response:', responseData);
-                    throw new Error(errorMessage);
-                }
-                
-                return responseData;
-            })
-            .then(data => {
-                showNotification('Thêm xe thành công!', 'success');
-                // Close modal và dọn sạch backdrop
-                const modalElement = document.getElementById('addCarModal');
-                if (modalElement) {
-                    let modalInstance = bootstrap.Modal.getInstance(modalElement);
-                    if (!modalInstance) {
-                        modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+                    // Timeout guard to avoid stuck spinner
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                    return fetch(`${API_BASE_URL}/CarOfAutoOwner`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(formData),
+                        signal: controller.signal
+                    }).finally(() => clearTimeout(timeoutId));
+                })
+                .then(async response => {
+                    // Đọc body một lần, ưu tiên parse JSON
+                    let rawText = '';
+                    let responseData = {};
+                    try {
+                        rawText = await response.text();
+                        try {
+                            responseData = JSON.parse(rawText);
+                        } catch {
+                            responseData = { message: rawText };
+                        }
+                    } catch { /* ignore */ }
+
+                    if (!response.ok) {
+                        const serverMsg = responseData?.message || responseData?.error || responseData?.title;
+                        let errorMessage = serverMsg || 'Đã xảy ra lỗi khi thêm xe.';
+
+                        if (!serverMsg && responseData?.errors) {
+                            const firstKey = Object.keys(responseData.errors)[0];
+                            if (firstKey) {
+                                errorMessage = responseData.errors[firstKey]?.join('<br>') || errorMessage;
+                            }
+                        }
+
+                        if (response.status === 400 && !serverMsg && !responseData?.errors) {
+                            errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra: biển số (đúng định dạng), VIN 17 ký tự, số máy 5-20 ký tự.';
+                        } else if (response.status === 500 && !serverMsg) {
+                            errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+                        }
+
+                        console.error('Add car failed', { status: response.status, body: responseData, rawText });
+                        throw new Error(errorMessage);
                     }
-                    if (modalInstance) {
-                        modalInstance.hide();
+
+                    return responseData;
+                })
+                .then(data => {
+                    showNotification('Thêm xe thành công!', 'success');
+                    const modalElement = document.getElementById('addCarModal');
+                    if (modalElement) {
+                        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        if (!modalInstance) {
+                            modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+                        }
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
                     }
-                }
-                cleanupModalBackdrop();
-                // Reset form
-                document.getElementById('addCarForm').reset();
-                // Reload cars list
-                loadUserCars();
-            })
-            .catch(error => {
-                console.error('Error adding car:', error);
-                showNotification('Lỗi khi thêm xe: ' + error.message, 'error');
-            })
-            .finally(() => {
-                if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalText;
-                }
-            });
+                    cleanupModalBackdrop();
+                    document.getElementById('addCarForm').reset();
+                    loadUserCars();
+                })
+                .catch(error => {
+                    console.error('Error adding car:', error);
+                    if (error.name === 'AbortError') {
+                        showNotification('Quá thời gian chờ khi thêm xe. Vui lòng thử lại.', 'error');
+                    } else {
+                        showNotification(error.message || 'Có lỗi xảy ra khi thêm xe.', 'error');
+                    }
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
         }
 
         function cleanupModalBackdrop() {

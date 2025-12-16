@@ -1,6 +1,7 @@
 using BE.vn.fpt.edu.DTOs.CarOfAutoOwner;
 using BE.vn.fpt.edu.interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BE.vn.fpt.edu.controllers
 {
@@ -48,11 +49,38 @@ namespace BE.vn.fpt.edu.controllers
             return Ok(new { success = true, data = result });
         }
 
+        [HttpGet("check-duplicate")]
+        public async Task<IActionResult> CheckDuplicate(
+            [FromQuery] string? licensePlate = null,
+            [FromQuery] string? vinNumber = null,
+            [FromQuery] string? engineNumber = null,
+            [FromQuery] long? excludeCarId = null)
+        {
+            try
+            {
+                var result = await _service.CheckDuplicateAsync(licensePlate, vinNumber, engineNumber, excludeCarId);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RequestDto dto)
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = BuildModelStateMessage(ModelState)
+                    });
+                }
+
                 if (dto == null)
                 {
                     return BadRequest(new { message = "Request data is required." });
@@ -68,7 +96,12 @@ namespace BE.vn.fpt.edu.controllers
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new
+                {
+                    success = false,
+                    field = MapFieldFromMessage(ex.Message),
+                    message = ex.Message
+                });
             }
             catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
             {
@@ -118,8 +151,29 @@ namespace BE.vn.fpt.edu.controllers
         [HttpPut("{id:long}")]
         public async Task<IActionResult> Update(long id, [FromBody] RequestDto dto)
         {
-            var result = await _service.UpdateAsync(id, dto);
-            return Ok(result);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = BuildModelStateMessage(ModelState)
+                    });
+                }
+
+                var result = await _service.UpdateAsync(id, dto);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    field = MapFieldFromMessage(ex.Message),
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpDelete("{id:long}")]
@@ -129,6 +183,36 @@ namespace BE.vn.fpt.edu.controllers
             if (!success)
                 return NotFound("Car not found or already deleted.");
             return NoContent();
+        }
+
+        private static string BuildModelStateMessage(ModelStateDictionary modelState)
+        {
+            var messages = modelState.Values
+                .SelectMany(v => v.Errors)
+                .Select(e => string.IsNullOrWhiteSpace(e.ErrorMessage) ? e.Exception?.Message : e.ErrorMessage)
+                .Where(m => !string.IsNullOrWhiteSpace(m))
+                .ToList();
+
+            return messages.Count > 0
+                ? string.Join("; ", messages)
+                : "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.";
+        }
+
+        private static string? MapFieldFromMessage(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message)) return null;
+            var m = message.ToLowerInvariant();
+
+            if (m.Contains("biển số")) return "licensePlate";
+            if (m.Contains("vin")) return "vinNumber";
+            if (m.Contains("số máy")) return "vehicleEngineNumber";
+            if (m.Contains("tên xe")) return "carName";
+            if (m.Contains("mẫu xe")) return "carModel";
+            if (m.Contains("loại xe")) return "vehicleTypeId";
+            if (m.Contains("năm sản xuất")) return "yearOfManufacture";
+            if (m.Contains("khách hàng")) return "userId";
+
+            return null;
         }
     }
 }

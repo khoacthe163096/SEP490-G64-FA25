@@ -14,10 +14,10 @@
                         Quản lý Phiếu Bảo Dưỡng
                     </h4>
                     <div>
-                    <a href="/MaintenanceTickets/Create" class="btn btn-outline-primary">
+                        <a href="/MaintenanceTickets/Create" class="btn btn-outline-primary" id="createMaintenanceTicketBtn" style="display: none;">
                             <i class="fas fa-plus me-1"></i>
                             Tạo phiếu mới
-                    </a>
+                        </a>
                     </div>
                 </div>
                 <div class="card-body">
@@ -148,6 +148,7 @@
         let totalRecords = 0;
 
         $(document).ready(function() {
+            toggleCreateButtonByRole();
             loadMaintenanceTickets();
     
             // Filter events với debounce cho search
@@ -172,33 +173,62 @@
                 currentPage = 1;
                 applyFilters();
             });
-    
-    // Action buttons
-    $('#assignTechnicianBtn').on('click', function() {
-        $('#actionModal').modal('hide');
-        loadTechnicians();
-        $('#assignTechnicianModal').modal('show');
-    });
-    
-    $('#startMaintenanceBtn').on('click', function() {
-        startMaintenance(currentTicketId);
-    });
-    
-    $('#completeMaintenanceBtn').on('click', function() {
-        completeMaintenance(currentTicketId);
-    });
-    
-    $('#viewDetailsBtn').on('click', function() {
-        window.location.href = `/MaintenanceTickets/Details/${currentTicketId}`;
-    });
-    
-    $('#confirmAssignBtn').on('click', function() {
-        const technicianId = $('#technicianSelect').val();
-        if (technicianId) {
-            assignTechnician(currentTicketId, technicianId);
+
+            // Action buttons
+            $('#assignTechnicianBtn').on('click', function() {
+                $('#actionModal').modal('hide');
+                loadTechnicians();
+                $('#assignTechnicianModal').modal('show');
+            });
+
+            $('#startMaintenanceBtn').on('click', function() {
+                startMaintenance(currentTicketId);
+            });
+
+            $('#completeMaintenanceBtn').on('click', function() {
+                completeMaintenance(currentTicketId);
+            });
+
+            $('#viewDetailsBtn').on('click', function() {
+                window.location.href = `/MaintenanceTickets/Details/${currentTicketId}`;
+            });
+
+            $('#confirmAssignBtn').on('click', function() {
+                const technicianId = $('#technicianSelect').val();
+                if (technicianId) {
+                    assignTechnician(currentTicketId, technicianId);
+                }
+            });
+        });
+
+        function toggleCreateButtonByRole() {
+            const btn = document.getElementById('createMaintenanceTicketBtn');
+            if (!btn) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    // Không có token => ẩn nút
+                    btn.style.display = 'none';
+                    return;
+                }
+
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const roleId = parseInt(payload['RoleId'] || payload['role_id'] || '0');
+                const roleName = (payload['RoleName'] || payload['role_name'] || '').toString().toUpperCase();
+
+                // Chỉ cho Consulter (roleId = 6) thấy nút tạo phiếu
+                const isConsulter = roleId === 6 || roleName === 'CONSULTER';
+                if (isConsulter) {
+                    btn.style.display = 'inline-block';
+                } else {
+                    btn.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Error checking role for create maintenance ticket button:', e);
+                btn.style.display = 'none';
+            }
         }
-    });
-});
 
         function loadMaintenanceTickets() {
             // ✅ Gọi qua FE controller để tự động filter theo branchId của user đăng nhập
@@ -347,7 +377,9 @@
                 tbody.append(`
                     <tr>
                         <td>
-                            <strong>${ticket.code || 'BD-' + ticket.id}</strong>
+                            <a href="/MaintenanceTickets/Details/${ticket.id}" class="text-dark" style="text-decoration: underline;">
+                                <strong>${ticket.code || 'BD-' + ticket.id}</strong>
+                            </a>
                         </td>
                         <td>${customerNameDisplay}</td>
                         <td>${createdAt}</td>

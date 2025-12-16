@@ -29,20 +29,20 @@
         <!-- Left Panel: Image and Component Name -->
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm h-100 border-0">
-                <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
+                <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 400px; background: #ffffff; padding: 2rem;">
                     <div id="imageLoading" class="text-center">
-                        <div class="spinner-border text-white" role="status">
+                        <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Đang tải...</span>
                         </div>
                     </div>
                     <div id="imageContainer" style="display: none; width: 100%; text-align: center; margin-bottom: 2rem;">
-                        <img id="componentImageLarge" src="" alt="Component Image" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                        <img id="componentImageLarge" src="" alt="Component Image" style="max-width: 100%; max-height: 320px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: contain; display: none;">
                     </div>
                     <div id="imagePlaceholder" style="display: none; width: 100%; text-align: center; margin-bottom: 2rem;">
-                        <i class="fas fa-image text-white" style="font-size: 8rem; opacity: 0.5;"></i>
+                        <i class="fas fa-image" style="font-size: 8rem; opacity: 0.5; color: #6c757d;"></i>
                     </div>
-                    <h1 class="text-center fw-bold text-white mt-3" id="componentNameLarge" style="font-size: 2.5rem; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); display: none;">
-                        <div class="spinner-border text-white" role="status">
+                    <h1 class="text-center fw-bold text-dark mt-3" id="componentNameLarge" style="font-size: 2.5rem; letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); display: none;">
+                        <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Đang tải...</span>
                         </div>
                     </h1>
@@ -101,9 +101,6 @@
                                     <dt class="col-sm-4 fw-bold text-muted mb-3" style="font-size: 1rem; color: #6c757d !important;">Giá xuất</dt>
                                     <dd class="col-sm-8 mb-3 fw-semibold" id="componentUnitPrice" style="font-size: 1.1rem; color: #212529;">-</dd>
 
-                                    <dt class="col-sm-4 fw-bold text-muted mb-3" style="font-size: 1rem; color: #6c757d !important;">Chiết khấu sản phẩm</dt>
-                                    <dd class="col-sm-8 mb-3 fw-semibold" id="componentDiscount" style="font-size: 1.1rem; color: #212529;">-</dd>
-
                                     <dt class="col-sm-4 fw-bold text-muted mb-3" style="font-size: 1rem; color: #6c757d !important;">Tình trạng</dt>
                                     <dd class="col-sm-8 mb-3" id="componentStatus" style="font-size: 1.1rem;">-</dd>
                                 </dl>
@@ -135,7 +132,7 @@
                                                     <i class="fa fa-trash me-1"></i> Xóa
                                                 </button>
                                                 <div id="editImagePreviewContainer" class="mt-2" style="display: none;">
-                                                    <img id="editImagePreview" src="" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                                    <img id="editImagePreview" src="" alt="Preview" style="display: none; max-width: 200px; max-height: 200px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
                                                 </div>
                                             </div>
                                         </div>
@@ -221,6 +218,8 @@
         let currentComponentId = null;
         let currentComponentData = null;
 
+        let isWarehouse = false;
+
         document.addEventListener('DOMContentLoaded', function() {
             currentComponentId = getComponentIdFromUrl();
             if (currentComponentId) {
@@ -231,12 +230,68 @@
             
             // Setup edit form
             setupEditForm();
+
+            // Enforce permission: only Warehouse (roleId=5 or role name WAREHOUSE) can edit
+            enforceWarehousePermission();
         });
 
         function getComponentIdFromUrl() {
             const path = window.location.pathname;
             const segments = path.split('/');
             return segments[segments.length - 1];
+        }
+
+        function enforceWarehousePermission() {
+            try {
+                const token = getAuthToken();
+                if (!token) {
+                    setReadOnlyMode(true);
+                    return;
+                }
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const roleId = parseInt(payload['RoleId'] || payload['role_id'] || payload['roleId'] || '0');
+                const roleName = (payload['RoleName'] || payload['role_name'] || payload['role'] || '').toString().toUpperCase();
+                isWarehouse = roleId === 5 || roleName === 'WAREHOUSE';
+                setReadOnlyMode(!isWarehouse);
+            } catch (err) {
+                console.error('Cannot parse role', err);
+                setReadOnlyMode(true);
+            }
+        }
+
+        function setReadOnlyMode(readOnly) {
+            const inputs = document.querySelectorAll('#settingsContent input, #settingsContent button, #settingsContent select, #settingsContent textarea');
+            inputs.forEach(el => {
+                if (el.id === 'saveEditBtn' || el.id === 'cancelEditBtn') {
+                    el.disabled = readOnly;
+                } else {
+                    el.readOnly = readOnly;
+                    el.disabled = readOnly;
+                }
+            });
+
+            // Hide upload/delete buttons if read-only
+            const uploadLabel = document.querySelector('label[for="editComponentImageFile"]');
+            const deleteBtn = document.querySelector('button[onclick="clearEditImage()"]');
+            if (uploadLabel) uploadLabel.style.display = readOnly ? 'none' : '';
+            if (deleteBtn) deleteBtn.style.display = readOnly ? 'none' : '';
+
+            if (readOnly) {
+                const note = document.getElementById('warehouseOnlyNote');
+                if (!note) {
+                    const container = document.getElementById('settingsContent');
+                    if (container) {
+                        const div = document.createElement('div');
+                        div.id = 'warehouseOnlyNote';
+                        div.className = 'alert alert-warning mb-3';
+                        div.textContent = 'Chỉ Thủ kho mới được chỉnh sửa linh kiện.';
+                        container.insertBefore(div, container.firstChild);
+                    }
+                }
+            } else {
+                const note = document.getElementById('warehouseOnlyNote');
+                if (note && note.parentNode) note.parentNode.removeChild(note);
+            }
         }
 
         async function loadComponentDetails(id) {
@@ -277,50 +332,51 @@
                 componentImageLarge.src = component.imageUrl;
                 imageContainer.style.display = 'block';
                 imagePlaceholder.style.display = 'none';
+                componentImageLarge.style.display = 'block';
             } else {
                 imageContainer.style.display = 'none';
                 imagePlaceholder.style.display = 'block';
+                componentImageLarge.style.display = 'none';
             }
             
             componentNameLarge.textContent = component.name || '-';
             componentNameLarge.style.display = 'block';
             
-            // Update intro tab content
-            document.getElementById('componentName').textContent = component.name || '-';
-            document.getElementById('componentCode').textContent = component.code || '-';
-            document.getElementById('componentMinimumQuantity').textContent = component.minimumQuantity || '-';
+            // Update intro tab content (an element may be missing if UI is adjusted)
+            const nameEl = document.getElementById('componentName');
+            const codeEl = document.getElementById('componentCode');
+            const minQtyEl = document.getElementById('componentMinimumQuantity');
+            if (nameEl) nameEl.textContent = component.name || '-';
+            if (codeEl) codeEl.textContent = component.code || '-';
+            if (minQtyEl) minQtyEl.textContent = component.minimumQuantity || '-';
             
             // Kiểm tra cảnh báo "Sắp hết hàng"
             const quantityStock = component.quantityStock || 0;
             const minimumQuantity = component.minimumQuantity || 0;
             const isLowStock = minimumQuantity > 0 && quantityStock <= minimumQuantity;
             
-            document.getElementById('componentQuantityValue').textContent = quantityStock;
+            const qtyValueEl = document.getElementById('componentQuantityValue');
             const warningBadge = document.getElementById('componentLowStockWarning');
+            if (qtyValueEl) qtyValueEl.textContent = quantityStock;
+            if (warningBadge) {
             if (isLowStock) {
                 warningBadge.style.display = 'inline-block';
                 warningBadge.title = `Sắp hết hàng (Tồn kho: ${quantityStock}, Tối thiểu: ${minimumQuantity})`;
             } else {
                 warningBadge.style.display = 'none';
+                }
             }
             
             const purchasePrice = component.purchasePrice 
                 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.purchasePrice)
                 : '-';
-            document.getElementById('componentPurchasePrice').textContent = purchasePrice;
-            
             const unitPrice = component.unitPrice 
                 ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(component.unitPrice)
                 : '-';
-            document.getElementById('componentUnitPrice').textContent = unitPrice;
-            
-            // Calculate discount if both prices exist
-            let discountText = '-';
-            if (component.purchasePrice && component.unitPrice && component.purchasePrice > 0) {
-                const discount = ((component.unitPrice - component.purchasePrice) / component.purchasePrice) * 100;
-                discountText = discount.toFixed(1) + '%';
-            }
-            document.getElementById('componentDiscount').textContent = discountText;
+            const purchaseEl = document.getElementById('componentPurchasePrice');
+            const unitPriceEl = document.getElementById('componentUnitPrice');
+            if (purchaseEl) purchaseEl.textContent = purchasePrice;
+            if (unitPriceEl) unitPriceEl.textContent = unitPrice;
             
             let statusBadge = '<span class="badge bg-secondary">Không xác định</span>';
             if (component.statusCode === 'ACTIVE') {
@@ -328,7 +384,8 @@
             } else if (component.statusCode === 'OUT_OF_STOCK') {
                 statusBadge = '<span class="badge bg-secondary">Không hoạt động</span>';
             }
-            document.getElementById('componentStatus').innerHTML = statusBadge;
+            const statusEl = document.getElementById('componentStatus');
+            if (statusEl) statusEl.innerHTML = statusBadge;
             
             // Show intro content
             document.getElementById('introLoading').style.display = 'none';
@@ -352,11 +409,11 @@
             if (editComponentMinimumQuantity) editComponentMinimumQuantity.value = component.minimumQuantity || 0;
             if (editComponentImageUrl) editComponentImageUrl.value = component.imageUrl || '';
             
-            if (component.imageUrl && editImagePreview && editImagePreviewContainer) {
+            if (component.imageUrl && editImagePreview) {
                 editImagePreview.src = component.imageUrl;
+                if (editImagePreviewContainer) {
                 editImagePreviewContainer.style.display = 'block';
-            } else if (editImagePreviewContainer) {
-                editImagePreviewContainer.style.display = 'none';
+                }
             }
             
             // Show settings content
@@ -410,8 +467,23 @@
             }
         }
 
+        function getAuthToken() {
+            const fromLocalStorage = localStorage.getItem('authToken');
+            if (fromLocalStorage) return fromLocalStorage;
+            
+            // Fallback: try cookie (server also stores authToken there)
+            const match = document.cookie.match(new RegExp('(^| )authToken=([^;]+)'));
+            if (match) return decodeURIComponent(match[2]);
+            
+            // Fallback: sessionStorage (in case login flow used it)
+            const fromSession = sessionStorage.getItem('authToken');
+            if (fromSession) return fromSession;
+            
+            return null;
+        }
+
         async function uploadImageToCloudinary(file) {
-            const token = localStorage.getItem('authToken');
+            const token = getAuthToken();
             if (!token) {
                 alert('Vui lòng đăng nhập lại');
                 return;
@@ -434,18 +506,33 @@
             // Show preview
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('editImagePreview').src = e.target.result;
-                document.getElementById('editImagePreviewContainer').style.display = 'block';
+                const previewSrc = e.target.result;
+                const editPreview = document.getElementById('editImagePreview');
+                if (editPreview) {
+                    editPreview.src = previewSrc;
+                }
+
+                // Hiển thị ngay ảnh vừa chọn ở panel bên trái để người dùng thấy
+                const componentImageLarge = document.getElementById('componentImageLarge');
+                const imageContainer = document.getElementById('imageContainer');
+                const imagePlaceholder = document.getElementById('imagePlaceholder');
+                if (componentImageLarge && imageContainer && imagePlaceholder) {
+                    componentImageLarge.src = previewSrc;
+                    imageContainer.style.display = 'block';
+                    imagePlaceholder.style.display = 'none';
+                }
             };
             reader.readAsDataURL(file);
             
             // Upload to Cloudinary
             try {
+                const uploadUrl = `${apiBaseUrl}/Image/upload-temp`;
+                console.log('[uploadImageToCloudinary] Uploading to', uploadUrl);
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('folder', 'component-images');
                 
-                const response = await fetch(`${apiBaseUrl}/Image/upload-temp`, {
+                const response = await fetch(uploadUrl, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -455,15 +542,35 @@
                 
                 const data = await response.json();
                 
-                if (data.success && data.data && data.data.url) {
-                    document.getElementById('editComponentImageUrl').value = data.data.url;
-                    console.log('Image uploaded to Cloudinary:', data.data.url);
+                if (response.ok && data.success && data.data && data.data.url) {
+                    const imageUrl = data.data.url;
+                    document.getElementById('editComponentImageUrl').value = imageUrl;
+                    // Lưu lại vào dữ liệu hiện tại để khi lưu sẽ mang theo
+                    if (currentComponentData) {
+                        currentComponentData.imageUrl = imageUrl;
+                    }
+                    // Cập nhật ngay ảnh hiển thị bên trái theo URL Cloudinary (không dùng base64)
+                    const componentImageLarge = document.getElementById('componentImageLarge');
+                    const imageContainer = document.getElementById('imageContainer');
+                    const imagePlaceholder = document.getElementById('imagePlaceholder');
+                    if (componentImageLarge && imageContainer && imagePlaceholder) {
+                        componentImageLarge.src = imageUrl;
+                        componentImageLarge.style.display = 'block';
+                        imageContainer.style.display = 'block';
+                        imagePlaceholder.style.display = 'none';
+                    }
+                    const editPreview = document.getElementById('editImagePreview');
+                    if (editPreview) {
+                        editPreview.src = imageUrl;
+                    }
+                    console.log('Image uploaded to Cloudinary:', imageUrl);
             } else {
-                    throw new Error(data.message || 'Không thể upload ảnh');
+                    const message = data?.message || `Không thể upload ảnh (status ${response.status})`;
+                    throw new Error(message);
                 }
             } catch (error) {
                 console.error('Error uploading image:', error);
-                alert('Lỗi upload ảnh: ' + error.message);
+                alert('Lỗi upload ảnh: ' + (error?.message || 'Failed to fetch'));
                 document.getElementById('editComponentImageFile').value = '';
                 document.getElementById('editImagePreviewContainer').style.display = 'none';
                 document.getElementById('editComponentImageUrl').value = '';
@@ -491,12 +598,24 @@
                     throw new Error('Không tìm thấy ID linh kiện');
                 }
                 
+                // Nếu input trống nhưng preview đang có src, lấy src
+                const imgUrlInput = document.getElementById('editComponentImageUrl');
+                const previewSrc = document.getElementById('componentImageLarge')?.src || '';
+                const finalImageUrl = (imgUrlInput && imgUrlInput.value.trim()) 
+                    || (previewSrc && !previewSrc.includes('base64') ? previewSrc : '')
+                    || (currentComponentData && currentComponentData.imageUrl) 
+                    || null;
+                
                 const payload = {
-                    name: document.getElementById('editComponentName').value.trim(),
-                    code: document.getElementById('editComponentCode').value.trim() || null,
-                    minimumQuantity: parseInt(document.getElementById('editComponentMinimumQuantity').value) || 0,
-                    imageUrl: document.getElementById('editComponentImageUrl').value.trim() || null
+                    // Dùng PascalCase để khớp DTO backend (case-insensitive nhưng an toàn hơn)
+                    Name: document.getElementById('editComponentName').value.trim(),
+                    Code: document.getElementById('editComponentCode').value.trim() || null,
+                    MinimumQuantity: parseInt(document.getElementById('editComponentMinimumQuantity').value) || 0,
+                    ImageUrl: finalImageUrl,
+                    // giữ nguyên trạng thái hiện có, tránh bị null => "Không xác định"
+                    StatusCode: (currentComponentData && currentComponentData.statusCode) ? currentComponentData.statusCode : 'ACTIVE'
                 };
+                console.log('[submitEditForm] Payload imageUrl:', payload.ImageUrl);
                 
                 console.log('Updating component with payload:', payload);
                 
